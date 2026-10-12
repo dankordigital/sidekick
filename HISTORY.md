@@ -13,20 +13,15 @@ detailed developer notes, including every release in "Versions") and
 - **Website:** **getsidekick.app** (OVHcloud, free 100 MB hosting with
   email), uploaded by the owner with FileZilla into `www`. It's a
   **wishlist page, not a download page** (Sidekick isn't out yet).
-- **Wishlist:** works, but the emails depend on the owner's last step (see
-  "Waiting on the owner").
+- **Wishlist:** works, emails confirmed arriving (12 Oct, the check page's
+  test email reached info@getsidekick.app).
 - **Ads:** three finished videos (below), all made outside the repo, in the
   session's scratchpad.
 
 ## Waiting on the owner
 
-1. **Wishlist emails:** upload the new `wishlist.php`, `wishlist-check.php`
-   and `website/email-header.png`, create `wishlist-config.php` (from
-   `wishlist-config.example.php`) with the info@getsidekick.app mailbox
-   password, then open `getsidekick.app/wishlist-check.php`, send the test
-   email, and delete the check page. People who signed up before the fix
-   never got their email (`emailed` is empty in `list.csv`): offered a
-   one-time resend.
+1. **Wishlist:** delete `wishlist-check.php` from the hosting. People who
+   signed up before the fix never got their email: offered a one-time resend.
 2. **Terms of Service:** fill in the country in section 9; the copyright
    line should name a real person or business. Not on the site yet
    (offered as `terms.html`).
