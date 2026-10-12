@@ -33,8 +33,11 @@ const SITE = 'https://getsidekick.app';
 // Also tell FROM about each new sign-up ("New on the wishlist: …").
 const NOTIFY_OWNER = true;
 
+// OVHcloud's outgoing mail server. Tried in order: SSL on 465, then
+// STARTTLS on 587 (some hostings block one of them). Port 993 is IMAP:
+// it's for reading the mailbox and can't send.
 const SMTP_HOST = 'ssl0.ovh.net';
-const SMTP_PORT = 465;
+const SMTP_PORTS = [465, 587];
 
 const MAX_PER_HOUR = 5;        // sign-ups per visitor (by a hash of their IP)
 
@@ -231,9 +234,17 @@ function send_mail(string $to, string $subject, string $body, string $fromName, 
     }
     $password = smtp_password();
     if ($password !== null) {
-        $error = smtp_send($to, $subj, $body, $headers, $password);
-        if ($error === null) return true;
-        mail_log("SMTP to $to failed: $error");
+        foreach (SMTP_PORTS as $port) {
+            $error = smtp_send($to, $subj, $body, $headers, $password, $port);
+            if ($error === null) return true;
+            mail_log("SMTP (port $port) to $to failed: $error");
+            // A refused password fails the same on every port.
+            if (str_starts_with($error, 'login refused')) return false;
+        }
+        // Both ports blocked: mail() as a last try.
+        $h = implode("\r\n", $headers);
+        if (@mail($to, $subj, $body, $h, '-f' . FROM) || @mail($to, $subj, $body, $h)) return true;
+        mail_log("mail() to $to failed too");
         return false;
     }
     // No password: PHP's mail(), first with the envelope sender, then without
@@ -266,11 +277,13 @@ function mime_body(string $text, string $html): array {
     return ["Content-Type: multipart/related; boundary=\"$rel\"; type=\"multipart/alternative\"", $body];
 }
 
-/** A small SMTP client: SSL, AUTH LOGIN as FROM. Null on success, else why. */
-function smtp_send(string $to, string $subject, string $body, array $headers, string $password): ?string {
-    $ctx = stream_context_create(['ssl' => ['verify_peer' => true, 'verify_peer_name' => true]]);
-    $s = @stream_socket_client('ssl://' . SMTP_HOST . ':' . SMTP_PORT, $errno, $errstr, 15, STREAM_CLIENT_CONNECT, $ctx);
-    if (!$s) return "can't connect to " . SMTP_HOST . ": $errstr ($errno)";
+/** A small SMTP client: SSL on 465, STARTTLS on any other port, AUTH LOGIN
+ *  as FROM. Null on success, else why. */
+function smtp_send(string $to, string $subject, string $body, array $headers, string $password, int $port = 465): ?string {
+    $ctx = stream_context_create(['ssl' => ['verify_peer' => true, 'verify_peer_name' => true, 'peer_name' => SMTP_HOST]]);
+    $tls = $port !== 465;
+    $s = @stream_socket_client(($tls ? 'tcp://' : 'ssl://') . SMTP_HOST . ':' . $port, $errno, $errstr, 15, STREAM_CLIENT_CONNECT, $ctx);
+    if (!$s) return "can't connect to " . SMTP_HOST . ":$port: $errstr ($errno)";
     stream_set_timeout($s, 15);
     $read = function () use ($s): string {
         $all = '';
@@ -294,6 +307,9 @@ function smtp_send(string $to, string $subject, string $body, array $headers, st
         . preg_replace('/^\./m', '..', str_replace(["\r\n", "\n"], ["\n", "\r\n"], $body));
     $error = $step(null, '220', 'greeting')
         ?? $step("EHLO $host", '250', 'EHLO')
+        ?? ($tls ? ($step('STARTTLS', '220', 'STARTTLS')
+            ?? (@stream_socket_enable_crypto($s, true, STREAM_CRYPTO_METHOD_TLS_CLIENT) ? null : 'TLS handshake failed')
+            ?? $step("EHLO $host", '250', 'EHLO after TLS')) : null)
         ?? $step('AUTH LOGIN', '334', 'AUTH')
         ?? $step(base64_encode(FROM), '334', 'login name')
         ?? (($e = $step(base64_encode($password), '235')) !== null ? 'login refused (check the password in wishlist-config.php): ' . $e : null)

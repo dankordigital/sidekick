@@ -39,6 +39,13 @@ detailed developer notes, including every release in "Versions") and
 
 ## History
 
+### Wishlist email: second route (12 Oct)
+- `wishlist.php` now tries `ssl0.ovh.net` on **465 (SSL)**, then **587
+  (STARTTLS)**, then PHP `mail()`, logging each failure. Port 993 (what the
+  owner had) is IMAP, for reading mail: it can't send. The header image
+  stays attached inline (`cid:header`). Tested both ports against fake
+  servers.
+
 ### Wishlist emails fixed and designed (12 Oct)
 - Emails weren't arriving: PHP `mail()` doesn't deliver on OVHcloud. Now
   `wishlist.php` sends over **SMTP to `ssl0.ovh.net:465`**, logged in as
