@@ -153,12 +153,51 @@ function send_welcome(string $email, string $token): bool {
         . "Changed your mind? Remove your email from the list:\r\n"
         . "$remove\r\n\r\n"
         . "Sidekick\r\ngetsidekick.app\r\n";
+    $html = welcome_html($remove);
     if ($local) {
         $out = data_dir() . '/outbox';
         @mkdir($out, 0700);
+        file_put_contents("$out/" . date('Ymd-His') . "-$email.html", str_replace('cid:header', '/website/email-header.png', $html));
         return file_put_contents("$out/" . date('Ymd-His') . "-$email.txt", "To: $email\r\nSubject: $subject\r\n\r\n$body") !== false;
     }
-    return send_mail($email, $subject, $body, FROM_NAME, FROM, ['List-Unsubscribe: <' . $remove . '>']);
+    return send_mail($email, $subject, $body, FROM_NAME, FROM, ['List-Unsubscribe: <' . $remove . '>'], $html);
+}
+
+/** The designed version of "Got your email!": the header image (logo on
+ *  Sidekick's purple), the message, a button to the site, and the remove
+ *  link. Tables and inline styles: what every email app understands. */
+function welcome_html(string $remove): string {
+    $site = htmlspecialchars(SITE);
+    $remove = htmlspecialchars($remove);
+    $font = "font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif";
+    return <<<HTML
+<!doctype html>
+<html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="color-scheme" content="light only"><title>Got your email!</title></head>
+<body style="margin:0;padding:0;background:#f1edf8">
+<div style="display:none;max-height:0;overflow:hidden">We'll remind you when Sidekick comes out.</div>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f1edf8"><tr><td align="center" style="padding:24px 12px">
+<table role="presentation" width="600" cellpadding="0" cellspacing="0" style="width:100%;max-width:600px;background:#ffffff;border-radius:24px;overflow:hidden">
+<tr><td><a href="$site"><img src="cid:header" width="600" alt="Sidekick: Your devices, together." style="display:block;width:100%;height:auto;border:0;background:#2a1257"></a></td></tr>
+<tr><td style="padding:36px 40px 8px;$font;color:#1d1530">
+<h1 style="margin:0 0 12px;font-size:30px;line-height:1.2;font-weight:800">Got your email!</h1>
+<p style="margin:0 0 16px;font-size:17px;line-height:1.55;color:#3d3550">We'll remind you when Sidekick comes out.</p>
+<p style="margin:0 0 26px;font-size:16px;line-height:1.55;color:#5d5670">Sidekick makes your phone and computer work as one: send files both ways, share your clipboard, use your phone as a touchpad, mirror its screen and more, on Windows, Mac, Android and iPhone. Free, with no account.</p>
+</td></tr>
+<tr><td align="center" style="padding:0 40px 30px">
+<table role="presentation" cellpadding="0" cellspacing="0"><tr><td align="center" bgcolor="#6a4cff" style="border-radius:14px;background:linear-gradient(100deg,#7b5cff,#c04fd8)">
+<a href="$site" style="display:inline-block;padding:15px 34px;$font;font-size:17px;font-weight:700;color:#ffffff;text-decoration:none;border-radius:14px">See what Sidekick does</a>
+</td></tr></table>
+</td></tr>
+<tr><td style="padding:0 40px 32px;$font;font-size:14px;line-height:1.5;color:#8a8399;border-top:1px solid #eee8f6">
+<p style="margin:22px 0 6px">That's the only email you'll get until then. We never share your address.</p>
+<p style="margin:0">Changed your mind? <a href="$remove" style="color:#6a4cff">Remove my email</a></p>
+</td></tr>
+</table>
+<p style="margin:18px 0 0;$font;font-size:13px;color:#a39cb3">Sidekick · <a href="$site" style="color:#a39cb3">getsidekick.app</a></p>
+</td></tr></table>
+</body></html>
+HTML;
 }
 
 function mail_log(string $line): void {
@@ -180,15 +219,16 @@ function smtp_password(): ?string {
 
 /** Sends a plain-text email: through OVHcloud's mail server when the
  *  password is set, otherwise with mail(). False (and a log line) if not. */
-function send_mail(string $to, string $subject, string $body, string $fromName, string $replyTo, array $extra = []): bool {
+function send_mail(string $to, string $subject, string $body, string $fromName, string $replyTo, array $extra = [], ?string $html = null): bool {
     $subj = '=?UTF-8?B?' . base64_encode($subject) . '?=';
-    $headers = array_merge([
-        'From: ' . $fromName . ' <' . FROM . '>',
-        'Reply-To: ' . $replyTo,
-        'MIME-Version: 1.0',
-        'Content-Type: text/plain; charset=UTF-8',
-        'Content-Transfer-Encoding: 8bit',
-    ], $extra);
+    $headers = array_merge(['From: ' . $fromName . ' <' . FROM . '>', 'Reply-To: ' . $replyTo, 'MIME-Version: 1.0'], $extra);
+    if ($html === null) {
+        $headers[] = 'Content-Type: text/plain; charset=UTF-8';
+        $headers[] = 'Content-Transfer-Encoding: 8bit';
+    } else {
+        [$type, $body] = mime_body($body, $html);
+        $headers[] = $type;
+    }
     $password = smtp_password();
     if ($password !== null) {
         $error = smtp_send($to, $subj, $body, $headers, $password);
@@ -202,6 +242,28 @@ function send_mail(string $to, string $subject, string $body, string $fromName, 
     if (@mail($to, $subj, $body, $h, '-f' . FROM) || @mail($to, $subj, $body, $h)) return true;
     mail_log("mail() to $to failed (no SMTP password set in wishlist-config.php)");
     return false;
+}
+
+/** Plain text and HTML together (the app shows what it can), with the
+ *  header image attached inline so it shows even when web images are
+ *  blocked. Returns [Content-Type header, body]. */
+function mime_body(string $text, string $html): array {
+    $alt = 'alt-' . bin2hex(random_bytes(8));
+    $rel = 'rel-' . bin2hex(random_bytes(8));
+    $part = fn(string $type, string $data) => "Content-Type: $type\r\nContent-Transfer-Encoding: base64\r\n\r\n"
+        . chunk_split(base64_encode($data)) . "\r\n";
+    $alternative = "--$alt\r\n" . $part('text/plain; charset=UTF-8', $text)
+        . "--$alt\r\n" . $part('text/html; charset=UTF-8', $html) . "--$alt--\r\n";
+    $image = @file_get_contents(__DIR__ . '/website/email-header.png');
+    if ($image === false) {
+        // No image on the hosting: the HTML without it.
+        return ["Content-Type: multipart/alternative; boundary=\"$alt\"", $alternative];
+    }
+    $body = "--$rel\r\nContent-Type: multipart/alternative; boundary=\"$alt\"\r\n\r\n$alternative"
+        . "--$rel\r\nContent-Type: image/png; name=\"sidekick.png\"\r\nContent-Transfer-Encoding: base64\r\n"
+        . "Content-ID: <header>\r\nContent-Disposition: inline; filename=\"sidekick.png\"\r\n\r\n"
+        . chunk_split(base64_encode($image)) . "\r\n--$rel--\r\n";
+    return ["Content-Type: multipart/related; boundary=\"$rel\"; type=\"multipart/alternative\"", $body];
 }
 
 /** A small SMTP client: SSL, AUTH LOGIN as FROM. Null on success, else why. */

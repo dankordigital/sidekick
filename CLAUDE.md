@@ -31,7 +31,9 @@ mail server** (`ssl0.ovh.net:465`, logged in as `FROM`; PHP `mail()` never
 delivered on the hosting, so it's only a fallback), the password in
 `wishlist-config.php` next to it on the hosting, **never in git**
 (`.gitignore`; template `wishlist-config.example.php`); every failure goes
-to `sidekick-wishlist/mail.log` (never the password), with a
+to `sidekick-wishlist/mail.log` (never the password). The email is HTML
+(`welcome_html`: `website/email-header.png` attached inline as `cid:header`,
+a button to the site, the remove link) with a plain-text part, with a
 remove link, and a note to `FROM` about each sign-up (`NOTIFY_OWNER`); a
 honeypot field, a 2-second minimum, and 5 tries an hour per hashed IP.
 `wishlist-check.php` (upload once, open, delete) loads `wishlist.php`'s
@@ -48,6 +50,9 @@ downloads come back.
 **Every change must work on all four platforms.**
 
 ## Keeping this file up to date
+
+`HISTORY.md` is the running record of what's been done (newest first), for
+picking up after `/clear`: update it when something notable is done.
 
 **Every release adds an entry to [Versions](#versions)** (newest first) with
 its biggest features and fixes (see [Releasing](#releasing)). The history starts at 1.1.3.
