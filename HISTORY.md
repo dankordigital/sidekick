@@ -34,6 +34,12 @@ detailed developer notes, including every release in "Versions") and
 
 ## History
 
+### Website fits phones (12 Oct)
+- `index.html`: on phones the top bar fits (smaller logo, "Join" button),
+  hero buttons are full width, the email field no longer collapses, bigger
+  color swatches, tighter spacing; tablets get a centered hero picture.
+  Checked at 360, 390, 820 and 1440 px wide: no sideways scrolling.
+
 ### Wishlist email: second route (12 Oct)
 - `wishlist.php` now tries `ssl0.ovh.net` on **465 (SSL)**, then **587
   (STARTTLS)**, then PHP `mail()`, logging each failure. Port 993 (what the
