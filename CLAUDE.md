@@ -32,7 +32,7 @@ delivered on the hosting, so it's only a fallback), the password in
 `wishlist-config.php` next to it on the hosting, **never in git**
 (`.gitignore`; template `wishlist-config.example.php`); every failure goes
 to `sidekick-wishlist/mail.log` (never the password). The email is HTML
-(`welcome_html`: `website/email-header.png` attached inline as `cid:header`,
+(`welcome_html`: the header image, `website/email-header.png` as a JPEG inside `wishlist.php` (`header_image`), attached inline as `cid:header`,
 a "Cancel my sign-up" button: the remove link) with a plain-text part, with a
 remove link, and a note to `FROM` about each sign-up (`NOTIFY_OWNER`); a
 honeypot field, a 2-second minimum, and 5 tries an hour per hashed IP.
