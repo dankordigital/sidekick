@@ -15,6 +15,12 @@
  *   POST  wishlist.php            email, devices, t (page time), website (a trap)
  *   GET   wishlist.php?remove=…   removes, then back to the page
  *
+ * Emails go through OVHcloud's mail server (ssl0.ovh.net), logged in as
+ * FROM, like a mail app: PHP's own mail() is often dropped by the hosting.
+ * The mailbox password lives in wishlist-config.php next to this file
+ * (never in git; see wishlist-config.example.php). Without it, mail() is
+ * tried. Every failure is written to sidekick-wishlist/mail.log.
+ *
  * On localhost (php -S localhost:8000) emails aren't sent: they're saved
  * in sidekick-wishlist/outbox, so the whole flow can be tried offline.
  */
@@ -26,6 +32,9 @@ const FROM_NAME = 'Sidekick';
 const SITE = 'https://getsidekick.app';
 // Also tell FROM about each new sign-up ("New on the wishlist: …").
 const NOTIFY_OWNER = true;
+
+const SMTP_HOST = 'ssl0.ovh.net';
+const SMTP_PORT = 465;
 
 const MAX_PER_HOUR = 5;        // sign-ups per visitor (by a hash of their IP)
 
@@ -149,15 +158,90 @@ function send_welcome(string $email, string $token): bool {
         @mkdir($out, 0700);
         return file_put_contents("$out/" . date('Ymd-His') . "-$email.txt", "To: $email\r\nSubject: $subject\r\n\r\n$body") !== false;
     }
-    $headers = implode("\r\n", [
-        'From: ' . FROM_NAME . ' <' . FROM . '>',
-        'Reply-To: ' . FROM,
+    return send_mail($email, $subject, $body, FROM_NAME, FROM, ['List-Unsubscribe: <' . $remove . '>']);
+}
+
+function mail_log(string $line): void {
+    try {
+        file_put_contents(data_dir() . '/mail.log', gmdate('Y-m-d H:i:s') . " $line\n", FILE_APPEND);
+    } catch (Throwable $e) {
+    }
+    error_log("Sidekick wishlist: $line");
+}
+
+/** The mailbox password, from wishlist-config.php (not in git). */
+function smtp_password(): ?string {
+    $file = __DIR__ . '/wishlist-config.php';
+    if (!is_readable($file)) return null;
+    $config = include $file;
+    $p = is_array($config) ? ($config['smtp_password'] ?? '') : '';
+    return $p !== '' ? $p : null;
+}
+
+/** Sends a plain-text email: through OVHcloud's mail server when the
+ *  password is set, otherwise with mail(). False (and a log line) if not. */
+function send_mail(string $to, string $subject, string $body, string $fromName, string $replyTo, array $extra = []): bool {
+    $subj = '=?UTF-8?B?' . base64_encode($subject) . '?=';
+    $headers = array_merge([
+        'From: ' . $fromName . ' <' . FROM . '>',
+        'Reply-To: ' . $replyTo,
         'MIME-Version: 1.0',
         'Content-Type: text/plain; charset=UTF-8',
         'Content-Transfer-Encoding: 8bit',
-        'List-Unsubscribe: <' . $remove . '>',
-    ]);
-    return mail($email, $subject, $body, $headers, '-f' . FROM);
+    ], $extra);
+    $password = smtp_password();
+    if ($password !== null) {
+        $error = smtp_send($to, $subj, $body, $headers, $password);
+        if ($error === null) return true;
+        mail_log("SMTP to $to failed: $error");
+        return false;
+    }
+    // No password: PHP's mail(), first with the envelope sender, then without
+    // (some hosts refuse the -f option).
+    $h = implode("\r\n", $headers);
+    if (@mail($to, $subj, $body, $h, '-f' . FROM) || @mail($to, $subj, $body, $h)) return true;
+    mail_log("mail() to $to failed (no SMTP password set in wishlist-config.php)");
+    return false;
+}
+
+/** A small SMTP client: SSL, AUTH LOGIN as FROM. Null on success, else why. */
+function smtp_send(string $to, string $subject, string $body, array $headers, string $password): ?string {
+    $ctx = stream_context_create(['ssl' => ['verify_peer' => true, 'verify_peer_name' => true]]);
+    $s = @stream_socket_client('ssl://' . SMTP_HOST . ':' . SMTP_PORT, $errno, $errstr, 15, STREAM_CLIENT_CONNECT, $ctx);
+    if (!$s) return "can't connect to " . SMTP_HOST . ": $errstr ($errno)";
+    stream_set_timeout($s, 15);
+    $read = function () use ($s): string {
+        $all = '';
+        while (($line = fgets($s, 1024)) !== false) {
+            $all .= $line;
+            if (strlen($line) < 4 || $line[3] === ' ') break;
+        }
+        return $all;
+    };
+    // [$label] names the step in the log: never the command itself, which
+    // for the login steps is the address and password.
+    $step = function (?string $cmd, string $want, string $label = '') use ($s, $read): ?string {
+        if ($cmd !== null) fwrite($s, $cmd . "\r\n");
+        $reply = $read();
+        return str_starts_with($reply, $want) ? null : trim(($label !== '' ? "$label: " : '') . $reply);
+    };
+    $host = parse_url(SITE, PHP_URL_HOST) ?: 'localhost';
+    // The message: dot-stuffed, CRLF line ends.
+    $data = implode("\r\n", array_merge(["To: <$to>", "Subject: $subject", 'Date: ' . date('r'),
+        'Message-ID: <' . bin2hex(random_bytes(12)) . '@' . $host . '>'], $headers)) . "\r\n\r\n"
+        . preg_replace('/^\./m', '..', str_replace(["\r\n", "\n"], ["\n", "\r\n"], $body));
+    $error = $step(null, '220', 'greeting')
+        ?? $step("EHLO $host", '250', 'EHLO')
+        ?? $step('AUTH LOGIN', '334', 'AUTH')
+        ?? $step(base64_encode(FROM), '334', 'login name')
+        ?? (($e = $step(base64_encode($password), '235')) !== null ? 'login refused (check the password in wishlist-config.php): ' . $e : null)
+        ?? $step('MAIL FROM:<' . FROM . '>', '250', 'MAIL FROM')
+        ?? $step("RCPT TO:<$to>", '25', 'RCPT TO')
+        ?? $step('DATA', '354', 'DATA')
+        ?? $step($data . "\r\n.", '250', 'message');
+    fwrite($s, "QUIT\r\n");
+    fclose($s);
+    return $error;
 }
 
 /** A short note to FROM about a new sign-up (never shown to the visitor). */
@@ -176,14 +260,7 @@ function notify_owner(string $email, array $devices, bool $sent): void {
         file_put_contents("$out/" . date('Ymd-His') . '-owner.txt', "To: " . FROM . "\r\nSubject: $subject\r\n\r\n$body");
         return;
     }
-    $headers = implode("\r\n", [
-        'From: ' . FROM_NAME . ' wishlist <' . FROM . '>',
-        'Reply-To: ' . $email,
-        'MIME-Version: 1.0',
-        'Content-Type: text/plain; charset=UTF-8',
-        'Content-Transfer-Encoding: 8bit',
-    ]);
-    @mail(FROM, $subject, $body, $headers, '-f' . FROM);
+    send_mail(FROM, $subject, $body, FROM_NAME . ' wishlist', $email);
 }
 
 function by_token(array &$rows, string $token): ?string {
@@ -193,6 +270,9 @@ function by_token(array &$rows, string $token): ?string {
     }
     return null;
 }
+
+// wishlist-check.php loads the functions above without handling a request.
+if (defined('WISHLIST_LIB')) return;
 
 try {
     if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['remove'])) {
@@ -250,7 +330,6 @@ try {
                 if (isset($rows[$email])) $rows[$email]['emailed'] = gmdate('Y-m-d H:i:s');
             });
         } else {
-            error_log("Sidekick wishlist: couldn't email $email");
         }
         if (NOTIFY_OWNER) notify_owner($email, $devices, $sent);
     }

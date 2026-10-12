@@ -25,12 +25,19 @@ and `#wishlist` (the old `#download` section) say "Join the wishlist", and
 `404.html` links there. **The wishlist is real** (`wishlist.php`, PHP only,
 no database: the owner's OVHcloud free plan): signing up puts the address
 on the list and emails "Got your email! We'll remind you when Sidekick
-comes out." (the owner's words; no confirm step) via `mail()` from `FROM`
-(`info@getsidekick.app`, the owner's mailbox), with a
+comes out." (the owner's words; no confirm step) from `FROM`
+(`info@getsidekick.app`, the owner's mailbox) **over SMTP to OVHcloud's
+mail server** (`ssl0.ovh.net:465`, logged in as `FROM`; PHP `mail()` never
+delivered on the hosting, so it's only a fallback), the password in
+`wishlist-config.php` next to it on the hosting, **never in git**
+(`.gitignore`; template `wishlist-config.example.php`); every failure goes
+to `sidekick-wishlist/mail.log` (never the password), with a
 remove link, and a note to `FROM` about each sign-up (`NOTIFY_OWNER`); a
 honeypot field, a 2-second minimum, and 5 tries an hour per hashed IP.
-`wishlist-check.php` (upload once, open, delete) checks the hosting: PHP,
-the private folder, and a test email to `FROM`. The list is `sidekick-wishlist/list.csv`,
+`wishlist-check.php` (upload once, open, delete) loads `wishlist.php`'s
+functions (`WISHLIST_LIB`) and checks the hosting: PHP, the private
+folder, openssl, the password, and a real test email to `FROM`, showing
+the log's reason if it fails. The list is `sidekick-wishlist/list.csv`,
 next to `www` (outside the web root; inside it behind a deny-all
 .htaccess only if that's not writable). On localhost (`php -S
 localhost:8000`) emails go to `sidekick-wishlist/outbox` instead. Both
