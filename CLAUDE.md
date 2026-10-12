@@ -27,7 +27,7 @@ no database: the owner's OVHcloud free plan): signing up puts the address
 on the list and emails "Got your email! We'll remind you when Sidekick
 comes out." (the owner's words; no confirm step) from `FROM`
 (`info@getsidekick.app`, the owner's mailbox) **over SMTP to OVHcloud's
-mail server** (`ssl0.ovh.net:465`, logged in as `FROM`; PHP `mail()` never
+mail server** (`ssl0.ovh.net`: 465 SSL, then 587 STARTTLS; 993 is IMAP, it can't send; logged in as `FROM`; PHP `mail()` never
 delivered on the hosting, so it's only a fallback), the password in
 `wishlist-config.php` next to it on the hosting, **never in git**
 (`.gitignore`; template `wishlist-config.example.php`); every failure goes
