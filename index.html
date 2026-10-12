@@ -451,6 +451,8 @@ img, svg { display: block; }
 .sendover h4 { font-size: 24px; font-weight: 750; letter-spacing: -.01em; margin: 8px 0 0; }
 .sendover p { margin: 0; color: var(--on-surface-variant); font-size: 14px; }
 .ring-wrap { position: relative; width: 150px; height: 150px; display: grid; place-items: center; }
+/* The rings sit behind the badge, both centred on the same point. */
+.ring-wrap .rings { position: absolute; inset: 0; }
 .ring-wrap .rings i {
   position: absolute; inset: 0; border-radius: 50%; border: 3px solid var(--primary); opacity: 0;
   animation: ping 2s var(--ease) infinite;
