@@ -173,6 +173,9 @@ function welcome_html(string $remove): string {
     $site = htmlspecialchars(SITE);
     $remove = htmlspecialchars($remove);
     $font = "font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif";
+    // Attached inline when the file is on the hosting (mime_body), else
+    // loaded from the site.
+    $img = is_file(__DIR__ . '/website/email-header.png') ? 'cid:header' : "$site/website/email-header.png";
     return <<<HTML
 <!doctype html>
 <html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
@@ -181,7 +184,7 @@ function welcome_html(string $remove): string {
 <div style="display:none;max-height:0;overflow:hidden">We'll remind you when Sidekick comes out.</div>
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f1edf8"><tr><td align="center" style="padding:24px 12px">
 <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="width:100%;max-width:600px;background:#ffffff;border-radius:24px;overflow:hidden">
-<tr><td><a href="$site"><img src="cid:header" width="600" alt="Sidekick: Your devices, together." style="display:block;width:100%;height:auto;border:0;background:#2a1257"></a></td></tr>
+<tr><td bgcolor="#2a1257" align="center" style="background:#2a1257"><a href="$site" style="color:#ffffff;text-decoration:none"><img src="$img" width="600" alt="Sidekick" style="display:block;width:100%;height:auto;border:0;background:#2a1257;color:#ffffff;$font;font-size:28px;font-weight:800;line-height:80px;text-align:center;text-decoration:none"></a></td></tr>
 <tr><td style="padding:36px 40px 8px;$font;color:#1d1530">
 <h1 style="margin:0 0 12px;font-size:30px;line-height:1.2;font-weight:800">Got your email!</h1>
 <p style="margin:0 0 16px;font-size:17px;line-height:1.55;color:#3d3550">We'll remind you when Sidekick comes out.</p>
