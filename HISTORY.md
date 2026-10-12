@@ -47,8 +47,8 @@ detailed developer notes, including every release in "Versions") and
   (never the password). Tested against a fake SMTP server.
 - "Got your email!" is now a **designed HTML email**: a header image
   (`website/email-header.png`: the glass "sk" logo, "Sidekick", "Your
-  devices, together." on the purple gradient), the message, a **"See what
-  Sidekick does" button**, and a "Remove my email" link; plain text inside
+  devices, together." on the purple gradient), the message, a **"Cancel my sign-up"
+  button** (the remove link; the header image links to the site); plain text inside
   too for apps that don't show HTML. The image is attached inline, so it
   shows even when web images are blocked.
 - `wishlist-check.php` sends a real test email the same way and shows the

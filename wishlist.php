@@ -182,16 +182,16 @@ function welcome_html(string $remove): string {
 <tr><td style="padding:36px 40px 8px;$font;color:#1d1530">
 <h1 style="margin:0 0 12px;font-size:30px;line-height:1.2;font-weight:800">Got your email!</h1>
 <p style="margin:0 0 16px;font-size:17px;line-height:1.55;color:#3d3550">We'll remind you when Sidekick comes out.</p>
-<p style="margin:0 0 26px;font-size:16px;line-height:1.55;color:#5d5670">Sidekick makes your phone and computer work as one: send files both ways, share your clipboard, use your phone as a touchpad, mirror its screen and more, on Windows, Mac, Android and iPhone. Free, with no account.</p>
+<p style="margin:0 0 16px;font-size:16px;line-height:1.55;color:#5d5670">Sidekick makes your phone and computer work as one: send files both ways, share your clipboard, use your phone as a touchpad, mirror its screen and more, on Windows, Mac, Android and iPhone. Free, with no account.</p>
+<p style="margin:0 0 22px;font-size:16px;line-height:1.55;color:#5d5670">Changed your mind? Cancel, and your email is taken off the list right away.</p>
 </td></tr>
 <tr><td align="center" style="padding:0 40px 30px">
 <table role="presentation" cellpadding="0" cellspacing="0"><tr><td align="center" bgcolor="#6a4cff" style="border-radius:14px;background:linear-gradient(100deg,#7b5cff,#c04fd8)">
-<a href="$site" style="display:inline-block;padding:15px 34px;$font;font-size:17px;font-weight:700;color:#ffffff;text-decoration:none;border-radius:14px">See what Sidekick does</a>
+<a href="$remove" style="display:inline-block;padding:15px 34px;$font;font-size:17px;font-weight:700;color:#ffffff;text-decoration:none;border-radius:14px">Cancel my sign-up</a>
 </td></tr></table>
 </td></tr>
 <tr><td style="padding:0 40px 32px;$font;font-size:14px;line-height:1.5;color:#8a8399;border-top:1px solid #eee8f6">
-<p style="margin:22px 0 6px">That's the only email you'll get until then. We never share your address.</p>
-<p style="margin:0">Changed your mind? <a href="$remove" style="color:#6a4cff">Remove my email</a></p>
+<p style="margin:22px 0 0">That's the only email you'll get until then. We never share your address.</p>
 </td></tr>
 </table>
 <p style="margin:18px 0 0;$font;font-size:13px;color:#a39cb3">Sidekick · <a href="$site" style="color:#a39cb3">getsidekick.app</a></p>
