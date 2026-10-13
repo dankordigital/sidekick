@@ -8,7 +8,6 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.media.MediaScannerConnection
-import android.media.projection.MediaProjectionManager
 import android.net.ConnectivityManager
 import android.net.Network
 import android.net.NetworkCapabilities
@@ -34,7 +33,6 @@ import java.io.IOException
  * Dart side uses for everything Android-specific: permissions, remote input,
  * the hotspot and the multicast lock.
  */
-private const val REQUEST_SCREEN = 7
 
 class MainActivity : FlutterActivity() {
     companion object {
@@ -181,24 +179,6 @@ class MainActivity : FlutterActivity() {
             }
     }
 
-    /** Android's "Start recording or casting with Sidekick?" (ScreenMirror.kt). */
-    private var consentReply: ((Int, Intent?) -> Unit)? = null
-
-    fun askScreenCapture(reply: (Int, Intent?) -> Unit) {
-        consentReply?.invoke(RESULT_CANCELED, null)
-        consentReply = reply
-        val manager = getSystemService(MediaProjectionManager::class.java)
-        startActivityForResult(manager.createScreenCaptureIntent(), REQUEST_SCREEN)
-    }
-
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        super.onActivityResult(requestCode, resultCode, data)
-        if (requestCode != REQUEST_SCREEN) return
-        val reply = consentReply
-        consentReply = null
-        reply?.invoke(resultCode, data)
-    }
-
     /** Back on the last screen sends Sidekick to the background (still
      *  receiving, with its notification) instead of closing it. */
     override fun popSystemNavigator(): Boolean {
@@ -217,7 +197,6 @@ class MainActivity : FlutterActivity() {
         multicastLock = null
         if (current === this) {
             current = null
-            ScreenMirror.cancelConsent()
             SidekickEngine.backgroundHandlers(applicationContext)
         }
         super.onDestroy()

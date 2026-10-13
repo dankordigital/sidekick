@@ -3,7 +3,6 @@ import AVFoundation
 import Flutter
 import NetworkExtension
 import Photos
-import ReplayKit
 import UserNotifications
 import UIKit
 
@@ -115,12 +114,6 @@ import UIKit
             id: args["id"] as? String ?? "", done: (args["done"] as? NSNumber)?.int64Value ?? 0,
             total: (args["total"] as? NSNumber)?.int64Value ?? 0, status: args["status"] as? String ?? "",
             end: call.method == "liveEnd", failed: args["failed"] as? Bool ?? false)
-          result(nil)
-        case "startBroadcast":
-          // Screen Mirroring: iOS's "Start Broadcast" sheet for Sidekick's
-          // broadcast extension (SidekickMirror), which sends the screen to
-          // the app on 127.0.0.1 (lib/platform/screen_source.dart).
-          BroadcastPicker.open()
           result(nil)
         case "joinHotspot":
           // Another device's network for a direct link (an Android phone's
@@ -538,35 +531,3 @@ final class LiveTransfers {
   }
 }
 
-/// Opens iOS's "Start Broadcast" sheet for Sidekick's broadcast extension.
-/// iOS only opens it from a tap on its own picker button, so the app adds an
-/// invisible picker and taps it.
-enum BroadcastPicker {
-  private static var picker: RPSystemBroadcastPickerView?
-
-  static func open() {
-    DispatchQueue.main.async {
-      picker?.removeFromSuperview()
-      let view = RPSystemBroadcastPickerView(frame: CGRect(x: 0, y: 0, width: 44, height: 44))
-      view.preferredExtension = (Bundle.main.bundleIdentifier ?? "dev.sidekick.sidekick") + ".Mirror"
-      view.showsMicrophoneButton = false
-      view.alpha = 0.011
-      view.isUserInteractionEnabled = false
-      let window = UIApplication.shared.connectedScenes
-        .compactMap { $0 as? UIWindowScene }
-        .flatMap { $0.windows }
-        .first { $0.isKeyWindow }
-      window?.addSubview(view)
-      picker = view
-      for case let button as UIButton in view.subviews {
-        button.sendActions(for: .touchUpInside)
-      }
-      DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
-        if picker === view {
-          view.removeFromSuperview()
-          picker = nil
-        }
-      }
-    }
-  }
-}

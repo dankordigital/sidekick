@@ -6,7 +6,6 @@ import '../platform/android.dart';
 import '../core/bluetooth.dart';
 import '../core/models.dart';
 import '../platform/autoload.dart';
-import 'mirror_page.dart';
 import 'permissions.dart';
 import 'theme_chooser.dart';
 import 'widgets.dart';
@@ -261,12 +260,6 @@ class _SettingsPageState extends State<SettingsPage> {
                       ],
                     ],
                   ),
-                  // Phones are what's mirrored (computers watch, on their
-                  // Screen Mirroring tab).
-                  if (!hostIsComputer) ...[
-                    const SectionLabel('Screen Mirroring', icon: Icons.cast_rounded),
-                    MirrorSettings(state: state),
-                  ],
                   const SectionLabel('Paired devices', icon: Icons.link_rounded),
                   _Group(
                     children: [

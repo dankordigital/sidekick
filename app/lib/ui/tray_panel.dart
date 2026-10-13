@@ -463,7 +463,7 @@ class _Footer extends StatelessWidget {
           ),
           IconButton(
             tooltip: 'Settings',
-            onPressed: () => window.openFromPanel(tab: 4),
+            onPressed: () => window.openFromPanel(tab: 3),
             color: Colors.white,
             style: IconButton.styleFrom(backgroundColor: Colors.white.withValues(alpha: 0.09)),
             icon: const Icon(Icons.settings_rounded, size: 20),

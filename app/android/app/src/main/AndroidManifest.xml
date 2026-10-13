@@ -13,8 +13,6 @@
     <!-- Keeps Wi-Fi awake while Sidekick runs in the background (SidekickService). -->
     <uses-permission android:name="android.permission.WAKE_LOCK" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_CONNECTED_DEVICE" />
-    <!-- Screen Mirroring: a paired computer sees this screen, after "Start now". -->
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PROJECTION" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <!-- Keep running: start at boot, and ask once to skip battery optimisation. -->
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
@@ -120,11 +118,6 @@
         <meta-data
             android:name="flutterEmbedding"
             android:value="2" />
-        <!-- Captures the screen while a computer mirrors it (ScreenMirror.kt). -->
-        <service
-            android:name=".ScreenCaptureService"
-            android:exported="false"
-            android:foregroundServiceType="mediaProjection" />
     </application>
     <!-- Required to query activities that can process text, see:
          https://developer.android.com/training/package-visibility and

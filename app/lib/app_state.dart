@@ -28,7 +28,6 @@ import 'platform/gallery.dart';
 import 'platform/ios.dart';
 import 'platform/hotspot.dart';
 import 'platform/macos.dart';
-import 'platform/notifications.dart';
 import 'platform/input.dart';
 import 'platform/secret_store.dart';
 import 'platform/sound.dart';
@@ -334,64 +333,6 @@ class AppState extends ChangeNotifier {
   Stream<ManualJoin> get manualJoins => _manualJoins.stream;
 
   final _pings = StreamController<TrustedPeer>.broadcast();
-  final _mirrorRequests = StreamController<MirrorRequest>.broadcast();
-
-  /// A paired device asks to see this computer's screen (Screen Mirroring).
-  Stream<MirrorRequest> get mirrorRequests => _mirrorRequests.stream;
-
-  /// Who sees this computer's screen right now (Screen Mirroring), if anyone.
-  TrustedPeer? mirroringTo;
-
-  /// Devices allowed to mirror this screen without asking.
-  Set<String> mirrorAlways = {};
-
-  void stopMirroring() => server.stopMirroring();
-
-  void forgetMirrorAlways(String id) {
-    mirrorAlways.remove(id);
-    _prefs.setStringList('mirrorAlways', mirrorAlways.toList());
-    notifyListeners();
-  }
-
-  Future<bool> _approveMirror(TrustedPeer peer) async {
-    if (mirrorAlways.contains(peer.id)) {
-      // Starting asks the phone's own question (Android's Start now, iOS's
-      // Start Broadcast), which needs Sidekick on screen.
-      if (_onScreen) return true;
-      OfferNotifications.showMirror(peer.name, ask: false);
-      return _untilOnScreen(const Duration(seconds: 55));
-    }
-    final request = MirrorRequest._(peer);
-    if (sound) unawaited(playRequestSound());
-    OfferNotifications.showMirror(peer.name, ask: true);
-    _mirrorRequests.add(request);
-    final answer = await request._answer.future;
-    OfferNotifications.cancelMirror();
-    if (answer == _MirrorAnswer.always) {
-      mirrorAlways.add(peer.id);
-      await _prefs.setStringList('mirrorAlways', mirrorAlways.toList());
-    }
-    return answer != _MirrorAnswer.deny;
-  }
-
-  bool get _onScreen => WidgetsBinding.instance.lifecycleState == AppLifecycleState.resumed;
-
-  /// Waits for Sidekick to be opened; false if it isn't within [limit].
-  Future<bool> _untilOnScreen(Duration limit) async {
-    if (_onScreen) return true;
-    final opened = Completer<bool>();
-    final listener = AppLifecycleListener(
-      onResume: () {
-        if (!opened.isCompleted) opened.complete(true);
-      },
-    );
-    try {
-      return await opened.future.timeout(limit, onTimeout: () => false);
-    } finally {
-      listener.dispose();
-      OfferNotifications.cancelMirror();
-    }
-  }
 
   /// A paired device pinged this one: it rings until Found It ([foundIt]).
   Stream<TrustedPeer> get pings => _pings.stream;
@@ -473,12 +414,7 @@ class AppState extends ChangeNotifier {
     welcomed = _prefs.getBool('welcomed') ?? false;
     bluetoothOn = _prefs.getBool('bluetooth') ?? false;
     iphoneRemoteNoticeSeen = _prefs.getBool('iphoneRemoteNotice') ?? false;
-    permissions = Permissions(
-      files: _prefs.getBool('allowFiles') ?? true,
-      input: _prefs.getBool('allowInput') ?? true,
-      mirror: _prefs.getBool('allowMirror') ?? true,
-    );
-    mirrorAlways = {...?_prefs.getStringList('mirrorAlways')};
+    permissions = Permissions(files: _prefs.getBool('allowFiles') ?? true, input: _prefs.getBool('allowInput') ?? true);
     _receiveDir = _prefs.getString('receiveDir');
     selectedId = _prefs.getString('selectedId');
   }
@@ -593,7 +529,6 @@ class AppState extends ChangeNotifier {
       inputReady: _inputReady,
       askBeforeReceiving: () => askBeforeReceiving,
       ringing: () => ringingFrom != null,
-      approveMirror: _approveMirror,
     );
     server.events.listen(_onServerEvent);
     await _startServer();
@@ -1647,9 +1582,6 @@ class AppState extends ChangeNotifier {
             ? 'Allow Sidekick in Settings → Accessibility (if it\'s already on there, remove it and add it again).'
             : 'Allow remote control in Settings.';
         _notices.add(Notice('${peer.name} tried to control this device. $where'));
-      case MirrorSessionChanged(:final peer, :final active):
-        mirroringTo = active ? peer : null;
-        notifyListeners();
       case RemoteSessionChanged(:final peer, :final active):
         if (active) {
           activeRemoteSessions[peer.id] = peer;
@@ -1930,8 +1862,7 @@ class AppState extends ChangeNotifier {
     permissions = value;
     _prefs
       ..setBool('allowFiles', value.files)
-      ..setBool('allowInput', value.input)
-      ..setBool('allowMirror', value.mirror);
+      ..setBool('allowInput', value.input);
     discovery.announce();
     notifyListeners();
   }
@@ -1970,24 +1901,5 @@ Future<void> revealInFolder(String path) async {
     await Process.run('open', ['-R', path]);
   } else if (Platform.isLinux) {
     await Process.run('xdg-open', [p.dirname(path)]);
-  }
-}
-
-enum _MirrorAnswer { once, always, deny }
-
-/// [peer] asks to see this computer's screen; answered once.
-class MirrorRequest {
-  MirrorRequest._(this.peer);
-  final TrustedPeer peer;
-  final _answer = Completer<_MirrorAnswer>();
-
-  bool get answered => _answer.isCompleted;
-
-  void allow({bool always = false}) {
-    if (!answered) _answer.complete(always ? _MirrorAnswer.always : _MirrorAnswer.once);
-  }
-
-  void deny() {
-    if (!answered) _answer.complete(_MirrorAnswer.deny);
   }
 }

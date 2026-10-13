@@ -51,9 +51,6 @@ object SidekickEngine {
                 else -> result.notImplemented()
             }
         }
-        MethodChannel(engine.dartExecutor.binaryMessenger, "sidekick/mirror").setMethodCallHandler { call, result ->
-            ScreenMirror.handle(app, call, result)
-        }
         android = MethodChannel(engine.dartExecutor.binaryMessenger, "sidekick/android")
         backgroundHandlers(app)
         engine.dartExecutor.executeDartEntrypoint(DartExecutor.DartEntrypoint.createDefault())
