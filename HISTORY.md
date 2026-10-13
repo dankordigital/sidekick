@@ -34,6 +34,14 @@ detailed developer notes, including every release in "Versions") and
 
 ## History
 
+### 2.16.1, admin panel, Mac icon looks (13 Oct)
+- M1 app was dead in 2.16.0 (no background, buttons dead): the see-through
+  glass window was removed; the Mac draws its own glass.
+- `np7dpanel.php`: password-protected panel that emails the whole list in
+  batches (tested against a fake SMTP server). Password comes from
+  wishlist-config.php, never git.
+- `website/mac-icons/sidekick-mac-{default,dark,clear,tinted}.png`.
+
 ### Sidekick 2.16.0: Mac per chip, real glass (13 Oct)
 - Owner: M1 Mac showed no pairing code/QR; Liquid Glass "doesn't make
   anything liquid glass"; wanted separate ARM and Intel Mac versions.

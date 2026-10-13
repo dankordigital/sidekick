@@ -10,7 +10,7 @@ website (`index.html` at the top of the repo; its images live in
 **https://getsidekick.app**, the official domain (the owner's, hosting on
 OVHcloud; it was at sk.dankor.digital on cyber_Folks before). Use
 getsidekick.app wherever an address is shown (ads, trailers, the app).
-The owner uploads with FileZilla: `index.html`, `wishlist.php`, `privacy.html`,
+The owner uploads with FileZilla: `index.html`, `wishlist.php`, `np7dpanel.php`, `privacy.html`,
 `404.html`, `.htaccess`, `robots.txt` and `website/` go in the site's root
 folder (`www`). The
 pages link only with relative or `/…` paths, so nothing in them names the
@@ -46,6 +46,14 @@ localhost:8000`) emails go to `sidekick-wishlist/outbox` instead. Both
 privacy policies describe exactly this; keep them true if it changes.
 The download tiles and `RELEASE` links are in git history (2.12.0) for when
 downloads come back.
+**`np7dpanel.php`** (the owner's name for it; not linked anywhere): the
+admin panel that emails everyone on the list. Its password is
+`admin_password` in `wishlist-config.php`, or the mailbox password if that
+isn't set; **never in git**. 5 wrong tries per 15 minutes per visitor,
+session cookie (Strict), CSRF token. Sends in batches of 8 from the page,
+each with the person's own remove link and `List-Unsubscribe`; who got a
+send is kept in `sidekick-wishlist/sends/<id>.txt`, so sending the same text
+again skips them. "Send a test" goes to `FROM` first.
 
 **Every change must work on all four platforms.**
 
@@ -450,14 +458,21 @@ one) without asking.
 
 ## Versions
 
+### 2.16.1
+- **Fixed: the Apple-silicon Mac app had no background and its buttons did
+  nothing** (2.16.0's see-through glass window). The Mac draws its glass
+  itself again.
+- The welcome email no longer mentions the clipboard or Screen Mirroring.
+- Mac icon pictures in all four macOS looks (Default, Dark, Clear, Tinted):
+  `website/mac-icons/`, made by `app/tool/mac_icon_looks.py`.
+
 ### 2.16.0
 - **Separate Mac apps for Apple silicon and Intel:** each release has an
   Apple-silicon and an Intel `.dmg` and `.pkg`, each with only its own code.
 - **Fixed: an M1 Mac showed no pairing code or QR code** with Liquid Glass
   on (the glass view drawn inside the window covered them).
-- **Liquid Glass that looks like it:** on the Mac the whole window is
-  Apple's glass, the desktop showing through; on iPhone the backdrop has
-  color again (even with Pure black or Monochrome) for the glass to show.
+- **Liquid Glass that looks like it:** on iPhone the backdrop has color
+  again (even with Pure black or Monochrome) for the glass to show.
 
 ### 2.15.1
 - **Liquid Glass: nothing hides behind the tab bar** any more: like the

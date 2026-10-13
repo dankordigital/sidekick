@@ -195,6 +195,19 @@ jobs:
             # Nothing of the other kind left inside.
             lipo -archs "build/arch-$arch/Sidekick.app/Contents/MacOS/"* | grep -qx "$arch"
           done
+          # The Apple-silicon app must start and keep running on this (Apple
+          # silicon) runner: a crash on launch is reported in the log.
+          exe="$(ls build/arch-arm64/Sidekick.app/Contents/MacOS/* | head -1)"
+          "$exe" > build/launch.log 2>&1 &
+          pid=$!
+          sleep 20
+          if kill -0 "$pid" 2>/dev/null; then
+            echo "Apple-silicon app still running after 20 s"
+            kill "$pid" || true
+          else
+            echo "::warning::The Apple-silicon app quit on launch"
+            cat build/launch.log || true
+          fi
 
       # For each: a disk image with the app and a shortcut to Applications to
       # drag it to, and an installer package (welcome page, privacy policy;

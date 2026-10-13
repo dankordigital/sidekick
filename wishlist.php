@@ -149,9 +149,10 @@ function send_welcome(string $email, string $token): bool {
     $subject = 'Got your email!';
     $body = "Hi!\r\n\r\n"
         . "Got your email! We'll remind you when Sidekick comes out.\r\n\r\n"
-        . "Sidekick makes your phone and computer work as one: send files both ways, share\r\n"
-        . "your clipboard, use your phone as a touchpad, mirror its screen and more, on\r\n"
-        . "Windows, Mac, Android and iPhone. Free, with no account.\r\n\r\n"
+        . "Sidekick makes your phone and computer work as one: send files both ways, use\r\n"
+        . "your phone as a touchpad and keyboard, see your phone's notifications and\r\n"
+        . "screenshots on your computer and more, on Windows, Mac, Android and iPhone.\r\n"
+        . "Free, with no account.\r\n\r\n"
         . "That's the only email you'll get until then. We never share your address.\r\n\r\n"
         . "Changed your mind? Remove your email from the list:\r\n"
         . "$remove\r\n\r\n"
@@ -185,7 +186,7 @@ function welcome_html(string $remove): string {
 <tr><td style="padding:36px 40px 8px;$font;color:#1d1530">
 <h1 style="margin:0 0 12px;font-size:30px;line-height:1.2;font-weight:800">Got your email!</h1>
 <p style="margin:0 0 16px;font-size:17px;line-height:1.55;color:#3d3550">We'll remind you when Sidekick comes out.</p>
-<p style="margin:0 0 16px;font-size:16px;line-height:1.55;color:#5d5670">Sidekick makes your phone and computer work as one: send files both ways, share your clipboard, use your phone as a touchpad, mirror its screen and more, on Windows, Mac, Android and iPhone. Free, with no account.</p>
+<p style="margin:0 0 16px;font-size:16px;line-height:1.55;color:#5d5670">Sidekick makes your phone and computer work as one: send files both ways, use your phone as a touchpad and keyboard, see your phone's notifications and screenshots on your computer and more, on Windows, Mac, Android and iPhone. Free, with no account.</p>
 <p style="margin:0 0 22px;font-size:16px;line-height:1.55;color:#5d5670">Changed your mind? Cancel, and your email is taken off the list right away.</p>
 </td></tr>
 <tr><td align="center" style="padding:0 40px 30px">

@@ -37,14 +37,9 @@ Color glassRim(ColorScheme scheme) =>
     Colors.white.withValues(alpha: scheme.brightness == Brightness.dark ? 0.14 : 0.55);
 
 /// The real thing: Apple's Liquid Glass views (UIGlassEffect on iOS 26,
-/// as a platform view; the Mac's is the window itself, [windowGlass]). Elsewhere (and in the
+/// as a platform view; on the Mac Sidekick draws its own). Elsewhere (and in the
 /// screenshot tool) [GlassPanel] draws a frosted look of its own.
 bool get nativeGlass => Platform.isIOS && (appleOsMajor ?? 0) >= 26;
-
-/// macOS 26: the whole window stands on Apple's glass (NSGlassEffectView
-/// behind Sidekick, `setGlass` on `sidekick/macos`), so the desktop shows
-/// through, blurred; the backdrop then stays almost clear.
-bool get windowGlass => Platform.isMacOS && (appleOsMajor ?? 0) >= 26;
 
 /// Frosted glass: blurs what's behind it, tints it and draws a bright rim.
 class GlassPanel extends StatelessWidget {
@@ -125,13 +120,6 @@ class GlassBackdrop extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final dark = scheme.brightness == Brightness.dark;
-    // The Mac's window is Apple's glass already: only a light tint on top.
-    if (windowGlass) {
-      return ColoredBox(
-        color: scheme.surface.withValues(alpha: dark ? 0.25 : 0.2),
-        child: child,
-      );
-    }
     RadialGradient blob(Alignment at, Color color, double radius) => RadialGradient(
       center: at,
       radius: radius,

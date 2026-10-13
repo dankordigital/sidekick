@@ -52,49 +52,6 @@ class MainFlutterWindow: NSWindow {
     super.makeKeyAndOrderFront(sender)
   }
 
-  /// Settings → Theme → Liquid Glass (macOS 26): Apple's glass behind the
-  /// whole window, the Flutter view see-through on top of it.
-  private var glassView: NSView?
-
-  func setGlass(_ on: Bool) {
-    guard let content = contentView, let frameView = content.superview else { return }
-    glassView?.removeFromSuperview()
-    glassView = nil
-    let flutter = contentViewController as? FlutterViewController
-    guard on else {
-      isOpaque = true
-      backgroundColor = .windowBackgroundColor
-      flutter?.backgroundColor = .windowBackgroundColor
-      return
-    }
-    let glass: NSView
-    #if compiler(>=6.2)
-    if #available(macOS 26.0, *) {
-      glass = NSGlassEffectView()
-    } else {
-      glass = Self.vibrancy()
-    }
-    #else
-    glass = Self.vibrancy()
-    #endif
-    glass.frame = frameView.bounds
-    glass.autoresizingMask = [.width, .height]
-    frameView.addSubview(glass, positioned: .below, relativeTo: content)
-    glassView = glass
-    isOpaque = false
-    backgroundColor = .clear
-    flutter?.backgroundColor = .clear
-  }
-
-  /// Before macOS 26: the desktop, blurred, behind the window.
-  private static func vibrancy() -> NSView {
-    let blur = NSVisualEffectView()
-    blur.material = .underWindowBackground
-    blur.blendingMode = .behindWindow
-    blur.state = .active
-    return blur
-  }
-
   override func awakeFromNib() {
     let flutterViewController = FlutterViewController()
     let windowFrame = self.frame
@@ -149,9 +106,6 @@ final class SidekickNative {
 
   func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
     switch call.method {
-    case "setGlass":
-      (window as? MainFlutterWindow)?.setGlass((call.arguments as? [String: Any])?["on"] as? Bool ?? false)
-      result(nil)
     case "showNotification":
       // A phone's notification or a screenshot that arrived, in Notification
       // Center (asks once).
