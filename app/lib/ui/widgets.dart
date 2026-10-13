@@ -161,33 +161,26 @@ class PageFrame extends StatelessWidget {
 class SectionLabel extends StatelessWidget {
   const SectionLabel(this.text, {super.key, this.icon});
   final String text;
+
+  /// Kept for callers; section titles are plain text (no icons).
   final IconData? icon;
 
   @override
-  Widget build(BuildContext context) {
-    final color = Theme.of(context).colorScheme.primary;
-    return Padding(
-      padding: const EdgeInsets.only(top: 24, bottom: 10, left: 4),
-      child: Row(
-        children: [
-          if (icon != null) ...[Icon(icon, size: 18, color: color), const SizedBox(width: 8)],
-          Flexible(
-            child: Text(
-              text,
-              style: Theme.of(context).textTheme.titleSmall?.copyWith(color: color, fontWeight: FontWeight.w700),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+  Widget build(BuildContext context) => Padding(
+    padding: const EdgeInsets.only(top: 28, bottom: 8, left: 16),
+    child: Text(
+      text,
+      style: Theme.of(context).textTheme.labelLarge
+          ?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant, fontWeight: FontWeight.w500),
+    ),
+  );
 }
 
 /// Which container color an [IconTile] uses.
 enum TileTone { primary, secondary, tertiary, error }
 
-/// A small rounded square with a tinted icon: the leading icon of settings
-/// rows and list items.
+/// The leading icon of settings rows and list items: a plain icon in the
+/// row's quiet color (only [TileTone.error] stands out).
 class IconTile extends StatelessWidget {
   const IconTile(this.icon, {super.key, this.tone = TileTone.secondary, this.size = 40});
   final IconData icon;
@@ -197,17 +190,10 @@ class IconTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    final (bg, fg) = switch (tone) {
-      TileTone.primary => (scheme.primaryContainer, scheme.onPrimaryContainer),
-      TileTone.secondary => (scheme.secondaryContainer, scheme.onSecondaryContainer),
-      TileTone.tertiary => (scheme.tertiaryContainer, scheme.onTertiaryContainer),
-      TileTone.error => (scheme.errorContainer, scheme.onErrorContainer),
-    };
-    return Container(
-      width: size,
+    return SizedBox(
+      width: size * 0.6,
       height: size,
-      decoration: BoxDecoration(color: bg, borderRadius: BorderRadius.circular(size * 0.32)),
-      child: Icon(icon, size: size * 0.52, color: fg),
+      child: Icon(icon, size: 22, color: tone == TileTone.error ? scheme.error : scheme.onSurfaceVariant),
     );
   }
 }
@@ -224,7 +210,7 @@ class Entrance extends StatefulWidget {
 }
 
 class _EntranceState extends State<Entrance> with SingleTickerProviderStateMixin {
-  static const _step = 60, _length = 420;
+  static const _step = 0, _length = 180;
   late final AnimationController _c = AnimationController(
     vsync: this,
     duration: Duration(milliseconds: _length + _step * widget.index.clamp(0, 8)),
@@ -251,10 +237,7 @@ class _EntranceState extends State<Entrance> with SingleTickerProviderStateMixin
   @override
   Widget build(BuildContext context) => AnimatedBuilder(
     animation: _t,
-    builder: (context, child) => Opacity(
-      opacity: _t.value,
-      child: Transform.translate(offset: Offset(0, 18 * (1 - _t.value)), child: child),
-    ),
+    builder: (context, child) => Opacity(opacity: _t.value, child: child),
     child: widget.child,
   );
 }
@@ -362,8 +345,7 @@ class EmptyState extends StatelessWidget {
   }
 }
 
-/// A rounded square in the theme's primary → tertiary gradient with an icon:
-/// Sidekick's signature shape (welcome screen, empty states, hero cards).
+/// An icon in a soft, flat rounded square (welcome screen, empty states).
 class GradientBadge extends StatelessWidget {
   const GradientBadge({super.key, required this.icon, this.size = 56});
   final IconData icon;
@@ -375,31 +357,19 @@ class GradientBadge extends StatelessWidget {
     return Container(
       width: size,
       height: size,
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [scheme.primary, scheme.tertiary],
-        ),
-        borderRadius: BorderRadius.circular(size * 0.32),
-        boxShadow: [
-          BoxShadow(
-            color: scheme.primary.withValues(alpha: 0.25),
-            blurRadius: size * 0.3,
-            offset: Offset(0, size * 0.08),
-          ),
-        ],
-      ),
-      child: Icon(icon, size: size * 0.48, color: scheme.onPrimary),
+      decoration: BoxDecoration(color: scheme.surfaceContainerHighest, borderRadius: BorderRadius.circular(size * 0.3)),
+      child: Icon(icon, size: size * 0.46, color: scheme.onSurface),
     );
   }
 }
 
-/// A small rounded label for statuses: an icon, or a colored dot.
+/// A status: a small colored dot (or icon) and a word, no background.
 class StatusPill extends StatelessWidget {
   const StatusPill({super.key, required this.label, required this.color, this.background, this.icon});
   final String label;
   final Color color;
+
+  /// Kept for callers; statuses have no background.
   final Color? background;
 
   /// Shown in [color] instead of the dot.
@@ -408,36 +378,27 @@ class StatusPill extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 250),
-      padding: EdgeInsets.fromLTRB(icon == null ? 10 : 8, 4, 10, 4),
-      decoration: BoxDecoration(
-        color: background ?? scheme.surfaceContainerHighest,
-        borderRadius: BorderRadius.circular(999),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          if (icon != null)
-            Icon(icon, size: 15, color: color)
-          else
-            AnimatedContainer(
-              duration: const Duration(milliseconds: 250),
-              width: 8,
-              height: 8,
-              decoration: BoxDecoration(color: color, shape: BoxShape.circle),
-            ),
-          const SizedBox(width: 6),
-          Flexible(
-            child: Text(
-              label,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: Theme.of(context).textTheme.labelMedium?.copyWith(color: scheme.onSurfaceVariant),
-            ),
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        if (icon != null)
+          Icon(icon, size: 14, color: color)
+        else
+          Container(
+            width: 7,
+            height: 7,
+            decoration: BoxDecoration(color: color, shape: BoxShape.circle),
           ),
-        ],
-      ),
+        const SizedBox(width: 6),
+        Flexible(
+          child: Text(
+            label,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
+          ),
+        ),
+      ],
     );
   }
 }

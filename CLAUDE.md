@@ -146,8 +146,8 @@ its biggest features and fixes (see [Releasing](#releasing)). The history starts
   (`togglePanel`; Mac under the menu bar at the icon, Windows above the
   taskbar's corner), deep purple gradient in the theme's hue with a glow,
   translucent cards: "Sidekick: Ready", encrypted / ready to receive and
-  the network, Clipboard (on/off), the last file received (Show), every
-  paired device with Send / Clipboard / Ping, a "Did you know?" tip, and
+  the network, the last file received (Show), every
+  paired device with Send / Ping, a "Did you know?" tip, and
   Open Sidekick / Settings / Quit. It takes the focus and closes when it
   loses it (`onWindowBlur`; not while its file picker is open,
   `holdPanel`). With the main window open, the icon just brings it
@@ -339,27 +339,6 @@ its biggest features and fixes (see [Releasing](#releasing)). The history starts
   certificate fingerprint, and falls back to Bluetooth. Camera: iOS
   `NSCameraUsageDescription`; Android's permission comes from the plugin.
   The Mac has no camera permission (it never scans).
-- **Shared clipboard** (`platform/clipboard.dart` `ClipboardWatcher`,
-  `/v1/clipboard`, Settings → Share clipboard, on by default; text only, up
-  to 256 KB): what's copied here goes to every paired device in reach (same
-  network, Apple's link, or Bluetooth where allowed; never opens a network
-  for it), and what they send lands in this clipboard ("Copied from …").
-  Windows polls `GetClipboardSequenceNumber` (FFI), the Mac
-  `NSPasteboard.changeCount` (`clipboardState`), Android listens
-  (`sidekick/clipboard`, only while on screen: Android's rule) and on
-  coming back checks the clip's timestamp (`stamp`, no toast), the iPhone
-  checks `UIPasteboard.changeCount` every second while on screen
-  (`clipboardState` on `sidekick/ios`; iOS hands out nothing in the
-  background, and asks "Allow Paste?" per read unless Settings → Sidekick →
-  Paste from Other Apps is Allow: a one-time tip and a Settings row open
-  that page, `openSettings`). Automatic everywhere (the owner's call: no
-  tapping); the card's Clipboard button still sends by hand. A copy
-  waits for devices out of reach (`_clipPending`, 3 minutes) and goes when
-  they're back (`_deliverClip` on `_onFound` and every presence check), so
-  failed sends retry too; 403/404 (off there, old release) stop it. Never shared: Windows
-  `ExcludeClipboardContentFromMonitorProcessing` / `Clipboard Viewer
-  Ignore`, Mac `ConcealedType` / `TransientType`, Android 13
-  `EXTRA_IS_SENSITIVE`. `_lastClip` stops echoes.
 - **Live Activities** (iPhone, iOS 16.2+): a transfer's progress on the
   Lock Screen and in the Dynamic Island, for files coming in (once
   accepted) and going out with Send (`platform/live_activity.dart`
@@ -374,35 +353,28 @@ its biggest features and fixes (see [Releasing](#releasing)). The history starts
   `NSSupportsLiveActivities` is on in Info.plist. When adding objects to
   the .pbxproj by hand, use IDs nothing else has (2.7.0's first push reused
   the app icon's and Xcode called the project damaged).
-- **Screen Mirroring** (2.13.0, the owner's call: phones are watched, Mac
-  and Windows watch; computer screens may come later, their capture code
-  was set aside): the Mirroring tab exists **only on computers**
-  (`hostIsComputer`; Settings is tab 4 there, 3 on phones) and lists paired
-  phones. `core/mirror.dart`: packets of changed 64 px tiles, exact pixels
-  (lossless), zlib level 1 in a worker isolate, one binary WebSocket
-  message each on `/v1/mirror` (pinned TLS); flags say RGBA (Android) and
-  quarter turns (an iPhone app held sideways); at most two frames in
-  flight (`ack`); Fast (half size each way, the default) / Sharp switch
-  without restarting (`{t: sharp}`). The phone asks first
-  (`showMirrorRequest`: Don't allow / Always allow / Allow, a notification
-  when it's in the background), then the system asks.
-  `platform/screen_source.dart`:
-  - Android `AndroidScreen` → `ScreenMirror.kt` on the engine's
-    `sidekick/mirror`: MediaProjection consent (needs MainActivity, every
-    session), `ScreenCaptureService` (foreground, mediaProjection type,
-    Stop in its notification), a virtual display into an RGBA ImageReader,
-    resized when the phone turns, tiles compared in Kotlin.
-  - iPhone `IphoneScreen`: the **SidekickMirror** broadcast upload extension
-    (`ios/SidekickMirror/SampleHandler.swift`, its own target, bundle id
-    `….Mirror`, renamed by the TestFlight job like LiveActivity) converts
-    ReplayKit's frames with vImage, compares tiles, and answers the app over
-    a loopback TCP socket on 53319 (`BroadcastLink`: `SKB1`, then `N` /
-    `K` / `S` / `F` / `Q`). Never through the main server port. The app opens
-    the Start Broadcast sheet by tapping a hidden `RPSystemBroadcastPickerView`
-    (`startBroadcast`); Control Center's Screen Recording → Sidekick works
-    too. Extensions get ~50 MB: no extra frame copies there.
-  Tested in `test/mirror_test.dart` (pixel-exact end to end, the loopback
-  link).
+- **Phone notifications on computers** (2.15.0, Android only: iOS lets
+  no app see others' notifications; Settings → Show notifications on
+  computers, pref `relayNotifications`, off by default): `NotificationRelay`
+  (PhoneRelay.kt, a NotificationListenerService the user allows in
+  Notification access) skips ongoing, private, summary and system ones and
+  calls Dart on `sidekick/phone`; `AppState._relayNotification` posts
+  `/v1/notification` {app, title, text} to paired computers in reach. Macs
+  and PCs show it with `platform/desktop_notify.dart`: Notification Center
+  (`showNotification` on `sidekick/macos`, `MacNotifications`) or a Windows
+  toast through PowerShell under the AUMID `Sidekick.Sidekick`, which the
+  installer's Start menu shortcut carries (`sidekick.iss`).
+- **Screenshots to computers** (2.15.0, phones; Settings → Send screenshots
+  to computers, pref `sendScreenshots`, off by default): Android's
+  `ScreenshotWatcher` (MediaStore observer, READ_MEDIA_IMAGES) and the
+  iPhone's `ScreenshotWatcher` in AppDelegate.swift (PHPhotoLibrary change
+  observer, full read access; "Limited" never sees new ones; only while
+  Sidekick runs) copy each new screenshot to a temp file and call
+  `screenshot` on `sidekick/phone`; it goes over Wi-Fi only to
+  `/v1/screenshot` (no Accept; straight into the receive folder,
+  `FileReceived.screenshot`), and the computer shows a notification.
+- **No shared clipboard and no Screen Mirroring** (removed in 2.15.0, the
+  owner's call: mirroring was too laggy). Don't bring them back.
 - **Always running on phones** (2.13.0): Android keeps one Flutter engine
   outside the screen (`KeepRunning.kt` `SidekickEngine`, cached;
   MainActivity borrows it and never destroys it), `SidekickService` is
@@ -413,8 +385,7 @@ its biggest features and fixes (see [Releasing](#releasing)). The history starts
   MainActivity takes over while open. iPhone: `KeepAlive` in AppDelegate
   plays silence (mixes with others) and revives itself after interruptions,
   route changes, media resets and via a 5 s watchdog. iOS still stops apps
-  swiped away and never lets one read the clipboard in the background (it's
-  checked on resume); writing what arrives works.
+  swiped away.
 - **Ping** (`/v1/ping`, the card's Ping button): the other device rings
   the owner's ringtone (`tool/sounds/ping_ringtone.mp3` → `ping.wav`, kept
   whole and loud by `prepare_sounds.py`) **on repeat until Found It!** on
@@ -476,6 +447,20 @@ one) without asking.
 4. Add the version to [Versions](#versions) below.
 
 ## Versions
+
+### 2.15.0
+- **Simpler, calmer look:** plain rows instead of gradient cards and
+  tinted icon tiles, quiet section titles, one Send button per device with
+  Browse files, Remote control, Ping and Unpair in its ⋯ menu, and short
+  fades instead of bouncing animations.
+- **Real Liquid Glass tab bar on iPhone (iOS 26):** with Liquid Glass on,
+  the tab bar is Apple's own, swipeable from tab to tab.
+- **Phone notifications on your computer** (Android): Settings → Show
+  notifications on computers; they appear in the Mac's Notification Center
+  or as Windows notifications.
+- **Screenshots go to your computer** as soon as you take them (iPhone and
+  Android): Settings → Send screenshots to computers.
+- **Removed:** the shared clipboard and Screen Mirroring.
 
 ### 2.14.0
 - **Liquid Glass on iPhone and Mac (iOS / macOS 26 and newer):** Settings →

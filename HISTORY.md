@@ -34,6 +34,15 @@ detailed developer notes, including every release in "Versions") and
 
 ## History
 
+### Sidekick 2.15.0: simpler, and two new features (13 Oct)
+- The owner tried Liquid Glass and wanted the real thing: the iPhone tab
+  bar is now Apple's own UITabBar (swipeable) on iOS 26.
+- "More minimalist, not vibecoded": no gradient hero, no tinted icon
+  squares or status pills, plain section titles, Send + ⋯ menu per device.
+- Removed the shared clipboard and Screen Mirroring (too laggy), including
+  the iPhone broadcast extension target.
+- New: Android notifications on computers; screenshots to computers.
+
 ### Liquid Glass theme, 2.14.0 (13 Oct)
 - iOS/macOS 26+ get Settings → Theme → "Theme: Default / Liquid Glass";
   Material stays the default everywhere (`ui/glass.dart`, pref `look`).

@@ -329,60 +329,27 @@ class _ThisDeviceCard extends StatelessWidget {
     final text = Theme.of(context).textTheme;
     final error = state.networkError;
     final bt = state.bluetooth;
-    final onCard = error == null ? scheme.onPrimaryContainer : scheme.onErrorContainer;
     final wifi = state.addresses.isNotEmpty;
+    final details = [
+      wifi ? state.addresses.join(', ') : 'No Wi-Fi',
+      if (bt != null && bt.status == BluetoothStatus.on) bt.advertising ? 'Bluetooth: findable' : 'Bluetooth on',
+    ].join(' · ');
     return Container(
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(32),
-        gradient: error == null
-            ? LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [scheme.primaryContainer, scheme.tertiaryContainer],
-              )
-            : null,
-        color: error == null ? null : scheme.errorContainer,
-      ),
-      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(color: scheme.surfaceContainerLow, borderRadius: BorderRadius.circular(20)),
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
       child: Row(
         children: [
-          GradientBadge(icon: platformIcon(state.me.platform), size: 64),
-          const SizedBox(width: 20),
+          Icon(platformIcon(state.me.platform), color: scheme.onSurfaceVariant),
+          const SizedBox(width: 16),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('This device', style: text.labelLarge?.copyWith(color: onCard.withValues(alpha: 0.75))),
-                Text(state.name, style: text.headlineSmall?.copyWith(color: onCard)),
-                const SizedBox(height: 10),
-                if (error != null)
-                  Text(error, style: TextStyle(color: onCard))
-                else
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    children: [
-                      StatusPill(
-                        icon: wifi ? Icons.wifi_rounded : Icons.wifi_off_rounded,
-                        label: wifi ? state.addresses.join(', ') : 'No Wi-Fi',
-                        color: wifi ? Colors.green : scheme.outline,
-                        background: scheme.surface.withValues(alpha: 0.7),
-                      ),
-                      if (bt != null)
-                        StatusPill(
-                          icon: bt.status == BluetoothStatus.on
-                              ? Icons.bluetooth_connected_rounded
-                              : Icons.bluetooth_disabled_rounded,
-                          label: bt.advertising
-                              ? 'Findable'
-                              : bt.status == BluetoothStatus.on
-                              ? 'Can search'
-                              : 'Off',
-                          color: bt.status == BluetoothStatus.on ? scheme.primary : scheme.outline,
-                          background: scheme.surface.withValues(alpha: 0.7),
-                        ),
-                    ],
-                  ),
+                Text(state.name, style: text.titleMedium),
+                Text(
+                  error ?? 'This device · $details',
+                  style: text.bodySmall?.copyWith(color: error == null ? scheme.onSurfaceVariant : scheme.error),
+                ),
               ],
             ),
           ),
@@ -404,7 +371,6 @@ class _PairedCard extends StatefulWidget {
 
 class _PairedCardState extends State<_PairedCard> {
   bool _dragging = false;
-  bool _hover = false;
 
   AppState get state => widget.state;
   PairedDevice get device => widget.device;
@@ -472,161 +438,76 @@ class _PairedCardState extends State<_PairedCard> {
         ? Icons.wifi_rounded
         : Icons.cloud_off_rounded;
 
+    final canBrowse = caps?.files ?? true;
+    // An iPhone can't be controlled (Apple doesn't allow it).
+    final canControl = (caps?.input ?? true) && device.platform != DevicePlatform.ios;
+    final findNearby = !online && AppState.bluetoothSupported && !state.bluetoothOn;
+
     return MaybeDropTarget(
       onHover: (hovering) => setState(() => _dragging = hovering),
       onFiles: (files) => state.sendFiles(device, files),
-      child: MouseRegion(
-        onEnter: (_) => setState(() => _hover = true),
-        onExit: (_) => setState(() => _hover = false),
-        child: AnimatedScale(
-          scale: _dragging ? 1.03 : (_hover ? 1.012 : 1),
-          duration: const Duration(milliseconds: 220),
-          curve: Curves.easeOutCubic,
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 220),
-            curve: Curves.easeOutCubic,
-            padding: const EdgeInsets.fromLTRB(20, 18, 12, 20),
-            decoration: BoxDecoration(
-              color: _dragging ? scheme.secondaryContainer : scheme.surfaceContainerLow,
-              borderRadius: BorderRadius.circular(_dragging ? 36 : 28),
-              border: Border.all(color: _dragging ? scheme.primary : scheme.outlineVariant, width: _dragging ? 2 : 1),
-              boxShadow: [
-                BoxShadow(
-                  color: scheme.shadow.withValues(alpha: _hover || _dragging ? 0.10 : 0),
-                  blurRadius: 24,
-                  offset: const Offset(0, 8),
-                ),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 150),
+        padding: const EdgeInsets.fromLTRB(20, 14, 8, 14),
+        decoration: BoxDecoration(
+          color: _dragging ? scheme.secondaryContainer : scheme.surfaceContainerLow,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: _dragging ? scheme.primary : Colors.transparent, width: 2),
+        ),
+        child: Row(
+          children: [
+            Icon(platformIcon(device.platform), color: scheme.onSurfaceVariant),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    device.name,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: Theme.of(context).textTheme.titleMedium,
+                  ),
+                  const SizedBox(height: 2),
+                  StatusPill(
+                    icon: _dragging ? statusIcon : null,
+                    label: state.runsOlderApp(device) ? '$status · update Sidekick on it' : status,
+                    color: reset ? scheme.error : (online ? Colors.green : scheme.outline),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 8),
+            if (reset)
+              FilledButton(
+                onPressed: () => pairWith(context, state, state.forgetForRepair(device)),
+                child: const Text('Pair again'),
+              )
+            else if (findNearby)
+              FilledButton.tonal(
+                onPressed: () => askToTurnOnBluetooth(context, state, device.name),
+                child: const Text('Find nearby'),
+              )
+            else
+              FilledButton(onPressed: online ? _pickAndSend : null, child: const Text('Send')),
+            PopupMenuButton<String>(
+              tooltip: 'More',
+              icon: const Icon(Icons.more_vert_rounded),
+              onSelected: (v) => switch (v) {
+                'files' => _open(1),
+                'remote' => _open(2),
+                'ping' => _ping(),
+                _ => _confirmUnpair(),
+              },
+              itemBuilder: (_) => [
+                if (canBrowse) PopupMenuItem(value: 'files', enabled: online, child: const Text('Browse files')),
+                if (canControl) PopupMenuItem(value: 'remote', enabled: online, child: const Text('Remote control')),
+                PopupMenuItem(value: 'ping', enabled: online, child: const Text('Ping')),
+                const PopupMenuDivider(),
+                const PopupMenuItem(value: 'unpair', child: Text('Unpair')),
               ],
             ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Container(
-                      width: 52,
-                      height: 52,
-                      decoration: BoxDecoration(
-                        color: scheme.secondaryContainer,
-                        borderRadius: BorderRadius.circular(18),
-                      ),
-                      child: Icon(platformIcon(device.platform), color: scheme.onSecondaryContainer, size: 26),
-                    ),
-                    const SizedBox(width: 14),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            device.name,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: Theme.of(context).textTheme.titleMedium,
-                          ),
-                          const SizedBox(height: 4),
-                          StatusPill(
-                            icon: statusIcon,
-                            label: status,
-                            color: reset ? scheme.error : (online ? Colors.green : scheme.outline),
-                            background: _dragging ? scheme.surface : null,
-                          ),
-                          if (state.runsOlderApp(device))
-                            Padding(
-                              padding: const EdgeInsets.only(top: 6),
-                              child: Tooltip(
-                                message:
-                                    '${device.name} runs ${state.appVersionOf(device) == null ? 'an older Sidekick' : 'Sidekick ${state.appVersionOf(device)}'}'
-                                    ', this device ${state.appVersion}. Update it so they work well together.',
-                                child: const StatusPill(
-                                  icon: Icons.system_update_rounded,
-                                  label: 'Update Sidekick on it',
-                                  color: Colors.orange,
-                                ),
-                              ),
-                            ),
-                        ],
-                      ),
-                    ),
-                    PopupMenuButton<String>(
-                      tooltip: 'More',
-                      icon: const Icon(Icons.more_horiz_rounded),
-                      onSelected: (v) => v == 'unpair' ? _confirmUnpair() : null,
-                      itemBuilder: (_) => const [
-                        PopupMenuItem(
-                          value: 'unpair',
-                          child: ListTile(leading: Icon(Icons.link_off_rounded), title: Text('Unpair')),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 18),
-                Padding(
-                  padding: const EdgeInsets.only(right: 8),
-                  child: reset
-                      ? SizedBox(
-                          width: double.infinity,
-                          child: FilledButton.icon(
-                            onPressed: () => pairWith(context, state, state.forgetForRepair(device)),
-                            icon: const Icon(Icons.link, size: 18),
-                            label: const Text('Pair again'),
-                          ),
-                        )
-                      : Column(
-                          children: [
-                            Row(
-                              children: [
-                                Expanded(
-                                  // Out of reach with Bluetooth off: offer to find it nearby.
-                                  child: !online && AppState.bluetoothSupported && !state.bluetoothOn
-                                      ? FilledButton.tonalIcon(
-                                          onPressed: () => askToTurnOnBluetooth(context, state, device.name),
-                                          icon: const Icon(Icons.bluetooth_searching_rounded, size: 18),
-                                          label: const Text('Find nearby'),
-                                        )
-                                      : FilledButton.icon(
-                                          onPressed: online ? _pickAndSend : null,
-                                          icon: const Icon(Icons.send_rounded, size: 18),
-                                          label: const Text('Send files'),
-                                        ),
-                                ),
-                                if (caps?.files ?? true) ...[
-                                  const SizedBox(width: 8),
-                                  IconButton.filledTonal(
-                                    tooltip: 'Browse files',
-                                    onPressed: () => _open(1),
-                                    icon: const Icon(Icons.folder_open_outlined),
-                                  ),
-                                ],
-                                // An iPhone can't be controlled (Apple doesn't allow it).
-                                if ((caps?.input ?? true) && device.platform != DevicePlatform.ios) ...[
-                                  const SizedBox(width: 4),
-                                  IconButton.filledTonal(
-                                    tooltip: 'Remote control',
-                                    onPressed: () => _open(2),
-                                    icon: const Icon(Icons.mouse_outlined),
-                                  ),
-                                ],
-                              ],
-                            ),
-                            const SizedBox(height: 8),
-                            Row(
-                              children: [
-                                Expanded(
-                                  child: OutlinedButton.icon(
-                                    onPressed: online ? _ping : null,
-                                    icon: const Icon(Icons.notifications_active_outlined, size: 18),
-                                    label: const Text('Ping'),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
-                ),
-              ],
-            ),
-          ),
+          ],
         ),
       ),
     );
