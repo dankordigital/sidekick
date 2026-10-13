@@ -156,12 +156,12 @@ function send_welcome(string $email, string $token): bool {
         . "That's the only email you'll get until then. We never share your address.\r\n\r\n"
         . "Changed your mind? Remove your email from the list:\r\n"
         . "$remove\r\n\r\n"
-        . "Sidekick\r\ngetsidekick.app\r\n";
+        . "Sidekick\r\ngetsidekick.app · " . FROM . "\r\n";
     $html = welcome_html($remove);
     if ($local) {
         $out = data_dir() . '/outbox';
         @mkdir($out, 0700);
-        file_put_contents("$out/" . date('Ymd-His') . "-$email.html", str_replace('cid:header', 'data:image/jpeg;base64,' . header_image(), $html));
+        file_put_contents("$out/" . date('Ymd-His') . "-$email.html", str_replace(['cid:header', 'cid:logo'], ['data:image/jpeg;base64,' . header_image(), 'data:image/png;base64,' . logo_image()], $html));
         return file_put_contents("$out/" . date('Ymd-His') . "-$email.txt", "To: $email\r\nSubject: $subject\r\n\r\n$body") !== false;
     }
     return send_mail($email, $subject, $body, FROM_NAME, FROM, ['List-Unsubscribe: <' . $remove . '>'], $html);
@@ -174,6 +174,7 @@ function welcome_html(string $remove): string {
     $site = htmlspecialchars(SITE);
     $remove = htmlspecialchars($remove);
     $font = "font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif";
+    $footer = email_footer();
     return <<<HTML
 <!doctype html>
 <html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
@@ -198,7 +199,7 @@ function welcome_html(string $remove): string {
 <p style="margin:22px 0 0">That's the only email you'll get until then. We never share your address.</p>
 </td></tr>
 </table>
-<p style="margin:18px 0 0;$font;font-size:13px;color:#a39cb3">Sidekick · <a href="$site" style="color:#a39cb3">getsidekick.app</a></p>
+{$footer}
 </td></tr></table>
 </body></html>
 HTML;
@@ -269,8 +270,33 @@ function mime_body(string $text, string $html): array {
     $body = "--$rel\r\nContent-Type: multipart/alternative; boundary=\"$alt\"\r\n\r\n$alternative"
         . "--$rel\r\nContent-Type: image/jpeg; name=\"sidekick.jpg\"\r\nContent-Transfer-Encoding: base64\r\n"
         . "Content-ID: <header>\r\nContent-Disposition: inline; filename=\"sidekick.jpg\"\r\n\r\n"
-        . chunk_split(header_image()) . "\r\n--$rel--\r\n";
+        . chunk_split(header_image()) . "\r\n"
+        . "--$rel\r\nContent-Type: image/png; name=\"sidekick-logo.png\"\r\nContent-Transfer-Encoding: base64\r\n"
+        . "Content-ID: <logo>\r\nContent-Disposition: inline; filename=\"sidekick-logo.png\"\r\n\r\n"
+        . chunk_split(logo_image()) . "\r\n--$rel--\r\n";
     return ["Content-Type: multipart/related; boundary=\"$rel\"; type=\"multipart/alternative\"", $body];
+}
+
+/** The signature under every email: the "sk" logo (attached inline as
+ *  cid:logo), the name, the site and the mailbox. */
+function email_footer(): string {
+    $site = htmlspecialchars(SITE);
+    $from = htmlspecialchars(FROM);
+    $font = "font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif";
+    return <<<HTML
+<table role="presentation" cellpadding="0" cellspacing="0" style="margin:22px auto 0"><tr>
+<td valign="middle" style="padding-right:12px"><a href="$site"><img src="cid:logo" width="44" height="44" alt="sk" style="display:block;border:0;border-radius:11px"></a></td>
+<td valign="middle" style="$font;text-align:left">
+<div style="font-size:15px;font-weight:800;color:#1d1530">Sidekick</div>
+<div style="font-size:13px;line-height:1.5;color:#8a8399"><a href="$site" style="color:#6a4cff;text-decoration:none">getsidekick.app</a> · <a href="mailto:$from" style="color:#8a8399;text-decoration:none">$from</a></div>
+</td></tr></table>
+HTML;
+}
+
+/** The footer's logo (website/apple-touch-icon.png at 96 px), inside this
+ *  file like the header. */
+function logo_image(): string {
+    return 'iVBORw0KGgoAAAANSUhEUgAAAGAAAABgCAYAAADimHc4AAASlElEQVR42u2dW5Ac5XXHf9/X3XPdXa3AWgmBjEAIYZCEkGB1QdiAjFOOK2U/hcR27KpUpSqVSqXykEpVqhKKV5crPOQlL6lKXiChTBxjY3wDKgR0QULGsgAhyeIiIQmtrnubnenu7zt56JnZnp7uuaBdQ6H5trp259I9PefyP+d/zuledXHCCoPVfQlI2uP47/obROa3+OPkexDQA8n2LP+MB1e3XBnYf99akKRHZFh80trTnnMHUu1D6FlKyBB+bwoYeEDfGNREjcTvhlCbG/N/S8bz7kD+vQJ/TPAJJUhKoO0YhGP7DCCo16yHdOhpEXCKA9iY4FXstcbfAwjq0wtIg5+G8G27N8St3sZgqpH8DyCoh9RSEgKXBPQ0/064QFIJkuIxAwjqJa+XdAeIC79F0DYm6OR+ifR1AEHdLD4RdNNSy7b0kxTrpz0ID7Ig6V0JaVlPS1DO2DrBz8ADull9mhLSsF/SlZD6XGLfQQxI5PcdOUASXkjgfSMLsikliTTouuYgSPpThmRYPylCjWN/XAlW0rG/cehrFoIky9KTpYUGaRJQWZADYFv/JoH1EiNjNnYsdwA53b3ExogUWVCUkQVJIk1tHMPW6fA1XY6WToW2LqlnMiZ0zIDIgCB7LXqApBh6Ssm5jf12EDg9pJ9p3bDPXAyQq1GEpON/VkVT4lmQSLoH0O4tyc/57GZB0uWprEaLZGQ9pFm49E680nrIn8kgLD081Yfw06AH2xsUZRXu4tnWVQVh9WmGmIwiWpsCUkoKLUWzTJyXVuXY9OCc5k2pClAfQ9ryKbJ26XDa8bpN2+NGakh6cY3UUoN0tHor7V7VqP+reDobhyDpJm/5BE2/X4iJvWAFlGrtUKmYBdq+BF8XfoJ4pbUcbUY2ZRMnnJkFSSdBy6cX96XF1OczFWl8FwtWdcF9m3itKWxprfekKSBtf9prQQ3ZpscA1bug+3IG9fEVKX2+IR7wSDJY251otWc+0rG6mcV8JaO8MZ+GJk5cqY8pGNWD3OVjCLhNsBH+Kq1aPlJSereS8bglKJKRvbQEYcnOdiBz5ieT2MXOo00BjYJRz6ad8Ba1QIiVljqKgJfTuC5Uq2CMQSmFUqpVAd2En1bHIR3vkezX6aYE2hWRhMp5Baj2F1UveCMZqKWuHs9b4pcVCgXN24ffZ3Z2jk1b1lIqu/g18AOLApRSbZibKgzJZrptJIuU+k9Kupo6fNuDd7rxk1MJ4aVZoVK9W+yCxlkrOC58eOocP3jyRdbd+Xk2bVnH3VvWMTY2gjFQqwrWWpTW7V+2B+FnCZ4Olc4s1pxp+Qm5uEnraMaAThlQD3gvKsp5+zL82D6SUkIWA57nUSzlOHv6Au+dOMNLv3qd9RvWsGXrF7hlzU0UXIdqDcLAgFJopebTxqQCSATmeoopGRXPOAPuNJ6SRvRSoRFwGxkBar5Z0CAMxJQRFyy2VQktwVBlf1gvWkhNI+tf0NY9wVqLl3Nxcw5+zWfPq4c4sO8tVq+5gc33reeuDbexZLRA4EMQSKsSM6caZJ5Adarr2xSWmxJoLaBsCrST4QHJ4Ntgic2Dq5hiEp7QEkZkgWJAQoHzPdcIImxdEUopSqUCIsKJ4x9y7MhJPrdsKRs2rWXzfXcytnwME0qbxc/Di6TPdnboAzS7XkmsJ2acad6QogXX2vbvrlR7QG2DhhSIEZUeA1R/cTf1SVtntWLrWFA31WZNBigUPEAxNTXN/76wn/976QBf+8YuvvjQZuYqBqV0DN+l3aIz0steqpotOG+7N37aFNBi/dKqiLg1Jp9TPRC3pvd0q25ItjLExgte0tziy5joseNo8sNFJienuXD+SqRAA0rHUkvSG+0d8/qMXkEW5vdyVU0zBrRYdjIwxl5rKd6p1g9Vqo8uVIxUtRFBQKFaIaiuANvTZINgTARPnquxBqwIyqbk9XSu4Sd5QotCYuPOoug6V5SqAGvbBZCEmVTlqBQO0CU7irKNCCQdR+O6Cq1jkFeHGROCCS0iEuX2SkUQVPeACPuky7eLXjdWsDbaV6t67IgRrGRwTlNQxLlVKpGb/169w05CAZJqgWmPk8qhNVlpKigtUzVWcF2HfNFBBGZnfKbOzzA7PUO1WkPE4noeQ0NlRkZHGB4q4njg1yDwDVYs1jr1QJBsuKa6QTN1sjaCINHgaIdCLjavQ/acZ2OFAfi+qTNuaZv1z/LwXtJA15qEMBPppah5KSuIrquUVmGT9JAGVKn5fmmp7DA9VeXXrx/n6JHfceb0BNNTswR+gK27odIKz3UpDRUZG/sca9et5gvrb2f58qVUa5owkKb8rdQtuYMCrDQypig+5F3FR2fP8euDh/BcN1OH8zFQ4fsBK25YwcaNGwjq3AKJVVST2aD0xpda09B66iSqlRGnPVYmlmY1mHGs1CstniForfE8xasvv8HLL+7lwvmLoCJBa0fjeBoXJ/blLVOT01y6eIW33zzKi7/czfq717Fj5zhr1i6L8N2a1CDcHl/qSrBgrUVrxZ5XXmPfntcolor1jCqj1FIv+AW+z6Pf+mYEg1bQWjUhR0mMF8XJZ0P4thcPsK2lCFHtJQmVEgNI8gLVehwrgnYU1gQ89eRPObD/EIV8jmKxUM/l65tpF6JWinzOA5XD9332vvI6bxx4i699/WGMlYiMGdPZA+rxxlqLMeA4Huc+usSxd46xZHTJPEPOWFopqtUqGzZt4s4776BSCdFaNz1QpcGP7R37YxDUysBUSjBNxgHSFJKMA6JwXcV/PvkT9u97gyVLhrHW4gdBHywtMqVCsUAQBDzz9M9YMjpMLu8RhKZLJgShMRgjGAOuozn0xmGuTE5RLpcJbdixxBt5tmJ86zbCMOIMaZypX4Fne0CMVamE2XcKzGlKsdZSLrvseeUg+3YfZGRkCL/mf+xCXBhGeOw6iksXL5PLeV3mC0G0xoQhJjQoBZNTc/zm4CG0VoRB0BG+tNbMVipsuW+cm1atZHY2QCudebnY1RQeIx6gYqWIRDtSIW18QJRq5QJtUKqZnfZ5+cXdaK2p+WE9/eyhvdBSUpY2waz6/CpOfnAKrXVHJWgtBIElDAz5HLzz5jucOXOWYrGI74fZybICEYOXK7Btx058X1AJj10IwTcVYGy2JSfxf17o0h631HzZuFh0OX7sNKdPnyXneQR+0GNvRzUDrOu4aK3qwVMzPT3Djp1bWX3rzbx9+AhDw0PN7ClLAWEQYEUIAnht335MaAiCsLv1z8zw0K5dLF9+fWT9Wrde27WA5XZXbHojvoXpppAtpbLZLQrOnvmISqWKLuuOgopbvh8ElMtlvJzH5JVJ/JpPqVwEwMvl+eof/QGHfvMmQRAShiHW2I6CrPk+juvx3rvnOPbO8Sh2BEGHGRaFMT5DwyNsv/9+ajXbrB9lNleuVgF1YtrWt21LQROZj6R5S4OtWqjO1QiDkDA0XRWgHc3cbIUNd9/FX/zld5mZDZg4d4ZDb7zJa3sPcOHCRf70W4+ycuUS9u2pYWwELd09IESh2bdnP5W5Cq430llpjmZ2ZpYvP/IVrrtuCdMzAY6j2+s+CziW47Y1kGkvSyehpqmcxMmIqpcSLORyeYwxmNBguinAWkTg/MQljh17n9tvX8fYxtu5c/3tbLx7E3t372X7zh3MzkYnGgaG0JguHmDR2uXM6bOc/OB9XCeCwiwL1lpRq9UYG1vOth07qFRslKqmlJ0X/nY1Cem39IRVemVPpRWbFIhVhD4sG1uB67qExjRhKevErRUc1+HDUx/yxPf+hVvXrGZ82zibNt/DXRtuZc1ttzI762NNVAqwNrL+Th5gBVzP5e03DxMEIdrRmDSFNWsnmmq1yoMP72JouMjMdIB2dGvVdxGWa23i4JKhiIx+cftrimrVcNOqm1i+YgVnPjxNLp9rZ53J2GEMnucB8O6Jdzl69Di/+NkveeBLD/Dgww/ieQXCUOoFuYiMiXSfc6nVfFAquz0qUfypVCrcvHo19269l9kZA2jELlqLe97zpFGsamz1imQDyxslYBv/3WEfayEMLbmcx65HvkytVm2WGBpWm75JBFnGkMvlGSqXuXL5Cs/81zP88/ee4NTJkxQKqhlTet0iZXV/nwIe+cpX8bxc01NEFn/TbYXdlPsbNBshyd/NLlXrcwrN7EzI+LZxHtr1MJcvX4oGqXS9pdjlx1hDaEIc12FoZIgPPnifJ77/fY4fO0mhUIxSVSUsxA8KgtBn6XXXs/aOL1Cdi9Le39dyvvMnjz3e1oimh0m1xKx72vy7McKGu9fj+z5HjxwBK02Y6Smfq1tvPp+nWqlw4nfvMTIyyrsnjuO6bm/HUKpr2dp1Xa5cvsTwyAjr7lhDrWqahHCxl3rhR2H3r6FSMiTp5f31Wk7e4eDrB3n+uR/z4amTuK5LPl+oVxhtDwcTtNIYYygUC/i+3xn/Y8TOWoPSTkckVyiMMRRLRf7u7/+RJUtGCUPbocW3gB7w7Ucfezw5iijS3qtN3m4r01NaOhXRXA4oVq1ayeYtW1m2bIzpmWkuXryA79dwHaeLlUqT4GmtIiLVcylPKA8NEQZB12tTHddlemqSmu9zz5Z7qNUMWqtFnwR3vv3oY48n7+6ROc4gPaQDjbkYaymXXJ790Q956/Ahblt7B6VSgdW3rGbzlu2sWXMrgR9w4cL5/ly2R6tUSjNXrTA+fj/GGC5euoDneh37B14ux8kP3uOWW9exYsVYswu2qAr4sz9+7PFMGScE3uvUulhLvuDx3rvv8fRT/8GxY0c5+s4RXC9HsTBMsVTi5luWM75tnMOH3uT8+Qlc12uU/RYGW7WmUqmwafO9rLltHb8++Br5QhGRTuRN4Yc+5ycmuHd8O2JVhiUuKBGTjrGWluZ0h7jQUrKIMPXZHz5NEASMDI9w8v13+fd/+1c+t2yMlTeuYunodczOTnPq1Ad4nodYs7DfTAStFHOVCg/v2sXzz40xOzON67qZ8cMaQ7FQ5PixI+zd/QoPPvQQ0zM+ziJmRX1dpioZrhJvyltjGRrO8dKLL3LknbcYGh4mCH1yhTwAV65c5vz5iajKqRT5QiFqdvcBQb0EYKnXSoIwZHS0wNZtO3n+p//DkDfc0QusNeTzeX7x85+wfuM9lMvDzRGXxSFiV0MkEvHZWiGX85g4d4Ff/OxZCoU8Uic1DcLjui6lUomhoSFK5XLfXywMw75jRq0KW7c9wNKlSwnDoONnigie53Lx4gS//Plz5HMO1kjHmzJdFRFrk+JVbCIRjv73M09x+dJFcl4OK6Zlki3q0ZrmFn+t06aILsi4/vpliNg+9lP4Pixbtowt9+5gbq4SDX112Cc0hlKxxN7dL3H8+AkKBS9ixwsoq8amF1KbCIShsH793RRLRWYrMziOU0+nP/5Zuq7D1PQka2+/k+33P8jcXCVKEXvYV7AoBbWaYfuOBxkeHiE0AUp13k9pRRAGPP/cD+pcRS1SKWIhFYAiCEJ27PwSf/XX/8CNN97M1NQkQeCjtZ5vN/ZguY2milKKyckr3HTjzXznu3+O6zhYKz1Bl6pPGEi9KHfDDSvYdM9W5ubm0NrpuJ+1lmKxzJEjh9m/fy/lsocxZsGhaBFuVaCYnvJZvXoNf/O3/8TuV1/g1VdeYGLibH1GKIfjuF1x2JiQubkaWjls3fZFvv6NbzI6uoRqdQ4TBvi+j+2QOWnt4Ps1jAmb5xUEws4HdrH/tZcjL+oS/KPrz+C5Hz/NunV3MTS0hDBcWG6wKPcL0lozNxdZ/Zcf+UPuG/8ihw+/zuHfHuTUyRNMT0/Vg6mglJ7PW+rjdK7jMjI6ysaN97J1+5dYd8d6/KqhWhVKpSGWjS2nVBrqqoBisUS5PIyY6JyqtYCVK1exfftD/Pa3BygWS127dY7jMDMzw4EDe3jkka8RBOGC8gL1k6eCRSPbUs9+XMelUNAYC5cuXeKjs6c4N3GaySuXqcxWCE0QvadUYunS61ix/EZuuOHzLL1uKSJQrQb1i/A0VgzW9jpbJGjtonWicKeEMPTbJrCzjhENC1g8r7DglEz9eBEVEIeURibjejlcFxxd5w2x6xNUfe7UWvADIQyDpke1lM5UP5+dzt1V48N6BlaFFbvgsvk93bJMNXEzDAJ8Pzb/rVT7NICKRgMb8CQJBih9/dsblX6jkb6Zt1qUisQncMeseoVUdS99Z5+b6h8Lr/YYi9SXHPwPmU94DW5d/EkrwA5kMPCAa1oBgxjwya7Bf9IbeMA1r4CBBgZB+Jr2gIEMBh4wCMKDNYCgAQQN1gCCBgoYrAEEDYLwYA0gaABBgzWAoAEEDdYAggYeMFgDBXzW16An/Amv/weWO/xTTDbUGgAAAABJRU5ErkJggg==';
 }
 
 /** The email's header image (website/email-header.png as a JPEG), kept

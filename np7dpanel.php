@@ -124,6 +124,7 @@ function welcome_to(string $email): bool {
 /** The announcement, designed like the welcome email: the header image,
  *  a heading, the message and a "Remove me" link. */
 function announce_html(string $heading, string $message, string $remove): string {
+    $footer = email_footer();
     $site = e(SITE);
     $remove = e($remove);
     $font = "font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif";
@@ -151,7 +152,7 @@ $paragraphs
 <p style="margin:22px 0 0">You're getting this because you joined the Sidekick wishlist. <a href="$remove" style="color:#8a8399">Remove me from the list</a>.</p>
 </td></tr>
 </table>
-<p style="margin:18px 0 0;$font;font-size:13px;color:#a39cb3">Sidekick · <a href="$site" style="color:#a39cb3">getsidekick.app</a></p>
+{$footer}
 </td></tr></table>
 </body></html>
 HTML;
@@ -163,7 +164,7 @@ function send_announcement(string $to, string $token, string $subject, string $h
     $text = ($heading !== '' ? "$heading\r\n\r\n" : '')
         . str_replace(["\r\n", "\n"], "\r\n", trim($message)) . "\r\n\r\n"
         . "You're getting this because you joined the Sidekick wishlist.\r\n"
-        . "Remove me from the list: $remove\r\n\r\nSidekick\r\ngetsidekick.app\r\n";
+        . "Remove me from the list: $remove\r\n\r\nSidekick\r\ngetsidekick.app · " . FROM . "\r\n";
     return send_mail($to, $subject, $text, FROM_NAME, FROM, ['List-Unsubscribe: <' . $remove . '>'],
         announce_html($heading !== '' ? $heading : $subject, $message, $remove));
 }

@@ -19,8 +19,8 @@ detailed developer notes, including every release in "Versions") and
   - Look: minimal Material by default; Liquid Glass option on iOS/macOS 26
     (iPhone uses Apple's own swipeable tab bar; the Mac draws its own glass,
     never a transparent window: that killed the M1 app in 2.16.0).
-- **Mac:** separate Apple-silicon and Intel builds since 2.16.0. The owner's
-  M1 still has to confirm 2.16.1 works (background, buttons, pairing code).
+- **Mac:** separate Apple-silicon and Intel builds since 2.16.0. The owner
+  confirmed 2.16.1 works on the M1.
 - **Website:** **getsidekick.app** (OVHcloud free hosting), uploaded by the
   owner with FileZilla into `www`. A **wishlist page, not a download page**.
 - **Wishlist:** works, emails arrive (SMTP via ssl0.ovh.net). Admin panel
@@ -31,8 +31,7 @@ detailed developer notes, including every release in "Versions") and
 
 ## Waiting on the owner
 
-1. **Test 2.16.1 on the M1** (Apple-silicon file): background, buttons,
-   pairing code and QR, with Liquid Glass on and off.
+1. ~~Test 2.16.1 on the M1~~: done, it works.
 2. **Upload to `www`:** `np7dpanel.php`, `wishlist.php` (welcome email no
    longer mentions clipboard/mirroring), `privacy.html` (2.15 features).
    Delete `wishlist-check.php` from the hosting.
@@ -56,6 +55,13 @@ detailed developer notes, including every release in "Versions") and
   the download page (Apple-silicon/Intel Mac links too); "Make it a
   wishlist again" undoes it. `.htaccess` routes the home page through
   `index.php`. Privacy policies mention the visit count.
+
+### Email signature, M1 confirmed (13 Oct)
+- Every email (welcome and Email everyone) ends with a signature: the "sk"
+  logo (inline `cid:logo`, `logo_image()` in `wishlist.php`), "Sidekick",
+  getsidekick.app and info@getsidekick.app (`email_footer()`). The plain
+  text ends the same way. Upload `wishlist.php` and `np7dpanel.php`.
+- The owner confirmed 2.16.1 works on the M1.
 
 ### Admin panel grows up (13 Oct)
 - `np7dpanel.php` became a full admin panel: Overview (counts, 30-day
