@@ -479,7 +479,8 @@ one) without asking.
 
 ### 2.14.0
 - **Liquid Glass on iPhone and Mac (iOS / macOS 26 and newer):** Settings →
-  Theme → Theme: Default or Liquid Glass. Frosted, see-through cards and
+  Theme → Theme: Default or Liquid Glass, Apple's own glass under the
+  tab bar and panels. Frosted, see-through cards and
   dialogs over a soft backdrop in your theme's colors, and a floating glass
   tab bar on the iPhone. Material stays the default, and on every other
   system.

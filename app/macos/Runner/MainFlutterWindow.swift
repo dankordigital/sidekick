@@ -68,8 +68,52 @@ class MainFlutterWindow: NSWindow {
     channel.setMethodCallHandler { call, result in native.handle(call, result: result) }
     ble = SidekickBLE.register(messenger: flutterViewController.engine.binaryMessenger)
     p2p = SidekickP2P.register(messenger: flutterViewController.engine.binaryMessenger)
+    flutterViewController.registrar(forPlugin: "SidekickGlass")
+      .register(GlassViewFactory(), withId: "sidekick/glass")
 
     super.awakeFromNib()
+  }
+}
+
+/// Apple's own Liquid Glass (NSGlassEffectView, macOS 26) behind Sidekick's
+/// panels: Flutter shows it as a platform view ("sidekick/glass") under its
+/// own widgets, and the glass refracts the app drawn beneath it.
+final class GlassViewFactory: NSObject, FlutterPlatformViewFactory {
+  func create(withViewIdentifier viewId: Int64, arguments args: Any?) -> NSView {
+    let args = args as? [String: Any] ?? [:]
+    let radius = CGFloat((args["radius"] as? NSNumber)?.doubleValue ?? 28)
+    let dark = args["dark"] as? Bool ?? false
+    let view: NSView
+    #if compiler(>=6.2)
+    if #available(macOS 26.0, *) {
+      let glass = NSGlassEffectView()
+      glass.cornerRadius = radius
+      view = glass
+    } else {
+      view = GlassViewFactory.material(radius)
+    }
+    #else
+    view = GlassViewFactory.material(radius)
+    #endif
+    // Follow the app's light/dark choice, not only the system's.
+    view.appearance = NSAppearance(named: dark ? .darkAqua : .aqua)
+    return view
+  }
+
+  func createArgsCodec() -> (FlutterMessageCodec & NSObjectProtocol)? {
+    FlutterStandardMessageCodec.sharedInstance()
+  }
+
+  /// Before macOS 26: the system's frosted material.
+  private static func material(_ radius: CGFloat) -> NSView {
+    let blur = NSVisualEffectView()
+    blur.material = .hudWindow
+    blur.blendingMode = .withinWindow
+    blur.state = .active
+    blur.wantsLayer = true
+    blur.layer?.cornerRadius = radius
+    blur.layer?.masksToBounds = true
+    return blur
   }
 }
 

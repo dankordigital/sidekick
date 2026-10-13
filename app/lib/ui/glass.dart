@@ -1,6 +1,10 @@
+import 'dart:io' show Platform;
 import 'dart:ui' show ImageFilter;
 
+import 'package:flutter/services.dart' show StandardMessageCodec;
 import 'package:material_ui/material_ui.dart';
+
+import 'widgets.dart' show appleOsMajor;
 
 /// Settings → Theme → Liquid Glass (iOS and macOS 26+): the same app, with
 /// frosted, translucent surfaces over a soft backdrop in the theme's colors,
@@ -31,6 +35,11 @@ Color glassTint(ColorScheme scheme, [double opacity = 0.5]) => scheme.surface.wi
 Color glassRim(ColorScheme scheme) =>
     Colors.white.withValues(alpha: scheme.brightness == Brightness.dark ? 0.14 : 0.55);
 
+/// The real thing: Apple's Liquid Glass views (UIGlassEffect on iOS 26,
+/// NSGlassEffectView on macOS 26), as platform views. Elsewhere (and in the
+/// screenshot tool) [GlassPanel] draws a frosted look of its own.
+bool get nativeGlass => (Platform.isIOS || Platform.isMacOS) && (appleOsMajor ?? 0) >= 26;
+
 /// Frosted glass: blurs what's behind it, tints it and draws a bright rim.
 class GlassPanel extends StatelessWidget {
   const GlassPanel({
@@ -52,6 +61,30 @@ class GlassPanel extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final shape = BorderRadius.circular(radius);
+    if (nativeGlass) {
+      // Apple's own Liquid Glass, drawn by the system under our widgets.
+      final params = {'radius': radius, 'dark': scheme.brightness == Brightness.dark};
+      final glass = Platform.isIOS
+          ? UiKitView(
+              viewType: 'sidekick/glass',
+              creationParams: params,
+              creationParamsCodec: const StandardMessageCodec(),
+            )
+          : AppKitView(
+              viewType: 'sidekick/glass',
+              creationParams: params,
+              creationParamsCodec: const StandardMessageCodec(),
+            );
+      return Stack(
+        children: [
+          // Keyed by the look: the native view is rebuilt when dark mode flips.
+          Positioned.fill(
+            child: IgnorePointer(key: ValueKey(params['dark']), child: glass),
+          ),
+          Padding(padding: padding, child: child),
+        ],
+      );
+    }
     return ClipRRect(
       borderRadius: shape,
       child: BackdropFilter(

@@ -145,7 +145,50 @@ import UIKit
       ble = SidekickBLE.register(messenger: registrar.messenger())
       p2p = SidekickP2P.register(messenger: registrar.messenger())
     }
+    if let registrar = engineBridge.pluginRegistry.registrar(forPlugin: "SidekickGlass") {
+      registrar.register(GlassViewFactory(), withId: "sidekick/glass")
+    }
   }
+}
+
+/// Apple's own Liquid Glass (UIGlassEffect, iOS 26) behind Sidekick's tab bar
+/// and panels: Flutter shows it as a platform view ("sidekick/glass") under
+/// its own widgets, and the glass refracts the app drawn beneath it.
+final class GlassViewFactory: NSObject, FlutterPlatformViewFactory {
+  func create(withFrame frame: CGRect, viewIdentifier viewId: Int64, arguments args: Any?) -> FlutterPlatformView {
+    GlassPlatformView(frame: frame, args: args as? [String: Any] ?? [:])
+  }
+
+  func createArgsCodec() -> FlutterMessageCodec & NSObjectProtocol {
+    FlutterStandardMessageCodec.sharedInstance()
+  }
+}
+
+final class GlassPlatformView: NSObject, FlutterPlatformView {
+  private let effectView: UIVisualEffectView
+
+  init(frame: CGRect, args: [String: Any]) {
+    let radius = CGFloat((args["radius"] as? NSNumber)?.doubleValue ?? 28)
+    let dark = args["dark"] as? Bool ?? false
+    var effect: UIVisualEffect = UIBlurEffect(style: .systemMaterial)
+    #if compiler(>=6.2)
+    if #available(iOS 26.0, *) {
+      let glass = UIGlassEffect()
+      glass.isInteractive = args["interactive"] as? Bool ?? false
+      effect = glass
+    }
+    #endif
+    effectView = UIVisualEffectView(effect: effect)
+    effectView.frame = frame
+    effectView.layer.cornerRadius = radius
+    effectView.layer.cornerCurve = .continuous
+    effectView.clipsToBounds = true
+    // Follow the app's light/dark choice, not only the system's.
+    effectView.overrideUserInterfaceStyle = dark ? .dark : .light
+    super.init()
+  }
+
+  func view() -> UIView { effectView }
 }
 
 /// Plays Sidekick's sounds (startup, a request arriving, accepted, declined).
