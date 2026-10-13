@@ -17,6 +17,7 @@ import 'direct_wifi.dart';
 import 'mirror_page.dart';
 import 'ping.dart';
 import 'files_page.dart';
+import 'glass.dart';
 import 'qr_pairing.dart';
 import 'remote_page.dart';
 import 'settings_page.dart';
@@ -250,26 +251,35 @@ class _ShellState extends State<Shell> {
       ),
     );
 
+    final glass = isGlass(context);
     if (!wide) {
+      final bar = NavigationBar(
+        selectedIndex: _index,
+        onDestinationSelected: _go,
+        destinations: [
+          for (final d in _destinations)
+            NavigationDestination(icon: Icon(d.icon), selectedIcon: Icon(d.selected), label: d.label),
+        ],
+      );
       return Scaffold(
-        body: SafeArea(child: body),
-        bottomNavigationBar: NavigationBar(
-          selectedIndex: _index,
-          onDestinationSelected: _go,
-          destinations: [
-            for (final d in _destinations)
-              NavigationDestination(icon: Icon(d.icon), selectedIcon: Icon(d.selected), label: d.label),
-          ],
-        ),
+        // Liquid Glass: the content scrolls under a floating frosted bar.
+        extendBody: glass,
+        body: SafeArea(bottom: !glass, child: body),
+        bottomNavigationBar: glass
+            ? SafeArea(
+                minimum: const EdgeInsets.fromLTRB(16, 0, 16, 10),
+                child: GlassPanel(radius: 34, opacity: 0.42, child: bar),
+              )
+            : bar,
       );
     }
 
     return Scaffold(
-      backgroundColor: scheme.surfaceContainer,
+      backgroundColor: glass ? Colors.transparent : scheme.surfaceContainer,
       body: Row(
         children: [
           NavigationRail(
-            backgroundColor: scheme.surfaceContainer,
+            backgroundColor: glass ? Colors.transparent : scheme.surfaceContainer,
             selectedIndex: _index,
             onDestinationSelected: _go,
             labelType: NavigationRailLabelType.all,
@@ -292,10 +302,12 @@ class _ShellState extends State<Shell> {
           Expanded(
             child: Padding(
               padding: const EdgeInsets.fromLTRB(0, 8, 8, 8),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(28),
-                child: ColoredBox(color: scheme.surface, child: body),
-              ),
+              child: glass
+                  ? GlassPanel(opacity: 0.4, child: body)
+                  : ClipRRect(
+                      borderRadius: BorderRadius.circular(28),
+                      child: ColoredBox(color: scheme.surface, child: body),
+                    ),
             ),
           ),
         ],

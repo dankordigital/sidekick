@@ -13,6 +13,22 @@ class ThemeChooser extends StatelessWidget {
   Widget build(BuildContext context) => Column(
     crossAxisAlignment: CrossAxisAlignment.stretch,
     children: [
+      // iOS and macOS 26+: Apple's Liquid Glass, or the default Material look.
+      if (liquidGlassAvailable)
+        ListTile(
+          leading: const IconTile(Icons.auto_awesome_outlined),
+          title: const Text('Theme'),
+          trailing: DropdownButton<bool>(
+            value: state.liquidGlass,
+            underline: const SizedBox(),
+            borderRadius: BorderRadius.circular(16),
+            items: const [
+              DropdownMenuItem(value: false, child: Text('Default')),
+              DropdownMenuItem(value: true, child: Text('Liquid Glass')),
+            ],
+            onChanged: (v) => state.setLiquidGlass(v ?? false),
+          ),
+        ),
       Padding(
         padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
         child: SegmentedButton<ThemeMode>(

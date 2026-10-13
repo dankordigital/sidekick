@@ -175,6 +175,10 @@ class AppState extends ChangeNotifier {
   /// True-black backgrounds in dark mode (saves battery on OLED screens).
   bool pureBlack = false;
 
+  /// Settings → Theme: "Liquid Glass" instead of the default Material look
+  /// (pref `look`). Only offered where [liquidGlassAvailable].
+  bool liquidGlass = false;
+
   /// The first-launch welcome has been shown (it never shows again).
   bool welcomed = false;
 
@@ -484,6 +488,7 @@ class AppState extends ChangeNotifier {
     themeColor = _prefs.getString('themeColor') ?? (Platform.isIOS ? 'purple' : 'system');
     if (themeColor != 'system' && !themeColors.containsKey(themeColor)) themeColor = 'system';
     pureBlack = _prefs.getBool('pureBlack') ?? false;
+    liquidGlass = _prefs.getString('look') == 'glass';
     keepRunning = _prefs.getBool('keepRunning') ?? true;
     askBeforeReceiving = _prefs.getBool('askBeforeReceiving') ?? true;
     shareClipboard = _prefs.getBool('shareClipboard') ?? true;
@@ -2050,6 +2055,12 @@ class AppState extends ChangeNotifier {
   void setPureBlack(bool value) {
     pureBlack = value;
     _prefs.setBool('pureBlack', value);
+    notifyListeners();
+  }
+
+  void setLiquidGlass(bool value) {
+    liquidGlass = value;
+    _prefs.setString('look', value ? 'glass' : 'material');
     notifyListeners();
   }
 

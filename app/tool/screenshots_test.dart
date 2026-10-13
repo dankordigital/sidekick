@@ -236,6 +236,38 @@ void main() {
     state.setThemeMode(ThemeMode.dark);
     state.setPureBlack(true);
     await shot('iphone-settings-theme-teal-dark');
+
+    // Liquid Glass (offered on iOS/macOS 26+): the Theme dropdown, then the app.
+    debugGlassAvailable = true;
+    state.setThemeColor('purple');
+    state.setPureBlack(false);
+    state.setThemeMode(ThemeMode.light);
+    await settle();
+    await tester.dragUntilVisible(
+      find.text('Liquid Glass').hitTestable().evaluate().isEmpty ? find.text('Default') : find.text('Liquid Glass'),
+      list,
+      const Offset(0, 200),
+    );
+    await shot('iphone-settings-theme-dropdown');
+    state.setLiquidGlass(true);
+    await tester.tap(find.text('Devices').last);
+    await shot('glass-iphone-devices');
+    await tester.tap(find.text('Settings').last);
+    await shot('glass-iphone-settings');
+    state.setThemeMode(ThemeMode.dark);
+    await tester.tap(find.text('Devices').last);
+    await shot('glass-iphone-devices-dark');
+    debugHostPlatform = DevicePlatform.macos;
+    debugForceMobile = false;
+    tester.view.physicalSize = const Size(1280, 840);
+    state.setThemeMode(ThemeMode.light);
+    await shot('glass-mac-devices');
+    state.setThemeMode(ThemeMode.dark);
+    await shot('glass-mac-devices-dark');
+    state.setLiquidGlass(false);
+    debugGlassAvailable = false;
+    debugForceMobile = true;
+    tester.view.physicalSize = const Size(412, 915);
     debugHostPlatform = null;
 
     // The startup animation, a few frames in (desktop, light).

@@ -34,6 +34,10 @@ detailed developer notes, including every release in "Versions") and
 
 ## History
 
+### Liquid Glass theme, 2.14.0 (13 Oct)
+- iOS/macOS 26+ get Settings → Theme → "Theme: Default / Liquid Glass";
+  Material stays the default everywhere (`ui/glass.dart`, pref `look`).
+
 ### Website fits phones (12 Oct)
 - `index.html`: on phones the top bar fits (smaller logo, "Join" button),
   hero buttons are full width, the email field no longer collapses, bigger

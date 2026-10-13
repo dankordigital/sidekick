@@ -54,6 +54,21 @@ bool get hostIsMacOS => debugHostPlatform == null ? Platform.isMacOS : debugHost
 /// `Platform.operatingSystem`, or the overridden platform's name.
 String get hostOS => debugHostPlatform?.name ?? Platform.operatingSystem;
 
+/// Lets the screenshot tool offer Liquid Glass on any host.
+bool debugGlassAvailable = false;
+
+/// The major version of iOS or macOS ("Version 26.0 (Build …)" → 26), or
+/// null elsewhere.
+int? get appleOsMajor {
+  if (!Platform.isIOS && !Platform.isMacOS) return null;
+  final m = RegExp(r'(\d+)\.\d').firstMatch(Platform.operatingSystemVersion);
+  return m == null ? null : int.tryParse(m.group(1)!);
+}
+
+/// Liquid Glass is offered on iOS and macOS 26 and newer (Apple's own look
+/// since 26); everywhere else Sidekick is Material only.
+bool get liquidGlassAvailable => debugGlassAvailable || (appleOsMajor ?? 0) >= 26;
+
 /// Screens narrower than this get the compact phone layout.
 const compactWidth = 600.0;
 

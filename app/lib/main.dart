@@ -10,6 +10,8 @@ import 'platform/autoload.dart';
 import 'platform/desktop_window.dart';
 import 'platform/sound.dart';
 import 'ui/corner_popup.dart';
+import 'ui/glass.dart';
+import 'ui/widgets.dart';
 import 'ui/shell.dart';
 import 'ui/startup.dart';
 import 'ui/tray_panel.dart';
@@ -216,12 +218,16 @@ class SidekickApp extends StatelessWidget {
   static final _themes = <Object, ThemeData>{};
 
   ThemeData _themeFor(ColorScheme? dynamic, Brightness brightness) {
-    final key = (state.themeColor, state.pureBlack, brightness, dynamic);
+    final key = (state.themeColor, state.pureBlack, brightness, dynamic, _glass);
     final theme = _themes[key];
     if (theme != null) return theme;
     if (_themes.length > 8) _themes.clear();
-    return _themes[key] = _theme(_scheme(dynamic, brightness));
+    final material = _theme(_scheme(dynamic, brightness));
+    return _themes[key] = _glass ? glassTheme(material) : material;
   }
+
+  /// Settings → Theme → Liquid Glass, where it's offered (iOS/macOS 26+).
+  bool get _glass => state.liquidGlass && liquidGlassAvailable;
 
   ColorScheme _scheme(ColorScheme? dynamic, Brightness brightness) {
     final choice = state.themeColor;
@@ -263,7 +269,11 @@ class SidekickApp extends StatelessWidget {
           themeMode: state.themeMode,
           theme: _themeFor(lightDynamic, Brightness.light),
           darkTheme: _themeFor(darkDynamic, Brightness.dark),
-          builder: DesktopWindow.supported ? _withCornerPopup : null,
+          builder: (context, child) {
+            // Liquid Glass: the colored backdrop sits under every screen.
+            if (_glass) child = GlassBackdrop(child: child ?? const SizedBox());
+            return DesktopWindow.supported ? _withCornerPopup(context, child) : child ?? const SizedBox();
+          },
           home: _maybeSplash(
             AnimatedSwitcher(
               duration: const Duration(milliseconds: 400),

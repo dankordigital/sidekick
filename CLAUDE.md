@@ -432,6 +432,16 @@ its biggest features and fixes (see [Releasing](#releasing)). The history starts
   Nap doesn't throttle it in the menu bar; `PeerClient._send` retries once
   on a dead kept-alive connection (always for GET, otherwise only if the
   request never went out).
+- **Liquid Glass** (2.14.0, the owner's call: Material is the default
+  everywhere): on iOS and macOS 26+ (`liquidGlassAvailable`, from
+  `appleOsMajor`), Settings → Theme has a "Theme" dropdown: Default /
+  Liquid Glass (`AppState.liquidGlass`, pref `look`). Nowhere else is it
+  offered. `ui/glass.dart`: `glassTheme` turns the Material theme
+  translucent (cards, dialogs, sheets, menus, bars) and adds `GlassLook`;
+  `GlassBackdrop` (soft blobs of the theme's colors) sits under every
+  screen (MaterialApp `builder`); `GlassPanel` (blur, tint, bright rim)
+  frames the phone's floating tab bar and the computer's content panel
+  (shell.dart). Rendered by `tool/screenshots_test.dart` (`glass-*.png`).
 - Devices announce their release (`DeviceInfo.app`, "2.2.0"); a paired card
   shows "Update Sidekick on it" when the other device runs an older one.
 - **iPhones can't be controlled** (Apple allows no app to): Remote on an
@@ -466,6 +476,13 @@ one) without asking.
 4. Add the version to [Versions](#versions) below.
 
 ## Versions
+
+### 2.14.0
+- **Liquid Glass on iPhone and Mac (iOS / macOS 26 and newer):** Settings →
+  Theme → Theme: Default or Liquid Glass. Frosted, see-through cards and
+  dialogs over a soft backdrop in your theme's colors, and a floating glass
+  tab bar on the iPhone. Material stays the default, and on every other
+  system.
 
 ### 2.13.0
 - **Screen Mirroring:** a new Mirroring tab on Mac and Windows shows a
