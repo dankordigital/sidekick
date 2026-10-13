@@ -46,6 +46,8 @@
     <uses-permission
         android:name="android.permission.READ_EXTERNAL_STORAGE"
         android:maxSdkVersion="32" />
+    <!-- Settings → Send screenshots to computers: sees new screenshots. -->
+    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
     <uses-permission
         android:name="android.permission.WRITE_EXTERNAL_STORAGE"
         android:maxSdkVersion="29"
@@ -100,6 +102,16 @@
         <receiver
             android:name=".OfferActionReceiver"
             android:exported="false" />
+        <!-- Settings → Show notifications on computers (PhoneRelay.kt). -->
+        <service
+            android:name=".NotificationRelay"
+            android:exported="true"
+            android:label="Sidekick"
+            android:permission="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE">
+            <intent-filter>
+                <action android:name="android.service.notification.NotificationListenerService" />
+            </intent-filter>
+        </service>
         <service
             android:name=".SidekickAccessibilityService"
             android:exported="false"

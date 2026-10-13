@@ -2,6 +2,7 @@ import AVFoundation
 import ApplicationServices
 import Cocoa
 import QuartzCore
+import UserNotifications
 import FlutterMacOS
 
 class MainFlutterWindow: NSWindow {
@@ -148,6 +149,14 @@ final class SidekickNative {
 
   func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
     switch call.method {
+    case "showNotification":
+      // A phone's notification or a screenshot that arrived, in Notification
+      // Center (asks once).
+      let args = call.arguments as? [String: Any] ?? [:]
+      MacNotifications.shared.show(
+        title: args["title"] as? String ?? "", subtitle: args["subtitle"] as? String ?? "",
+        body: args["body"] as? String ?? "")
+      result(nil)
     case "permissions":
       result(["accessibility": AXIsProcessTrusted()])
     case "requestAccessibility":
@@ -419,5 +428,36 @@ final class MacInput {
         event?.post(tap: .cghidEventTap)
       }
     }
+  }
+}
+
+/// Posts to Notification Center, and shows banners even while Sidekick is
+/// the app in front.
+final class MacNotifications: NSObject, UNUserNotificationCenterDelegate {
+  static let shared = MacNotifications()
+  private var asked = false
+
+  func show(title: String, subtitle: String, body: String) {
+    let center = UNUserNotificationCenter.current()
+    center.delegate = self
+    let post = {
+      let content = UNMutableNotificationContent()
+      content.title = title
+      content.subtitle = subtitle
+      content.body = body
+      center.add(UNNotificationRequest(identifier: UUID().uuidString, content: content, trigger: nil))
+    }
+    if asked { return post() }
+    center.requestAuthorization(options: [.alert, .sound]) { granted, _ in
+      self.asked = true
+      if granted { post() }
+    }
+  }
+
+  func userNotificationCenter(
+    _ center: UNUserNotificationCenter, willPresent notification: UNNotification,
+    withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void
+  ) {
+    completionHandler([.banner, .sound])
   }
 }

@@ -12,6 +12,7 @@ import UIKit
   private let sounds = Sounds()
   private let offers = OfferNotifier()
   private let live = LiveTransfers()
+  private let screenshots = ScreenshotWatcher()
   private var ble: SidekickBLE?
   private var p2p: SidekickP2P?
 
@@ -30,9 +31,14 @@ import UIKit
       let sounds = self.sounds
       let offers = self.offers
       let live = self.live
+      let screenshots = self.screenshots
+      screenshots.channel = FlutterMethodChannel(name: "sidekick/phone", binaryMessenger: registrar.messenger())
       offers.attach(channel)
       channel.setMethodCallHandler { call, result in
         switch call.method {
+        case "watchScreenshots":
+          // Settings → Send screenshots to computers.
+          screenshots.watch((call.arguments as? [String: Any])?["on"] as? Bool ?? false, done: result)
         case "setKeepAlive":
           keepAlive.set((call.arguments as? [String: Any])?["on"] as? Bool ?? false)
           result(nil)
@@ -531,3 +537,65 @@ final class LiveTransfers {
   }
 }
 
+
+/// Settings → Send screenshots to computers: watches the photo library
+/// while Sidekick runs (it needs read access, asked for when turned on) and
+/// hands each new screenshot to Dart on `sidekick/phone` as a temporary copy.
+final class ScreenshotWatcher: NSObject, PHPhotoLibraryChangeObserver {
+  var channel: FlutterMethodChannel?
+  private var watching = false
+  private var since = Date()
+  private var sent = Set<String>()
+
+  func watch(_ on: Bool, done: @escaping FlutterResult) {
+    guard on else {
+      if watching { PHPhotoLibrary.shared().unregisterChangeObserver(self) }
+      watching = false
+      done(true)
+      return
+    }
+    PHPhotoLibrary.requestAuthorization(for: .readWrite) { status in
+      DispatchQueue.main.async {
+        // "Limited" access never includes new screenshots.
+        guard status == .authorized else { return done(false) }
+        if !self.watching {
+          self.since = Date()
+          PHPhotoLibrary.shared().register(self)
+          self.watching = true
+        }
+        done(true)
+      }
+    }
+  }
+
+  func photoLibraryDidChange(_ changeInstance: PHChange) {
+    let options = PHFetchOptions()
+    options.predicate = NSPredicate(
+      format: "(mediaSubtypes & %d) != 0 AND creationDate > %@",
+      PHAssetMediaSubtype.photoScreenshot.rawValue, since as NSDate)
+    options.sortDescriptors = [NSSortDescriptor(key: "creationDate", ascending: true)]
+    PHAsset.fetchAssets(with: .image, options: options).enumerateObjects { asset, _, _ in
+      guard !self.sent.contains(asset.localIdentifier) else { return }
+      self.sent.insert(asset.localIdentifier)
+      if let created = asset.creationDate { self.since = max(self.since, created) }
+      let request = PHImageRequestOptions()
+      request.isNetworkAccessAllowed = true
+      request.version = .current
+      PHImageManager.default().requestImageDataAndOrientation(for: asset, options: request) { data, _, _, _ in
+        guard let data else { return }
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd 'at' HH.mm.ss"
+        let name = "Screenshot \(formatter.string(from: asset.creationDate ?? Date())).png"
+        let url = FileManager.default.temporaryDirectory.appendingPathComponent(name)
+        do {
+          try data.write(to: url)
+        } catch {
+          return
+        }
+        DispatchQueue.main.async {
+          self.channel?.invokeMethod("screenshot", arguments: ["path": url.path, "name": name])
+        }
+      }
+    }
+  }
+}

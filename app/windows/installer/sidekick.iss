@@ -53,7 +53,7 @@ Source: "{#BuildDir}\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs c
 Source: "..\..\packaging\privacy.txt"; DestDir: "{app}"; DestName: "Privacy.txt"; Flags: ignoreversion
 
 [Icons]
-Name: "{autoprograms}\{#AppName}"; Filename: "{app}\{#AppExe}"
+Name: "{autoprograms}\{#AppName}"; Filename: "{app}\{#AppExe}"; AppUserModelID: "Sidekick.Sidekick"
 Name: "{autodesktop}\{#AppName}"; Filename: "{app}\{#AppExe}"; Tasks: desktopicon
 
 [Run]

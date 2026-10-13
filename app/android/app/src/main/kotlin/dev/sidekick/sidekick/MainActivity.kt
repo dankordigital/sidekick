@@ -34,9 +34,11 @@ import java.io.IOException
  * the hotspot and the multicast lock.
  */
 
+private const val REQUEST_PHOTOS = 9
+
 class MainActivity : FlutterActivity() {
     companion object {
-        /** The screen while it's open: screen capture needs it to ask. */
+        /** The screen while it's open: permission questions need it. */
         var current: MainActivity? = null
     }
 
@@ -184,6 +186,23 @@ class MainActivity : FlutterActivity() {
     override fun popSystemNavigator(): Boolean {
         moveTaskToBack(true)
         return true
+    }
+
+    /** Settings → Send screenshots to computers: Android's photo permission. */
+    private var photosReply: ((Boolean) -> Unit)? = null
+
+    fun askPhotos(reply: (Boolean) -> Unit) {
+        photosReply?.invoke(false)
+        photosReply = reply
+        requestPermissions(arrayOf(ScreenshotWatcher.permission), REQUEST_PHOTOS)
+    }
+
+    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        if (requestCode != REQUEST_PHOTOS) return
+        val reply = photosReply
+        photosReply = null
+        reply?.invoke(grantResults.firstOrNull() == PackageManager.PERMISSION_GRANTED)
     }
 
     override fun onDestroy() {

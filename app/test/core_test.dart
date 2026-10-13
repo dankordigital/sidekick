@@ -169,6 +169,29 @@ void main() {
     await expectLater(pc.anonymous().ping(), throwsA(isA<SidekickException>()));
   });
 
+  test('phone notifications and screenshots reach a paired computer', () async {
+    final client = await pair();
+    final shown = pc.server.events.only<PhoneNotification>().first;
+    await client.sendNotification(app: 'Messages', title: 'Anna', text: 'See you at 8');
+    final n = await shown;
+    expect((n.app, n.title, n.text, n.from.id), ('Messages', 'Anna', 'See you at 8', phone.id));
+
+    final shot = File(p.join(Directory.systemTemp.createTempSync('sk_shot').path, 'Screenshot_1.png'))
+      ..writeAsBytesSync(List.generate(5000, (i) => i % 256));
+    final got = pc.server.events.only<FileReceived>().first;
+    await client.sendScreenshot(shot, 'Screenshot_1.png');
+    final file = await got;
+    expect(file.screenshot, isTrue);
+    expect(file.file.readAsBytesSync(), shot.readAsBytesSync());
+
+    // Not paired: refused.
+    await expectLater(
+      pc.anonymous().sendNotification(app: 'x', title: 'x', text: 'x'),
+      throwsA(isA<SidekickException>()),
+    );
+    await expectLater(pc.anonymous().sendScreenshot(shot, 'x.png'), throwsA(isA<SidekickException>()));
+  });
+
   test('info works without pairing', () async {
     final info = await pc.anonymous().info();
     expect(info.id, pc.id);

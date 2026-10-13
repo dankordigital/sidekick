@@ -237,6 +237,33 @@ class _SettingsPageState extends State<SettingsPage> {
                       ],
                     ),
                   ],
+                  // Phones pass these on to paired computers by themselves.
+                  if (!hostIsComputer) ...[
+                    const SectionLabel('On your computers', icon: Icons.computer_rounded),
+                    _Group(
+                      children: [
+                        if (hostIsAndroid)
+                          SwitchListTile(
+                            secondary: const IconTile(Icons.notifications_outlined),
+                            title: const Text('Show notifications on computers'),
+                            subtitle: const Text('Your phone\'s notifications appear on your Mac or PC'),
+                            value: state.relayNotifications,
+                            onChanged: state.setRelayNotifications,
+                          ),
+                        SwitchListTile(
+                          secondary: const IconTile(Icons.screenshot_outlined),
+                          title: const Text('Send screenshots to computers'),
+                          subtitle: Text(
+                            hostIsIOS
+                                ? 'New screenshots go to your Mac or PC while Sidekick runs'
+                                : 'New screenshots go to your Mac or PC',
+                          ),
+                          value: state.sendScreenshots,
+                          onChanged: state.setSendScreenshots,
+                        ),
+                      ],
+                    ),
+                  ],
                   const SectionLabel('What paired devices can do here', icon: Icons.tune_rounded),
                   _Group(
                     children: [

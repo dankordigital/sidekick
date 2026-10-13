@@ -28,6 +28,8 @@ import 'platform/gallery.dart';
 import 'platform/ios.dart';
 import 'platform/hotspot.dart';
 import 'platform/macos.dart';
+import 'platform/desktop_notify.dart';
+import 'platform/phone_relay.dart';
 import 'platform/input.dart';
 import 'platform/secret_store.dart';
 import 'platform/sound.dart';
@@ -183,6 +185,15 @@ class AppState extends ChangeNotifier {
   /// iPhone: keep running while other apps are open, so computers can still
   /// reach it (files, browsing).
   bool keepRunning = true;
+
+  /// Android: notifications that show up here appear on paired computers
+  /// too (Settings → Show notifications on computers; needs Android's
+  /// notification access). Off by default.
+  bool relayNotifications = false;
+
+  /// Phones: screenshots go to paired computers as soon as they're taken
+  /// (Settings → Send screenshots to computers). Off by default.
+  bool sendScreenshots = false;
 
   /// This build's version, e.g. "0.4.0" (shown in Settings → About).
   String appVersion = '';
@@ -405,6 +416,8 @@ class AppState extends ChangeNotifier {
     pureBlack = _prefs.getBool('pureBlack') ?? false;
     liquidGlass = _prefs.getString('look') == 'glass';
     keepRunning = _prefs.getBool('keepRunning') ?? true;
+    relayNotifications = _prefs.getBool('relayNotifications') ?? false;
+    sendScreenshots = _prefs.getBool('sendScreenshots') ?? false;
     askBeforeReceiving = _prefs.getBool('askBeforeReceiving') ?? true;
     autoLoad = _prefs.getBool('autoLoad') ?? true;
     // One switch since 2.4.1; before, two (off if either was off).
@@ -556,6 +569,8 @@ class AppState extends ChangeNotifier {
     // Off unless turned on (Settings → Bluetooth): Wi-Fi by default, and no
     // Bluetooth permission prompt at start.
     if (bluetoothOn) _startBluetooth();
+    PhoneRelay.listen(onNotification: _relayNotification, onScreenshot: _relayScreenshot);
+    if (sendScreenshots && PhoneRelay.screenshotsSupported) unawaited(PhoneRelay.watchScreenshots(true));
     // Written again each start while on: it follows the app if it moved.
     if (AutoLoad.supported) unawaited(AutoLoad.apply(autoLoad));
 
@@ -1538,6 +1553,14 @@ class AppState extends ChangeNotifier {
         _pairRequests.add(request);
       case InviteScanned(:final device):
         _inviteScans.add(device);
+      case PhoneNotification(:final from, :final app, :final title, :final text):
+        unawaited(
+          DesktopNotify.show(
+            title: title.isEmpty ? app : title,
+            subtitle: title.isEmpty ? from.name : '$app · ${from.name}',
+            body: text,
+          ),
+        );
       case Pinged(:final from):
         // One at a time (the server refuses more, but two can cross).
         if (ringingFrom == null) {
@@ -1559,7 +1582,14 @@ class AppState extends ChangeNotifier {
         _savePaired();
         notifyListeners();
         if (name != null) _notices.add(Notice('$name unpaired from this device'));
-      case FileReceived(:final from, :final file, :final size, :final security, :final toReceiveFolder):
+      case FileReceived(
+        :final from,
+        :final file,
+        :final size,
+        :final security,
+        :final toReceiveFolder,
+        :final screenshot,
+      ):
         final transfer = Transfer(name: p.basename(file.path), upload: false, deviceName: from.name)
           ..done = size
           ..total = size
@@ -1571,8 +1601,11 @@ class AppState extends ChangeNotifier {
         transfers.insert(0, transfer);
         if (transfers.length > 50) transfers.removeLast();
         notifyListeners();
-        // Photos and videos sent to a phone go straight to Photos / the gallery.
-        if (toReceiveFolder && _forGallery(file)) {
+        if (screenshot) {
+          _notices.add(Notice('Screenshot from ${from.name}', revealPath: file.path));
+          unawaited(DesktopNotify.show(title: 'Screenshot from ${from.name}', body: p.basename(file.path)));
+          // Photos and videos sent to a phone go straight to Photos / the gallery.
+        } else if (toReceiveFolder && _forGallery(file)) {
           unawaited(_toGallery(transfer, file, 'Received ${p.basename(file.path)} from ${from.name}'));
         } else {
           _notices.add(Notice('Received ${p.basename(file.path)} from ${from.name}', revealPath: file.path));
@@ -1838,6 +1871,71 @@ class AppState extends ChangeNotifier {
     if (Platform.isIOS) unawaited(setIosKeepAlive(value));
     if (Platform.isAndroid) unawaited(AndroidBackground.keepRunning(value));
     notifyListeners();
+  }
+
+  /// Turns on showing this phone's notifications on computers: needs
+  /// Android's notification access, so this opens its page when missing.
+  Future<void> setRelayNotifications(bool value) async {
+    if (value && !await PhoneRelay.notificationAccess()) {
+      await PhoneRelay.openNotificationAccess();
+      _notices.add(Notice('Allow Sidekick in Notification access, then come back.'));
+    }
+    relayNotifications = value;
+    await _prefs.setBool('relayNotifications', value);
+    notifyListeners();
+  }
+
+  Future<void> setSendScreenshots(bool value) async {
+    if (value && !await PhoneRelay.watchScreenshots(true)) {
+      _notices.add(Notice('Sidekick needs access to your photos to see new screenshots.'));
+      return;
+    }
+    if (!value) unawaited(PhoneRelay.watchScreenshots(false));
+    sendScreenshots = value;
+    await _prefs.setBool('sendScreenshots', value);
+    notifyListeners();
+  }
+
+  /// Paired Macs and PCs that can be reached right now; [wifiOnly] leaves
+  /// out the ones only Bluetooth reaches (too slow for pictures).
+  Iterable<PairedDevice> _computersInReach({bool wifiOnly = false}) => _paired.values.where(
+    (d) =>
+        (d.platform == DevicePlatform.windows || d.platform == DevicePlatform.macos) &&
+        (reachableViaWifi(d.id) || (!wifiOnly && viaBluetooth(d.id))),
+  );
+
+  /// The same notification is often posted again (updated); sent once.
+  final _relayed = <String>[];
+
+  void _relayNotification(String app, String title, String text) {
+    if (!relayNotifications) return;
+    final key = '$app\n$title\n$text';
+    if (_relayed.contains(key)) return;
+    _relayed.add(key);
+    if (_relayed.length > 30) _relayed.removeAt(0);
+    for (final d in _computersInReach()) {
+      unawaited(
+        clientFor(d)
+            .sendNotification(app: app, title: title, text: text)
+            .catchError((Object e) => debugPrint('Sidekick: notification to ${d.name}: $e')),
+      );
+    }
+  }
+
+  Future<void> _relayScreenshot(String path, String name) async {
+    if (!sendScreenshots) return;
+    final file = File(path);
+    try {
+      await Future.wait([
+        for (final d in _computersInReach(wifiOnly: true))
+          clientFor(d)
+              .sendScreenshot(file, name.isEmpty ? p.basename(path) : name)
+              .catchError((Object e) => debugPrint('Sidekick: screenshot to ${d.name}: $e')),
+      ]);
+    } finally {
+      // It was a copy for sending; the original stays in Photos.
+      await file.delete().catchError((_) => file);
+    }
   }
 
   void setPureBlack(bool value) {

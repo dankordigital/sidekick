@@ -349,6 +349,30 @@ class PeerClient {
   /// already ringing.
   Future<void> ping() => _postJson('/v1/ping', const {});
 
+  /// Shows a notification from this phone on the computer.
+  Future<void> sendNotification({required String app, required String title, required String text}) =>
+      _postJson('/v1/notification', {'app': app, 'title': title, 'text': text});
+
+  /// Sends a screenshot this phone just took (Wi-Fi only: never worth
+  /// Bluetooth's time).
+  Future<void> sendScreenshot(File file, String name) async {
+    if (ble != null) throw SidekickException('Screenshots go over Wi-Fi only.');
+    final total = await file.length();
+    try {
+      final req = await _http.openUrl('POST', _uri('/v1/screenshot', {'name': name}));
+      if (token != null) req.headers.set(HttpHeaders.authorizationHeader, 'Bearer $token');
+      req.contentLength = total;
+      await req.addStream(file.openRead());
+      final res = await req.close();
+      if (res.statusCode >= 400) throw await _failure(res);
+      await res.drain<void>();
+    } on HandshakeException {
+      throw _tlsFailure();
+    } on SocketException {
+      throw SidekickException('Lost connection to $host while sending.');
+    }
+  }
+
   // ------------------------------------------------------------ direct link
 
   /// Asks the device (over Bluetooth) to open a hotspot for us.

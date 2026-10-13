@@ -155,18 +155,18 @@ try {
     <li>browse your files and use your mouse and keyboard. Both are allowed by default; turn either off in Settings
       under “What paired devices can do here”. Using the mouse and keyboard also needs the system's Accessibility
       permission on the Mac and Android, which you grant yourself.</li>
-    <li>share your clipboard: text you copy goes to your paired devices nearby, and what they copy lands in yours
-      (turn it off in Settings under “Share clipboard”). Every device sends what you copy by itself; Android and
-      iPhone only while Sidekick is open (they let no app read the clipboard in the background), and an iPhone asks
-      “Allow Paste?” unless you allow it in Settings. A copy is delivered to a device that's out of reach when it's
-      back, for a few minutes. What password managers mark as secret is never sent, and Sidekick keeps no copy;</li>
     <li>ping your device: it rings until you tap Found It! on it (on Android at alarm volume, so you hear it on
-      silent);</li>
-    <li>see your phone's screen (Screen Mirroring, from a Mac or Windows PC): only after you allow it on the phone
-      each time (or choose Always allow for that computer), and then the system's own question: Start Broadcast on
-      iPhone, Start now on Android. Everything on the screen goes to that computer, live and encrypted, until either
-      of you stops it; the phone shows that it's being shared. Nothing is recorded or kept. Turn it off in Settings
-      under “Let paired computers see this screen”.</li>
+      silent).</li>
+  </ul>
+  <p>Two things a phone can pass on to your paired Macs and PCs by itself, both off until you turn them on:</p>
+  <ul>
+    <li>its notifications (Android only, Settings → “Show notifications on computers”): each new notification's
+      app name, title and text go to your paired computers in reach, encrypted, and appear in their notifications.
+      Ongoing ones (music, downloads), private ones and system ones are left out. Nothing is kept on the phone or
+      sent anywhere else;</li>
+    <li>its screenshots (Settings → “Send screenshots to computers”): each new screenshot goes to your paired
+      computers in reach over Wi-Fi, encrypted, into their receive folder. The original stays in your Photos or
+      gallery; the copy made for sending is deleted.</li>
   </ul>
   <p>You can unpair a device at any time.</p>
   <h3>Encryption</h3>
@@ -180,17 +180,18 @@ try {
     <div>Bluetooth</div><div>All devices: to connect when one of them isn't on Wi-Fi. While both are, Sidekick only
       uses Wi-Fi.</div>
     <div>Notifications</div><div>iPhone and Android: to show a file request while Sidekick is in the background, with
-      Accept and Decline, and on Android its progress and the "Ready to receive" notice.</div>
-    <div>Screen capture</div><div>iPhone and Android: only for Screen Mirroring, after you allow it each time
-      (Android's “Start now”, iOS's Start Broadcast). On iPhone a small broadcast extension sends the screen to the
-      Sidekick app on the same phone, which passes it to the computer.</div>
+      Accept and Decline, and on Android its progress and the "Ready to receive" notice. Mac and Windows: to show
+      your phone's notifications and screenshots as they arrive.</div>
     <div>Background running</div><div>iPhone and Android: to stay reachable while you use other apps. Android may
       ask to stop optimising Sidekick's battery use (Settings → Keep running); the iPhone plays silence in the
       background.</div>
     <div>Camera</div><div>iPhone and Android: only to scan a pairing QR code. The picture is read on the device and is
       never saved or sent.</div>
     <div>Photos</div><div>iPhone: only the photos you pick to send, and adding the photos and videos you receive to
-      your library. Adding doesn't let Sidekick see the rest of your library.</div>
+      your library. Adding doesn't let Sidekick see the rest of your library. If you turn on “Send screenshots to
+      computers”, iPhone and Android ask to read your photos, and Sidekick only looks for new screenshots.</div>
+    <div>Notification access</div><div>Android: only if you turn on “Show notifications on computers”, which you
+      allow yourself in Android's settings, to pass new notifications on to your paired computers.</div>
     <div>Files and “All files access”</div><div>Android: to save files you receive and, if you allow it, let paired
       devices browse your files.</div>
     <div>Location</div><div>Android 12 and older only: those versions require it for Bluetooth and Wi-Fi scanning.

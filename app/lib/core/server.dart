@@ -48,6 +48,16 @@ class Paired extends ServerEvent {
   final PairedDevice device;
 }
 
+/// A notification that showed up on a paired Android phone, to show on
+/// this computer too.
+class PhoneNotification extends ServerEvent {
+  PhoneNotification(this.from, {required this.app, required this.title, required this.text});
+  final TrustedPeer from;
+  final String app;
+  final String title;
+  final String text;
+}
+
 /// A paired device pinged this one: play a loud sound, to find it.
 class Pinged extends ServerEvent {
   Pinged(this.from);
@@ -67,7 +77,7 @@ class Unpaired extends ServerEvent {
 }
 
 class FileReceived extends ServerEvent {
-  FileReceived(this.from, this.file, this.size, this.security, {this.toReceiveFolder = false});
+  FileReceived(this.from, this.file, this.size, this.security, {this.toReceiveFolder = false, this.screenshot = false});
   final TrustedPeer from;
   final File file;
   final int size;
@@ -76,6 +86,10 @@ class FileReceived extends ServerEvent {
   /// Sent to this device (into the receive folder), not copied into a
   /// folder someone picked while browsing its files.
   final bool toReceiveFolder;
+
+  /// A screenshot the phone just took, sent by itself (Settings → Send
+  /// screenshots to computers).
+  final bool screenshot;
 }
 
 /// A paired device wants to send files here. Show [offer] and answer it;
@@ -356,6 +370,8 @@ class SidekickServer {
       ..post('/v1/pair/confirm', _pairConfirm)
       ..post('/v1/unpair', _authed(_unpair))
       ..post('/v1/ping', _authed(_ping))
+      ..post('/v1/notification', _authed(_notification))
+      ..post('/v1/screenshot', _authed(_screenshot, (p) => p.files))
       ..get('/v1/fs/roots', _authed(_roots, (p) => p.files))
       ..get('/v1/fs/list', _authed(_list, (p) => p.files))
       ..get('/v1/fs/download', _authed(_download, (p) => p.files))
@@ -578,6 +594,36 @@ class SidekickServer {
     _events.add(Unpaired(peer.id));
     return _json({'ok': true});
   }
+
+  /// A paired phone's notification, to show here (computers only).
+  Future<Response> _notification(Request r) async {
+    if (self().platform != DevicePlatform.windows && self().platform != DevicePlatform.macos) {
+      return _error(404, 'Only computers show phone notifications');
+    }
+    final body = await _body(r);
+    String field(String key, int max) {
+      final v = body[key];
+      if (v is! String) return '';
+      return v.length > max ? v.substring(0, max) : v;
+    }
+
+    final title = field('title', 200), text = field('text', 1000);
+    if (title.isEmpty && text.isEmpty) return _error(400, 'Empty notification');
+    _events.add(PhoneNotification(_peer(r), app: field('app', 80), title: title, text: text));
+    return _json({'ok': true});
+  }
+
+  /// A screenshot a paired phone just took: straight into the receive
+  /// folder, no Accept needed (the phone owner turned it on).
+  Future<Response> _screenshot(Request r) async {
+    final length = int.tryParse(r.headers['content-length'] ?? '');
+    if (length == null || length > maxScreenshot) return _error(413, 'Screenshot too big');
+    final name = sanitizeFileName(r.url.queryParameters['name'] ?? 'Screenshot.png');
+    return _save(r, await receiveDir(), name, null, toReceiveFolder: true, screenshot: true);
+  }
+
+  /// The biggest screenshot accepted (a 4K PNG is well under it).
+  static const maxScreenshot = 40 * 1024 * 1024;
 
   Response _ping(Request r) {
     if (ringing()) return _error(409, '${self().name} is already being pinged');
@@ -827,6 +873,18 @@ class SidekickServer {
     }
     final (ticket, refusal) = _takeTicket(r, dirParam);
     if (refusal != null) return refusal;
+    return _save(r, dir, name, ticket, toReceiveFolder: dirParam == null || dirParam.isEmpty);
+  }
+
+  /// Writes an upload's body into [dir] as [name] (or a free variant).
+  Future<Response> _save(
+    Request r,
+    String dir,
+    String name,
+    _Ticket? ticket, {
+    required bool toReceiveFolder,
+    bool screenshot = false,
+  }) async {
     await Directory(dir).create(recursive: true);
 
     // Write to a temporary name, then rename, so a half-sent file never
@@ -853,7 +911,9 @@ class SidekickServer {
           ? const TransferSecurity.bluetooth()
           : TransferSecurity.wifi(certificate: _peer(r).fingerprint);
       ticket?.offer._fileDone(size);
-      _events.add(FileReceived(_peer(r), saved, size, security, toReceiveFolder: dirParam == null || dirParam.isEmpty));
+      _events.add(
+        FileReceived(_peer(r), saved, size, security, toReceiveFolder: toReceiveFolder, screenshot: screenshot),
+      );
       return _json({'path': saved.path, 'size': size});
     } catch (_) {
       // Counts as finished, so the receiving screen doesn't wait for it.

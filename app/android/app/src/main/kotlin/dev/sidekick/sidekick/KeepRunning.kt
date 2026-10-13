@@ -29,6 +29,10 @@ object SidekickEngine {
     var android: MethodChannel? = null
         private set
 
+    /** `sidekick/phone`: notifications and screenshots for paired computers (PhoneRelay.kt). */
+    var phone: MethodChannel? = null
+        private set
+
     fun get(context: Context): FlutterEngine {
         val cache = FlutterEngineCache.getInstance()
         cache.get(ID)?.let { return it }
@@ -44,6 +48,27 @@ object SidekickEngine {
                     result.success(null)
                 }
                 "batteryUnrestricted" -> result.success(Battery.unrestricted(app))
+                "notificationAccess" -> result.success(PhoneRelay.notificationAccess(app))
+                "openNotificationAccess" -> {
+                    PhoneRelay.openNotificationAccess(app)
+                    result.success(true)
+                }
+                "watchScreenshots" -> {
+                    if (call.argument<Boolean>("on") != true) {
+                        ScreenshotWatcher.stop(app)
+                        result.success(true)
+                    } else if (ScreenshotWatcher.allowed(app)) {
+                        ScreenshotWatcher.start(app)
+                        result.success(true)
+                    } else {
+                        // Asking needs the screen; the answer comes back there.
+                        val activity = MainActivity.current
+                        if (activity == null) result.success(false) else activity.askPhotos { granted ->
+                            if (granted) ScreenshotWatcher.start(app)
+                            result.success(granted)
+                        }
+                    }
+                }
                 "requestBatteryUnrestricted" -> {
                     Battery.request(app)
                     result.success(null)
@@ -52,6 +77,7 @@ object SidekickEngine {
             }
         }
         android = MethodChannel(engine.dartExecutor.binaryMessenger, "sidekick/android")
+        phone = MethodChannel(engine.dartExecutor.binaryMessenger, "sidekick/phone")
         backgroundHandlers(app)
         engine.dartExecutor.executeDartEntrypoint(DartExecutor.DartEntrypoint.createDefault())
         cache.put(ID, engine)
