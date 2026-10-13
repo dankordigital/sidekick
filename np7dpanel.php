@@ -442,7 +442,9 @@ function form_start(string $action, string $tab, array $hidden = []): string {
   </nav>
   <?php if ($flash): ?><div class="notice <?= $flash[1] ? 'bad' : '' ?>"><?= e($flash[0]) ?></div><?php endif; ?>
 
-<?php if ($tab === 'overview'):
+<?php if (in_array($tab, ['visits', 'site'], true) && !function_exists('site_state')): ?>
+  <div class="notice bad">This tab needs the new wishlist.php: upload it from the repo next to this page (and index.php, index.html and .htaccess for the website).</div>
+<?php elseif ($tab === 'overview'):
     $now = time();
     $since = fn(int $days) => count(array_filter($rows, fn($r) => $now - strtotime($r['joined'] . ' UTC') < $days * 86400));
     $noWelcome = count(array_filter($rows, fn($r) => $r['emailed'] === ''));
