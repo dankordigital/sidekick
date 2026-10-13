@@ -5,34 +5,56 @@ a new session. Newest first. For how things work, read `CLAUDE.md` (the
 detailed developer notes, including every release in "Versions") and
 `ARCHITECTURE.md` (the big picture).
 
-## Where things stand (12 October 2026)
+## Where things stand (13 October 2026)
 
-- **App:** latest release **2.13.0** (Screen Mirroring, phones that stay on
-  in the background), published on GitHub with all six files and on
-  TestFlight. Branch: `claude/sidekick-app-architecture-8ilytw`.
-- **Website:** **getsidekick.app** (OVHcloud, free 100 MB hosting with
-  email), uploaded by the owner with FileZilla into `www`. It's a
-  **wishlist page, not a download page** (Sidekick isn't out yet).
-- **Wishlist:** works, emails confirmed arriving (12 Oct, the check page's
-  test email reached info@getsidekick.app).
-- **Ads:** three finished videos (below), all made outside the repo, in the
-  session's scratchpad.
+- **App:** latest release **2.16.1**, published on GitHub (Windows .exe,
+  Apple-silicon and Intel .dmg/.pkg, Android .apk, iPhone .ipa,
+  altstore.json) and on TestFlight. Branch:
+  `claude/sidekick-app-architecture-8ilytw`.
+  - Features now: files both ways, browse the other device, remote control,
+    Ping, direct Wi-Fi / Bluetooth, QR pairing, Live Activities, phone
+    notifications on computers (Android), screenshots to computers.
+  - **Removed (2.15.0, don't bring back):** shared clipboard, Screen
+    Mirroring.
+  - Look: minimal Material by default; Liquid Glass option on iOS/macOS 26
+    (iPhone uses Apple's own swipeable tab bar; the Mac draws its own glass,
+    never a transparent window: that killed the M1 app in 2.16.0).
+- **Mac:** separate Apple-silicon and Intel builds since 2.16.0. The owner's
+  M1 still has to confirm 2.16.1 works (background, buttons, pairing code).
+- **Website:** **getsidekick.app** (OVHcloud free hosting), uploaded by the
+  owner with FileZilla into `www`. A **wishlist page, not a download page**.
+- **Wishlist:** works, emails arrive (SMTP via ssl0.ovh.net). Admin panel
+  **`np7dpanel.php`**: overview, people (add/remove/resend/CSV), email
+  everyone, past sends, mail log, health. Its password is the mailbox
+  password from `wishlist-config.php` (never in git).
+- **Ads:** three finished videos, made outside the repo (scratchpad).
 
 ## Waiting on the owner
 
-1. **Wishlist:** delete `wishlist-check.php` from the hosting. People who
-   signed up before the fix never got their email: offered a one-time resend.
-2. **Terms of Service:** fill in the country in section 9; the copyright
-   line should name a real person or business. Not on the site yet
-   (offered as `terms.html`).
-3. **Privacy policy:** still mentions the Microsoft Store as an install
-   source, which isn't true (offered to fix).
-4. **Launch, when ready:** bring back the download section (in git history,
-   2.12.0), make the site findable on Google, and build the "email everyone"
-   page for the wishlist (password-protected, sends in small batches).
-   Decide what iPhone users are told (no App Store; AltStore/TestFlight).
+1. **Test 2.16.1 on the M1** (Apple-silicon file): background, buttons,
+   pairing code and QR, with Liquid Glass on and off.
+2. **Upload to `www`:** `np7dpanel.php`, `wishlist.php` (welcome email no
+   longer mentions clipboard/mirroring), `privacy.html` (2.15 features).
+   Delete `wishlist-check.php` from the hosting.
+3. **Change the info@getsidekick.app password** (it was shared in chat),
+   then update `wishlist-config.php` on the hosting. The panel uses it too.
+4. **Profile picture for info@:** `website/profile.png` (white "sk" on
+   black). Google needs a phone number that isn't over its limit;
+   Gravatar works without one.
+5. **Terms of Service:** country in section 9, a real name in the
+   copyright line. **Privacy policy:** still mentions the Microsoft Store.
+6. **Launch, when ready:** bring back the download section (git history,
+   2.12.0), make the site findable on Google, email the list from
+   `np7dpanel.php`. Decide what iPhone users are told (AltStore/TestFlight).
 
 ## History
+
+### Admin panel grows up (13 Oct)
+- `np7dpanel.php` became a full admin panel: Overview (counts, 30-day
+  sign-up chart, devices, newest), People (search, add, remove, resend
+  welcome, send to everyone who never got it, CSV export), Email everyone
+  (test first, batches of 8, resumable, draft kept), Past sends, Mail log,
+  Health. Tested with 37 fake sign-ups against a fake SMTP server.
 
 ### 2.16.1, admin panel, Mac icon looks (13 Oct)
 - M1 app was dead in 2.16.0 (no background, buttons dead): the see-through
