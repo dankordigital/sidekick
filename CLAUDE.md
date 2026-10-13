@@ -439,14 +439,25 @@ one) without asking.
 1. Push to the branch. CI runs tests and builds all four platforms.
 2. Run the `Build` workflow (workflow_dispatch) with `release_tag: vX.Y.Z`.
    It builds everything and publishes the release: `SidekickSetup-X.Y.Z.exe`,
-   `Sidekick-X.Y.Z.dmg`, `Sidekick-X.Y.Z.pkg`, `Sidekick-X.Y.Z.apk`,
-   `Sidekick-X.Y.Z.ipa`, `altstore.json`.
+   `Sidekick-X.Y.Z-Apple-silicon.dmg` / `.pkg`, `Sidekick-X.Y.Z-Intel.dmg` /
+   `.pkg` (2.16.0, the owner's call: one app per kind of Mac; CI thins the
+   universal build with `ditto --arch` and signs each again, ad hoc),
+   `Sidekick-X.Y.Z.apk`, `Sidekick-X.Y.Z.ipa`, `altstore.json`.
 3. While the site is a wishlist there are no download links to bump. When
    downloads come back: update `index.html` (every `X.Y.Z` link, `version:`
    and "Version X.Y.Z"), including `RELEASE.files.macosPkg` (the `.pkg`).
 4. Add the version to [Versions](#versions) below.
 
 ## Versions
+
+### 2.16.0
+- **Separate Mac apps for Apple silicon and Intel:** each release has an
+  Apple-silicon and an Intel `.dmg` and `.pkg`, each with only its own code.
+- **Fixed: an M1 Mac showed no pairing code or QR code** with Liquid Glass
+  on (the glass view drawn inside the window covered them).
+- **Liquid Glass that looks like it:** on the Mac the whole window is
+  Apple's glass, the desktop showing through; on iPhone the backdrop has
+  color again (even with Pure black or Monochrome) for the glass to show.
 
 ### 2.15.1
 - **Liquid Glass: nothing hides behind the tab bar** any more: like the

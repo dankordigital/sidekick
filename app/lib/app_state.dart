@@ -33,6 +33,7 @@ import 'platform/phone_relay.dart';
 import 'platform/input.dart';
 import 'platform/secret_store.dart';
 import 'platform/sound.dart';
+import 'ui/widgets.dart' show appleOsMajor;
 
 /// The color themes in Settings → Theme: name and seed color.
 const themeColors = <String, (String, Color)>{
@@ -569,6 +570,7 @@ class AppState extends ChangeNotifier {
     // Off unless turned on (Settings → Bluetooth): Wi-Fi by default, and no
     // Bluetooth permission prompt at start.
     if (bluetoothOn) _startBluetooth();
+    if (liquidGlass) _applyWindowGlass();
     PhoneRelay.listen(onNotification: _relayNotification, onScreenshot: _relayScreenshot);
     if (sendScreenshots && PhoneRelay.screenshotsSupported) unawaited(PhoneRelay.watchScreenshots(true));
     // Written again each start while on: it follows the app if it moved.
@@ -1947,7 +1949,18 @@ class AppState extends ChangeNotifier {
   void setLiquidGlass(bool value) {
     liquidGlass = value;
     _prefs.setString('look', value ? 'glass' : 'material');
+    _applyWindowGlass();
     notifyListeners();
+  }
+
+  /// macOS 26: Apple's glass behind the whole window (see ui/glass.dart).
+  void _applyWindowGlass() {
+    if (!Platform.isMacOS || (appleOsMajor ?? 0) < 26) return;
+    unawaited(
+      const MethodChannel('sidekick/macos')
+          .invokeMethod<void>('setGlass', {'on': liquidGlass})
+          .catchError((Object e) => debugPrint('Sidekick: setGlass: $e')),
+    );
   }
 
   void setThemeMode(ThemeMode mode) {

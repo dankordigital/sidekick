@@ -34,6 +34,13 @@ detailed developer notes, including every release in "Versions") and
 
 ## History
 
+### Sidekick 2.16.0: Mac per chip, real glass (13 Oct)
+- Owner: M1 Mac showed no pairing code/QR; Liquid Glass "doesn't make
+  anything liquid glass"; wanted separate ARM and Intel Mac versions.
+- Mac builds split (Apple-silicon / Intel .dmg and .pkg). The Mac's glass
+  is now the window (NSGlassEffectView behind a clear Flutter view); the
+  AppKitView glass that likely hid the pairing code is gone.
+
 ### Sidekick 2.15.0: simpler, and two new features (13 Oct)
 - The owner tried Liquid Glass and wanted the real thing: the iPhone tab
   bar is now Apple's own UITabBar (swipeable) on iOS 26.

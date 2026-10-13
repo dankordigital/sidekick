@@ -243,7 +243,8 @@ class SidekickApp extends StatelessWidget {
         dynamicSchemeVariant: choice == 'mono' ? DynamicSchemeVariant.monochrome : DynamicSchemeVariant.tonalSpot,
       );
     }
-    if (brightness == Brightness.dark && state.pureBlack) {
+    // Pure black would leave nothing for glass to show.
+    if (brightness == Brightness.dark && state.pureBlack && !_glass) {
       scheme = scheme.copyWith(
         surface: Colors.black,
         surfaceContainerLowest: Colors.black,

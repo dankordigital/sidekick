@@ -179,61 +179,75 @@ jobs:
       - run: flutter pub get
       - run: flutter build macos --release --build-name=${{ steps.version.outputs.version }} --build-number=${{ github.run_number }}
 
-      # A disk image with the app and a shortcut to Applications to drag it to.
-      - name: Package the .dmg
+      # Two Macs, two apps: Apple silicon (arm64) and Intel (x86_64), each
+      # with only its own code. Thinning breaks the ad-hoc signature, and
+      # Apple silicon refuses to run unsigned code, so each is signed again.
+      - name: Split into Apple silicon and Intel apps
         run: |
           app="$(ls -d build/macos/Build/Products/Release/*.app | head -1)"
-          mkdir -p build/dmg build/dist
-          cp -R "$app" build/dmg/Sidekick.app
-          dmg="build/dist/Sidekick-${{ steps.version.outputs.version }}.dmg"
-          # The drag-to-install window: background (sharp on Retina), Sidekick
-          # under the arrow's tail, Applications under its head.
-          tiffutil -cathidpicheck macos/packaging/dmg-background.png macos/packaging/dmg-background@2x.png \
-            -out build/dmg-background.tiff
-          brew install create-dmg || true
-          styled=0
-          for i in 1 2 3; do
-            rm -f "$dmg"
-            if create-dmg --volname Sidekick --background build/dmg-background.tiff \
-                --window-pos 200 120 --window-size 640 453 --icon-size 112 \
-                --icon Sidekick.app 417 293 --hide-extension Sidekick.app \
-                --app-drop-link 233 293 "$dmg" build/dmg; then
-              styled=1
-              break
-            fi
-            sleep 5
+          for arch in arm64 x86_64; do
+            rm -rf "build/arch-$arch" && mkdir -p "build/arch-$arch"
+            ditto --arch "$arch" "$app" "build/arch-$arch/Sidekick.app"
+            # Everything inside first, then the app itself with its entitlements.
+            codesign --force --deep --sign - "build/arch-$arch/Sidekick.app"
+            codesign --force --sign - --entitlements macos/Runner/Release.entitlements "build/arch-$arch/Sidekick.app"
+            codesign --verify --deep --strict "build/arch-$arch/Sidekick.app"
+            # Nothing of the other kind left inside.
+            lipo -archs "build/arch-$arch/Sidekick.app/Contents/MacOS/"* | grep -qx "$arch"
           done
-          if [ "$styled" = 0 ]; then
-            echo "::warning::Styling the .dmg failed; making a plain one"
-            ln -s /Applications build/dmg/Applications
-            # hdiutil is occasionally "busy" on CI machines; retry a few times.
-            for i in 1 2 3; do
-              hdiutil create -volname Sidekick -srcfolder build/dmg -ov -format UDZO "$dmg" && break
-              sleep 5
-            done
-          fi
-          test -f "$dmg"
 
-      # The Mac's other choice: an installer package. It puts Sidekick in
-      # Applications, with a welcome page and the privacy policy. Unsigned,
-      # like the .dmg (first open: right-click → Open).
-      - name: Package the .pkg
+      # For each: a disk image with the app and a shortcut to Applications to
+      # drag it to, and an installer package (welcome page, privacy policy;
+      # always into /Applications). Unsigned by Apple, like before (first
+      # open: right-click → Open).
+      - name: Package the .dmg and .pkg files
         run: |
           v="${{ steps.version.outputs.version }}"
-          app="$(ls -d build/macos/Build/Products/Release/*.app | head -1)"
-          rm -rf build/pkgroot build/pkg
-          mkdir -p build/pkgroot/Applications build/pkg/resources build/dist
-          cp -R "$app" build/pkgroot/Applications/Sidekick.app
-          # Always install into /Applications, never "update" a copy elsewhere.
-          pkgbuild --analyze --root build/pkgroot build/pkg/component.plist
-          plutil -replace 0.BundleIsRelocatable -bool NO build/pkg/component.plist
-          pkgbuild --root build/pkgroot --component-plist build/pkg/component.plist \
-            --identifier dev.sidekick.sidekick --version "$v" --install-location / build/pkg/Sidekick-app.pkg
-          cp macos/packaging/pkg/welcome.html packaging/privacy.txt build/pkg/resources/
-          # The glass "sk" in the corner, sharp on Retina.
+          mkdir -p build/dist
+          tiffutil -cathidpicheck macos/packaging/dmg-background.png macos/packaging/dmg-background@2x.png \
+            -out build/dmg-background.tiff
           tiffutil -cathidpicheck macos/packaging/pkg/background.png macos/packaging/pkg/background@2x.png \
-            -out build/pkg/resources/background.tiff
-          cat > build/pkg/distribution.xml <<EOF
+            -out build/pkg-background.tiff
+          brew install create-dmg || true
+          for arch in arm64 x86_64; do
+            name=$([ "$arch" = arm64 ] && echo "Apple-silicon" || echo "Intel")
+            src="build/arch-$arch/Sidekick.app"
+
+            rm -rf build/dmg && mkdir -p build/dmg
+            cp -R "$src" build/dmg/Sidekick.app
+            dmg="build/dist/Sidekick-$v-$name.dmg"
+            styled=0
+            for i in 1 2 3; do
+              rm -f "$dmg"
+              if create-dmg --volname Sidekick --background build/dmg-background.tiff \
+                  --window-pos 200 120 --window-size 640 453 --icon-size 112 \
+                  --icon Sidekick.app 417 293 --hide-extension Sidekick.app \
+                  --app-drop-link 233 293 "$dmg" build/dmg; then
+                styled=1
+                break
+              fi
+              sleep 5
+            done
+            if [ "$styled" = 0 ]; then
+              echo "::warning::Styling the $name .dmg failed; making a plain one"
+              ln -sf /Applications build/dmg/Applications
+              for i in 1 2 3; do
+                hdiutil create -volname Sidekick -srcfolder build/dmg -ov -format UDZO "$dmg" && break
+                sleep 5
+              done
+            fi
+            test -f "$dmg"
+
+            rm -rf build/pkgroot build/pkg
+            mkdir -p build/pkgroot/Applications build/pkg/resources
+            cp -R "$src" build/pkgroot/Applications/Sidekick.app
+            pkgbuild --analyze --root build/pkgroot build/pkg/component.plist
+            plutil -replace 0.BundleIsRelocatable -bool NO build/pkg/component.plist
+            pkgbuild --root build/pkgroot --component-plist build/pkg/component.plist \
+              --identifier dev.sidekick.sidekick --version "$v" --install-location / build/pkg/Sidekick-app.pkg
+            cp macos/packaging/pkg/welcome.html packaging/privacy.txt build/pkg/resources/
+            cp build/pkg-background.tiff build/pkg/resources/background.tiff
+            cat > build/pkg/distribution.xml <<EOF
           <?xml version="1.0" encoding="utf-8"?>
           <installer-gui-script minSpecVersion="2">
             <title>Sidekick</title>
@@ -241,7 +255,7 @@ jobs:
             <readme file="privacy.txt" mime-type="text/plain"/>
             <background file="background.tiff" alignment="bottomleft" scaling="none"/>
             <background-darkAqua file="background.tiff" alignment="bottomleft" scaling="none"/>
-            <options customize="never" require-scripts="false" hostArchitectures="arm64,x86_64"/>
+            <options customize="never" require-scripts="false" hostArchitectures="$arch"/>
             <domains enable_anywhere="false" enable_currentUserHome="false" enable_localSystem="true"/>
             <volume-check><allowed-os-versions><os-version min="12.0"/></allowed-os-versions></volume-check>
             <choices-outline><line choice="sidekick"/></choices-outline>
@@ -249,11 +263,10 @@ jobs:
             <pkg-ref id="dev.sidekick.sidekick" version="$v" onConclusion="none">Sidekick-app.pkg</pkg-ref>
           </installer-gui-script>
           EOF
-          productbuild --distribution build/pkg/distribution.xml --resources build/pkg/resources \
-            --package-path build/pkg "build/dist/Sidekick-$v.pkg"
-          test -f "build/dist/Sidekick-$v.pkg"
-          # It lists exactly the app, in Applications.
-          pkgutil --payload-files "build/dist/Sidekick-$v.pkg" | grep -q '^./Applications/Sidekick.app$'
+            productbuild --distribution build/pkg/distribution.xml --resources build/pkg/resources \
+              --package-path build/pkg "build/dist/Sidekick-$v-$name.pkg"
+            pkgutil --payload-files "build/dist/Sidekick-$v-$name.pkg" | grep -q '^./Applications/Sidekick.app$'
+          done
 
       - uses: actions/upload-artifact@v4
         with:
@@ -445,7 +458,7 @@ jobs:
 
             **Android 8.0+:** on your phone, download the **Sidekick** `.apk` below and open it. If asked, allow your browser or Files app to install apps.
 
-            **macOS 12+:** open the **Sidekick** `.dmg` and drag Sidekick into Applications, or open the `.pkg` installer and click **Continue**, then **Install**. The first time, right-click Sidekick → **Open** → **Open** (it isn't notarized yet). On macOS 15 and newer: try to open it once, then go to **System Settings → Privacy & Security** and click **Open Anyway**.
+            **macOS 12+:** pick your Mac's kind: Apple menu → **About This Mac** says **Chip: Apple M…** → the **Apple-silicon** files; **Processor: Intel** → the **Intel** files. Open the `.dmg` and drag Sidekick into Applications, or open the `.pkg` installer and click **Continue**, then **Install**. The first time, right-click Sidekick → **Open** → **Open** (it isn't notarized yet). On macOS 15 and newer: try to open it once, then go to **System Settings → Privacy & Security** and click **Open Anyway**.
 
             **iPhone/iPad (iOS 15+):** install [AltStore](https://altstore.io) or [SideStore](https://sidestore.io) once, then add this source in it: `https://github.com/${{ github.repository }}/releases/latest/download/altstore.json` and tap **Sidekick → Install**. New versions then show up as updates. (Or install the `.ipa` below with [Sideloadly](https://sideloadly.io).)
 

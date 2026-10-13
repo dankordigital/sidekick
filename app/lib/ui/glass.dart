@@ -37,9 +37,14 @@ Color glassRim(ColorScheme scheme) =>
     Colors.white.withValues(alpha: scheme.brightness == Brightness.dark ? 0.14 : 0.55);
 
 /// The real thing: Apple's Liquid Glass views (UIGlassEffect on iOS 26,
-/// NSGlassEffectView on macOS 26), as platform views. Elsewhere (and in the
+/// as a platform view; the Mac's is the window itself, [windowGlass]). Elsewhere (and in the
 /// screenshot tool) [GlassPanel] draws a frosted look of its own.
-bool get nativeGlass => (Platform.isIOS || Platform.isMacOS) && (appleOsMajor ?? 0) >= 26;
+bool get nativeGlass => Platform.isIOS && (appleOsMajor ?? 0) >= 26;
+
+/// macOS 26: the whole window stands on Apple's glass (NSGlassEffectView
+/// behind Sidekick, `setGlass` on `sidekick/macos`), so the desktop shows
+/// through, blurred; the backdrop then stays almost clear.
+bool get windowGlass => Platform.isMacOS && (appleOsMajor ?? 0) >= 26;
 
 /// Frosted glass: blurs what's behind it, tints it and draws a bright rim.
 class GlassPanel extends StatelessWidget {
@@ -65,17 +70,11 @@ class GlassPanel extends StatelessWidget {
     if (nativeGlass) {
       // Apple's own Liquid Glass, drawn by the system under our widgets.
       final params = {'radius': radius, 'dark': scheme.brightness == Brightness.dark};
-      final glass = Platform.isIOS
-          ? UiKitView(
-              viewType: 'sidekick/glass',
-              creationParams: params,
-              creationParamsCodec: const StandardMessageCodec(),
-            )
-          : AppKitView(
-              viewType: 'sidekick/glass',
-              creationParams: params,
-              creationParamsCodec: const StandardMessageCodec(),
-            );
+      final glass = UiKitView(
+        viewType: 'sidekick/glass',
+        creationParams: params,
+        creationParamsCodec: const StandardMessageCodec(),
+      );
       return Stack(
         children: [
           // Keyed by the look: the native view is rebuilt when dark mode flips.
@@ -126,6 +125,13 @@ class GlassBackdrop extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final dark = scheme.brightness == Brightness.dark;
+    // The Mac's window is Apple's glass already: only a light tint on top.
+    if (windowGlass) {
+      return ColoredBox(
+        color: scheme.surface.withValues(alpha: dark ? 0.25 : 0.2),
+        child: child,
+      );
+    }
     RadialGradient blob(Alignment at, Color color, double radius) => RadialGradient(
       center: at,
       radius: radius,
@@ -137,7 +143,9 @@ class GlassBackdrop extends StatelessWidget {
     return DecoratedBox(
       decoration: BoxDecoration(color: scheme.surface),
       child: DecoratedBox(
-        decoration: BoxDecoration(gradient: blob(const Alignment(-0.9, -0.8), scheme.primaryContainer, 1.1)),
+        decoration: BoxDecoration(
+          gradient: blob(const Alignment(-0.9, -0.8), dark ? scheme.primary : scheme.primaryContainer, 1.1),
+        ),
         child: DecoratedBox(
           decoration: BoxDecoration(gradient: blob(const Alignment(1, -0.1), scheme.tertiaryContainer, 0.9)),
           child: DecoratedBox(
