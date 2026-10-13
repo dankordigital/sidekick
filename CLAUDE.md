@@ -448,6 +448,11 @@ one) without asking.
 
 ## Versions
 
+### 2.15.1
+- **Liquid Glass: nothing hides behind the tab bar** any more: like the
+  default bar, every screen ends 16 px above it (Settings' About and the
+  Remote shortcuts were under it).
+
 ### 2.15.0
 - **Simpler, calmer look:** plain rows instead of gradient cards and
   tinted icon tiles, quiet section titles, one Send button per device with

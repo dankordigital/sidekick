@@ -213,9 +213,12 @@ class _ShellState extends State<Shell> {
         ],
       );
       return Scaffold(
-        // Liquid Glass: the content scrolls under a floating frosted bar.
-        extendBody: glass,
-        body: SafeArea(bottom: !glass, child: body),
+        // Like the default bar, the content stops above it (16 px clear of
+        // it with Liquid Glass): nothing hides behind the glass.
+        body: SafeArea(
+          bottom: !glass,
+          child: glass ? Padding(padding: const EdgeInsets.only(bottom: 16), child: body) : body,
+        ),
         bottomNavigationBar: glass && NativeTabBar.supported
             // iOS 26: Apple's own tab bar, swipeable.
             ? NativeTabBar(
