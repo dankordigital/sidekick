@@ -10,7 +10,7 @@ website (`index.html` at the top of the repo; its images live in
 **https://getsidekick.app**, the official domain (the owner's, hosting on
 OVHcloud; it was at sk.dankor.digital on cyber_Folks before). Use
 getsidekick.app wherever an address is shown (ads, trailers, the app).
-The owner uploads with FileZilla: `index.html`, `wishlist.php`, `np7dpanel.php`, `privacy.html`,
+The owner uploads with FileZilla: `index.html`, `index.php`, `wishlist.php`, `np7dpanel.php`, `privacy.html`,
 `404.html`, `.htaccess`, `robots.txt` and `website/` go in the site's root
 folder (`www`). The
 pages link only with relative or `/…` paths, so nothing in them names the
@@ -44,11 +44,20 @@ next to `www` (outside the web root; inside it behind a deny-all
 .htaccess only if that's not writable). On localhost (`php -S
 localhost:8000`) emails go to `sidekick-wishlist/outbox` instead. Both
 privacy policies describe exactly this; keep them true if it changes.
-The download tiles and `RELEASE` links are in git history (2.12.0) for when
-downloads come back.
+**Released mode:** `.htaccess` sends `/` and `/index.html` to `index.php`,
+which counts the visit (`record_visit`) and serves index.html; when
+site.json says released it adds `class="released"` to `<html>` and
+`window.SIDEKICK_RELEASE` (`release_files`: the GitHub release's .exe,
+Apple-silicon and Intel .dmg/.pkg, .apk, .ipa). index.html marks the two
+looks with `only-wish` / `only-released` (Download buttons, `#download`
+tiles). Without PHP it's still the wishlist.
 **`np7dpanel.php`** (the owner's name for it; not linked anywhere): the
 wishlist admin panel. Tabs: Overview (counts, sign-ups per day for 30 days,
-devices), People (search, add, remove, send the welcome email again, send it
+devices), Visits (home-page visits and different visitors per day, 30-day
+chart, referring sites; `sidekick-wishlist/visits.json`, visitors only as
+a day-salted hash of IP + browser, bots skipped; both privacy policies say
+so), Website (**Release Sidekick** with a version / **Make it a wishlist
+again**: `sidekick-wishlist/site.json`), People (search, add, remove, send the welcome email again, send it
 to everyone who never got it, CSV export), Email everyone, Past sends
 (`sends/<id>.json`), Mail log (view, clear) and Health (PHP, openssl,
 folder, password, the mail server's ports). Its password is

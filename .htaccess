@@ -16,3 +16,11 @@ ErrorDocument 403 /404.html
 <IfModule mod_headers.c>
   Header always set X-Robots-Tag "noindex, nofollow, noarchive, nosnippet, noimageindex"
 </IfModule>
+
+# The home page goes through index.php, which counts the visit and shows the
+# wishlist or, once released (np7dpanel.php → Website), the downloads.
+DirectoryIndex index.php index.html
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteRule ^index\.html$ /index.php [L]
+</IfModule>

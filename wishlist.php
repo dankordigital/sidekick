@@ -351,6 +351,98 @@ function by_token(array &$rows, string $token): ?string {
     return null;
 }
 
+// ------------------------------------------------------------------ the site's mode and visits
+// index.php (the home page) and np7dpanel.php share these. The mode lives
+// in sidekick-wishlist/site.json: a wishlist (the default) or released,
+// with downloads for one version. Visits are counted per day in
+// sidekick-wishlist/visits.json (a day's visitors only as short hashes of
+// IP + browser, salted with the day, so nobody can be traced back).
+
+const REPO = 'michaldaniszewski03-hash/sidekick';
+const VISIT_DAYS = 400;        // days of visits kept
+
+function site_state(): array {
+    $state = ['released' => false, 'version' => '', 'changed' => ''];
+    try {
+        $raw = @file_get_contents(data_dir() . '/site.json');
+        $saved = $raw ? json_decode($raw, true) : null;
+        if (is_array($saved)) $state = array_merge($state, array_intersect_key($saved, $state));
+    } catch (Throwable $e) {
+    }
+    $state['released'] = (bool)$state['released'] && preg_match('/^\d+\.\d+\.\d+$/', (string)$state['version']);
+    return $state;
+}
+
+function save_site_state(bool $released, string $version): bool {
+    $state = ['released' => $released, 'version' => $version, 'changed' => gmdate('Y-m-d H:i:s')];
+    return file_put_contents(data_dir() . '/site.json', json_encode($state), LOCK_EX) !== false;
+}
+
+/** The download links for a release, as the Build workflow names them. */
+function release_files(string $v): array {
+    $base = 'https://github.com/' . REPO . "/releases/download/v$v/";
+    return [
+        'version' => $v,
+        'page' => 'https://github.com/' . REPO . "/releases/tag/v$v",
+        'files' => [
+            'windows' => $base . "SidekickSetup-$v.exe",
+            'macos' => $base . "Sidekick-$v-Apple-silicon.dmg",
+            'macosPkg' => $base . "Sidekick-$v-Apple-silicon.pkg",
+            'macosIntel' => $base . "Sidekick-$v-Intel.dmg",
+            'macosIntelPkg' => $base . "Sidekick-$v-Intel.pkg",
+            'android' => $base . "Sidekick-$v.apk",
+            'ios' => $base . "Sidekick-$v.ipa",
+        ],
+    ];
+}
+
+function is_bot(string $ua): bool {
+    return $ua === '' || (bool)preg_match('/bot|crawl|spider|slurp|preview|fetch|monitor|curl|wget|python|scan|headless|lighthouse/i', $ua);
+}
+
+/** Counts one visit to the home page (not bots, not the owner's panel). */
+function record_visit(): void {
+    $ua = (string)($_SERVER['HTTP_USER_AGENT'] ?? '');
+    if (is_bot($ua) || ($_SERVER['REQUEST_METHOD'] ?? 'GET') !== 'GET') return;
+    $day = gmdate('Y-m-d');
+    $who = substr(hash('sha256', $day . '|' . ($_SERVER['REMOTE_ADDR'] ?? '') . '|' . $ua), 0, 12);
+    $from = parse_url((string)($_SERVER['HTTP_REFERER'] ?? ''), PHP_URL_HOST) ?: '';
+    $own = $from !== '' && $from === ($_SERVER['HTTP_HOST'] ?? '');
+    $f = @fopen(data_dir() . '/visits.json', 'c+');
+    if (!$f) return;
+    flock($f, LOCK_EX);
+    $data = json_decode(stream_get_contents($f) ?: '', true);
+    if (!is_array($data)) $data = ['days' => [], 'from' => []];
+    $d = $data['days'][$day] ?? ['v' => 0, 'u' => []];
+    $d['v']++;
+    if (!in_array($who, $d['u'], true)) $d['u'][] = $who;
+    $data['days'][$day] = $d;
+    if ($from !== '' && !$own) {
+        $from = preg_replace('/^www\./', '', strtolower($from));
+        $data['from'][$from] = ($data['from'][$from] ?? 0) + 1;
+        arsort($data['from']);
+        $data['from'] = array_slice($data['from'], 0, 50, true);
+    }
+    ksort($data['days']);
+    $data['days'] = array_slice($data['days'], -VISIT_DAYS, null, true);
+    ftruncate($f, 0);
+    rewind($f);
+    fwrite($f, json_encode($data));
+    fflush($f);
+    flock($f, LOCK_UN);
+    fclose($f);
+}
+
+/** ['days' => [date => ['v' => visits, 'u' => [visitor hashes]]], 'from' => [site => visits]] */
+function visits(): array {
+    try {
+        $data = json_decode((string)@file_get_contents(data_dir() . '/visits.json'), true);
+    } catch (Throwable $e) {
+        $data = null;
+    }
+    return is_array($data) ? $data + ['days' => [], 'from' => []] : ['days' => [], 'from' => []];
+}
+
 // wishlist-check.php loads the functions above without handling a request.
 if (defined('WISHLIST_LIB')) return;
 

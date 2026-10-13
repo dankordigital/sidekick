@@ -49,6 +49,14 @@ detailed developer notes, including every release in "Versions") and
 
 ## History
 
+### Admin panel: Visits and Release / wishlist switch (13 Oct)
+- `np7dpanel.php` → **Visits**: home-page visits and visitors per day,
+  30-day chart, referring sites (counted by the new `index.php`).
+- → **Website**: "Release Sidekick" (with a version) turns the site into
+  the download page (Apple-silicon/Intel Mac links too); "Make it a
+  wishlist again" undoes it. `.htaccess` routes the home page through
+  `index.php`. Privacy policies mention the visit count.
+
 ### Admin panel grows up (13 Oct)
 - `np7dpanel.php` became a full admin panel: Overview (counts, 30-day
   sign-up chart, devices, newest), People (search, add, remove, resend

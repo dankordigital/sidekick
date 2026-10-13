@@ -1,6 +1,7 @@
 <?php
 // Sidekick's admin panel: the wishlist at a glance, everyone on it, emailing
-// them all, past sends, the mail log and a health check.
+// them all, past sends, the mail log, a health check, the website's visits,
+// and switching the website between a wishlist and released (downloads).
 //
 // Upload next to wishlist.php (in www). It uses wishlist.php's list and mail
 // settings, and asks for the password in wishlist-config.php
@@ -279,6 +280,20 @@ if ($action !== '' && $action !== 'login') {
             flash("Sent $sent welcome email" . ($sent === 1 ? '' : 's') . ($left ? ". $left still to go: press it again." : '.'), $sent < min(20, count($missing)));
             go('people');
 
+        case 'site':
+            $release = ($_POST['released'] ?? '') === '1';
+            $version = ltrim(trim((string)($_POST['version'] ?? '')), 'vV');
+            if ($release && !preg_match('/^\d+\.\d+\.\d+$/', $version)) {
+                flash('Write the version to offer, like 2.16.1.', true);
+                go('site');
+            }
+            if (!save_site_state($release, $release ? $version : site_state()['version'])) {
+                flash('Couldn\'t save the website\'s mode (the private folder isn\'t writable).', true);
+                go('site');
+            }
+            flash($release ? "Released: the website now offers Sidekick $version to download." : 'The website is a wishlist again.');
+            go('site');
+
         case 'clear_log':
             @file_put_contents(data_dir() . '/mail.log', '');
             flash('Mail log cleared.');
@@ -326,7 +341,7 @@ if (signed_in() && ($_GET['export'] ?? '') === 'csv') {
 
 // ------------------------------------------------------------------ page
 
-$tabs = ['overview' => 'Overview', 'people' => 'People', 'email' => 'Email everyone', 'sends' => 'Past sends', 'log' => 'Mail log', 'health' => 'Health'];
+$tabs = ['overview' => 'Overview', 'visits' => 'Visits', 'site' => 'Website', 'people' => 'People', 'email' => 'Email everyone', 'sends' => 'Past sends', 'log' => 'Mail log', 'health' => 'Health'];
 $tab = array_key_exists($_GET['tab'] ?? '', $tabs) ? $_GET['tab'] : 'overview';
 $flash = $_SESSION['flash'] ?? null;
 unset($_SESSION['flash']);
@@ -617,6 +632,91 @@ $('send').onclick = async () => {
     </table></div>
     <?php endif; ?>
   </div>
+
+<?php elseif ($tab === 'visits'):
+    $v = visits();
+    $now = time();
+    $sum = function (int $days) use ($v, $now): array {
+        $visits = 0;
+        $people = 0;
+        for ($i = 0; $i < $days; $i++) {
+            $d = $v['days'][gmdate('Y-m-d', $now - $i * 86400)] ?? null;
+            if ($d) { $visits += $d['v']; $people += count($d['u']); }
+        }
+        return [$visits, $people];
+    };
+    $all = array_sum(array_map(fn($d) => $d['v'], $v['days']));
+    $chart = [];
+    for ($i = 29; $i >= 0; $i--) $chart[gmdate('Y-m-d', $now - $i * 86400)] = $v['days'][gmdate('Y-m-d', $now - $i * 86400)] ?? ['v' => 0, 'u' => []];
+    $peak = max(1, max(array_map(fn($d) => $d['v'], $chart)));
+    [$today, $todayPeople] = $sum(1);
+    [$week, $weekPeople] = $sum(7);
+    [$month, $monthPeople] = $sum(30);
+    $since = $v['days'] ? array_key_first($v['days']) : null;
+?>
+  <div class="stats">
+    <div class="stat"><b><?= $all ?></b><span>visits in all<?= $since ? ' (since ' . e(gmdate('j M Y', strtotime($since))) . ')' : '' ?></span></div>
+    <div class="stat"><b><?= $today ?></b><span>visits today · <?= $todayPeople ?> visitors</span></div>
+    <div class="stat"><b><?= $week ?></b><span>visits this week · <?= $weekPeople ?> visitors</span></div>
+    <div class="stat"><b><?= $month ?></b><span>visits in 30 days</span></div>
+  </div>
+  <div class="grid2">
+    <div class="card">
+      <h2>Visits, last 30 days</h2>
+      <div class="bars">
+        <?php foreach ($chart as $d => $n): ?><div style="height:<?= round(100 * $n['v'] / $peak) ?>%" title="<?= e($d) ?>: <?= $n['v'] ?> visits, <?= count($n['u']) ?> people"></div><?php endforeach; ?>
+      </div>
+      <div class="axis"><span><?= e(gmdate('j M', $now - 29 * 86400)) ?></span><span>today</span></div>
+    </div>
+    <div class="card">
+      <h2>Where they came from</h2>
+      <?php if (!$v['from']): ?><p class="muted">Nobody came from another site yet (typed addresses and bookmarks aren't shown).</p><?php else:
+        $fromPeak = max($v['from']); ?>
+        <?php foreach (array_slice($v['from'], 0, 10, true) as $site => $n): ?>
+          <div class="hbar" style="grid-template-columns:140px 1fr 40px"><span style="overflow:hidden;text-overflow:ellipsis"><?= e($site) ?></span><div class="track"><i style="width:<?= round(100 * $n / $fromPeak) ?>%"></i></div><span><?= $n ?></span></div>
+        <?php endforeach; ?>
+      <?php endif; ?>
+    </div>
+  </div>
+  <div class="card">
+    <h2>By day</h2>
+    <?php if (!$v['days']): ?><p class="muted">No visits counted yet.</p><?php else: ?>
+    <div class="tablewrap"><table>
+      <tr><th>Day (UTC)</th><th>Visits</th><th>Visitors</th></tr>
+      <?php foreach (array_slice(array_reverse($v['days'], true), 0, 14, true) as $d => $n): ?>
+        <tr><td><?= e($d) ?></td><td><?= $n['v'] ?></td><td><?= count($n['u']) ?></td></tr>
+      <?php endforeach; ?>
+    </table></div>
+    <?php endif; ?>
+  </div>
+  <p class="muted">Every time someone opens the home page counts as a visit; "visitors" are the different people in a day. Search engines and other bots aren't counted. Nothing that identifies anyone is kept.</p>
+
+<?php elseif ($tab === 'site'): $site = site_state(); ?>
+  <div class="card">
+    <h2>Website</h2>
+    <?php if ($site['released']): ?>
+      <p><span class="pill good">Released</span> The website offers <b>Sidekick <?= e($site['version']) ?></b> to download, for Windows, Mac (Apple silicon and Intel), Android and iPhone.</p>
+      <p class="muted">Since <?= e($site['changed']) ?> UTC. <a href="/" target="_blank" rel="noopener">Open the website →</a></p>
+      <?= form_start('site', 'site', ['released' => '1']) ?>
+        <label for="version">Offer another version</label>
+        <input id="version" name="version" type="text" value="<?= e($site['version']) ?>" pattern="v?\d+\.\d+\.\d+" required style="max-width:200px">
+        <div class="row"><button class="primary" type="submit">Change version</button></div>
+      </form>
+      <?= form_start('site', 'site', ['released' => '0']) ?>
+        <div class="row"><button class="danger" type="submit" onclick="return confirm('Take the downloads down and make the website a wishlist again?')">Make it a wishlist again</button></div>
+      </form>
+    <?php else: ?>
+      <p><span class="pill">Wishlist</span> The website collects emails: no downloads anywhere.</p>
+      <?php if ($site['changed']): ?><p class="muted">Since <?= e($site['changed']) ?> UTC.</p><?php endif; ?>
+      <?= form_start('site', 'site', ['released' => '1']) ?>
+        <label for="version">Version to offer</label>
+        <input id="version" name="version" type="text" value="<?= e($site['version']) ?>" placeholder="2.16.1" pattern="v?\d+\.\d+\.\d+" required style="max-width:200px">
+        <p class="muted">The release on GitHub with this version must exist: its .exe, Mac .dmg and .pkg (Apple silicon and Intel), .apk and .ipa are linked.</p>
+        <div class="row"><button class="primary" type="submit" onclick="return confirm('Release Sidekick on the website? The wishlist is replaced by downloads.')">Release Sidekick</button></div>
+      </form>
+    <?php endif; ?>
+  </div>
+  <p class="muted">Releasing doesn't email the wishlist: do that on the Email everyone tab.</p>
 
 <?php elseif ($tab === 'log'): $lines = mail_lines(200); ?>
   <div class="card">
