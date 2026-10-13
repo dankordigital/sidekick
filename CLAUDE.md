@@ -47,7 +47,11 @@ privacy policies describe exactly this; keep them true if it changes.
 The download tiles and `RELEASE` links are in git history (2.12.0) for when
 downloads come back.
 **`np7dpanel.php`** (the owner's name for it; not linked anywhere): the
-admin panel that emails everyone on the list. Its password is
+wishlist admin panel. Tabs: Overview (counts, sign-ups per day for 30 days,
+devices), People (search, add, remove, send the welcome email again, send it
+to everyone who never got it, CSV export), Email everyone, Past sends
+(`sends/<id>.json`), Mail log (view, clear) and Health (PHP, openssl,
+folder, password, the mail server's ports). Its password is
 `admin_password` in `wishlist-config.php`, or the mailbox password if that
 isn't set; **never in git**. 5 wrong tries per 15 minutes per visitor,
 session cookie (Strict), CSRF token. Sends in batches of 8 from the page,
