@@ -49,16 +49,6 @@ abstract final class AndroidBackground {
     } catch (_) {}
   }
 
-  /// Puts [text] in the clipboard, with or without the screen.
-  static Future<bool> setClipboard(String text) async {
-    try {
-      await _channel.invokeMethod<void>('setClipboard', {'text': text});
-      return true;
-    } catch (_) {
-      return false;
-    }
-  }
-
   /// Android isn't "optimising" Sidekick's battery (which stops it in the
   /// background on many phones).
   static Future<bool> batteryUnrestricted() async {

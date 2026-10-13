@@ -1,8 +1,6 @@
 package dev.sidekick.sidekick
 
 import android.content.BroadcastReceiver
-import android.content.ClipData
-import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
@@ -18,7 +16,7 @@ import io.flutter.plugin.common.MethodChannel
  * Sidekick keeps running when it isn't on screen: after Home, after being
  * swiped away from recent apps, and from the moment the phone starts.
  *
- * The Dart side (the server paired devices talk to, the clipboard, Ping)
+ * The Dart side (the server paired devices talk to, Ping)
  * runs in one Flutter engine that outlives the screen: MainActivity borrows
  * it ([SidekickEngine.get]) instead of owning it, and SidekickService (a
  * foreground service with its "Ready to receive" notification) starts it on
@@ -39,14 +37,6 @@ object SidekickEngine {
         // Things the Dart side needs whether or not there's a screen.
         MethodChannel(engine.dartExecutor.binaryMessenger, "sidekick/background").setMethodCallHandler { call, result ->
             when (call.method) {
-                // What another device copied, into this phone's clipboard
-                // (Flutter's own clipboard needs the screen).
-                "setClipboard" -> {
-                    val text = call.argument<String>("text") ?: ""
-                    app.getSystemService(ClipboardManager::class.java)
-                        .setPrimaryClip(ClipData.newPlainText("Sidekick", text))
-                    result.success(null)
-                }
                 "keepRunning" -> {
                     val on = call.argument<Boolean>("on") != false
                     val intent = Intent(app, SidekickService::class.java)

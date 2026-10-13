@@ -345,9 +345,6 @@ class PeerClient {
 
   Future<void> unpair() => _postJson('/v1/unpair', const {});
 
-  /// Puts [text] in the device's clipboard.
-  Future<void> sendClipboard(String text) => _postJson('/v1/clipboard', {'text': text});
-
   /// Makes the device ring until someone taps Found It on it (the Ping
   /// button). Throws a [SidekickException] with status 409 while it's
   /// already ringing.

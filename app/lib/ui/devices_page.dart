@@ -614,14 +614,6 @@ class _PairedCardState extends State<_PairedCard> {
                               children: [
                                 Expanded(
                                   child: OutlinedButton.icon(
-                                    onPressed: online ? () => state.sendClipboard(device) : null,
-                                    icon: const Icon(Icons.content_paste_go_rounded, size: 18),
-                                    label: const Text('Clipboard'),
-                                  ),
-                                ),
-                                const SizedBox(width: 8),
-                                Expanded(
-                                  child: OutlinedButton.icon(
                                     onPressed: online ? _ping : null,
                                     icon: const Icon(Icons.notifications_active_outlined, size: 18),
                                     label: const Text('Ping'),

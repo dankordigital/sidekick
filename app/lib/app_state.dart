@@ -22,7 +22,6 @@ import 'core/trust.dart';
 import 'platform/android.dart';
 import 'platform/apple_p2p.dart';
 import 'platform/autoload.dart';
-import 'platform/clipboard.dart';
 import 'platform/device_name.dart';
 import 'platform/files.dart';
 import 'platform/gallery.dart';
@@ -303,31 +302,6 @@ class AppState extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Settings → Share clipboard (on by default): what you copy here goes to
-  /// paired devices nearby, and what they copy lands here.
-  bool shareClipboard = true;
-  ClipboardWatcher? _clipboard;
-
-  /// The text last copied here or received, so it never goes round in a loop.
-  String? _lastClip;
-
-  /// What was last copied here, still on its way to devices that were out
-  /// of reach (or failed) when it was copied: delivered when they're back,
-  /// for a few minutes ([_clipFor]).
-  String? _clipPending;
-  DateTime _clipAt = DateTime(0);
-  final Set<String> _clipDelivered = {};
-  final Set<String> _clipSending = {};
-  static const _clipFor = Duration(minutes: 3);
-
-  /// iPhone: the one-time tip on stopping "Allow Paste?" was shown.
-  bool pasteTipSeen = false;
-
-  void markPasteTipSeen() {
-    pasteTipSeen = true;
-    _prefs.setBool('iosPasteTip', true);
-  }
-
   /// Sidekick's sounds, all of them (Settings → Sound): opening, a request
   /// arriving, and a request being accepted or declined.
   bool sound = true;
@@ -491,9 +465,7 @@ class AppState extends ChangeNotifier {
     liquidGlass = _prefs.getString('look') == 'glass';
     keepRunning = _prefs.getBool('keepRunning') ?? true;
     askBeforeReceiving = _prefs.getBool('askBeforeReceiving') ?? true;
-    shareClipboard = _prefs.getBool('shareClipboard') ?? true;
     autoLoad = _prefs.getBool('autoLoad') ?? true;
-    pasteTipSeen = _prefs.getBool('iosPasteTip') ?? false;
     // One switch since 2.4.1; before, two (off if either was off).
     sound =
         _prefs.getBool('sound') ??
@@ -620,7 +592,6 @@ class AppState extends ChangeNotifier {
       link: directLink,
       inputReady: _inputReady,
       askBeforeReceiving: () => askBeforeReceiving,
-      shareClipboard: () => shareClipboard,
       ringing: () => ringingFrom != null,
       approveMirror: _approveMirror,
     );
@@ -650,7 +621,6 @@ class AppState extends ChangeNotifier {
     // Off unless turned on (Settings → Bluetooth): Wi-Fi by default, and no
     // Bluetooth permission prompt at start.
     if (bluetoothOn) _startBluetooth();
-    if (shareClipboard) _watchClipboard();
     // Written again each start while on: it follows the app if it moved.
     if (AutoLoad.supported) unawaited(AutoLoad.apply(autoLoad));
 
@@ -748,7 +718,6 @@ class AppState extends ChangeNotifier {
     }
     directLink.stopHosting();
     directLink.leave();
-    _stopClipboard();
     p2p.peers.removeListener(_onP2pPeers);
     p2p.stop();
     bluetooth?.stop();
@@ -1188,10 +1157,8 @@ class AppState extends ChangeNotifier {
         ..info = info
         ..lastSeen = DateTime.now();
     }
-    final wasAway = !reachableViaWifi(info.id);
     _lastContact[info.id] = DateTime.now();
     final pairedDevice = _paired[info.id];
-    if (wasAway && pairedDevice != null) _deliverClip();
     if (pairedDevice != null &&
         (pairedDevice.lastAddress != info.address ||
             pairedDevice.lastPort != info.port ||
@@ -1282,7 +1249,6 @@ class AppState extends ChangeNotifier {
               .catchError((_) {}),
     ]);
     await _checkP2p();
-    _deliverClip();
     // Also refreshes online dots and drops stale nearby devices.
     notifyListeners();
   }
@@ -1637,8 +1603,6 @@ class AppState extends ChangeNotifier {
         _pairRequests.add(request);
       case InviteScanned(:final device):
         _inviteScans.add(device);
-      case ClipboardReceived(:final from, :final text):
-        unawaited(_receivedClipboard(from, text));
       case Pinged(:final from):
         // One at a time (the server refuses more, but two can cross).
         if (ringingFrom == null) {
@@ -1920,114 +1884,6 @@ class AppState extends ChangeNotifier {
     welcomed = true;
     _prefs.setBool('welcomed', true);
     notifyListeners();
-  }
-
-  void setShareClipboard(bool value) {
-    shareClipboard = value;
-    _prefs.setBool('shareClipboard', value);
-    value ? _watchClipboard() : _stopClipboard();
-    notifyListeners();
-  }
-
-  void _watchClipboard() {
-    if (!ClipboardWatcher.automatic || _clipboard != null) return;
-    _clipboard = ClipboardWatcher(_copiedHere)..start();
-  }
-
-  void _stopClipboard() {
-    _clipboard?.stop();
-    _clipboard = null;
-  }
-
-  /// Something was copied here: off it goes to the paired devices in reach
-  /// (on the same network, Apple's direct link, or Bluetooth where allowed;
-  /// never worth opening a network for), and to the others when they're
-  /// back within a few minutes.
-  void _copiedHere(String text) {
-    if (!shareClipboard || text == _lastClip || text.length > SidekickServer.maxClipboard) return;
-    _lastClip = text;
-    _clipPending = text;
-    _clipAt = DateTime.now();
-    _clipDelivered.clear();
-    _deliverClip();
-  }
-
-  /// Sends the pending clipboard to every paired device in reach that
-  /// doesn't have it yet. Called on a copy, when a device shows up, and
-  /// every few seconds (a failed send is tried again).
-  void _deliverClip() {
-    final text = _clipPending;
-    if (text == null || !shareClipboard) return;
-    if (DateTime.now().difference(_clipAt) > _clipFor) {
-      _clipPending = null;
-      return;
-    }
-    for (final d in _paired.values) {
-      if (_clipDelivered.contains(d.id) || _clipSending.contains(d.id)) continue;
-      if (!reachableViaWifi(d.id) && !viaBluetooth(d.id)) continue;
-      _clipSending.add(d.id);
-      unawaited(
-        clientFor(d)
-            .sendClipboard(text)
-            .then((_) => _clipDelivered.add(d.id))
-            .catchError((Object e) {
-              // Turned off there, or a release without it: don't keep trying.
-              if (e is SidekickException && (e.status == 403 || e.status == 404)) _clipDelivered.add(d.id);
-              debugPrint('Sidekick: clipboard to ${d.name}: $e');
-              return false;
-            })
-            .whenComplete(() => _clipSending.remove(d.id)),
-      );
-    }
-  }
-
-  /// The Send clipboard button: what's in this device's clipboard goes to
-  /// [d]. The iPhone's way (it never reads the clipboard by itself: iOS asks
-  /// "Allow Paste?" each time, unless allowed in Settings → Sidekick).
-  Future<void> sendClipboard(PairedDevice d) async {
-    final String? text;
-    try {
-      text = (await Clipboard.getData(Clipboard.kTextPlain))?.text;
-    } catch (_) {
-      _notices.add(Notice("Couldn't read the clipboard."));
-      return;
-    }
-    if (text == null || text.trim().isEmpty) {
-      _notices.add(Notice('Nothing to send: copy some text first.'));
-      return;
-    }
-    if (text.length > SidekickServer.maxClipboard) {
-      _notices.add(Notice('Too much text for the clipboard. Send it as a file instead.'));
-      return;
-    }
-    try {
-      await (await _clientForTransfer(d, 0)).sendClipboard(text);
-      _lastClip = text;
-      _notices.add(Notice('Clipboard sent to ${d.name}'));
-    } catch (e) {
-      _noteFailure(d, e);
-      _notices.add(Notice("Couldn't send the clipboard to ${d.name}: ${_withUpdateHint(d, e)}"));
-    }
-  }
-
-  Future<void> _receivedClipboard(TrustedPeer from, String text) async {
-    if (!shareClipboard) return;
-    _lastClip = text;
-    // Newer than anything copied here that's still on its way.
-    _clipPending = null;
-    try {
-      // Android: through Sidekick's engine, so it works with the screen
-      // closed too (Flutter's own clipboard needs it).
-      if (!Platform.isAndroid || !await AndroidBackground.setClipboard(text)) {
-        await Clipboard.setData(ClipboardData(text: text));
-      }
-    } catch (e) {
-      debugPrint('Sidekick: setting the clipboard: $e');
-      return;
-    }
-    final line = text.trim().replaceAll(RegExp(r'\s+'), ' ');
-    final preview = line.length > 60 ? '${line.substring(0, 57)}…' : line;
-    _notices.add(Notice('Copied from ${from.name}: $preview'));
   }
 
   void setAskBeforeReceiving(bool value) {

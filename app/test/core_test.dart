@@ -153,13 +153,8 @@ void main() {
     expect((await paired).device.lastAddress, isNull);
   });
 
-  test('clipboard and ping: only from paired devices', () async {
+  test('ping: only from paired devices', () async {
     final client = await pair();
-    final copied = pc.server.events.only<ClipboardReceived>().first;
-    await client.sendClipboard('https://getsidekick.app');
-    expect((await copied).text, 'https://getsidekick.app');
-    expect((await copied).from.id, phone.id);
-
     final pinged = pc.server.events.only<Pinged>().first;
     await client.ping();
     expect((await pinged).from.id, phone.id);
@@ -171,7 +166,6 @@ void main() {
     await client.ping();
 
     // Not paired: refused.
-    await expectLater(pc.anonymous().sendClipboard('x'), throwsA(isA<SidekickException>()));
     await expectLater(pc.anonymous().ping(), throwsA(isA<SidekickException>()));
   });
 

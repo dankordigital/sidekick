@@ -10,9 +10,8 @@ import 'ping.dart';
 import 'widgets.dart';
 
 /// What a click on the tray / menu-bar icon opens (Windows and Mac), like
-/// CleanMyMac's: how Sidekick is doing, this device's network, the
-/// clipboard and the last file received, and every paired device with Send,
-/// Clipboard and Ping; Open Sidekick, Settings and Quit at the bottom. It
+/// CleanMyMac's: how Sidekick is doing, this device's network, the last
+/// file received, and every paired device with Send and Ping; Open Sidekick, Settings and Quit at the bottom. It
 /// closes when you click anywhere else.
 class TrayPanel extends StatelessWidget {
   const TrayPanel({super.key, required this.state});
@@ -59,19 +58,7 @@ class TrayPanel extends StatelessWidget {
                         const SizedBox(height: 14),
                         Entrance(index: 1, child: _StatusCard(state: state)),
                         const SizedBox(height: 10),
-                        Entrance(
-                          index: 2,
-                          child: IntrinsicHeight(
-                            child: Row(
-                              crossAxisAlignment: CrossAxisAlignment.stretch,
-                              children: [
-                                Expanded(child: _ClipboardCard(state: state)),
-                                const SizedBox(width: 10),
-                                Expanded(child: _ReceivedCard(state: state)),
-                              ],
-                            ),
-                          ),
-                        ),
+                        Entrance(index: 2, child: _ReceivedCard(state: state)),
                         const SizedBox(height: 10),
                         Entrance(index: 3, child: _DevicesCard(state: state)),
                         const SizedBox(height: 18),
@@ -205,46 +192,6 @@ class _StatusCard extends StatelessWidget {
   }
 }
 
-class _ClipboardCard extends StatelessWidget {
-  const _ClipboardCard({required this.state});
-  final AppState state;
-
-  @override
-  Widget build(BuildContext context) {
-    final text = Theme.of(context).textTheme;
-    return _Card(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              const Icon(Icons.content_paste_rounded, size: 20, color: Colors.white),
-              const SizedBox(width: 8),
-              Text(
-                'Clipboard',
-                style: text.titleSmall?.copyWith(fontWeight: FontWeight.w700, color: Colors.white),
-              ),
-            ],
-          ),
-          const SizedBox(height: 4),
-          Text(
-            state.shareClipboard ? 'Shared with your devices' : 'Not shared',
-            style: text.bodySmall?.copyWith(color: _faint),
-          ),
-          const Spacer(),
-          Align(
-            alignment: Alignment.centerRight,
-            child: _Link(
-              label: state.shareClipboard ? 'Turn off' : 'Turn on',
-              onTap: () => state.setShareClipboard(!state.shareClipboard),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
 class _ReceivedCard extends StatelessWidget {
   const _ReceivedCard({required this.state});
   final AppState state;
@@ -274,7 +221,7 @@ class _ReceivedCard extends StatelessWidget {
             overflow: TextOverflow.ellipsis,
             style: text.bodySmall?.copyWith(color: _faint),
           ),
-          const Spacer(),
+          const SizedBox(height: 8),
           if (last?.localPath case final path?)
             Align(
               alignment: Alignment.centerRight,
@@ -387,11 +334,6 @@ class _DeviceRow extends StatelessWidget {
           ),
           _Action(icon: Icons.send_rounded, tooltip: 'Send files', onTap: online ? () => _send(context) : null),
           _Action(
-            icon: Icons.content_paste_go_rounded,
-            tooltip: 'Send clipboard',
-            onTap: online ? () => state.sendClipboard(device) : null,
-          ),
-          _Action(
             icon: Icons.notifications_active_outlined,
             tooltip: 'Ping',
             onTap: online ? () => _ping(context) : null,
@@ -443,11 +385,6 @@ class _Tip extends StatelessWidget {
   const _Tip();
 
   static const _tips = [
-    (
-      icon: Icons.content_paste_go_rounded,
-      title: 'Copy here, paste there',
-      body: 'What you copy goes to your other devices by itself.',
-    ),
     (
       icon: Icons.notifications_active_rounded,
       title: "Can't find your phone?",
