@@ -46,6 +46,7 @@ dependencies:
   file_picker: ^13.1.0
   desktop_drop: ^0.8.4
   material_ui: ^1.4.0
+  cupertino_ui: ^1.1.1
   bluetooth_low_energy: ^6.2.1
   basic_utils: ^5.8.2
   pointycastle: ^4.0.0

@@ -198,8 +198,9 @@ class IconTile extends StatelessWidget {
   }
 }
 
-/// Fades and slides [child] into place the first time it's built. Give
-/// siblings increasing [index]es for a staggered cascade.
+/// Fades [child] in, rising a few pixels, the first time it's built, with
+/// Apple's long, soft ease-out. Give siblings increasing [index]es for a
+/// short stagger.
 class Entrance extends StatefulWidget {
   const Entrance({super.key, required this.child, this.index = 0});
   final Widget child;
@@ -210,14 +211,14 @@ class Entrance extends StatefulWidget {
 }
 
 class _EntranceState extends State<Entrance> with SingleTickerProviderStateMixin {
-  static const _step = 0, _length = 180;
+  static const _step = 24, _length = 320;
   late final AnimationController _c = AnimationController(
     vsync: this,
     duration: Duration(milliseconds: _length + _step * widget.index.clamp(0, 8)),
   );
   late final Animation<double> _t = CurvedAnimation(
     parent: _c,
-    curve: Interval(1 - _length / _c.duration!.inMilliseconds, 1, curve: Curves.easeOutCubic),
+    curve: Interval(1 - _length / _c.duration!.inMilliseconds, 1, curve: Curves.easeOutQuint),
   );
 
   @override
@@ -235,10 +236,13 @@ class _EntranceState extends State<Entrance> with SingleTickerProviderStateMixin
   }
 
   @override
-  Widget build(BuildContext context) => AnimatedBuilder(
-    animation: _t,
-    builder: (context, child) => Opacity(opacity: _t.value, child: child),
-    child: widget.child,
+  // Transitions, not a rebuild per frame.
+  Widget build(BuildContext context) => FadeTransition(
+    opacity: _t,
+    child: SlideTransition(
+      position: Tween(begin: const Offset(0, 0.02), end: Offset.zero).animate(_t),
+      child: widget.child,
+    ),
   );
 }
 

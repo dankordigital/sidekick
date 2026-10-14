@@ -38,6 +38,11 @@ class DesktopWindow with WindowListener, TrayListener {
   /// The panel opened the file picker: losing focus to it isn't leaving.
   bool holdPanel = false;
 
+  /// The panel is on its way out. Hiding it takes the focus away, and that
+  /// blur used to start a second close that hid the window again just after
+  /// Open Sidekick had shown it (the app opened and closed at once).
+  Future<void>? _closingPanel;
+
   /// The Mac's own window code (MainFlutterWindow.swift): it catches the red
   /// button itself and shows the pop-up without taking the focus.
   static const _mac = MethodChannel('sidekick/macos');
@@ -184,8 +189,13 @@ class DesktopWindow with WindowListener, TrayListener {
   }
 
   /// Closes the panel (focus went elsewhere, or one of its buttons).
-  Future<void> closePanel() async {
-    if (!panel.value) return;
+  Future<void> closePanel() {
+    if (_closingPanel case final closing?) return closing;
+    if (!panel.value) return Future.value();
+    return _closingPanel = _closePanel().whenComplete(() => _closingPanel = null);
+  }
+
+  Future<void> _closePanel() async {
     _panelClosedAt = DateTime.now();
     if (Platform.isMacOS) {
       await _mac.invokeMethod('hidePopup');
@@ -264,7 +274,7 @@ class DesktopWindow with WindowListener, TrayListener {
 
   /// Back from the tray.
   Future<void> open() async {
-    if (panel.value) await closePanel();
+    if (panel.value || _closingPanel != null) await closePanel();
     if (popup.value != null) {
       _openAfter = true;
       return;
@@ -297,7 +307,7 @@ class DesktopWindow with WindowListener, TrayListener {
   // A click anywhere else closes the panel.
   @override
   void onWindowBlur() {
-    if (panel.value && !holdPanel) unawaited(closePanel());
+    if (panel.value && !holdPanel && _closingPanel == null) unawaited(closePanel());
   }
 
   // A click opens the panel; a right-click (or Control-click) the menu.

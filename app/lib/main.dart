@@ -3,6 +3,7 @@ import 'dart:ui';
 
 import 'package:dynamic_color/dynamic_color.dart';
 import 'package:flutter/foundation.dart';
+import 'package:cupertino_ui/cupertino_ui.dart' show CupertinoPageTransitionsBuilder;
 import 'package:material_ui/material_ui.dart';
 
 import 'app_state.dart';
@@ -200,12 +201,15 @@ class SidekickApp extends StatelessWidget {
       progressIndicatorTheme: const ProgressIndicatorThemeData(year2023: false),
       // ignore: deprecated_member_use
       sliderTheme: const SliderThemeData(year2023: false),
-      // iPhone and Mac keep their native transitions.
+      // Apple's push (slide in from the right, the page below easing back)
+      // everywhere, so every platform moves the same way.
       pageTransitionsTheme: const PageTransitionsTheme(
         builders: {
-          TargetPlatform.android: FadeForwardsPageTransitionsBuilder(),
-          TargetPlatform.windows: FadeForwardsPageTransitionsBuilder(),
-          TargetPlatform.linux: FadeForwardsPageTransitionsBuilder(),
+          TargetPlatform.android: CupertinoPageTransitionsBuilder(),
+          TargetPlatform.iOS: CupertinoPageTransitionsBuilder(),
+          TargetPlatform.macOS: CupertinoPageTransitionsBuilder(),
+          TargetPlatform.windows: CupertinoPageTransitionsBuilder(),
+          TargetPlatform.linux: CupertinoPageTransitionsBuilder(),
         },
       ),
     );

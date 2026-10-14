@@ -54,6 +54,16 @@ detailed developer notes, including every release in "Versions") and
 
 ## History
 
+### 2.17.1: tray Open fix, smoother, Apple-like motion (14 Oct)
+- Tray panel's Open Sidekick opened and closed the window: the hide's focus
+  loss started a second close (`_closingPanel` now shared).
+- Lag: no BackdropFilter per glass button or on the computer's content
+  panel; tab switch shows only the new tab (fade-in, 180 ms).
+- Cupertino page transitions everywhere; `Entrance` slides up 2 % with
+  easeOutQuint.
+- Trailer (`trailer/`, Remotion): Apple style, rendered by
+  `.github/workflows/render.yml` (Artifacts).
+
 ### Admin panel: Visits and Release / wishlist switch (13 Oct)
 - `np7dpanel.php` → **Visits**: home-page visits and visitors per day,
   30-day chart, referring sites (counted by the new `index.php`).

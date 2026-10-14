@@ -121,6 +121,10 @@ its biggest features and fixes (see [Releasing](#releasing)). The history starts
     turns all of it off.
   - `startup.dart`: the startup animation (every platform; a tap skips it,
     reduced motion turns it off).
+  - Motion is Apple-like (2.17.1): Apple's push between pages on every
+    platform (`CupertinoPageTransitionsBuilder`, from `cupertino_ui`), tabs
+    switch at once with a quick fade-in, and `Entrance` fades in rising a
+    few pixels with a long ease-out (`easeOutQuint`, 320 ms).
   - `widgets.dart` has the shared pieces: `PageFrame`, `SectionLabel` (with
     an icon), `IconTile` (tinted icon square for rows), `StatusPill`,
     `Entrance` (fade/slide-in cascade), `Radar` (searching), `GradientBadge`.
@@ -172,7 +176,10 @@ its biggest features and fixes (see [Releasing](#releasing)). The history starts
   Open Sidekick / Settings / Quit. It takes the focus and closes when it
   loses it (`onWindowBlur`; not while its file picker is open,
   `holdPanel`). With the main window open, the icon just brings it
-  forward; right-click shows the menu. A request arriving takes over the
+  forward; right-click shows the menu. Closing the panel is one shared
+  `_closingPanel` future: hiding it takes the focus, and that blur used to
+  start a second close that hid the window right after Open Sidekick
+  showed it (2.17.1: "opens and closes"). A request arriving takes over the
   window as the corner pop-up. Rendered by `tool/screenshots_test.dart`
   (`tray-panel.png`).
 - **Auto-load** (`platform/autoload.dart`, Settings, Windows and Mac, on by
@@ -435,7 +442,10 @@ its biggest features and fixes (see [Releasing](#releasing)). The history starts
   frames the phone's floating tab bar and the computer's content panel
   (shell.dart). Since 2.17.0 `glassTheme` also makes buttons (`GlassFill`
   through `backgroundBuilder`), selections, switches, fields, menus,
-  snackbars and tooltips glass, each tinted in its own color. Rendered by `tool/screenshots_test.dart` (`glass-*.png`).
+  snackbars and tooltips glass, each tinted in its own color. **No live
+  blur on controls or the computer's content panel** (2.17.1): only the
+  soft backdrop is behind them, and a BackdropFilter per button made
+  screens slow; only the phone's floating tab bar blurs. Rendered by `tool/screenshots_test.dart` (`glass-*.png`).
 - Devices announce their release (`DeviceInfo.app`, "2.2.0"); a paired card
   shows "Update Sidekick on it" when the other device runs an older one.
 - **iPhones can't be controlled** (Apple allows no app to): Remote on an
@@ -472,6 +482,16 @@ one) without asking.
 4. Add the version to [Versions](#versions) below.
 
 ## Versions
+
+### 2.17.1
+- **Fixed: Open Sidekick in the tray panel opened the app and closed it
+  again at once** (Mac and Windows), and the same for the panel's Settings.
+- **Smoother:** Liquid Glass buttons and the computer's main panel no
+  longer blur live behind themselves (they made screens slow to draw);
+  switching tabs no longer draws both tabs at once.
+- **Apple-like motion:** pages slide in like on an iPhone, on every
+  platform; tabs switch at once with a quick fade; lists rise into place
+  with a soft ease-out.
 
 ### 2.17.0
 - **Liquid Glass everywhere it fits:** with Settings → Theme → Liquid

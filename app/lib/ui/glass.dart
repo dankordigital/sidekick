@@ -80,31 +80,30 @@ class GlassPanel extends StatelessWidget {
         ],
       );
     }
-    return ClipRRect(
-      borderRadius: shape,
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: blur, sigmaY: blur),
-        child: DecoratedBox(
-          decoration: BoxDecoration(
-            borderRadius: shape,
-            border: Border.all(color: glassRim(scheme)),
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              // Lighter at the top-left, as if lit from above.
-              colors: [
-                Color.lerp(
-                  glassTint(scheme, opacity),
-                  Colors.white,
-                  scheme.brightness == Brightness.dark ? 0.04 : 0.18,
-                )!,
-                glassTint(scheme, opacity),
-              ],
-            ),
-          ),
-          child: Padding(padding: padding, child: child),
+    final panel = DecoratedBox(
+      decoration: BoxDecoration(
+        borderRadius: shape,
+        border: Border.all(color: glassRim(scheme)),
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          // Lighter at the top-left, as if lit from above.
+          colors: [
+            Color.lerp(glassTint(scheme, opacity), Colors.white, scheme.brightness == Brightness.dark ? 0.04 : 0.18)!,
+            glassTint(scheme, opacity),
+          ],
         ),
       ),
+      child: Padding(padding: padding, child: child),
+    );
+    return ClipRRect(
+      borderRadius: shape,
+      child: blur > 0
+          ? BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: blur, sigmaY: blur),
+              child: panel,
+            )
+          : panel,
     );
   }
 }
@@ -146,37 +145,32 @@ class GlassBackdrop extends StatelessWidget {
   }
 }
 
-/// A glass fill for buttons and other small controls: blurs what's behind,
+/// A glass fill for buttons and other small controls:
 /// tints it with [color] (the control's own color, so a primary button stays
 /// in the theme's hue), lights it from the top and draws a bright rim.
 class GlassFill extends StatelessWidget {
-  const GlassFill({super.key, required this.color, this.child, this.blur = 12});
+  const GlassFill({super.key, required this.color, this.child});
 
   final Color color;
   final Widget? child;
-  final double blur;
 
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final dark = scheme.brightness == Brightness.dark;
-    const shape = StadiumBorder();
-    return ClipPath(
-      clipper: const ShapeBorderClipper(shape: shape),
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: blur, sigmaY: blur),
-        child: DecoratedBox(
-          decoration: ShapeDecoration(
-            shape: StadiumBorder(side: BorderSide(color: glassRim(scheme))),
-            gradient: LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: [Color.lerp(color, Colors.white, dark ? 0.08 : 0.22)!, color],
-            ),
-          ),
-          child: child,
+    // No live blur: behind a control the backdrop's soft blobs look the same
+    // blurred or not, and a BackdropFilter per button made every screen with
+    // a few of them slow to draw. The tint, top light and rim make the glass.
+    return DecoratedBox(
+      decoration: ShapeDecoration(
+        shape: StadiumBorder(side: BorderSide(color: glassRim(scheme))),
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [Color.lerp(color, Colors.white, dark ? 0.08 : 0.22)!, color],
         ),
       ),
+      child: child,
     );
   }
 }

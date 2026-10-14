@@ -182,19 +182,14 @@ class _ShellState extends State<Shell> {
               ],
             ),
           Expanded(
-            // Material "fade through": the old tab fades out, the new one
-            // fades in while rising slightly.
+            // Like Apple's tab bars: the old tab is gone at once and the new
+            // one fades in quickly. (Cross-fading two whole tabs meant drawing
+            // both for 300 ms on every switch.)
             child: AnimatedSwitcher(
-              duration: const Duration(milliseconds: 300),
-              switchInCurve: Curves.easeOutCubic,
-              switchOutCurve: Curves.easeInCubic,
-              transitionBuilder: (child, animation) => FadeTransition(
-                opacity: animation,
-                child: SlideTransition(
-                  position: Tween(begin: const Offset(0, 0.015), end: Offset.zero).animate(animation),
-                  child: ScaleTransition(scale: Tween(begin: 0.985, end: 1.0).animate(animation), child: child),
-                ),
-              ),
+              duration: const Duration(milliseconds: 180),
+              reverseDuration: Duration.zero,
+              switchInCurve: Curves.easeOut,
+              transitionBuilder: (child, animation) => FadeTransition(opacity: animation, child: child),
               child: KeyedSubtree(key: ValueKey(_index), child: pages[_index]),
             ),
           ),
@@ -265,7 +260,9 @@ class _ShellState extends State<Shell> {
             child: Padding(
               padding: const EdgeInsets.fromLTRB(0, 8, 8, 8),
               child: glass
-                  ? GlassPanel(opacity: 0.4, child: body)
+                  // Only the soft backdrop is behind it, so no live blur: a
+                  // window-sized blur made scrolling slow.
+                  ? GlassPanel(opacity: 0.4, blur: 0, child: body)
                   : ClipRRect(
                       borderRadius: BorderRadius.circular(28),
                       child: ColoredBox(color: scheme.surface, child: body),
