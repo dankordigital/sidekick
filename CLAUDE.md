@@ -497,6 +497,10 @@ one) without asking.
 
 ## Versions
 
+### 2.17.2
+- No app changes since 2.17.1: a rebuild of the same app, released after
+  the repo gained `sync.sh` and its syncing notes in this file.
+
 ### 2.17.1
 - **Fixed: Open Sidekick in the tray panel opened the app and closed it
   again at once** (Mac and Windows), and the same for the panel's Settings.
