@@ -133,7 +133,7 @@ export const Trailer: React.FC = () => {
           const tilt = Math.sin(T * 0.7 + i) * 2.2;
           return (
             <AbsoluteFill key={i} style={{ opacity: clamp(inU * 2.5) * (1 - clamp(outU * 2 - 1)), transform: `translateX(${x}px) scale(${zoom}) rotateY(${tilt}deg)`, filter: blur > 0.5 ? `blur(${blur}px)` : undefined }}>
-              <C t={t} d={d} T={T} />
+              <C t={clamp(t, 0, d - 1e-3)} d={d} T={T} />
             </AbsoluteFill>
           );
         })}
