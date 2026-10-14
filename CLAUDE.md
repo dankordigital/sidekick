@@ -462,14 +462,18 @@ its biggest features and fixes (see [Releasing](#releasing)). The history starts
 - Mac secrets live in a 0600 file, never the keychain (an unsigned app gets
   endless keychain password prompts).
 - Develop on `claude/sidekick-app-architecture-8ilytw`.
-- **Syncing with GitHub (`dankordigital/sidekick`):** the work happens in a
-  Claude session on the family Mac (`~/Documents/GitHub/sidekick`), driven
-  through Remote Control. `./sync.sh` pulls (rebase, autostash), commits
-  everything and pushes. It never uploads to the hosting. **Claude runs it
-  itself** (the owner's call: nobody should have to remember), without asking:
-  - **Before starting work:** `git pull --rebase --autostash`.
-  - **After each finished change:** `printf 'y\n' | ./sync.sh "<what changed>"`.
-    Don't sync half-done work.
+- **Syncing with GitHub (`dankordigital/sidekick`):** the app is written in
+  Claude cloud sessions (claude.ai/code: Flutter is there; CI builds all four
+  platforms). A copy also lives on the family Mac
+  (`~/Documents/GitHub/sidekick`, macOS 12, no Flutter or Xcode). Nobody
+  should have to remember to sync (the owner's call), so Claude does it
+  without asking:
+  - **Before starting work:** `git pull --rebase --autostash`, since the
+    other place may have pushed.
+  - **After each finished change:** push it (cloud sessions push as usual;
+    on the Mac, `printf 'y\n' | ./sync.sh "<what changed>"`, which pulls,
+    commits everything and pushes, never uploading to the hosting). Don't
+    push half-done work.
   - If it stops on a conflict, explain it to the owner and resolve it with
     them. Never force-push.
 
