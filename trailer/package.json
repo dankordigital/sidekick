@@ -1,0 +1,23 @@
+{
+  "name": "sidekick-trailer",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "studio": "remotion studio src/index.tsx",
+    "build:horizontal": "remotion render src/index.tsx Horizontal out/Sidekick-trailer-16x9.mp4 --codec h264 --crf 18",
+    "build:vertical": "remotion render src/index.tsx Vertical out/Sidekick-trailer-9x16.mp4 --codec h264 --crf 18",
+    "build": "npm run build:horizontal && npm run build:vertical",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "remotion": "4.0.533",
+    "@remotion/cli": "4.0.533",
+    "@remotion/fonts": "4.0.533",
+    "react": "19.1.0",
+    "react-dom": "19.1.0"
+  },
+  "devDependencies": {
+    "typescript": "5.6.3",
+    "@types/react": "19.1.0"
+  }
+}

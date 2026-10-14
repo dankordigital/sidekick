@@ -1,0 +1,44 @@
+# Renders the Sidekick trailer (trailer/) in both shapes whenever it changes,
+# and keeps the two MP4s as this run's artifacts (Actions → the run → Artifacts).
+name: Render trailer
+
+on:
+  push:
+    paths:
+      - 'trailer/**'
+      - '.github/workflows/render.yml'
+  workflow_dispatch:
+
+jobs:
+  render:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - composition: Horizontal
+            file: Sidekick-trailer-16x9.mp4
+          - composition: Vertical
+            file: Sidekick-trailer-9x16.mp4
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    defaults:
+      run:
+        working-directory: trailer
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: trailer/package-lock.json
+      - run: npm ci
+      - run: npx tsc --noEmit
+      # Chrome Headless Shell's system libraries (Remotion downloads the browser itself).
+      - run: sudo apt-get update && sudo apt-get install -y libnss3 libdbus-1-3 libatk1.0-0 libgbm-dev libasound2t64 libxrandr2 libxkbcommon-dev libxfixes3 libxcomposite1 libxdamage1 libatk-bridge2.0-0 libpango-1.0-0 libcairo2 libcups2
+      - run: npx remotion browser ensure
+      - run: npx remotion render src/index.tsx ${{ matrix.composition }} out/${{ matrix.file }} --codec h264 --crf 18 --concurrency 100%
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.file }}
+          path: trailer/out/${{ matrix.file }}
+          retention-days: 30
