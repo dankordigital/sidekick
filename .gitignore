@@ -1,3 +1,6 @@
 
 # The wishlist mailbox password: only on the hosting.
 wishlist-config.php
+
+# macOS
+.DS_Store
