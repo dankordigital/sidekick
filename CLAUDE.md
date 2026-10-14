@@ -462,6 +462,16 @@ its biggest features and fixes (see [Releasing](#releasing)). The history starts
 - Mac secrets live in a 0600 file, never the keychain (an unsigned app gets
   endless keychain password prompts).
 - Develop on `claude/sidekick-app-architecture-8ilytw`.
+- **Syncing with GitHub (`dankordigital/sidekick`):** two people work on this
+  repo, from the owner's Mac and from Claude sessions elsewhere. On the Mac,
+  `./sync.sh` pulls (rebase, autostash), commits everything and pushes. It
+  never uploads to the hosting. **Claude runs it itself** (the owner's
+  call: they forget), without asking:
+  - **Before starting work:** `git pull --rebase --autostash`.
+  - **After each finished change:** `printf 'y\n' | ./sync.sh "<what changed>"`.
+    Don't sync half-done work.
+  - If it stops on a conflict, explain it to the owner and resolve it with
+    them. Never force-push.
 
 ## Releasing
 
