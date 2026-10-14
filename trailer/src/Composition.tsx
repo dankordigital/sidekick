@@ -1,6 +1,6 @@
 import React from 'react';
-import { AbsoluteFill, Audio, staticFile, useCurrentFrame, useVideoConfig } from 'remotion';
-import { B, BAR, BEAT, DROP, END, FINAL, FPS, HIT, LEAD, clamp, easeInOut, lerp, prog, pulse } from './beat';
+import { AbsoluteFill, Audio, spring, staticFile, useCurrentFrame, useVideoConfig } from 'remotion';
+import { B, BAR, BEAT, DROP, END, FINAL, FPS, HIT, LEAD, clamp, easeIn, easeInOut, easeOut, lerp, prog, pulse } from './beat';
 import * as S from './scenes';
 
 type Scene = [number, number, React.FC<S.SceneProps>];
@@ -81,10 +81,24 @@ const Particles: React.FC<{ T: number }> = ({ T }) => {
   return <>{dots}</>;
 };
 
+const WHIP = 0.09;
+
+/** The camera: a kick on every beat once the music is going, harder on the
+ *  bar, and a shake on the big hits. */
+const camera = (T: number, width: number) => {
+  const going = (T >= B(4) && T < HIT) || (T >= DROP && T < FINAL + 0.5);
+  const kick = going ? pulse(T, BEAT, 9) * 0.012 + pulse(T, BAR, 6) * 0.02 : 0;
+  let shake = 0;
+  for (const h of [B(4), HIT, DROP, FINAL]) if (T >= h && T < h + 0.45) shake = Math.max(shake, (1 - (T - h) / 0.45) ** 2);
+  const sx = Math.sin(T * 91) * 14 * shake * (width / 1920), sy = Math.cos(T * 77) * 10 * shake * (width / 1920);
+  return `translate(${sx}px, ${sy}px) scale(${1 + kick + 0.03 * shake}) rotate(${Math.sin(T * 63) * 0.6 * shake}deg)`;
+};
+
 export const Trailer: React.FC = () => {
+  const { width } = useVideoConfig();
   const frame = useCurrentFrame();
   const T = frame / FPS;
-  const flashes: [number, number][] = [[B(2), 0.25], [B(4), 0.3], [HIT, 0.55], [DROP, 0.6], [B(27), 0.25], [FINAL, 0.45]];
+  const flashes: [number, number][] = [[B(2), 0.3], [B(4), 0.45], [B(8), 0.2], [B(12), 0.2], [HIT, 0.6], [DROP, 0.75], [B(21), 0.25], [B(25), 0.25], [B(27), 0.35], [B(29), 0.3], [FINAL, 0.55]];
   let flash = 0;
   for (const [t0, peak] of flashes) {
     const u = (T - t0) / 0.4;
@@ -94,7 +108,7 @@ export const Trailer: React.FC = () => {
   if (T >= DROP && T < FINAL) {
     const bt = LEAD + Math.floor((T - LEAD) / BEAT) * BEAT;
     const onBar = Math.abs((bt - LEAD) / BAR - Math.round((bt - LEAD) / BAR)) < 0.01;
-    flash = Math.max(flash, (onBar ? 0.08 : 0.035) * Math.exp(-(T - bt) * 9));
+    flash = Math.max(flash, (onBar ? 0.12 : 0.05) * Math.exp(-(T - bt) * 9));
   }
   return (
     <AbsoluteFill style={{ overflow: 'hidden' }}>
@@ -102,19 +116,28 @@ export const Trailer: React.FC = () => {
       <Audio src={staticFile('music.mp3')} volume={(f) => clamp((END - f / FPS) / 1.2)} />
       <Backdrop T={T} />
       <Particles T={T} />
-      {SCENES.map(([a, b, C], i) => {
-        if (T < a || T >= b) return null;
-        const t = T - a;
-        const d = b - a;
-        // Each scene pushes in a little and fades at its edges.
-        const alpha = i === 0 ? 1 : clamp(Math.min(t / 0.12, (d - t) / 0.16));
-        const zoom = lerp(1.03, 1, clamp(t / 0.4));
-        return (
-          <AbsoluteFill key={i} style={{ opacity: alpha, transform: `scale(${zoom})` }}>
-            <C t={t} d={d} T={T} />
-          </AbsoluteFill>
-        );
-      })}
+      <AbsoluteFill style={{ transform: camera(T, width), perspective: 2000 }}>
+        {SCENES.map(([a, b, C], i) => {
+          if (T < a - WHIP || T >= b + WHIP) return null;
+          const t = T - a;
+          const d = b - a;
+          // Whip pans: each scene flies in from the right with a motion blur
+          // and leaves to the left, overlapping its neighbours by WHIP.
+          const dir = i % 2 ? -1 : 1;
+          const inU = i === 0 ? 1 : clamp((t + WHIP) / (2 * WHIP));
+          const outU = i === SCENES.length - 1 ? 0 : clamp((t - d + WHIP) / (2 * WHIP));
+          const sIn = spring({ frame: Math.max(0, (t + WHIP) * FPS), fps: FPS, config: { damping: 14, stiffness: 160, mass: 0.6 } });
+          const x = (1 - easeOut(inU)) * width * 0.35 * dir - easeIn(outU) * width * 0.35 * dir;
+          const blur = (1 - inU) * 18 + outU * 18;
+          const zoom = lerp(1.12, 1, sIn) + 0.06 * outU;
+          const tilt = Math.sin(T * 0.7 + i) * 2.2;
+          return (
+            <AbsoluteFill key={i} style={{ opacity: clamp(inU * 2.5) * (1 - clamp(outU * 2 - 1)), transform: `translateX(${x}px) scale(${zoom}) rotateY(${tilt}deg)`, filter: blur > 0.5 ? `blur(${blur}px)` : undefined }}>
+              <C t={t} d={d} T={T} />
+            </AbsoluteFill>
+          );
+        })}
+      </AbsoluteFill>
       <AbsoluteFill style={{ background: 'white', opacity: flash, pointerEvents: 'none' }} />
       {T < 0.5 && <AbsoluteFill style={{ background: 'black', opacity: 1 - T / 0.5 }} />}
     </AbsoluteFill>

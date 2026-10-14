@@ -66,6 +66,9 @@ export const YourDevices: React.FC<SceneProps> = ({ t, d }) => {
   const s = useSlots();
   const p = rise(t, 0.1);
   const m = rise(t, BAR, 300);
+  const { width } = useVideoConfig();
+  // Alone in the middle first, then over to its place beside the Mac.
+  const px = lerp(width / 2 - s.phone.w / 2, s.phone.x, easeInOut(prog(t, BAR - 0.15, 0.6)));
   return (
     <>
       <Headline t={t} lines={[[['Your', 'w'], ['phone.', 'hi']]]} size={useHead().size} y={useHead().y} start={0.05} out={BAR - 0.25} />
@@ -75,8 +78,8 @@ export const YourDevices: React.FC<SceneProps> = ({ t, d }) => {
           <Fill src="shots/mac-devices.png" />
         </Mac>
       </div>
-      <div style={{ opacity: p.a, transform: `translateY(${p.y}px) rotate(${lerp(-8, -3, prog(t, 0, d))}deg)` }}>
-        <Phone w={s.phone.w} style={{ left: s.phone.x + O(0, 0), top: s.phone.y }}>
+      <div style={{ opacity: p.a, transform: `translateY(${p.y}px) rotate(${lerp(-8, -3, prog(t, 0, d))}deg)`, transformOrigin: `${px + s.phone.w / 2}px ${s.phone.y + s.phone.w}px` }}>
+        <Phone w={s.phone.w} style={{ left: px, top: s.phone.y }}>
           <Fill src="shots/iphone-devices.png" />
         </Phone>
       </div>
@@ -309,43 +312,75 @@ export const Ping: React.FC<SceneProps> = ({ t, d, T }) => {
   );
 };
 
-export const Corner: React.FC<SceneProps> = ({ t, d }) => {
-  const { width, height } = useVideoConfig();
+/** A Mac with something in a corner of its screen, the camera pushing in on it. */
+const MacZoom: React.FC<{ t: number; d: number; fx: number; fy: number; children: (sw: number, sh: number) => React.ReactNode }> = ({ t, d, fx, fy, children }) => {
+  const { width } = useVideoConfig();
   const O = useO();
-  const state = t < d * 0.4 ? 'corner_asking' : t < d * 0.75 ? 'corner_receiving' : 'corner_done';
-  const w = O(700, 840);
-  const u = appear(t, 0.05, 0.5);
+  const w = O(920, 860);
+  const x = (width - w * 1.16) / 2, y = O(320, 660);
+  const sw = w * 0.964, sh = w * 0.66 - w * 0.036;
+  const z = lerp(1, O(1.22, 1.15), easeInOut(prog(t, 0.35, d - 0.5)));
+  const ox = x + w * 0.098 + sw * fx, oy = y + (fy - fy);
+  const r = rise(t, 0, 200);
+  return (
+    <div style={{ position: 'absolute', inset: 0, transformOrigin: `${ox}px ${oy}px`, transform: `scale(${z}) translateY(${r.y}px)`, opacity: r.a }}>
+      <Mac w={w} style={{ left: x, top: y }}>
+        <Fill src="shots/mac-devices.png" />
+        {children(sw, sh)}
+      </Mac>
+    </div>
+  );
+};
+
+/** A dark band at the top, so a title stays readable over a zoomed-in screen. */
+const Scrim: React.FC = () => {
+  const O = useO();
+  return <div style={{ position: 'absolute', left: 0, right: 0, top: 0, height: O(340, 620), background: 'linear-gradient(180deg, rgba(14,5,36,.92) 40%, rgba(14,5,36,0))' }} />;
+};
+
+export const Corner: React.FC<SceneProps> = ({ t, d }) => {
+  const state = t < d * 0.42 ? 'corner_asking' : t < d * 0.75 ? 'corner_receiving' : 'corner_done';
+  const u = appear(t, 0.15, 0.45);
   return (
     <>
+      <MacZoom t={t} d={d} fx={0.82} fy={0.86}>
+        {(sw) => (
+          <div style={{ position: 'absolute', right: sw * 0.018, bottom: sw * 0.018, width: sw * 0.32, transform: `translateY(${lerp(sw * 0.12, 0, u)}px)`, opacity: u }}>
+            <Img src={staticFile(`shots/${state}.png`)} style={{ display: 'block', width: '100%', borderRadius: sw * 0.012, boxShadow: '0 12px 40px rgba(0,0,0,.35)' }} />
+          </div>
+        )}
+      </MacZoom>
+      <Scrim />
       <Title t={t} d={d} lines={[[['Requests pop up', 'w']], [['in the corner.', 'hi']]]} />
-      <div style={{ position: 'absolute', left: O(250, 60), top: O(250, 560), width: O(1420, 960), height: O(760, 900), borderRadius: 30, background: 'linear-gradient(135deg, rgba(255,255,255,.14), rgba(255,255,255,.04))', border: '1px solid rgba(255,255,255,.18)' }}>
-        <div style={{ position: 'absolute', right: 30, bottom: 30, width: w, transform: `translateY(${lerp(120, 0, u)}px)`, opacity: u }}>
-          <Img src={staticFile(`shots/${state}.png`)} style={{ width: '100%', borderRadius: 24, boxShadow: '0 30px 80px rgba(0,0,0,.5)' }} />
-        </div>
-      </div>
-      {state === 'corner_done' && <Ring t={t} t0={d * 0.75} x={O(250 + 1420 - 30 - w / 2, 60 + 960 - 30 - w / 2)} y={O(250 + 760 - 30 - w * 0.226, 560 + 900 - 30 - w * 0.226)} color={GREEN} r1={300} />}
     </>
   );
 };
 
 export const Tray: React.FC<SceneProps> = ({ t, d, T }) => {
-  const { width } = useVideoConfig();
-  const O = useO();
-  const w = O(380, 470);
-  const u = appear(t, 0.05, 0.5);
+  const u = appear(t, 0.2, 0.4);
   return (
     <>
+      <MacZoom t={t} d={d} fx={0.8} fy={0.3}>
+        {(sw, sh) => {
+          const bar = sh * 0.035;
+          return (
+            <>
+              <div style={{ position: 'absolute', left: 0, top: 0, right: 0, height: bar, background: 'rgba(30,20,50,.55)', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: bar * 0.6, paddingRight: bar, color: 'white', fontFamily: 'Inter', fontWeight: 600, fontSize: bar * 0.55 }}>
+                <Icon code={ICON.wifi} size={bar * 0.6} />
+                <div style={{ width: bar * 0.75, height: bar * 0.75, borderRadius: bar * 0.18, background: 'white', display: 'grid', placeItems: 'center', boxShadow: `0 0 ${bar * pulse(T, BEAT, 4)}px ${VIOLET}` }}>
+                  <Img src={staticFile('shots/sk-icon.png')} style={{ width: bar * 0.66, borderRadius: bar * 0.15 }} />
+                </div>
+                <span>Tue 9:41</span>
+              </div>
+              <div style={{ position: 'absolute', right: sw * 0.09, top: bar * 1.25, width: sw * 0.27, opacity: u, transform: `translateY(${lerp(-sh * 0.03, 0, u)}px) scale(${lerp(0.94, 1, u)})`, transformOrigin: 'top right' }}>
+                <Img src={staticFile('shots/tray-panel.png')} style={{ display: 'block', width: '100%', borderRadius: sw * 0.014, boxShadow: '0 16px 50px rgba(0,0,0,.45)' }} />
+              </div>
+            </>
+          );
+        }}
+      </MacZoom>
+      <Scrim />
       <Title t={t} d={d} lines={[[['Always', 'w']], [['one click away.', 'hi']]]} />
-      <div style={{ position: 'absolute', left: 0, top: O(260, 560), width, height: 54, background: 'rgba(255,255,255,.14)', backdropFilter: 'blur(10px)', display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 26, paddingRight: O(260, 80), color: 'white', fontFamily: 'Inter', fontWeight: 600, fontSize: 24 }}>
-        <Icon code={ICON.wifi} size={28} />
-        <div style={{ width: 34, height: 34, borderRadius: 9, background: 'white', display: 'grid', placeItems: 'center', boxShadow: `0 0 ${30 * pulse(T, BEAT, 4)}px ${VIOLET}` }}>
-          <Img src={staticFile('shots/sk-icon.png')} style={{ width: 30, borderRadius: 7 }} />
-        </div>
-        <span>Tue 9:41</span>
-      </div>
-      <div style={{ position: 'absolute', right: O(220, (width - w) / 2), top: O(330, 640), width: w, opacity: u, transform: `translateY(${lerp(-40, 0, u)}px) scale(${lerp(0.94, 1, u)})`, transformOrigin: 'top right' }}>
-        <Img src={staticFile('shots/tray-panel.png')} style={{ width: '100%', borderRadius: 28, boxShadow: '0 40px 100px rgba(0,0,0,.55)' }} />
-      </div>
     </>
   );
 };
@@ -360,11 +395,9 @@ export const QrPair: React.FC<SceneProps> = ({ t, d }) => {
       <Mac w={s.mac.w} style={{ left: O(170, 72), top: s.mac.y }}>
         <Fill src="shots/ad-mac-qr.png" />
       </Mac>
-      <div style={{ transform: `rotate(${lerp(-10, -4, prog(t, 0, d))}deg)` }}>
-        <Phone w={s.phone.w} style={{ left: O(1450, 720), top: s.phone.y }}>
-          <Fill src="shots/ad-iphone-scan.png" />
-        </Phone>
-      </div>
+      <Phone w={s.phone.w} style={{ left: O(1380, 680), top: s.phone.y, transform: `rotate(${lerp(-10, -4, prog(t, 0, d))}deg)` }}>
+        <Fill src="shots/ad-iphone-scan.png" />
+      </Phone>
       {paired && (
         <div style={{ position: 'absolute', left: O(170, 72) + s.mac.w * 0.6, top: s.mac.y + s.mac.w * 0.3, transform: `translate(-50%,-50%) scale(${back(prog(t, d * 0.62, 0.35))})` }}>
           <Pill icon={ICON.check} text="Paired" size={40} />
@@ -463,7 +496,7 @@ export const PhoneNotifications: React.FC<SceneProps> = ({ t, d }) => {
   const macX = (width - macW * O(1.16, 1)) / 2 + O(0, 0), macY = O(290, 600);
   const bw = macW * 0.4;
   const captions: [number, Word[][]][] = [
-    [BAR * 0.75, [[['Your phone,', 'w'], ['on your computer.', 'hi']]]],
+    [BAR * 0.75, O<Word[][]>([[['Your phone,', 'w'], ['on your computer.', 'hi']]], [[['Your phone,', 'w']], [['on your computer.', 'hi']]])],
     [BAR * 1.75, [[['Never miss', 'w'], ['a thing.', 'hi']]]],
   ];
   return (
@@ -503,8 +536,8 @@ const V_BREAK = (O: <T>(h: T, v: T) => T) => O<React.ReactNode>(' ', <br />);
 export const LiveActivity: React.FC<SceneProps> = ({ t, d }) => {
   const { width } = useVideoConfig();
   const O = useO();
-  const w = O(360, 400);
-  const x = width / 2 - w / 2, y = O(250, 560);
+  const w = O(290, 400);
+  const x = width / 2 - w / 2, y = O(330, 600);
   const p = clamp((t - 0.3) / (d - 0.6));
   return (
     <>
@@ -531,8 +564,8 @@ export const LiveActivity: React.FC<SceneProps> = ({ t, d }) => {
 export const Gallery: React.FC<SceneProps> = ({ t, d }) => {
   const { width } = useVideoConfig();
   const O = useO();
-  const w = O(330, 380);
-  const x = width / 2 - w / 2, y = O(250, 560);
+  const w = O(290, 380);
+  const x = width / 2 - w / 2, y = O(330, 600);
   const v = prog(t, 0.15, 0.7);
   return (
     <>
@@ -549,20 +582,24 @@ export const Gallery: React.FC<SceneProps> = ({ t, d }) => {
 export const Background: React.FC<SceneProps> = ({ t, d }) => {
   const { width } = useVideoConfig();
   const O = useO();
-  const w = O(1000, 960);
-  const typed = 'getsidekick.app'.slice(0, Math.floor(clamp((t - 0.6) / 0.5) * 15));
+  const w = O(290, 380);
+  const x = width / 2 - w / 2, y = O(320, 600);
+  const u = appear(t, 0.3, 0.4);
   return (
     <>
-      <Title t={t} d={d} lines={[[['Copy on your Mac.', 'w']], [['Paste in any app.', 'hi']]]} />
-      <div style={{ position: 'absolute', left: (width - w) / 2, top: O(330, 640), width: w, borderRadius: 30, background: 'white', padding: 30, boxShadow: '0 40px 100px rgba(0,0,0,.5)', opacity: appear(t, 0, 0.4) }}>
-        <div style={{ height: 80, borderRadius: 40, background: '#f1edf8', display: 'flex', alignItems: 'center', gap: 16, padding: '0 30px', fontFamily: 'Inter', fontWeight: 600, fontSize: 34, color: INK }}>
-          <span style={{ opacity: typed ? 1 : 0.35 }}>{typed || 'Search or type URL'}</span>
-          <span style={{ width: 3, height: 40, background: '#6a4cff', opacity: Math.floor(t * 3) % 2 }} />
+      <Title t={t} d={d} lines={[[['Always ready.', 'w']], [['Even in your pocket.', 'hi']]]} />
+      <Phone w={w} style={{ left: x, top: y }}>
+        <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(200deg,#1d1450,#4a2a8a 55%,#d76aa0)' }} />
+        <div style={{ position: 'absolute', top: '13%', width: '100%', textAlign: 'center', color: 'white', fontFamily: 'InterDisplay', fontWeight: 700, fontSize: w * 0.22, letterSpacing: -2 }}>9:41</div>
+        <div style={{ position: 'absolute', left: '5%', right: '5%', top: '42%', borderRadius: w * 0.06, background: 'rgba(255,255,255,.85)', padding: w * 0.045, display: 'flex', gap: w * 0.035, alignItems: 'center', fontFamily: 'Inter', color: INK, opacity: u, transform: `translateY(${lerp(-w * 0.2, 0, u)}px) scale(${lerp(0.9, 1, u)})` }}>
+          <Img src={staticFile('shots/sk-icon.png')} style={{ width: w * 0.12, borderRadius: w * 0.03 }} />
+          <div>
+            <div style={{ fontSize: w * 0.045, fontWeight: 600 }}>MacBook Pro wants to send</div>
+            <div style={{ fontSize: w * 0.04, fontWeight: 500, opacity: 0.7 }}>Trip.mov · Accept / Decline</div>
+          </div>
         </div>
-        {t < 0.6 && (
-          <div style={{ marginTop: 16, display: 'inline-block', padding: '14px 26px', borderRadius: 16, background: INK, color: 'white', fontFamily: 'Inter', fontWeight: 600, fontSize: 28, transform: `scale(${back(prog(t, 0.1, 0.3))})` }}>Paste</div>
-        )}
-      </div>
+      </Phone>
+      <Ring t={t} t0={0.3} x={width / 2} y={y + w * 1.0} r1={O(380, 420)} />
     </>
   );
 };
@@ -613,8 +650,8 @@ export const NoAccount: React.FC<SceneProps> = ({ t, d }) => {
 export const Themes: React.FC<SceneProps> = ({ t, d }) => {
   const { width } = useVideoConfig();
   const O = useO();
-  const w = O(330, 380);
-  const x = width / 2 - w / 2, y = O(250, 560);
+  const w = O(290, 380);
+  const x = width / 2 - w / 2, y = O(330, 600);
   const colors = ['#7c5cff', '#3d63c9', '#0f8b7a', '#3d8b3d', '#c9762c', '#c24d4d', '#c2557d', '#222'];
   const cx = width / 2, cy = y + w * O(1.2, 1.08);
   return (
