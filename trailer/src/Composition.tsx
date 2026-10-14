@@ -32,73 +32,36 @@ const SCENES: Scene[] = [
   [B(26), B(27), S.Themes],
   [B(27), B(29), S.Platforms],
   [B(29), B(31), S.Montage],
-  [B(31), FINAL, S.Converge],
+  [B(31), FINAL, S.Words],
   [FINAL, END, S.EndCard],
 ];
 
-/** Deep purple, with slow glowing blobs that breathe with the beat. */
+/** Black, with one soft light that breathes with the music. */
 const Backdrop: React.FC<{ T: number }> = ({ T }) => {
   const { width, height } = useVideoConfig();
-  const energy = T < B(4) ? 0.4 : T >= HIT && T < DROP ? 0.1 : 1;
-  const p = pulse(T, BEAT, 5) * energy;
-  const dim = T < B(0) ? 1 - easeInOut(prog(T, 0, B(0))) * 0.7 : T >= HIT && T < DROP ? 0.55 * easeInOut(prog(T, HIT + 0.1, 1.2)) : 0;
-  const blobs = [
-    { c: '#7b3cff', x: 0.25, y: 0.3, r: 0.55, s: 0.13 },
-    { c: '#ff4fa3', x: 0.78, y: 0.65, r: 0.5, s: 0.1 },
-    { c: '#3b5bff', x: 0.6, y: 0.2, r: 0.45, s: 0.16 },
-  ];
   const m = Math.max(width, height);
+  const glow = (T >= HIT && T < DROP ? 0.25 : 1) * (0.55 + 0.15 * pulse(T, BAR, 3));
   return (
-    <AbsoluteFill style={{ background: 'linear-gradient(160deg, #12062b 0%, #1d0b45 45%, #2a0d4a 100%)' }}>
-      {blobs.map((b, i) => {
-        const a = T * b.s + i * 2.1;
-        const x = (b.x + Math.cos(a) * 0.12) * width;
-        const y = (b.y + Math.sin(a * 0.8) * 0.12) * height;
-        const r = b.r * m * (1 + 0.04 * p);
-        return (
-          <div key={i} style={{ position: 'absolute', left: x - r / 2, top: y - r / 2, width: r, height: r, borderRadius: '50%', background: `radial-gradient(circle, ${b.c}aa, transparent 62%)`, opacity: 0.55 + 0.25 * p }} />
-        );
-      })}
-      <AbsoluteFill style={{ background: 'radial-gradient(ellipse at center, transparent 55%, rgba(5,0,15,.55))' }} />
-      <AbsoluteFill style={{ background: '#04010c', opacity: dim }} />
+    <AbsoluteFill style={{ background: '#000' }}>
+      <div style={{ position: 'absolute', left: width / 2 - m * 0.5, top: height * 0.62 - m * 0.5, width: m, height: m, borderRadius: '50%', background: 'radial-gradient(circle, rgba(124,92,255,.32), rgba(124,92,255,0) 60%)', opacity: glow }} />
     </AbsoluteFill>
   );
 };
 
-/** Specks of light drifting up. */
-const Particles: React.FC<{ T: number }> = ({ T }) => {
-  const { width, height } = useVideoConfig();
-  const dots = [];
-  for (let i = 0; i < 40; i++) {
-    const fx = (Math.sin(i * 12.9898) * 43758.5453) % 1;
-    const fy = (Math.sin(i * 78.233) * 12345.678) % 1;
-    const z = 0.3 + ((Math.sin(i * 4.1) + 1) / 2) * 0.7;
-    const y = (((Math.abs(fy) * (height + 200) - T * (20 + 60 * z)) % (height + 200)) + height + 200) % (height + 200) - 100;
-    const x = Math.abs(fx) * width + 30 * Math.sin(T * 0.4 + i) * z;
-    const r = 1.5 + 4 * z * z;
-    dots.push(<div key={i} style={{ position: 'absolute', left: x, top: y, width: r * 2, height: r * 2, borderRadius: r, background: '#d8ccff', opacity: 0.15 + 0.35 * (1 - z), filter: `blur(${z * 1.5}px)` }} />);
-  }
-  return <>{dots}</>;
-};
+const WHIP = 0.05;
 
-const WHIP = 0.09;
-
-/** The camera: a kick on every beat once the music is going, harder on the
- *  bar, and a shake on the big hits. */
-const camera = (T: number, width: number) => {
-  const going = (T >= B(4) && T < HIT) || (T >= DROP && T < FINAL + 0.5);
-  const kick = going ? pulse(T, BEAT, 9) * 0.012 + pulse(T, BAR, 6) * 0.02 : 0;
-  let shake = 0;
-  for (const h of [B(4), HIT, DROP, FINAL]) if (T >= h && T < h + 0.45) shake = Math.max(shake, (1 - (T - h) / 0.45) ** 2);
-  const sx = Math.sin(T * 91) * 14 * shake * (width / 1920), sy = Math.cos(T * 77) * 10 * shake * (width / 1920);
-  return `translate(${sx}px, ${sy}px) scale(${1 + kick + 0.03 * shake}) rotate(${Math.sin(T * 63) * 0.6 * shake}deg)`;
+/** The camera: a slow push-in, and a small kick on each bar once the music is going. */
+const camera = (T: number, _width: number) => {
+  const going = (T >= B(4) && T < HIT) || (T >= DROP && T < FINAL);
+  const kick = going ? pulse(T, BAR, 7) * 0.012 : 0;
+  return `scale(${1 + kick})`;
 };
 
 export const Trailer: React.FC = () => {
   const { width } = useVideoConfig();
   const frame = useCurrentFrame();
   const T = frame / FPS;
-  const flashes: [number, number][] = [[B(2), 0.3], [B(4), 0.45], [B(8), 0.2], [B(12), 0.2], [HIT, 0.6], [DROP, 0.75], [B(21), 0.25], [B(25), 0.25], [B(27), 0.35], [B(29), 0.3], [FINAL, 0.55]];
+  const flashes: [number, number][] = [[HIT, 0.9], [DROP, 0.9], [FINAL, 0.9]];
   let flash = 0;
   for (const [t0, peak] of flashes) {
     const u = (T - t0) / 0.4;
@@ -108,14 +71,14 @@ export const Trailer: React.FC = () => {
   if (T >= DROP && T < FINAL) {
     const bt = LEAD + Math.floor((T - LEAD) / BEAT) * BEAT;
     const onBar = Math.abs((bt - LEAD) / BAR - Math.round((bt - LEAD) / BAR)) < 0.01;
-    flash = Math.max(flash, (onBar ? 0.12 : 0.05) * Math.exp(-(T - bt) * 9));
+    void onBar;
   }
   return (
     <AbsoluteFill style={{ overflow: 'hidden' }}>
       {/* The first 62 s of the track, faded out over the last 1.2 s. */}
       <Audio src={staticFile('music.mp3')} volume={(f) => clamp((END - f / FPS) / 1.2)} />
       <Backdrop T={T} />
-      <Particles T={T} />
+      
       <AbsoluteFill style={{ transform: camera(T, width), perspective: 2000 }}>
         {SCENES.map(([a, b, C], i) => {
           if (T < a - WHIP || T >= b + WHIP) return null;
@@ -127,10 +90,10 @@ export const Trailer: React.FC = () => {
           const inU = i === 0 ? 1 : clamp((t + WHIP) / (2 * WHIP));
           const outU = i === SCENES.length - 1 ? 0 : clamp((t - d + WHIP) / (2 * WHIP));
           const sIn = spring({ frame: Math.max(0, (t + WHIP) * FPS), fps: FPS, config: { damping: 14, stiffness: 160, mass: 0.6 } });
-          const x = (1 - easeOut(inU)) * width * 0.35 * dir - easeIn(outU) * width * 0.35 * dir;
-          const blur = (1 - inU) * 18 + outU * 18;
-          const zoom = lerp(1.12, 1, sIn) + 0.06 * outU;
-          const tilt = Math.sin(T * 0.7 + i) * 2.2;
+          const x = 0 * dir;
+          const blur = (1 - inU) * 10;
+          const zoom = lerp(1.06, 1, sIn) + 0.02 * clamp(t / d);
+          const tilt = 0;
           return (
             <AbsoluteFill key={i} style={{ opacity: clamp(inU * 2.5) * (1 - clamp(outU * 2 - 1)), transform: `translateX(${x}px) scale(${zoom}) rotateY(${tilt}deg)`, filter: blur > 0.5 ? `blur(${blur}px)` : undefined }}>
               <C t={clamp(t, 0, d - 1e-3)} d={d} T={T} />
@@ -138,7 +101,7 @@ export const Trailer: React.FC = () => {
           );
         })}
       </AbsoluteFill>
-      <AbsoluteFill style={{ background: 'white', opacity: flash, pointerEvents: 'none' }} />
+      <AbsoluteFill style={{ background: 'black', opacity: flash, pointerEvents: 'none' }} />
       {T < 0.5 && <AbsoluteFill style={{ background: 'black', opacity: 1 - T / 0.5 }} />}
     </AbsoluteFill>
   );

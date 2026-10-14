@@ -2,10 +2,10 @@ import React from 'react';
 import { Img, staticFile, useVideoConfig } from 'remotion';
 import { back, clamp, easeOut, lerp, prog } from './beat';
 
-export const VIOLET = '#9b7bff';
+export const VIOLET = '#a78bfa';
 export const GREEN = '#4ade80';
 export const INK = '#1d1530';
-export const HI = 'linear-gradient(100deg, #ff7ac6 0%, #ffb37a 60%, #ffd27a 100%)';
+export const HI = 'linear-gradient(95deg, #a78bfa 0%, #e879f9 55%, #fb7185 100%)';
 
 export const useVertical = () => {
   const { width, height } = useVideoConfig();
@@ -65,8 +65,7 @@ export const Headline: React.FC<{
           {line.map(([text, kind], wi) => {
             const d = start + 0.07 * k++ + li * 0.05;
             const u = prog(t, d, 0.45);
-            const e = kind === 'hi' ? back(clamp(u * 1.05)) : easeOut(u);
-            const s = kind === 'hi' ? lerp(1.35, 1, clamp(e)) : 1;
+            const s = 1;
             return (
               <span
                 key={wi}
@@ -74,11 +73,11 @@ export const Headline: React.FC<{
                   display: 'inline-block',
                   marginRight: size * 0.24,
                   fontFamily: 'InterDisplay',
-                  fontWeight: 900,
+                  fontWeight: 800,
                   fontSize: size,
-                  letterSpacing: -size * 0.03,
+                  letterSpacing: -size * 0.035,
                   opacity: clamp(u * 3),
-                  transform: `translateY(${lerp(size * 0.5, 0, easeOut(u))}px) scale(${s})`,
+                  transform: `translateY(${lerp(size * 0.35, 0, easeOut(u))}px) scale(${s})`,
                   ...(kind === 'hi'
                     ? {
                         background: HI,
@@ -86,9 +85,9 @@ export const Headline: React.FC<{
                         backgroundClip: 'text',
                         color: 'transparent',
                         textShadow: 'none',
-                        filter: `blur(${(1 - easeOut(u)) * 8}px) drop-shadow(0 6px 24px rgba(255,120,190,.45))`,
+                        filter: `blur(${(1 - easeOut(u)) * 6}px)`,
                       }
-                    : { color: 'white', textShadow: '0 6px 30px rgba(20,6,50,.55)', filter: `blur(${(1 - easeOut(u)) * 8}px)` }),
+                    : { color: '#f5f5f7', filter: `blur(${(1 - easeOut(u)) * 6}px)` }),
                 }}
               >
                 {text}
@@ -116,17 +115,18 @@ export const Pill: React.FC<{ icon: number; text: string; size?: number; style?:
       height: size * 2,
       padding: `0 ${size * 0.9}px 0 ${size * 0.7}px`,
       borderRadius: size,
-      background: 'linear-gradient(180deg, rgba(255,255,255,.96), rgba(232,224,255,.92))',
-      boxShadow: '0 10px 40px rgba(120,80,255,.45), inset 0 1px 0 rgba(255,255,255,.9)',
-      color: INK,
-      fontFamily: 'InterDisplay',
-      fontWeight: 800,
+      background: 'rgba(255,255,255,.08)',
+      boxShadow: 'inset 0 0 0 1px rgba(255,255,255,.16)',
+      backdropFilter: 'blur(20px)',
+      color: '#f5f5f7',
+      fontFamily: 'Inter',
+      fontWeight: 600,
       fontSize: size,
       whiteSpace: 'nowrap',
       ...style,
     }}
   >
-    <Icon code={icon} size={size * 1.1} color="#6a4cff" />
+    <Icon code={icon} size={size * 1.1} color={VIOLET} />
     {text}
   </div>
 );
@@ -140,8 +140,8 @@ export const Ring: React.FC<{ t: number; t0: number; x: number; y: number; r0?: 
   r0 = 40,
   r1 = 300,
   dur = 0.8,
-  color = VIOLET,
-  width = 6,
+  color = 'rgba(255,255,255,.6)',
+  width = 2,
 }) => {
   const u = (t - t0) / dur;
   if (u < 0 || u > 1) return null;
@@ -178,7 +178,7 @@ export const Phone: React.FC<{
         height: h,
         borderRadius: r,
         padding: w * 0.035,
-        background: 'linear-gradient(135deg, #f4a06a, #c8642e 45%, #ef9a63)',
+        background: 'linear-gradient(135deg, #8e8e93, #3a3a3c 45%, #6e6e73)',
         boxShadow: '0 40px 90px rgba(10,0,30,.55), 0 0 0 2px rgba(255,255,255,.15) inset',
         ...style,
       }}

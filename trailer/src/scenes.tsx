@@ -335,7 +335,7 @@ const MacZoom: React.FC<{ t: number; d: number; fx: number; fy: number; children
 /** A dark band at the top, so a title stays readable over a zoomed-in screen. */
 const Scrim: React.FC = () => {
   const O = useO();
-  return <div style={{ position: 'absolute', left: 0, right: 0, top: 0, height: O(340, 620), background: 'linear-gradient(180deg, rgba(14,5,36,.92) 40%, rgba(14,5,36,0))' }} />;
+  return <div style={{ position: 'absolute', left: 0, right: 0, top: 0, height: O(340, 620), background: 'linear-gradient(180deg, rgba(0,0,0,.92) 40%, rgba(0,0,0,0))' }} />;
 };
 
 export const Corner: React.FC<SceneProps> = ({ t, d }) => {
@@ -431,8 +431,8 @@ const Arc: React.FC<{ t: number; x0: number; x1: number; y: number; icon: number
 
 const DeviceTile: React.FC<{ icon: number; x: number; y: number; size: number; t: number; t0: number; label?: string }> = ({ icon, x, y, size, t, t0, label }) => (
   <div style={{ position: 'absolute', left: x - size / 2, top: y - size / 2, width: size, transform: `scale(${back(prog(t, t0, 0.5))})`, opacity: clamp(prog(t, t0, 0.2) * 3) }}>
-    <div style={{ width: size, height: size, borderRadius: size * 0.24, background: 'linear-gradient(160deg, rgba(255,255,255,.95), rgba(214,200,255,.9))', display: 'grid', placeItems: 'center', boxShadow: '0 30px 70px rgba(80,40,200,.5)' }}>
-      <Icon code={icon} size={size * 0.56} color="#5b3df0" />
+    <div style={{ width: size, height: size, borderRadius: size * 0.24, background: 'linear-gradient(160deg, #2c2c2e, #1c1c1e)', border: '1px solid rgba(255,255,255,.12)', display: 'grid', placeItems: 'center', boxShadow: '0 30px 70px rgba(0,0,0,.6)' }}>
+      <Icon code={icon} size={size * 0.56} color="#f5f5f7" />
     </div>
     {label && <div style={{ marginTop: 18, textAlign: 'center', color: 'white', fontFamily: 'InterDisplay', fontWeight: 800, fontSize: size * 0.2 }}>{label}</div>}
   </div>
@@ -652,16 +652,9 @@ export const Themes: React.FC<SceneProps> = ({ t, d }) => {
   const O = useO();
   const w = O(290, 380);
   const x = width / 2 - w / 2, y = O(330, 600);
-  const colors = ['#7c5cff', '#3d63c9', '#0f8b7a', '#3d8b3d', '#c9762c', '#c24d4d', '#c2557d', '#222'];
-  const cx = width / 2, cy = y + w * O(1.2, 1.08);
   return (
     <>
-      <Title t={t} d={d} lines={[[['Liquid Glass.', 'w']], [['Or your colors.', 'hi']]]} />
-      {colors.map((c, i) => {
-        const a = (i / colors.length) * Math.PI * 2 + t * 0.8;
-        const r = O(300, 330) * easeOut(prog(t, 0.05 + i * 0.04, 0.5));
-        return <div key={c} style={{ position: 'absolute', left: cx + Math.cos(a) * r - 40, top: cy + Math.sin(a) * r - 40, width: 80, height: 80, borderRadius: 40, background: c, border: '4px solid rgba(255,255,255,.8)', boxShadow: '0 10px 30px rgba(0,0,0,.4)' }} />;
-      })}
+      <Title t={t} d={d} lines={[[['Liquid', 'w'], ['Glass.', 'hi']]]} />
       <Phone w={w} style={{ left: x, top: y }}>
         <Fill src="shots/glass-iphone-devices.png" />
       </Phone>
@@ -704,7 +697,7 @@ export const Montage: React.FC<SceneProps> = ({ t, d }) => {
           );
         })}
       </div>
-      <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(ellipse at center, rgba(16,6,40,.35), rgba(16,6,40,.85) 75%)' }} />
+      <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(ellipse at center, rgba(0,0,0,.45), rgba(0,0,0,.9) 75%)' }} />
       <Headline t={t} lines={[[['Everything.', 'w']], [['One app.', 'hi']]]} size={O(130, 120)} y={height / 2 - O(140, 150)} start={0.1} out={d - 0.25} />
     </>
   );
@@ -733,6 +726,22 @@ export const Converge: React.FC<SceneProps> = ({ t, d }) => {
         );
       })}
     </>
+  );
+};
+
+/** The climax: one word per beat, huge, on black. */
+const WORDS: [string, boolean][] = [['Send.', false], ['Control.', false], ['Ping.', false], ['Pair.', false], ['Notify.', true], ['Encrypted.', false], ['Everywhere.', true], ['Sidekick.', true]];
+
+export const Words: React.FC<SceneProps> = ({ t }) => {
+  const { width, height } = useVideoConfig();
+  const O = useO();
+  const i = Math.min(WORDS.length - 1, Math.floor(t / (BEAT / 2)));
+  const u = (t - i * (BEAT / 2)) / (BEAT / 2);
+  const [word, hi] = WORDS[i];
+  return (
+    <div style={{ position: 'absolute', left: 0, width, top: height / 2 - O(110, 100), textAlign: 'center', transform: `scale(${lerp(1.08, 1, easeOut(clamp(u * 2)))})` }}>
+      <span style={{ fontFamily: 'InterDisplay', fontWeight: 800, fontSize: O(190, 150), letterSpacing: -7, ...(hi ? { background: HI, WebkitBackgroundClip: 'text', backgroundClip: 'text', color: 'transparent' } : { color: '#f5f5f7' }) }}>{word}</span>
+    </div>
   );
 };
 
