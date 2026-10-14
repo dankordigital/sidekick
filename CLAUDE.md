@@ -433,7 +433,9 @@ its biggest features and fixes (see [Releasing](#releasing)). The history starts
   `GlassBackdrop` (soft blobs of the theme's colors) sits under every
   screen (MaterialApp `builder`); `GlassPanel` (blur, tint, bright rim)
   frames the phone's floating tab bar and the computer's content panel
-  (shell.dart). Rendered by `tool/screenshots_test.dart` (`glass-*.png`).
+  (shell.dart). Since 2.17.0 `glassTheme` also makes buttons (`GlassFill`
+  through `backgroundBuilder`), selections, switches, fields, menus,
+  snackbars and tooltips glass, each tinted in its own color. Rendered by `tool/screenshots_test.dart` (`glass-*.png`).
 - Devices announce their release (`DeviceInfo.app`, "2.2.0"); a paired card
   shows "Update Sidekick on it" when the other device runs an older one.
 - **iPhones can't be controlled** (Apple allows no app to): Remote on an
@@ -470,6 +472,13 @@ one) without asking.
 4. Add the version to [Versions](#versions) below.
 
 ## Versions
+
+### 2.17.0
+- **Liquid Glass everywhere it fits:** with Settings → Theme → Liquid
+  Glass, buttons are frosted glass pills in their own colors (`GlassFill`,
+  the theme's hue for main buttons), and so are segmented buttons, chips,
+  switches, checkboxes, sliders, progress bars, text fields, menus,
+  snackbars, tooltips and the selected tab / list row (`glassTheme`).
 
 ### 2.16.1
 - **Fixed: the Apple-silicon Mac app had no background and its buttons did

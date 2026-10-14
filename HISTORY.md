@@ -5,6 +5,12 @@ a new session. Newest first. For how things work, read `CLAUDE.md` (the
 detailed developer notes, including every release in "Versions") and
 `ARCHITECTURE.md` (the big picture).
 
+## 14 October 2026: 2.17.0
+
+- Liquid Glass theme now covers buttons, selections, switches, fields,
+  menus, snackbars and tooltips (`ui/glass.dart`: `GlassFill`,
+  `glassTheme`), all keeping the theme's colors.
+
 ## Where things stand (13 October 2026)
 
 - **App:** latest release **2.16.1**, published on GitHub (Windows .exe,

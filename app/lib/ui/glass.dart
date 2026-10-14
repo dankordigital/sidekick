@@ -146,12 +146,81 @@ class GlassBackdrop extends StatelessWidget {
   }
 }
 
+/// A glass fill for buttons and other small controls: blurs what's behind,
+/// tints it with [color] (the control's own color, so a primary button stays
+/// in the theme's hue), lights it from the top and draws a bright rim.
+class GlassFill extends StatelessWidget {
+  const GlassFill({super.key, required this.color, this.child, this.blur = 12});
+
+  final Color color;
+  final Widget? child;
+  final double blur;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final dark = scheme.brightness == Brightness.dark;
+    const shape = StadiumBorder();
+    return ClipPath(
+      clipper: const ShapeBorderClipper(shape: shape),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: blur, sigmaY: blur),
+        child: DecoratedBox(
+          decoration: ShapeDecoration(
+            shape: StadiumBorder(side: BorderSide(color: glassRim(scheme))),
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [Color.lerp(color, Colors.white, dark ? 0.08 : 0.22)!, color],
+            ),
+          ),
+          child: child,
+        ),
+      ),
+    );
+  }
+}
+
+/// A button style whose background is [GlassFill] in [tint] (dimmed when
+/// disabled), with [foreground] text and icons.
+ButtonStyle _glassButton(ButtonStyle? base, ColorScheme scheme, Color tint, Color foreground) {
+  return (base ?? const ButtonStyle()).copyWith(
+    backgroundColor: const WidgetStatePropertyAll(Colors.transparent),
+    shadowColor: const WidgetStatePropertyAll(Colors.transparent),
+    surfaceTintColor: const WidgetStatePropertyAll(Colors.transparent),
+    elevation: const WidgetStatePropertyAll(0),
+    side: const WidgetStatePropertyAll(BorderSide.none),
+    shape: const WidgetStatePropertyAll(StadiumBorder()),
+    foregroundColor: WidgetStateProperty.resolveWith(
+      (states) => states.contains(WidgetState.disabled) ? scheme.onSurface.withValues(alpha: 0.38) : foreground,
+    ),
+    iconColor: WidgetStateProperty.resolveWith(
+      (states) => states.contains(WidgetState.disabled) ? scheme.onSurface.withValues(alpha: 0.38) : foreground,
+    ),
+    backgroundBuilder: (context, states, child) =>
+        GlassFill(color: states.contains(WidgetState.disabled) ? glassTint(scheme, 0.25) : tint, child: child),
+  );
+}
+
 /// Turns a Material theme into its Liquid Glass version: see-through
 /// backgrounds (the [GlassBackdrop] shows through), translucent cards with a
-/// bright rim, and frosted dialogs, sheets and menus.
+/// bright rim, frosted dialogs, sheets and menus, and glass buttons, chips,
+/// switches, fields and selections, each tinted in its own color.
 ThemeData glassTheme(ThemeData base) {
   final scheme = base.colorScheme;
+  final dark = scheme.brightness == Brightness.dark;
   final rim = BorderSide(color: glassRim(scheme));
+  final selected = scheme.primary.withValues(alpha: dark ? 0.32 : 0.22);
+  bool on(Set<WidgetState> states) => states.contains(WidgetState.selected);
+  final glassMenu = MenuStyle(
+    backgroundColor: WidgetStatePropertyAll(glassTint(scheme, 0.9)),
+    surfaceTintColor: const WidgetStatePropertyAll(Colors.transparent),
+    shape: WidgetStatePropertyAll(RoundedRectangleBorder(borderRadius: BorderRadius.circular(18), side: rim)),
+  );
+  OutlineInputBorder field(Color color, [double width = 1]) => OutlineInputBorder(
+    borderRadius: BorderRadius.circular(16),
+    borderSide: BorderSide(color: color, width: width),
+  );
   return base.copyWith(
     extensions: [...base.extensions.values, const GlassLook(on: true)],
     scaffoldBackgroundColor: Colors.transparent,
@@ -174,17 +243,117 @@ ThemeData glassTheme(ThemeData base) {
       surfaceTintColor: Colors.transparent,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18), side: rim),
     ),
+    menuTheme: MenuThemeData(style: glassMenu),
+    dropdownMenuTheme: base.dropdownMenuTheme.copyWith(menuStyle: glassMenu),
     navigationBarTheme: base.navigationBarTheme.copyWith(
       backgroundColor: Colors.transparent,
       surfaceTintColor: Colors.transparent,
       elevation: 0,
-      indicatorColor: scheme.primary.withValues(alpha: 0.18),
+      indicatorColor: selected,
+      indicatorShape: StadiumBorder(side: rim),
     ),
     navigationRailTheme: base.navigationRailTheme.copyWith(
       backgroundColor: Colors.transparent,
-      indicatorColor: scheme.primary.withValues(alpha: 0.18),
+      indicatorColor: selected,
+      indicatorShape: StadiumBorder(side: rim),
     ),
     appBarTheme: base.appBarTheme.copyWith(backgroundColor: Colors.transparent, surfaceTintColor: Colors.transparent),
+    // Buttons: glass in their own colors.
+    filledButtonTheme: FilledButtonThemeData(
+      style: _glassButton(
+        base.filledButtonTheme.style,
+        scheme,
+        scheme.primary.withValues(alpha: dark ? 0.62 : 0.72),
+        scheme.onPrimary,
+      ),
+    ),
+    elevatedButtonTheme: ElevatedButtonThemeData(
+      style: _glassButton(base.elevatedButtonTheme.style, scheme, glassTint(scheme, 0.5), scheme.primary),
+    ),
+    outlinedButtonTheme: OutlinedButtonThemeData(
+      style: _glassButton(base.outlinedButtonTheme.style, scheme, glassTint(scheme, 0.32), scheme.primary),
+    ),
+    textButtonTheme: TextButtonThemeData(
+      style: (base.textButtonTheme.style ?? const ButtonStyle()).copyWith(
+        shape: const WidgetStatePropertyAll(StadiumBorder()),
+        overlayColor: WidgetStatePropertyAll(scheme.primary.withValues(alpha: 0.12)),
+      ),
+    ),
+    floatingActionButtonTheme: base.floatingActionButtonTheme.copyWith(
+      backgroundColor: scheme.primaryContainer.withValues(alpha: 0.7),
+      elevation: 0,
+      focusElevation: 0,
+      hoverElevation: 0,
+      highlightElevation: 0,
+      shape: StadiumBorder(side: rim),
+    ),
+    // Selections: glass segments and chips, the chosen one in the theme's hue.
+    segmentedButtonTheme: SegmentedButtonThemeData(
+      style: ButtonStyle(
+        backgroundColor: WidgetStateProperty.resolveWith((s) => on(s) ? selected : glassTint(scheme, 0.32)),
+        foregroundColor: WidgetStateProperty.resolveWith((s) => on(s) ? scheme.primary : scheme.onSurface),
+        side: WidgetStatePropertyAll(rim),
+      ),
+    ),
+    chipTheme: base.chipTheme.copyWith(
+      color: WidgetStateProperty.resolveWith((s) => on(s) ? selected : glassTint(scheme, 0.36)),
+      side: rim,
+      shape: StadiumBorder(side: rim),
+      surfaceTintColor: Colors.transparent,
+      shadowColor: Colors.transparent,
+    ),
+    listTileTheme: base.listTileTheme.copyWith(selectedTileColor: selected, selectedColor: scheme.primary),
+    switchTheme: base.switchTheme.copyWith(
+      trackColor: WidgetStateProperty.resolveWith(
+        (s) => on(s) ? scheme.primary.withValues(alpha: 0.75) : glassTint(scheme, 0.4),
+      ),
+      trackOutlineColor: WidgetStateProperty.resolveWith((s) => on(s) ? glassRim(scheme) : scheme.outlineVariant),
+      thumbColor: WidgetStateProperty.resolveWith((s) => on(s) ? Colors.white : scheme.outline),
+    ),
+    checkboxTheme: base.checkboxTheme.copyWith(
+      fillColor: WidgetStateProperty.resolveWith(
+        (s) => on(s) ? scheme.primary.withValues(alpha: 0.8) : glassTint(scheme, 0.4),
+      ),
+    ),
+    radioTheme: base.radioTheme.copyWith(
+      fillColor: WidgetStateProperty.resolveWith((s) => on(s) ? scheme.primary : scheme.onSurfaceVariant),
+    ),
+    sliderTheme: base.sliderTheme.copyWith(
+      activeTrackColor: scheme.primary.withValues(alpha: 0.8),
+      inactiveTrackColor: glassTint(scheme, 0.45),
+    ),
+    progressIndicatorTheme: base.progressIndicatorTheme.copyWith(
+      linearTrackColor: glassTint(scheme, 0.45),
+      circularTrackColor: glassTint(scheme, 0.3),
+    ),
+    // Fields: frosted, with a bright rim, and the theme's color when focused.
+    inputDecorationTheme: base.inputDecorationTheme.copyWith(
+      filled: true,
+      fillColor: glassTint(scheme, 0.4),
+      border: field(glassRim(scheme)),
+      enabledBorder: field(glassRim(scheme)),
+      focusedBorder: field(scheme.primary.withValues(alpha: 0.8), 2),
+    ),
+    snackBarTheme: base.snackBarTheme.copyWith(
+      backgroundColor: glassTint(scheme, 0.92),
+      contentTextStyle: base.textTheme.bodyMedium?.copyWith(color: scheme.onSurface),
+      actionTextColor: scheme.primary,
+      elevation: 0,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18), side: rim),
+    ),
+    tooltipTheme: base.tooltipTheme.copyWith(
+      decoration: ShapeDecoration(
+        color: glassTint(scheme, 0.92),
+        shape: StadiumBorder(side: rim),
+      ),
+      textStyle: base.textTheme.bodySmall?.copyWith(color: scheme.onSurface),
+    ),
+    badgeTheme: base.badgeTheme.copyWith(backgroundColor: scheme.primary.withValues(alpha: 0.85)),
+    dividerTheme: base.dividerTheme.copyWith(color: glassRim(scheme)),
+    drawerTheme: base.drawerTheme.copyWith(
+      backgroundColor: glassTint(scheme, 0.86),
+      surfaceTintColor: Colors.transparent,
+    ),
   );
 }
 
