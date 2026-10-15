@@ -18,8 +18,8 @@ AppName={#AppName}
 AppVersion={#AppVersion}
 AppVerName={#AppName} {#AppVersion}
 AppPublisher=Sidekick
-AppPublisherURL=https://github.com/michaldaniszewski03-hash/sidekick
-AppSupportURL=https://github.com/michaldaniszewski03-hash/sidekick/issues
+AppPublisherURL=https://github.com/dankordigital/sidekick
+AppSupportURL=https://github.com/dankordigital/sidekick/issues
 ; The privacy policy, on a page before installing (same text as privacy.html
 ; on the website).
 InfoBeforeFile=..\..\packaging\privacy.txt

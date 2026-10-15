@@ -172,4 +172,4 @@ Earlier versions are in the project's history on GitHub.
 CONTACT
 
 Questions? Open an issue on GitHub:
-https://github.com/michaldaniszewski03-hash/sidekick/issues
+https://github.com/dankordigital/sidekick/issues

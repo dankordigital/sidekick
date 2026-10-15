@@ -38,6 +38,10 @@ detailed developer notes; every release is in `VERSIONS.md`) and
   Mac's copy by itself; `website.yml` uploads from both names.
 - "Versions" moved out of `CLAUDE.md` into `VERSIONS.md` (the owner's call,
   to save tokens: `CLAUDE.md` is loaded into every session, 53 KB → 33 KB).
+- Every GitHub link pointed at the son's old account
+  (`michaldaniszewski03-hash/sidekick`): the site, privacy policies, README,
+  Windows installer and `wishlist.php`'s `REPO` (where the released site gets
+  its downloads). All now `dankordigital/sidekick`.
 
 ## Waiting on the owner
 

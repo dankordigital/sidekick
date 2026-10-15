@@ -15,7 +15,7 @@ The Flutter app lives in `app/`. One codebase builds all four apps.
 
 ### Install
 
-Download both from the [**Releases** page](https://github.com/michaldaniszewski03-hash/sidekick/releases):
+Download both from the [**Releases** page](https://github.com/dankordigital/sidekick/releases):
 
 - **Windows 10/11:** run **`SidekickSetup-<version>.exe`**. It installs Sidekick with Start menu and desktop shortcuts, allows it through Windows Firewall on private networks, and adds an uninstaller. The installer isn't code-signed yet, so Windows may say "Windows protected your PC": click **More info → Run anyway**.
 - **Android 8.0+:** open **`Sidekick-<version>.apk`** on your phone. If asked, allow your browser or Files app to install apps.
@@ -65,7 +65,7 @@ The Mac's media controls use the play/pause and skip media keys plus the system 
 1. On your Mac, install **AltServer** from [altstore.io](https://altstore.io), plug in the iPhone, and choose **Install AltStore** from AltServer's menu-bar icon. (SideStore works without a computer after its own setup: [sidestore.io](https://sidestore.io).)
 2. On the iPhone: **Settings → General → VPN & Device Management** → trust your Apple ID. On iOS 16+ also turn on **Settings → Privacy & Security → Developer Mode** (the phone restarts).
 3. In AltStore: **Sources → +**, paste
-   `https://github.com/michaldaniszewski03-hash/sidekick/releases/latest/download/altstore.json`
+   `https://github.com/dankordigital/sidekick/releases/latest/download/altstore.json`
    then open **Sidekick → Install**.
 4. New releases appear under **My Apps → Updates**.
 

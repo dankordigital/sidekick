@@ -384,7 +384,7 @@ function by_token(array &$rows, string $token): ?string {
 // sidekick-wishlist/visits.json (a day's visitors only as short hashes of
 // IP + browser, salted with the day, so nobody can be traced back).
 
-const REPO = 'michaldaniszewski03-hash/sidekick';
+const REPO = 'dankordigital/sidekick';
 const VISIT_DAYS = 400;        // days of visits kept
 
 function site_state(): array {
