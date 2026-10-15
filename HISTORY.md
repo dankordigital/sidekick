@@ -32,13 +32,13 @@ detailed developer notes; every release is in `VERSIONS.md`) and
   password from `wishlist-config.php` (never in git).
 - **Ads:** three finished videos, made outside the repo (scratchpad).
 
-
 ## 15 October 2026: one branch, lighter CLAUDE.md
 - The main branch is now `claude/sidekick-app-architecture-main` (renamed
   on GitHub from `-8ilytw`; no other branches left). `sync.sh` renames the
   Mac's copy by itself; `website.yml` uploads from both names.
 - "Versions" moved out of `CLAUDE.md` into `VERSIONS.md` (the owner's call,
   to save tokens: `CLAUDE.md` is loaded into every session, 53 KB → 33 KB).
+
 ## Waiting on the owner
 
 1. ~~Test 2.16.1 on the M1~~: done, it works.
