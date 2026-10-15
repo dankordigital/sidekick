@@ -2,7 +2,7 @@
 
 A running record of the work on Sidekick, for picking up after `/clear` or in
 a new session. Newest first. For how things work, read `CLAUDE.md` (the
-detailed developer notes, including every release in "Versions") and
+detailed developer notes; every release is in `VERSIONS.md`) and
 `ARCHITECTURE.md` (the big picture).
 
 ## Where things stand (15 October 2026)
@@ -32,6 +32,13 @@ detailed developer notes, including every release in "Versions") and
   password from `wishlist-config.php` (never in git).
 - **Ads:** three finished videos, made outside the repo (scratchpad).
 
+
+## 15 October 2026: one branch, lighter CLAUDE.md
+- The main branch is now `claude/sidekick-app-architecture-main` (renamed
+  on GitHub from `-8ilytw`; no other branches left). `sync.sh` renames the
+  Mac's copy by itself; `website.yml` uploads from both names.
+- "Versions" moved out of `CLAUDE.md` into `VERSIONS.md` (the owner's call,
+  to save tokens: `CLAUDE.md` is loaded into every session, 53 KB → 33 KB).
 ## Waiting on the owner
 
 1. ~~Test 2.16.1 on the M1~~: done, it works.
@@ -204,13 +211,13 @@ detailed developer notes, including every release in "Versions") and
   emotion each; ElevenLabs reads any timestamps aloud, so none in the text).
 
 ### Before this history starts
-- Releases 1.1.3 to 2.12.0: see "Versions" in `CLAUDE.md`.
+- Releases 1.1.3 to 2.12.0: see `VERSIONS.md`.
 
 ## How to work here (quick reminders)
 - Flutter: `/home/user/tools/flutter/bin`; `dart format -l 120`,
   `flutter analyze` clean and `flutter test` passing before any push.
 - Release when done and CI is green: run the `Build` workflow with
-  `release_tag: vX.Y.Z`, then add a "Versions" entry in `CLAUDE.md`.
+  `release_tag: vX.Y.Z`, then add an entry to `VERSIONS.md`.
 - Commit messages end with the Co-Authored-By and Claude-Session lines.
 - The owner uploads the website with FileZilla; send them the changed
   files. Never put the FTP login or the mailbox password in git.
