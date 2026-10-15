@@ -5,15 +5,9 @@ a new session. Newest first. For how things work, read `CLAUDE.md` (the
 detailed developer notes, including every release in "Versions") and
 `ARCHITECTURE.md` (the big picture).
 
-## 14 October 2026: 2.17.0
+## Where things stand (15 October 2026)
 
-- Liquid Glass theme now covers buttons, selections, switches, fields,
-  menus, snackbars and tooltips (`ui/glass.dart`: `GlassFill`,
-  `glassTheme`), all keeping the theme's colors.
-
-## Where things stand (13 October 2026)
-
-- **App:** latest release **2.16.1**, published on GitHub (Windows .exe,
+- **App:** latest release **2.17.2** (same app as 2.17.1), published on GitHub (Windows .exe,
   Apple-silicon and Intel .dmg/.pkg, Android .apk, iPhone .ipa,
   altstore.json) and on TestFlight. Branch:
   `claude/sidekick-app-architecture-8ilytw`.
@@ -23,6 +17,7 @@ detailed developer notes, including every release in "Versions") and
   - **Removed (2.15.0, don't bring back):** shared clipboard, Screen
     Mirroring.
   - Look: minimal Material by default; Liquid Glass option on iOS/macOS 26
+    (since 2.17.0 buttons, switches, fields and menus are glass too)
     (iPhone uses Apple's own swipeable tab bar; the Mac draws its own glass,
     never a transparent window: that killed the M1 app in 2.16.0).
 - **Mac:** separate Apple-silicon and Intel builds since 2.16.0. The owner
@@ -54,6 +49,14 @@ detailed developer notes, including every release in "Versions") and
 
 ## History
 
+### 2.17.2 and syncing with GitHub (14 Oct)
+- `sync.sh` (pull, commit everything, push; never uploads to the hosting)
+  for the copy on the family Mac; CLAUDE.md says Claude pulls before work
+  and pushes each finished change itself.
+- Released **2.17.2**: no app changes since 2.17.1, just a rebuild. All
+  files are on the GitHub release (.exe, Apple-silicon and Intel .dmg/.pkg,
+  .apk, .ipa, altstore.json).
+
 ### 2.17.1: tray Open fix, smoother, Apple-like motion (14 Oct)
 - Tray panel's Open Sidekick opened and closed the window: the hide's focus
   loss started a second close (`_closingPanel` now shared).
@@ -63,6 +66,11 @@ detailed developer notes, including every release in "Versions") and
   easeOutQuint.
 - Trailer (`trailer/`, Remotion): Apple style, rendered by
   `.github/workflows/render.yml` (Artifacts).
+
+### 2.17.0: Liquid Glass everywhere it fits (14 Oct)
+- Liquid Glass theme now covers buttons, selections, switches, fields,
+  menus, snackbars and tooltips (`ui/glass.dart`: `GlassFill`,
+  `glassTheme`), all keeping the theme's colors.
 
 ### Admin panel: Visits and Release / wishlist switch (13 Oct)
 - `np7dpanel.php` → **Visits**: home-page visits and visitors per day,
