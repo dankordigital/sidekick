@@ -10,7 +10,9 @@ detailed developer notes, including every release in "Versions") and
 - **App:** latest release **2.17.2** (same app as 2.17.1), published on GitHub (Windows .exe,
   Apple-silicon and Intel .dmg/.pkg, Android .apk, iPhone .ipa,
   altstore.json) and on TestFlight. Branch:
-  `claude/sidekick-app-architecture-8ilytw`.
+  `claude/sidekick-app-architecture-main` (until 15 Oct 2026
+  `claude/sidekick-app-architecture-8ilytw`; `sync.sh` renames the Mac's
+  copy by itself).
   - Features now: files both ways, browse the other device, remote control,
     Ping, direct Wi-Fi / Bluetooth, QR pairing, Live Activities, phone
     notifications on computers (Android), screenshots to computers.

@@ -461,7 +461,12 @@ its biggest features and fixes (see [Releasing](#releasing)). The history starts
     service IDs.
 - Mac secrets live in a 0600 file, never the keychain (an unsigned app gets
   endless keychain password prompts).
-- Develop on `claude/sidekick-app-architecture-8ilytw`.
+- Develop on `claude/sidekick-app-architecture-main`, the repo's default and
+  only branch (the owner's call, 15 Oct 2026: it was
+  `claude/sidekick-app-architecture-8ilytw`, renamed on GitHub). A session
+  set up with another, random branch name (`claude/brave-goldberg-…` and
+  the like) still works here and pushes here; don't leave extra branches
+  on GitHub (they confused the owner and their son).
 - **Syncing with GitHub (`dankordigital/sidekick`):** the app is written in
   Claude cloud sessions (claude.ai/code: Flutter is there; CI builds all four
   platforms). A copy also lives on the family Mac

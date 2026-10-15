@@ -12,7 +12,8 @@ name: Website
 
 on:
   push:
-    branches: [claude/sidekick-app-architecture-8ilytw]
+    # -8ilytw is the old name of -main (renamed 15 Oct 2026); both, so it works before and after.
+    branches: [claude/sidekick-app-architecture-main, claude/sidekick-app-architecture-8ilytw]
     paths: [index.html, index.php, wishlist.php, np7dpanel.php, privacy.html, 404.html, .htaccess, robots.txt, website/**, .github/workflows/website.yml]
   workflow_dispatch:
 
