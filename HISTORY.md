@@ -32,17 +32,6 @@ detailed developer notes; every release is in `VERSIONS.md`) and
   password from `wishlist-config.php` (never in git).
 - **Ads:** three finished videos, made outside the repo (scratchpad).
 
-## 15 October 2026: one branch, lighter CLAUDE.md
-- The main branch is now `claude/sidekick-app-architecture-main` (renamed
-  on GitHub from `-8ilytw`; no other branches left). `sync.sh` renames the
-  Mac's copy by itself; `website.yml` uploads from both names.
-- "Versions" moved out of `CLAUDE.md` into `VERSIONS.md` (the owner's call,
-  to save tokens: `CLAUDE.md` is loaded into every session, 53 KB → 33 KB).
-- Every GitHub link pointed at the son's old account
-  (`michaldaniszewski03-hash/sidekick`): the site, privacy policies, README,
-  Windows installer and `wishlist.php`'s `REPO` (where the released site gets
-  its downloads). All now `dankordigital/sidekick`.
-
 ## Waiting on the owner
 
 1. ~~Test 2.16.1 on the M1~~: done, it works.
@@ -61,6 +50,17 @@ detailed developer notes; every release is in `VERSIONS.md`) and
    `np7dpanel.php`. Decide what iPhone users are told (AltStore/TestFlight).
 
 ## History
+
+### One branch, lighter CLAUDE.md (15 Oct)
+- The main branch is now `claude/sidekick-app-architecture-main` (renamed
+  on GitHub from `-8ilytw`; no other branches left). `sync.sh` renames the
+  Mac's copy by itself; `website.yml` uploads from both names.
+- "Versions" moved out of `CLAUDE.md` into `VERSIONS.md` (the owner's call,
+  to save tokens: `CLAUDE.md` is loaded into every session, 53 KB → 33 KB).
+- Every GitHub link pointed at the son's old account
+  (`michaldaniszewski03-hash/sidekick`): the site, privacy policies, README,
+  Windows installer and `wishlist.php`'s `REPO` (where the released site gets
+  its downloads). All now `dankordigital/sidekick`.
 
 ### 2.17.2 and syncing with GitHub (14 Oct)
 - `sync.sh` (pull, commit everything, push; never uploads to the hosting)
