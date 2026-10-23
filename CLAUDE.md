@@ -516,7 +516,8 @@ release. Keep this file for how things work now, not for history.
   dropped). `ui/nothing.dart`: theme (`nothingScheme`, `nothingTheme`,
   `NothingLook` / `isNothing`), `DotText`, `DotLogo` ("sk." in dots), and
   the pieces (`NothingTile`, `NothingPill`, `NothingRound`,
-  `NothingStatus`, `NothingDotRing`). `ui/nothing_screens.dart`: its own
+  `NothingStatus`). The round widgets are plain circles: a ring of dots
+  filling up read like a countdown (2.17.7, the owner's call). `ui/nothing_screens.dart`: its own
   Devices home (phone: "SIDEKICK", In reach + network widgets, Paired,
   Nearby; computer: "DEVICES", the transfer card, the in-reach ring,
   Paired, This computer), a device's page (name in dots, Send / Files /
@@ -532,7 +533,8 @@ release. Keep this file for how things work now, not for history.
   `activity-alias`es (`.LauncherDefault`, `.LauncherNothing`) for
   MainActivity, one enabled; Mac `setDockIcon` (Dock, while running);
   Windows `windowManager.setIcon` (window/taskbar; the .exe's can't change);
-  tray / menu-bar icons swap (`DesktopWindow.setNothingIcons`). Icons:
+  tray / menu-bar icons swap (`DesktopWindow.setNothingIcons`; Mac and
+  Windows touch no icon unless Nothing is on). Icons:
   `python app/tool/make_icons.py nothing`. Rendered by the screenshot tools
   (`nothing-*.png`, `tray-panel-nothing.png`, `send_nothing.png`).
 - Devices announce their release (`DeviceInfo.app`, "2.2.0"); a paired card

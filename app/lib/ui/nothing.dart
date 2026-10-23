@@ -423,28 +423,3 @@ class NothingStatus extends StatelessWidget {
     ],
   );
 }
-
-/// A ring of dots, lit up to [value], the newest one red (like the Glyph lights).
-class NothingDotRing extends CustomPainter {
-  NothingDotRing({required this.value, required this.on, required this.off, this.count = 40});
-  final double value;
-  final Color on;
-  final Color off;
-  final int count;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final c = size.center(Offset.zero);
-    final r = size.shortestSide / 2 - 6;
-    final lit = (value * count).round();
-    for (var i = 0; i < count; i++) {
-      final a = -1.5707963 + i / count * 6.2831853;
-      final last = i == lit - 1;
-      final color = last ? nothingRed : (i < lit ? on : off);
-      canvas.drawCircle(c + Offset.fromDirection(a, r), last ? 4 : 3, Paint()..color = color);
-    }
-  }
-
-  @override
-  bool shouldRepaint(NothingDotRing old) => old.value != value || old.on != on || old.off != off;
-}

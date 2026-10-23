@@ -13,8 +13,10 @@ class AppIcon {
   static const _ios = MethodChannel('sidekick/ios');
   static const _android = MethodChannel('sidekick/android');
 
-  /// What was last set, so starts and theme changes don't ask twice.
-  static bool? _applied;
+  /// What was last set, so starts and theme changes don't ask twice. Mac and
+  /// Windows start with their own icons every time: nothing to do there
+  /// unless the Nothing look is on.
+  static bool? _applied = DesktopWindow.supported ? false : null;
 
   static Future<void> apply({required bool nothing}) async {
     if (Host.isWeb || _applied == nothing) return;

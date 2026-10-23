@@ -4,6 +4,13 @@ Every release, newest first, with its biggest features and fixes. Add an
 entry here with each release (see "Releasing" in `CLAUDE.md`). The history
 starts at 1.1.3.
 
+## 2.17.7
+- **Nothing theme: no more "timer" rings.** The Wi-Fi circle and the
+  computer's "in reach" circle lost their ring of dots, which looked like a
+  countdown.
+- Mac and Windows no longer touch the window, Dock or tray icon at start
+  unless the Nothing theme is on.
+
 ## 2.17.6
 - **New look to try: Nothing** (Settings → Theme → Nothing, on every
   device): black and white like Nothing's phones, titles and numbers in

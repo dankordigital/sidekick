@@ -167,8 +167,7 @@ class _Wide extends StatelessWidget {
   );
 }
 
-/// How many paired devices are in reach, in dots. On computers, inside a
-/// ring of dots that fills up with them.
+/// How many paired devices are in reach, in dots (on computers, in a circle).
 class _InReach extends StatelessWidget {
   const _InReach({required this.state, this.round = false});
   final AppState state;
@@ -182,18 +181,10 @@ class _InReach extends StatelessWidget {
     if (round) {
       return Container(
         decoration: BoxDecoration(color: scheme.surfaceContainer, shape: BoxShape.circle),
-        child: CustomPaint(
-          painter: NothingDotRing(
-            value: paired.isEmpty ? 0 : online / paired.length,
-            on: scheme.onSurface,
-            off: scheme.surfaceContainerHighest,
-            count: 44,
-          ),
-          child: Center(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [DotText('$online', dot: 9), const SizedBox(height: 10), const NothingLabel('In reach')],
-            ),
+        child: Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [DotText('$online', dot: 9), const SizedBox(height: 10), const NothingLabel('In reach')],
           ),
         ),
       );
@@ -213,7 +204,7 @@ class _InReach extends StatelessWidget {
   }
 }
 
-/// The network, in a round widget with a ring of dots.
+/// The network, in a round widget.
 class _Network extends StatelessWidget {
   const _Network({required this.state});
   final AppState state;
@@ -225,26 +216,19 @@ class _Network extends StatelessWidget {
     final address = state.addresses.isEmpty ? null : state.addresses.first;
     return Container(
       decoration: BoxDecoration(color: scheme.surfaceContainer, shape: BoxShape.circle),
-      child: CustomPaint(
-        painter: NothingDotRing(
-          value: wifi ? 0.75 : 0.25,
-          on: scheme.onSurface,
-          off: scheme.surfaceContainerHighest,
-          count: 36,
-        ),
-        child: Center(
-          child: Padding(
-            padding: const EdgeInsets.all(22),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(wifi ? Icons.wifi_rounded : Icons.wifi_tethering_rounded, size: 26),
-                const SizedBox(height: 6),
-                Text(wifi ? 'On Wi-Fi' : 'No Wi-Fi', style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
-                const SizedBox(height: 2),
-                NothingLabel(wifi ? (address ?? 'Wi-Fi') : 'Direct Wi-Fi', size: 9.5),
-              ],
-            ),
+      // A plain circle: a ring of dots filling up read like a countdown.
+      child: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(22),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(wifi ? Icons.wifi_rounded : Icons.wifi_tethering_rounded, size: 26),
+              const SizedBox(height: 6),
+              Text(wifi ? 'On Wi-Fi' : 'No Wi-Fi', style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
+              const SizedBox(height: 2),
+              NothingLabel(wifi ? (address ?? 'Wi-Fi') : 'Direct Wi-Fi', size: 9.5),
+            ],
           ),
         ),
       ),
