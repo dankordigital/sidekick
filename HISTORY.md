@@ -28,7 +28,7 @@ detailed developer notes; every release is in `VERSIONS.md`) and
   Send/Accept, Files, Remote, Ping, Settings all live. (A first version
   with screenshots was replaced the same day: the owner wanted the actual
   app.) `Platform.isX` → `Host.isX` everywhere for it.
-- **iPhone Liquid Glass crash (2.17.4):** tapping the tab bar crashed the
+- **iPhone Liquid Glass crash (released in 2.17.4):** tapping the tab bar crashed the
   app (Apple's UITabBar embedded as a platform view). It's now Sidekick's
   own tab bar on Apple's glass; and a crash right after starting with
   Liquid Glass turns it off next time, so the app always opens.

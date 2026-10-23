@@ -4,6 +4,14 @@ Every release, newest first, with its biggest features and fixes. Add an
 entry here with each release (see "Releasing" in `CLAUDE.md`). The history
 starts at 1.1.3.
 
+## 2.17.4
+- **Fixed: the iPhone crashed when the Liquid Glass tab bar was tapped**
+  (iOS 26). The tab bar is now Sidekick's own, on Apple's Liquid Glass.
+- **Sidekick always opens:** if it closes right after starting with Liquid
+  Glass on, the next start turns Liquid Glass off and says so.
+- **Connect a device** is a dialog on computers (it was a phone-style sheet
+  that cut off Bluetooth in a short window); on phones the sheet scrolls.
+
 ## 2.17.3
 - **Wi-Fi first, and it looks it:** the Devices page no longer offers
   "Pair over Bluetooth"; a **Connect** link (chain icon) opens every way to
