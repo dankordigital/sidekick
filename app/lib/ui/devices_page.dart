@@ -540,35 +540,65 @@ List<_ConnectWay> _connectWays(BuildContext context, AppState state) => [
     ),
 ];
 
-/// The same choices as the Connect device button, as a sheet.
-Future<void> showConnectOptions(BuildContext context, AppState state) => showModalBottomSheet<void>(
-  context: context,
-  showDragHandle: true,
-  builder: (sheet) => SafeArea(
-    child: Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Padding(
-          padding: const EdgeInsets.fromLTRB(24, 0, 24, 8),
-          child: Text('Connect a device', style: Theme.of(sheet).textTheme.titleLarge),
+/// The same choices as the Connect device button: a dialog on computers,
+/// a sheet from the bottom on phones. Both scroll, so a short window never
+/// hides the last choice.
+Future<void> showConnectOptions(BuildContext context, AppState state) {
+  Widget options(BuildContext popup) => Column(
+    mainAxisSize: MainAxisSize.min,
+    crossAxisAlignment: CrossAxisAlignment.stretch,
+    children: [
+      for (final way in _connectWays(context, state))
+        ListTile(
+          contentPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 2),
+          leading: IconTile(way.icon, size: 40),
+          title: Text(way.title),
+          subtitle: Text(way.detail),
+          enabled: way.onTap != null,
+          onTap: () {
+            Navigator.pop(popup);
+            way.onTap?.call();
+          },
         ),
-        for (final way in _connectWays(context, state))
-          ListTile(
-            contentPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 2),
-            leading: IconTile(way.icon, size: 40),
-            title: Text(way.title),
-            subtitle: Text(way.detail),
-            enabled: way.onTap != null,
-            onTap: () {
-              Navigator.pop(sheet);
-              way.onTap?.call();
-            },
-          ),
-        const SizedBox(height: 12),
-      ],
+    ],
+  );
+
+  if (!isMobile) {
+    return showDialog<void>(
+      context: context,
+      builder: (dialog) => AlertDialog(
+        title: const Text('Connect a device'),
+        contentPadding: const EdgeInsets.only(top: 12, bottom: 8),
+        content: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 420),
+          child: SingleChildScrollView(child: options(dialog)),
+        ),
+        actions: [TextButton(onPressed: () => Navigator.pop(dialog), child: const Text('Cancel'))],
+      ),
+    );
+  }
+  return showModalBottomSheet<void>(
+    context: context,
+    showDragHandle: true,
+    isScrollControlled: true,
+    useSafeArea: true,
+    builder: (sheet) => SafeArea(
+      child: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(24, 0, 24, 8),
+              child: Text('Connect a device', style: Theme.of(sheet).textTheme.titleLarge),
+            ),
+            options(sheet),
+            const SizedBox(height: 12),
+          ],
+        ),
+      ),
     ),
-  ),
-);
+  );
+}
 
 /// Adds a device by its IP address, then pairs.
 Future<void> _addByIp(BuildContext context, AppState state) async {

@@ -274,7 +274,9 @@ release. Keep this file for how things work now, not for history.
   the preview plays the app's WAVs through an `Audio` element. Inter
   (subset) stands in for San Francisco. **Rebuild with
   `app/tool/build_preview.sh` after UI changes** and upload `website/app/`.
-  Test it: `php -S localhost:8000` at the top, open /preview.html.
+  Test it: `php -S localhost:8000` at the top, open /preview.html. If an
+  app doesn't start in 15 s the page says why (file:// page, a missing
+  `website/app/` file, `.wasm` with the wrong type).
 - `404.html` (top of the repo): the not-found page, for any missing
   address, so every link in it is absolute (`/…`). `.htaccess` makes the
   server show it for every wrong address, keeping the address and a real
@@ -353,8 +355,8 @@ release. Keep this file for how things work now, not for history.
     only that one; the radio and other devices (headphones…) are untouched.
   - **Sidekick isn't a Bluetooth app** (the owner's call): the Devices
     page's entries say "Connect" with a link icon and open every way to
-    connect, Wi-Fi first (`showConnectOptions`, `_connectWays`); Bluetooth
-    is the last choice there.
+    connect, Wi-Fi first (`showConnectOptions`, `_connectWays`: a dialog on
+    computers, a scrolling sheet on phones); Bluetooth is the last choice.
   - Writes are always one packet (MTU minus 3), never long writes.
   - Files go over Bluetooth in 32 KB sealed parts (`/v1/fs/upload/part`),
     each retried if it arrives damaged ("Message failed authentication"),

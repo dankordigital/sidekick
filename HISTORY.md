@@ -28,6 +28,12 @@ detailed developer notes; every release is in `VERSIONS.md`) and
   Send/Accept, Files, Remote, Ping, Settings all live. (A first version
   with screenshots was replaced the same day: the owner wanted the actual
   app.) `Platform.isX` → `Host.isX` everywhere for it.
+- **Connect a device** on computers is a centred dialog (it was a phone-style
+  sheet from the bottom that a short window cut off); on phones the sheet
+  scrolls.
+- **preview.html checks itself:** if the app doesn't start in 15 s it says
+  why (opened as a file, a `website/app/` file missing on the server, or
+  `.wasm` sent with the wrong type: `.htaccess` not uploaded).
 - **Owner to upload:** `index.html`, `index.php`, `wishlist.php`,
   `np7dpanel.php`, `privacy.html`, `preview.html`, `.htaccess` and
   `website/app/` (or let the website workflow do it). `website/preview/`
