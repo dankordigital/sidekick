@@ -14,7 +14,7 @@ on:
   push:
     # -8ilytw is the old name of -main (renamed 15 Oct 2026); both, so it works before and after.
     branches: [claude/sidekick-app-architecture-main, claude/sidekick-app-architecture-8ilytw]
-    paths: [index.html, index.php, wishlist.php, np7dpanel.php, privacy.html, 404.html, .htaccess, robots.txt, website/**, .github/workflows/website.yml]
+    paths: [index.html, index.php, wishlist.php, np7dpanel.php, privacy.html, preview.html, 404.html, .htaccess, robots.txt, website/**, .github/workflows/website.yml]
   workflow_dispatch:
 
 # One upload at a time; a newer one waits instead of cancelling a half-done upload.
@@ -47,7 +47,7 @@ jobs:
         if: steps.check.outputs.ok == 'true'
         run: |
           mkdir site
-          cp index.html index.php wishlist.php np7dpanel.php privacy.html 404.html .htaccess robots.txt site/
+          cp index.html index.php wishlist.php np7dpanel.php privacy.html preview.html 404.html .htaccess robots.txt site/
           cp -r website site/
 
       # Uploads only what changed since the last upload (it keeps a small

@@ -22,8 +22,14 @@ detailed developer notes; every release is in `VERSIONS.md`) and
   days (bots marked, country / city / network from ipwho.is) and a
   countries chart (the owner suspected visits from Hong Kong). Both privacy
   policies say so.
+- **preview.html:** "Try Sidekick, no download needed": a MacBook and an
+  iPhone running the real app (rendered by `tool/preview_shots_test.dart`,
+  converted by `tool/make_preview.py` into `website/preview/`), with
+  clickable tabs, Send → Accept/Decline, and the touchpad moving the Mac's
+  pointer. Linked from the hero ("Try it in your browser") and the footer.
 - **Owner to upload:** `index.html`, `index.php`, `wishlist.php`,
-  `np7dpanel.php`, `privacy.html` (or let the website workflow do it).
+  `np7dpanel.php`, `privacy.html`, `preview.html` and `website/preview/`
+  (or let the website workflow do it).
 
 ## Where things stand (15 October 2026)
 

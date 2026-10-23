@@ -10,7 +10,7 @@ website (`index.html` at the top of the repo; its images live in
 **https://getsidekick.app**, the official domain (the owner's, hosting on
 OVHcloud; it was at sk.dankor.digital on cyber_Folks before). Use
 getsidekick.app wherever an address is shown (ads, trailers, the app).
-The owner uploads with FileZilla: `index.html`, `index.php`, `wishlist.php`, `np7dpanel.php`, `privacy.html`,
+The owner uploads with FileZilla: `index.html`, `index.php`, `wishlist.php`, `np7dpanel.php`, `privacy.html`, `preview.html`,
 `404.html`, `.htaccess`, `robots.txt` and `website/` go in the site's root
 folder (`www`). The
 pages link only with relative or `/…` paths, so nothing in them names the
@@ -251,6 +251,17 @@ release. Keep this file for how things work now, not for history.
   receiving and an iPhone sending, made from the ad render frames
   (`tool/ad_frames_test.dart`), transparent so the page's colors show.
   There is no Media anywhere on the site (removed with the feature).
+- **`preview.html`** (top of the repo; the hero's "Try it in your browser"):
+  a MacBook and an iPhone with the real app on them, clickable: tabs on
+  both, Send on the iPhone → the Mac's Accept / Decline card → progress on
+  both, and the iPhone's touchpad moves the Mac's pointer. The screens are
+  the app itself: `app/tool/preview_shots_test.dart` renders them (one
+  device per run: `--dart-define=DEVICE=iphone`, then `=mac`; Inter in
+  `app/build/fonts/x/` stands in for San Francisco), and
+  `app/tool/make_preview.py` turns them into `website/preview/` (WebP stills,
+  animated WebPs at 15 fps, `preview.json` with where the buttons are).
+  Re-render after UI changes. `debugCurrentPlatform` (app_state.dart) lets
+  the renders be an iPhone or a Mac.
 - `404.html` (top of the repo): the not-found page, for any missing
   address, so every link in it is absolute (`/…`). `.htaccess` makes the
   server show it for every wrong address, keeping the address and a real

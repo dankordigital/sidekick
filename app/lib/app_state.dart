@@ -149,7 +149,12 @@ class Notice {
   final String? galleryUri;
 }
 
+/// Renders (tool/) set this to draw another platform's app.
+@visibleForTesting
+DevicePlatform? debugCurrentPlatform;
+
 DevicePlatform get currentPlatform {
+  if (debugCurrentPlatform case final p?) return p;
   if (Platform.isWindows) return DevicePlatform.windows;
   if (Platform.isMacOS) return DevicePlatform.macos;
   if (Platform.isLinux) return DevicePlatform.linux;
