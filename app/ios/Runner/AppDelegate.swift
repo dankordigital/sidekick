@@ -142,7 +142,6 @@ import UIKit
     }
     if let registrar = engineBridge.pluginRegistry.registrar(forPlugin: "SidekickGlass") {
       registrar.register(GlassViewFactory(), withId: "sidekick/glass")
-      registrar.register(TabBarFactory(messenger: registrar.messenger()), withId: "sidekick/tabbar")
     }
   }
 }
@@ -157,76 +156,6 @@ final class GlassViewFactory: NSObject, FlutterPlatformViewFactory {
 
   func createArgsCodec() -> FlutterMessageCodec & NSObjectProtocol {
     FlutterStandardMessageCodec.sharedInstance()
-  }
-}
-
-/// Liquid Glass: Apple's own tab bar (UITabBar) at the bottom of the iPhone,
-/// with everything iOS 26 gives it: the glass, the selection you can drag
-/// from tab to tab, the stretch and bounce. Flutter shows it as a platform
-/// view ("sidekick/tabbar") and keeps it in step on "sidekick/tabbar/<id>":
-/// it calls `select`, the bar answers `selected` when a tab is chosen.
-final class TabBarFactory: NSObject, FlutterPlatformViewFactory {
-  private let messenger: FlutterBinaryMessenger
-
-  init(messenger: FlutterBinaryMessenger) {
-    self.messenger = messenger
-  }
-
-  func create(withFrame frame: CGRect, viewIdentifier viewId: Int64, arguments args: Any?) -> FlutterPlatformView {
-    TabBarPlatformView(frame: frame, viewId: viewId, args: args as? [String: Any] ?? [:], messenger: messenger)
-  }
-
-  func createArgsCodec() -> FlutterMessageCodec & NSObjectProtocol {
-    FlutterStandardMessageCodec.sharedInstance()
-  }
-}
-
-final class TabBarPlatformView: NSObject, FlutterPlatformView, UITabBarDelegate {
-  private let container: UIView
-  private let bar = UITabBar()
-  private let channel: FlutterMethodChannel
-
-  init(frame: CGRect, viewId: Int64, args: [String: Any], messenger: FlutterBinaryMessenger) {
-    container = UIView(frame: frame)
-    channel = FlutterMethodChannel(name: "sidekick/tabbar/\(viewId)", binaryMessenger: messenger)
-    super.init()
-    let tabs = args["items"] as? [[String: String]] ?? []
-    let items = tabs.enumerated().map { index, tab in
-      UITabBarItem(title: tab["title"], image: UIImage(systemName: tab["symbol"] ?? "circle"), tag: index)
-    }
-    bar.items = items
-    let selected = (args["selected"] as? NSNumber)?.intValue ?? 0
-    if items.indices.contains(selected) { bar.selectedItem = items[selected] }
-    bar.delegate = self
-    container.overrideUserInterfaceStyle = (args["dark"] as? Bool ?? false) ? .dark : .light
-    container.backgroundColor = .clear
-    bar.translatesAutoresizingMaskIntoConstraints = false
-    container.addSubview(bar)
-    NSLayoutConstraint.activate([
-      bar.leadingAnchor.constraint(equalTo: container.leadingAnchor),
-      bar.trailingAnchor.constraint(equalTo: container.trailingAnchor),
-      bar.bottomAnchor.constraint(equalTo: container.bottomAnchor),
-    ])
-    channel.setMethodCallHandler { [weak self] call, result in
-      guard let self else { return result(nil) }
-      switch call.method {
-      case "select":
-        if let index = call.arguments as? Int, let items = self.bar.items, items.indices.contains(index) {
-          self.bar.selectedItem = items[index]
-        }
-      case "dark":
-        self.container.overrideUserInterfaceStyle = (call.arguments as? Bool ?? false) ? .dark : .light
-      default:
-        break
-      }
-      result(nil)
-    }
-  }
-
-  func view() -> UIView { container }
-
-  func tabBar(_ tabBar: UITabBar, didSelect item: UITabBarItem) {
-    channel.invokeMethod("selected", arguments: item.tag)
   }
 }
 

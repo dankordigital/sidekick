@@ -1,7 +1,6 @@
-import 'dart:async';
 import 'dart:ui' show ImageFilter;
 
-import 'package:flutter/services.dart' show MethodChannel, StandardMessageCodec;
+import 'package:flutter/services.dart' show StandardMessageCodec;
 import 'package:material_ui/material_ui.dart';
 
 import 'widgets.dart' show appleOsMajor;
@@ -349,69 +348,4 @@ ThemeData glassTheme(ThemeData base) {
       surfaceTintColor: Colors.transparent,
     ),
   );
-}
-
-/// Liquid Glass on an iPhone (iOS 26+): Apple's own tab bar, swipeable,
-/// instead of Flutter's. [symbols] are SF Symbols names, one per tab.
-class NativeTabBar extends StatefulWidget {
-  const NativeTabBar({
-    super.key,
-    required this.labels,
-    required this.symbols,
-    required this.selected,
-    required this.onSelected,
-  });
-
-  final List<String> labels;
-  final List<String> symbols;
-  final int selected;
-  final ValueChanged<int> onSelected;
-
-  /// Only on a real iPhone running iOS 26 or newer.
-  static bool get supported => Host.isIOS && nativeGlass;
-
-  @override
-  State<NativeTabBar> createState() => _NativeTabBarState();
-}
-
-class _NativeTabBarState extends State<NativeTabBar> {
-  MethodChannel? _channel;
-  bool? _dark;
-
-  void _created(int id) {
-    _channel = MethodChannel('sidekick/tabbar/$id')
-      ..setMethodCallHandler((call) async {
-        if (call.method == 'selected' && call.arguments is int) widget.onSelected(call.arguments as int);
-        return null;
-      });
-  }
-
-  @override
-  void didUpdateWidget(NativeTabBar old) {
-    super.didUpdateWidget(old);
-    if (old.selected != widget.selected) unawaited(_channel?.invokeMethod<void>('select', widget.selected));
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final dark = Theme.of(context).brightness == Brightness.dark;
-    if (_dark != null && _dark != dark) unawaited(_channel?.invokeMethod<void>('dark', dark));
-    _dark = dark;
-    final bottom = MediaQuery.paddingOf(context).bottom;
-    return SizedBox(
-      height: 64 + bottom,
-      child: UiKitView(
-        viewType: 'sidekick/tabbar',
-        onPlatformViewCreated: _created,
-        creationParams: {
-          'items': [
-            for (var i = 0; i < widget.labels.length; i++) {'title': widget.labels[i], 'symbol': widget.symbols[i]},
-          ],
-          'selected': widget.selected,
-          'dark': dark,
-        },
-        creationParamsCodec: const StandardMessageCodec(),
-      ),
-    );
-  }
 }

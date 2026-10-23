@@ -28,6 +28,10 @@ detailed developer notes; every release is in `VERSIONS.md`) and
   Send/Accept, Files, Remote, Ping, Settings all live. (A first version
   with screenshots was replaced the same day: the owner wanted the actual
   app.) `Platform.isX` → `Host.isX` everywhere for it.
+- **iPhone Liquid Glass crash (2.17.4):** tapping the tab bar crashed the
+  app (Apple's UITabBar embedded as a platform view). It's now Sidekick's
+  own tab bar on Apple's glass; and a crash right after starting with
+  Liquid Glass turns it off next time, so the app always opens.
 - **Connect a device** on computers is a centred dialog (it was a phone-style
   sheet from the bottom that a short window cut off); on phones the sheet
   scrolls.
@@ -54,7 +58,7 @@ detailed developer notes; every release is in `VERSIONS.md`) and
     Mirroring.
   - Look: minimal Material by default; Liquid Glass option on iOS/macOS 26
     (since 2.17.0 buttons, switches, fields and menus are glass too)
-    (iPhone uses Apple's own swipeable tab bar; the Mac draws its own glass,
+    (iPhone: Sidekick's tab bar on Apple's glass since 2.17.4; the Mac draws its own glass,
     never a transparent window: that killed the M1 app in 2.16.0).
 - **Mac:** separate Apple-silicon and Intel builds since 2.16.0. The owner
   confirmed 2.16.1 works on the M1.

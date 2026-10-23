@@ -38,11 +38,11 @@ class _ShellState extends State<Shell> {
   AppState get state => widget.state;
 
   /// The tray panel's Settings is tab 3.
-  List<({IconData icon, IconData selected, String label, String symbol})> get _destinations => [
-    (icon: Icons.devices_outlined, selected: Icons.devices, label: 'Devices', symbol: 'laptopcomputer.and.iphone'),
-    (icon: Icons.folder_outlined, selected: Icons.folder, label: 'Files', symbol: 'folder'),
-    (icon: Icons.mouse_outlined, selected: Icons.mouse, label: 'Remote', symbol: 'computermouse'),
-    (icon: Icons.settings_outlined, selected: Icons.settings, label: 'Settings', symbol: 'gearshape'),
+  List<({IconData icon, IconData selected, String label})> get _destinations => [
+    (icon: Icons.devices_outlined, selected: Icons.devices, label: 'Devices'),
+    (icon: Icons.folder_outlined, selected: Icons.folder, label: 'Files'),
+    (icon: Icons.mouse_outlined, selected: Icons.mouse, label: 'Remote'),
+    (icon: Icons.settings_outlined, selected: Icons.settings, label: 'Settings'),
   ];
 
   @override
@@ -214,15 +214,10 @@ class _ShellState extends State<Shell> {
           bottom: !glass,
           child: glass ? Padding(padding: const EdgeInsets.only(bottom: 16), child: body) : body,
         ),
-        bottomNavigationBar: glass && NativeTabBar.supported
-            // iOS 26: Apple's own tab bar, swipeable.
-            ? NativeTabBar(
-                labels: [for (final d in _destinations) d.label],
-                symbols: [for (final d in _destinations) d.symbol],
-                selected: _index,
-                onSelected: _go,
-              )
-            : glass
+        // Liquid Glass: Sidekick's own tab bar on the glass (on iOS 26 Apple's
+        // UIGlassEffect, drawn underneath; touches stay in Flutter). Apple's
+        // UITabBar embedded as a platform view crashed when tapped (2.17.4).
+        bottomNavigationBar: glass
             ? SafeArea(
                 minimum: const EdgeInsets.fromLTRB(16, 0, 16, 10),
                 child: GlassPanel(radius: 34, opacity: 0.42, child: bar),

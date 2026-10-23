@@ -485,7 +485,12 @@ release. Keep this file for how things work now, not for history.
   `GlassBackdrop` (soft blobs of the theme's colors) sits under every
   screen (MaterialApp `builder`); `GlassPanel` (blur, tint, bright rim)
   frames the phone's floating tab bar and the computer's content panel
-  (shell.dart). Since 2.17.0 `glassTheme` also makes buttons (`GlassFill`
+  (shell.dart). On iOS 26 the iPhone's tab bar is Flutter's on Apple's
+  `UIGlassEffect` (a `sidekick/glass` platform view under it, IgnorePointer):
+  **never embed Apple's `UITabBar` as a platform view**: tapping it crashed
+  the app (2.17.4). If Sidekick closes within 10 s of starting with Liquid
+  Glass (or turning it on), the next start turns it off and says so
+  (`_watchGlass`, pref `glassCheck`), so it always opens. Since 2.17.0 `glassTheme` also makes buttons (`GlassFill`
   through `backgroundBuilder`), selections, switches, fields, menus,
   snackbars and tooltips glass, each tinted in its own color. **No live
   blur on controls or the computer's content panel** (2.17.1): only the

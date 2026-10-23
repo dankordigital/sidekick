@@ -418,6 +418,13 @@ class AppState extends ChangeNotifier {
     if (themeColor != 'system' && !themeColors.containsKey(themeColor)) themeColor = 'system';
     pureBlack = _prefs.getBool('pureBlack') ?? false;
     liquidGlass = _prefs.getString('look') == 'glass';
+    if (liquidGlass && (_prefs.getBool('glassCheck') ?? false)) {
+      liquidGlass = false;
+      _glassCrashed = true;
+      _prefs
+        ..setString('look', 'material')
+        ..remove('glassCheck');
+    }
     keepRunning = _prefs.getBool('keepRunning') ?? true;
     relayNotifications = _prefs.getBool('relayNotifications') ?? false;
     sendScreenshots = _prefs.getBool('sendScreenshots') ?? false;
@@ -478,6 +485,14 @@ class AppState extends ChangeNotifier {
       }
     }
     trust.onChanged = _saveTrusted;
+    if (liquidGlass) _watchGlass();
+    if (_glassCrashed) {
+      _notices.add(
+        Notice(
+          'Sidekick closed unexpectedly with Liquid Glass on, so it\'s off for now. Turn it on again in Settings → Theme.',
+        ),
+      );
+    }
     if (_droppedOldPairings) {
       _saveTrusted();
       _savePaired();
@@ -1964,8 +1979,19 @@ class AppState extends ChangeNotifier {
   void setLiquidGlass(bool value) {
     liquidGlass = value;
     _prefs.setString('look', value ? 'glass' : 'material');
+    if (value) _watchGlass();
     notifyListeners();
   }
+
+  /// Liquid Glass leans on Apple's newest system views. If Sidekick closes
+  /// within 10 s of starting with it (or of turning it on), it crashed: the
+  /// next start is without it, and says so, so it always opens.
+  void _watchGlass() {
+    _prefs.setBool('glassCheck', true);
+    Timer(const Duration(seconds: 10), () => _prefs.remove('glassCheck'));
+  }
+
+  bool _glassCrashed = false;
 
   void setThemeMode(ThemeMode mode) {
     themeMode = mode;
