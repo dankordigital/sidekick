@@ -16,6 +16,8 @@ import 'direct_wifi.dart';
 import 'ping.dart';
 import 'files_page.dart';
 import 'glass.dart';
+import 'nothing.dart';
+import 'nothing_screens.dart';
 import 'qr_pairing.dart';
 import 'remote_page.dart';
 import 'settings_page.dart';
@@ -149,8 +151,10 @@ class _ShellState extends State<Shell> {
 
   @override
   Widget build(BuildContext context) {
+    final nothing = isNothing(context);
     final pages = [
-      DevicesPage(state: state, onOpen: _go),
+      // The Nothing look has its own Devices home (nothing_screens.dart).
+      nothing ? NothingDevicesPage(state: state, onOpen: _go) : DevicesPage(state: state, onOpen: _go),
       FilesPage(state: state, onGoToDevices: () => _go(0)),
       RemotePage(state: state, onGoToDevices: () => _go(0)),
       SettingsPage(state: state),
@@ -198,6 +202,21 @@ class _ShellState extends State<Shell> {
     );
 
     final glass = isGlass(context);
+    // The Nothing look: a floating bar of icons on phones, a side bar of
+    // words on computers, everything on black.
+    if (nothing) {
+      return Scaffold(
+        body: wide
+            ? Row(
+                children: [
+                  NothingSideBar(destinations: _destinations, index: _index, onTap: _go, state: state),
+                  Expanded(child: body),
+                ],
+              )
+            : SafeArea(bottom: false, child: body),
+        bottomNavigationBar: wide ? null : NothingTabBar(destinations: _destinations, index: _index, onTap: _go),
+      );
+    }
     if (!wide) {
       final bar = NavigationBar(
         selectedIndex: _index,

@@ -19,6 +19,7 @@ import 'core/models.dart';
 import 'core/pairing_qr.dart';
 import 'core/server.dart';
 import 'core/trust.dart';
+import 'platform/app_icon.dart';
 import 'platform/android.dart';
 import 'platform/apple_p2p.dart';
 import 'platform/autoload.dart';
@@ -181,6 +182,10 @@ class AppState extends ChangeNotifier {
   /// Settings → Theme: "Liquid Glass" instead of the default Material look
   /// (pref `look`). Only offered where [liquidGlassAvailable].
   bool liquidGlass = false;
+
+  /// Settings → Theme: "Nothing" (pref `look` = `nothing`), on every
+  /// platform. A trial look; see ui/nothing.dart.
+  bool nothingLook = false;
 
   /// The first-launch welcome has been shown (it never shows again).
   bool welcomed = false;
@@ -418,6 +423,7 @@ class AppState extends ChangeNotifier {
     if (themeColor != 'system' && !themeColors.containsKey(themeColor)) themeColor = 'system';
     pureBlack = _prefs.getBool('pureBlack') ?? false;
     liquidGlass = _prefs.getString('look') == 'glass';
+    nothingLook = _prefs.getString('look') == 'nothing';
     if (liquidGlass && (_prefs.getBool('glassCheck') ?? false)) {
       liquidGlass = false;
       _glassCrashed = true;
@@ -607,6 +613,8 @@ class AppState extends ChangeNotifier {
     await _checkWifi();
     _presenceTimer = Timer.periodic(const Duration(seconds: 10), (_) => _checkPresence());
     unawaited(_checkPresence());
+    // Settings → Theme → Nothing changes the app's icon (and puts it back).
+    unawaited(AppIcon.apply(nothing: nothingLook));
     notifyListeners();
   }
 
@@ -1978,8 +1986,19 @@ class AppState extends ChangeNotifier {
 
   void setLiquidGlass(bool value) {
     liquidGlass = value;
+    if (value) nothingLook = false;
     _prefs.setString('look', value ? 'glass' : 'material');
+    unawaited(AppIcon.apply(nothing: nothingLook));
     if (value) _watchGlass();
+    notifyListeners();
+  }
+
+  void setNothingLook(bool value) {
+    nothingLook = value;
+    if (value) liquidGlass = false;
+    _prefs.setString('look', value ? 'nothing' : 'material');
+    // The app's icon follows: "sk." in dots, or the usual one.
+    unawaited(AppIcon.apply(nothing: value));
     notifyListeners();
   }
 

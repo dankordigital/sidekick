@@ -505,6 +505,36 @@ release. Keep this file for how things work now, not for history.
   blur on controls or the computer's content panel** (2.17.1): only the
   soft backdrop is behind them, and a BackdropFilter per button made
   screens slow; only the phone's floating tab bar blurs. Rendered by `tool/screenshots_test.dart` (`glass-*.png`).
+- **The Nothing look** (2.17.6, a trial the owner may delete: Settings →
+  Theme → Nothing, every platform; pref `look` = `nothing`,
+  `AppState.nothingLook`, off by default): built 1:1 from the owner's
+  approved mock-ups. Black (or light grey) with dark grey (white) cards,
+  pill buttons, small uppercase mono labels, page titles in dots
+  (`DotText`, a 5×7 dot font), red for progress, the Send tile and the
+  logo's full stop, **green only for "connected" dots** (the owner's dad:
+  red reads as "broken"), plain line icons (dotted icons were tried and
+  dropped). `ui/nothing.dart`: theme (`nothingScheme`, `nothingTheme`,
+  `NothingLook` / `isNothing`), `DotText`, `DotLogo` ("sk." in dots), and
+  the pieces (`NothingTile`, `NothingPill`, `NothingRound`,
+  `NothingStatus`, `NothingDotRing`). `ui/nothing_screens.dart`: its own
+  Devices home (phone: "SIDEKICK", In reach + network widgets, Paired,
+  Nearby; computer: "DEVICES", the transfer card, the in-reach ring,
+  Paired, This computer), a device's page (name in dots, Send / Files /
+  Remote / Ping tiles, Recent), the floating tab bar (no labels, current
+  icon white), the computer's side bar, and the sending screen
+  (`NothingSendView`); the tray panel has `_NothingPanel`. Files, Remote and
+  Settings keep their layout in its colors (`PageFrame` titles in dots,
+  `SectionLabel` in mono). **The app icon follows** (`platform/app_icon.dart`
+  `AppIcon.apply`, at start and on every look change): iPhone
+  `setAppIcon` → alternate icon `AppIcon-Nothing` (build setting
+  `ASSETCATALOG_COMPILER_ALTERNATE_APPICON_NAMES`; only asked when it
+  changes, iOS shows a note); Android `setAppIcon` → two launcher
+  `activity-alias`es (`.LauncherDefault`, `.LauncherNothing`) for
+  MainActivity, one enabled; Mac `setDockIcon` (Dock, while running);
+  Windows `windowManager.setIcon` (window/taskbar; the .exe's can't change);
+  tray / menu-bar icons swap (`DesktopWindow.setNothingIcons`). Icons:
+  `python app/tool/make_icons.py nothing`. Rendered by the screenshot tools
+  (`nothing-*.png`, `tray-panel-nothing.png`, `send_nothing.png`).
 - Devices announce their release (`DeviceInfo.app`, "2.2.0"); a paired card
   shows "Update Sidekick on it" when the other device runs an older one.
 - **iPhones can't be controlled** (Apple allows no app to): Remote on an

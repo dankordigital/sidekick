@@ -5,6 +5,7 @@ import 'package:material_ui/material_ui.dart';
 import '../app_state.dart';
 import '../core/models.dart';
 import '../platform/desktop_window.dart';
+import 'nothing.dart';
 import 'ping.dart';
 import 'widgets.dart';
 import '../core/host.dart';
@@ -19,6 +20,7 @@ class TrayPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (isNothing(context)) return _NothingPanel(state: state);
     final scheme = Theme.of(context).colorScheme;
     // Always dark, in a deep shade of the theme's color.
     final background = HSLColor.fromColor(scheme.primary).withSaturation(0.4).withLightness(0.14).toColor();
@@ -254,25 +256,9 @@ class _DeviceRow extends StatelessWidget {
   final AppState state;
   final PairedDevice device;
 
-  Future<void> _send(BuildContext context) async {
-    final window = DesktopWindow.instance;
-    // The file picker takes the focus: that's not leaving the panel.
-    window.holdPanel = true;
-    try {
-      final files = await pickFilesToSend(context, title: 'Send to ${device.name}');
-      if (files.isEmpty) return;
-      // The full window follows the send.
-      await window.openFromPanel();
-      await state.sendFiles(device, files);
-    } finally {
-      window.holdPanel = false;
-    }
-  }
+  Future<void> _send(BuildContext context) => _sendFromPanel(context, state, device);
 
-  Future<void> _ping(BuildContext context) async {
-    final rang = await state.ping(device);
-    if (!rang && context.mounted) await showAlreadyPinged(context, device.name);
-  }
+  Future<void> _ping(BuildContext context) => _pingFromPanel(context, state, device);
 
   @override
   Widget build(BuildContext context) {
@@ -458,6 +444,291 @@ class _Footer extends StatelessWidget {
             color: Colors.white,
             style: IconButton.styleFrom(backgroundColor: Colors.white.withValues(alpha: 0.09)),
             icon: const Icon(Icons.power_settings_new_rounded, size: 20),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+Future<void> _sendFromPanel(BuildContext context, AppState state, PairedDevice device) async {
+  final window = DesktopWindow.instance;
+  // The file picker takes the focus: that's not leaving the panel.
+  window.holdPanel = true;
+  try {
+    final files = await pickFilesToSend(context, title: 'Send to ${device.name}');
+    if (files.isEmpty) return;
+    // The full window follows the send.
+    await window.openFromPanel();
+    await state.sendFiles(device, files);
+  } finally {
+    window.holdPanel = false;
+  }
+}
+
+Future<void> _pingFromPanel(BuildContext context, AppState state, PairedDevice device) async {
+  final rang = await state.ping(device);
+  if (!rang && context.mounted) await showAlreadyPinged(context, device.name);
+}
+
+/// The panel in the Nothing look (Settings → Theme → Nothing): black, the
+/// name in dots, mono labels, round buttons, green only for "connected".
+class _NothingPanel extends StatelessWidget {
+  const _NothingPanel({required this.state});
+  final AppState state;
+
+  @override
+  Widget build(BuildContext context) {
+    final dark = nothingTheme(ThemeData(colorScheme: nothingScheme(Brightness.dark), useMaterial3: true));
+    return Theme(
+      data: dark.copyWith(
+        textTheme: dark.textTheme.apply(fontFamily: Theme.of(context).textTheme.bodyMedium?.fontFamily),
+      ),
+      child: Material(
+        color: Colors.black,
+        child: ListenableBuilder(
+          listenable: state,
+          builder: (context, _) {
+            final scheme = Theme.of(context).colorScheme;
+            final address = state.addresses.isEmpty ? null : state.addresses.first;
+            final last = state.transfers.where((t) => t.received && t.state == TransferState.done).lastOrNull;
+            final tip = _Tip._tips[DateTime.now().hour % _Tip._tips.length];
+            return Padding(
+              padding: const EdgeInsets.fromLTRB(14, 18, 14, 14),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Expanded(
+                    child: ListView(
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 4),
+                          child: Row(
+                            children: [
+                              const Expanded(child: DotText('Sidekick', dot: 3.2)),
+                              const SizedBox(width: 12),
+                              const NothingStatus('Ready', on: true),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 14),
+                        NothingTile(
+                          radius: 20,
+                          padding: const EdgeInsets.all(14),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  const Icon(Icons.shield_outlined, size: 18),
+                                  const SizedBox(width: 10),
+                                  const Expanded(
+                                    child: Text(
+                                      'Encrypted end to end',
+                                      style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+                                    ),
+                                  ),
+                                  const NothingLabel('Ready to receive', size: 9.5),
+                                ],
+                              ),
+                              const SizedBox(height: 10),
+                              Row(
+                                children: [
+                                  Icon(
+                                    state.wifiConnected ? Icons.wifi_rounded : Icons.wifi_tethering_rounded,
+                                    size: 18,
+                                    color: scheme.onSurfaceVariant,
+                                  ),
+                                  const SizedBox(width: 10),
+                                  Expanded(
+                                    child: Text(
+                                      state.wifiConnected
+                                          ? 'On Wi-Fi${address == null ? '' : ' · $address'}'
+                                          : 'No Wi-Fi here: direct Wi-Fi ready',
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: TextStyle(fontSize: 13, color: scheme.onSurfaceVariant),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 10),
+                        NothingTile(
+                          radius: 20,
+                          padding: const EdgeInsets.all(14),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const NothingLabel('Last received', size: 10),
+                              const SizedBox(height: 10),
+                              Row(
+                                children: [
+                                  const Icon(Icons.south_west_rounded, size: 18),
+                                  const SizedBox(width: 10),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          last?.name ?? 'Nothing yet',
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+                                        ),
+                                        if (last != null)
+                                          Text(
+                                            'From ${last.deviceName}',
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                            style: TextStyle(fontSize: 12, color: scheme.onSurfaceVariant),
+                                          ),
+                                      ],
+                                    ),
+                                  ),
+                                  if (last?.localPath case final path?)
+                                    NothingPill(
+                                      label: 'Show',
+                                      solid: false,
+                                      height: 32,
+                                      onPressed: () => revealInFolder(path),
+                                    ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 10),
+                        NothingTile(
+                          radius: 20,
+                          padding: const EdgeInsets.fromLTRB(14, 14, 14, 8),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const NothingLabel('Your devices', size: 10),
+                              const SizedBox(height: 4),
+                              if (state.paired.isEmpty)
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(vertical: 8),
+                                  child: Text(
+                                    'None paired yet. Open Sidekick to connect one.',
+                                    style: TextStyle(fontSize: 13, color: scheme.onSurfaceVariant),
+                                  ),
+                                ),
+                              for (final d in state.paired) _nothingDevice(context, d),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 10),
+                        NothingTile(
+                          radius: 20,
+                          padding: const EdgeInsets.all(14),
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Icon(Icons.lightbulb_outline_rounded, size: 20, color: nothingRed),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    const NothingLabel('Did you know?', size: 10),
+                                    const SizedBox(height: 6),
+                                    Text(tip.body, style: const TextStyle(fontSize: 13)),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: NothingPill(
+                          label: 'Open Sidekick',
+                          onPressed: () => DesktopWindow.instance.openFromPanel(),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      NothingRound(
+                        icon: Icons.settings_outlined,
+                        tooltip: 'Settings',
+                        size: 44,
+                        onPressed: () => DesktopWindow.instance.openFromPanel(tab: 3),
+                      ),
+                      const SizedBox(width: 8),
+                      NothingRound(
+                        icon: Icons.power_settings_new_rounded,
+                        tooltip: 'Quit Sidekick',
+                        size: 44,
+                        onPressed: DesktopWindow.instance.quit,
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            );
+          },
+        ),
+      ),
+    );
+  }
+
+  Widget _nothingDevice(BuildContext context, PairedDevice d) {
+    final scheme = Theme.of(context).colorScheme;
+    final online = state.isOnline(d.id);
+    final status = !online
+        ? 'Offline'
+        : state.viaDirectWifi(d.id) || state.viaDirectLinkOnly(d.id)
+        ? 'Direct Wi-Fi'
+        : state.viaBluetooth(d.id)
+        ? 'Bluetooth'
+        : 'On Wi-Fi';
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 7),
+      child: Row(
+        children: [
+          Icon(platformIcon(d.platform), size: 22, color: online ? scheme.onSurface : scheme.onSurfaceVariant),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  d.name,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                    color: online ? scheme.onSurface : scheme.onSurfaceVariant,
+                  ),
+                ),
+                const SizedBox(height: 3),
+                NothingStatus(status, on: online),
+              ],
+            ),
+          ),
+          NothingRound(
+            icon: Icons.north_east_rounded,
+            tooltip: 'Send files',
+            size: 36,
+            outlined: true,
+            onPressed: online ? () => _sendFromPanel(context, state, d) : null,
+          ),
+          const SizedBox(width: 8),
+          NothingRound(
+            icon: Icons.notifications_none_rounded,
+            tooltip: 'Ping',
+            size: 36,
+            outlined: true,
+            onPressed: online ? () => _pingFromPanel(context, state, d) : null,
           ),
         ],
       ),

@@ -131,6 +131,21 @@ import UIKit
           let ssid = (call.arguments as? [String: Any])?["ssid"] as? String ?? ""
           NEHotspotConfigurationManager.shared.removeConfiguration(forSSID: ssid)
           result(nil)
+        case "setAppIcon":
+          // Settings → Theme → Nothing: the "sk." icon (AppIcon-Nothing, an
+          // alternate icon); nil is the usual one. iOS says it changed; only
+          // ask when it really changes, so that note never shows at start.
+          let name = (call.arguments as? [String: Any])?["name"] as? String
+          let app = UIApplication.shared
+          guard app.supportsAlternateIcons, app.alternateIconName != name else {
+            result(nil)
+            return
+          }
+          app.setAlternateIconName(name) { error in
+            DispatchQueue.main.async {
+              result(error.map { FlutterError(code: "icon", message: $0.localizedDescription, details: nil) })
+            }
+          }
         default:
           result(FlutterMethodNotImplemented)
         }

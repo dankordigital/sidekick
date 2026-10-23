@@ -1,5 +1,6 @@
 import 'package:material_ui/material_ui.dart';
 
+import 'nothing.dart';
 import 'widgets.dart';
 
 /// The intro, played once: the first time Sidekick opens, before setup.
@@ -103,19 +104,26 @@ class _StartupSplashState extends State<StartupSplash> with SingleTickerProvider
 /// It runs before the settings are read, so it follows the system's light
 /// or dark and the chosen color only.
 class LoadingApp extends StatelessWidget {
-  const LoadingApp({super.key, required this.seed, this.themeMode = ThemeMode.system});
+  const LoadingApp({super.key, required this.seed, this.themeMode = ThemeMode.system, this.nothing = false});
 
   final Color seed;
   final ThemeMode themeMode;
 
+  /// Settings → Theme → Nothing.
+  final bool nothing;
+
   @override
   Widget build(BuildContext context) {
-    ThemeData theme(Brightness b) => ThemeData(
-      colorScheme: ColorScheme.fromSeed(seedColor: seed, brightness: b),
-      useMaterial3: true,
-      // ignore: deprecated_member_use
-      progressIndicatorTheme: const ProgressIndicatorThemeData(year2023: false),
-    );
+    ThemeData theme(Brightness b) {
+      final base = ThemeData(
+        colorScheme: nothing ? nothingScheme(b) : ColorScheme.fromSeed(seedColor: seed, brightness: b),
+        useMaterial3: true,
+        // ignore: deprecated_member_use
+        progressIndicatorTheme: const ProgressIndicatorThemeData(year2023: false),
+      );
+      return nothing ? nothingTheme(base) : base;
+    }
+
     return MaterialApp(
       title: 'Sidekick',
       debugShowCheckedModeBanner: false,

@@ -3,6 +3,7 @@ package dev.sidekick.sidekick
 import android.Manifest
 import android.app.DownloadManager
 import android.content.ActivityNotFoundException
+import android.content.ComponentName
 import android.content.ContentValues
 import android.content.Context
 import android.content.Intent
@@ -167,6 +168,10 @@ class MainActivity : FlutterActivity() {
                             Notifications.cancel(this, call.argument<String>("id") ?: "")
                             result.success(null)
                         }
+                        "setAppIcon" -> {
+                            setAppIcon(call.argument<Boolean>("nothing") == true)
+                            result.success(null)
+                        }
                         "input" -> {
                             val service = SidekickAccessibilityService.instance
                             val args = call.arguments as? Map<*, *>
@@ -179,6 +184,32 @@ class MainActivity : FlutterActivity() {
                     result.error("sidekick", e.message, null)
                 }
             }
+    }
+
+    /** Settings → Theme → Nothing: the launcher shows the "sk." icon. Two
+     *  launcher entries point at this activity (AndroidManifest.xml); the
+     *  new one is turned on before the old one is off, so there's always one. */
+    private fun setAppIcon(nothing: Boolean) {
+        val prefix = MainActivity::class.java.name.substringBeforeLast('.')
+        fun set(alias: String, on: Boolean, onByDefault: Boolean) {
+            val name = ComponentName(this, "$prefix.$alias")
+            val now = packageManager.getComponentEnabledSetting(name)
+            val isOn = now == PackageManager.COMPONENT_ENABLED_STATE_ENABLED ||
+                (now == PackageManager.COMPONENT_ENABLED_STATE_DEFAULT && onByDefault)
+            if (isOn == on) return
+            packageManager.setComponentEnabledSetting(
+                name,
+                if (on) PackageManager.COMPONENT_ENABLED_STATE_ENABLED else PackageManager.COMPONENT_ENABLED_STATE_DISABLED,
+                PackageManager.DONT_KILL_APP,
+            )
+        }
+        if (nothing) {
+            set("LauncherNothing", true, onByDefault = false)
+            set("LauncherDefault", false, onByDefault = true)
+        } else {
+            set("LauncherDefault", true, onByDefault = true)
+            set("LauncherNothing", false, onByDefault = false)
+        }
     }
 
     /** Back on the last screen sends Sidekick to the background (still

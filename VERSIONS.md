@@ -4,6 +4,16 @@ Every release, newest first, with its biggest features and fixes. Add an
 entry here with each release (see "Releasing" in `CLAUDE.md`). The history
 starts at 1.1.3.
 
+## 2.17.6
+- **New look to try: Nothing** (Settings → Theme → Nothing, on every
+  device): black and white like Nothing's phones, titles and numbers in
+  dots, a floating tab bar, red progress, green dots for connected devices,
+  and a device page with Send, Files, Remote and Ping.
+- **The app icon changes with it** ("sk." in dots, with a red full stop),
+  and back when you pick another theme: on iPhone and Android the home
+  screen icon; on Mac the Dock icon; on Windows the taskbar icon; and the
+  menu-bar / tray icon on both.
+
 ## 2.17.5
 - **Fixed: the iPhone froze for good** when the Liquid Glass bar's area was
   tapped during the intro. The glass never holds a touch now.

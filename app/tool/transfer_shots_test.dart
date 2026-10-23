@@ -17,6 +17,7 @@ import 'package:sidekick/app_state.dart';
 import 'package:sidekick/core/models.dart';
 import 'package:sidekick/core/server.dart';
 import 'package:sidekick/ui/corner_popup.dart';
+import 'package:sidekick/ui/nothing.dart';
 import 'package:sidekick/ui/transfer_screens.dart';
 
 Future<void> _loadFonts() async {
@@ -31,6 +32,11 @@ Future<void> _loadFonts() async {
         ..addFont(read('Roboto-Bold.ttf')))
       .load();
   await (FontLoader('MaterialIcons')..addFont(read('MaterialIcons-Regular.otf'))).load();
+  // The Nothing look's mono labels: any mono font here stands in.
+  const mono = '/usr/share/fonts/truetype/liberation/LiberationMono-Regular.ttf';
+  if (File(mono).existsSync()) {
+    await (FontLoader('monospace')..addFont(Future.value(ByteData.sublistView(File(mono).readAsBytesSync())))).load();
+  }
 }
 
 void main() {
@@ -88,6 +94,24 @@ void main() {
       );
       await shot('send_${phase.name}');
     }
+
+    // The Nothing look's own sending screen, while sending.
+    final nothing = nothingTheme(ThemeData(colorScheme: nothingScheme(Brightness.dark), fontFamily: 'Roboto'));
+    final sending = OutgoingSend(device: mac, names: ['IMG_2041.HEIC', 'IMG_2042.HEIC', 'Trip.mov'], total: 47100000)
+      ..phase = SendPhase.sending
+      ..done = 29000000
+      ..current = 2;
+    await tester.pumpWidget(
+      RepaintBoundary(
+        key: key,
+        child: MaterialApp(
+          theme: nothing,
+          debugShowCheckedModeBanner: false,
+          home: SendingScreen(send: sending),
+        ),
+      ),
+    );
+    await shot('send_nothing');
 
     // Also dark mode with the black-and-white theme: icons on the theme's
     // gradient must stay visible there.

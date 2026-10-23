@@ -161,6 +161,15 @@ final class SidekickNative {
     case "hideToMenuBar":
       (window as? MainFlutterWindow)?.hideToMenuBar()
       result(nil)
+    case "setDockIcon":
+      // Settings → Theme → Nothing: the Dock shows "sk." in dots while
+      // Sidekick runs; no image puts the app's own icon back.
+      if let data = (call.arguments as? [String: Any])?["png"] as? FlutterStandardTypedData {
+        NSApp.applicationIconImage = NSImage(data: data.data)
+      } else {
+        NSApp.applicationIconImage = nil
+      }
+      result(nil)
     case "showPopup":
       // In front of everything, without activating Sidekick: it fades in,
       // rising a little into its corner.

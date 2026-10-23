@@ -48,6 +48,26 @@ class DesktopWindow with WindowListener, TrayListener {
   /// button itself and shows the pop-up without taking the focus.
   static const _mac = MethodChannel('sidekick/macos');
 
+  /// Settings → Theme → Nothing: "sk." in dots for the tray / menu-bar icon,
+  /// the window (Windows) and the Dock (Mac, while running).
+  bool _nothingIcons = false;
+
+  String get _trayIcon => Host.isWindows
+      ? (_nothingIcons ? 'assets/tray/tray_nothing.ico' : 'assets/tray/tray.ico')
+      : (_nothingIcons ? 'assets/tray/tray_mac_nothing.png' : 'assets/tray/tray_mac.png');
+
+  Future<void> setNothingIcons(bool on) async {
+    _nothingIcons = on;
+    await trayManager.setIcon(_trayIcon, isTemplate: Host.isMacOS);
+    if (Host.isWindows) {
+      // The .exe's own icon can't change; the window's and taskbar's can.
+      await windowManager.setIcon(on ? 'assets/icons/nothing.ico' : 'assets/icons/default.ico');
+    } else if (Host.isMacOS) {
+      final png = on ? (await rootBundle.load('assets/icons/nothing_dock.png')).buffer.asUint8List() : null;
+      await _mac.invokeMethod('setDockIcon', {'png': png});
+    }
+  }
+
   /// The Mac window's usual minimum size, lifted while it's the small pop-up.
   static const _macMinSize = Size(420, 560);
 
@@ -94,10 +114,7 @@ class DesktopWindow with WindowListener, TrayListener {
       }
     }
     try {
-      await trayManager.setIcon(
-        Host.isWindows ? 'assets/tray/tray.ico' : 'assets/tray/tray_mac.png',
-        isTemplate: Host.isMacOS,
-      );
+      await trayManager.setIcon(_trayIcon, isTemplate: Host.isMacOS);
       await trayManager.setToolTip('Sidekick');
       await trayManager.setContextMenu(
         Menu(

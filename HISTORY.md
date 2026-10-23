@@ -7,6 +7,11 @@ detailed developer notes; every release is in `VERSIONS.md`) and
 
 ## 23 October 2026
 
+- **App 2.17.6: the Nothing look** (Settings → Theme → Nothing, a trial).
+  Designed with the owner over several mock-ups (calm, a dark "glow" style,
+  then Nothing's: black/white/red, dot-matrix titles; green only for
+  "connected"; plain icons; logo "sk." with a red dot), then built 1:1 as
+  its own screens. The app icon switches with it on every platform.
 - **App 2.17.5:** fixed the iPhone freezing for good when the Liquid Glass
   tab bar area was tapped during the intro (the glass platform view now
   never holds touches). The intro plays only on the first launch; every

@@ -8,6 +8,7 @@ import 'package:material_ui/material_ui.dart';
 import '../app_state.dart';
 import '../core/models.dart';
 import 'direct_wifi.dart';
+import 'nothing.dart';
 import '../core/host.dart';
 
 IconData platformIcon(DevicePlatform platform) => switch (platform) {
@@ -107,7 +108,14 @@ class PageFrame extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       children: [
-        Text(title, style: compact ? text.headlineMedium : text.headlineLarge),
+        // The Nothing look: page titles in dots.
+        if (isNothing(context))
+          Padding(
+            padding: const EdgeInsets.only(top: 4, bottom: 6),
+            child: DotText(title, dot: compact ? 4.6 : 5),
+          )
+        else
+          Text(title, style: compact ? text.headlineMedium : text.headlineLarge),
         if (subtitle != null)
           Padding(
             padding: const EdgeInsets.only(top: 2),
@@ -171,11 +179,13 @@ class SectionLabel extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Padding(
     padding: const EdgeInsets.only(top: 28, bottom: 8, left: 16),
-    child: Text(
-      text,
-      style: Theme.of(context).textTheme.labelLarge
-          ?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant, fontWeight: FontWeight.w500),
-    ),
+    child: isNothing(context)
+        ? Text(text.toUpperCase(), style: nothingLabel(context))
+        : Text(
+            text,
+            style: Theme.of(context).textTheme.labelLarge
+                ?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant, fontWeight: FontWeight.w500),
+          ),
   );
 }
 
@@ -378,6 +388,20 @@ class LogoTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    // The Nothing look: "sk." in dots on a black tile, like its app icon.
+    if (isNothing(context)) {
+      return Container(
+        width: size,
+        height: size,
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          color: Colors.black,
+          borderRadius: BorderRadius.circular(size * 0.225),
+          border: Border.all(color: scheme.outlineVariant),
+        ),
+        child: DotLogo(height: size * 0.33, color: Colors.white),
+      );
+    }
     return Container(
       width: size,
       height: size,

@@ -214,6 +214,7 @@ def android() -> None:
     (res / "values/colors.xml").write_text(
         '<?xml version="1.0" encoding="utf-8"?>\n<resources>\n'
         f'    <color name="ic_launcher_background">#FF{BG[0]:02X}{BG[1]:02X}{BG[2]:02X}</color>\n'
+        '    <color name="ic_launcher_nothing_background">#FF000000</color>\n'
         "</resources>\n"
     )
     (res / "mipmap-anydpi-v26").mkdir(exist_ok=True)
@@ -296,7 +297,106 @@ def tray() -> None:
         im.save(folder / "ic_stat_sidekick.png", optimize=True)
 
 
+# ---------------------------------------------------------------- Nothing look
+# Settings → Theme → Nothing switches the app icon (iPhone: an alternate
+# icon; Android: a launcher alias; Mac: the Dock icon while running;
+# Windows: the window and tray icons). The icon is "sk." in dots, white on
+# black, the full stop in Nothing red (the same drawing as DotLogo in
+# lib/ui/nothing.dart).
+
+SK_DOTS = ["......X...", "......X...", ".XXXX.X..X", "X.....X.X.", ".XXX..XX..", "....X.X.X.", "XXXX..X..X"]
+NOTHING_RED = (215, 25, 33)
+
+
+def dot_logo(canvas: Image.Image, box: tuple, *, color=(255, 255, 255), red=True, frac=0.64) -> None:
+    """Draws "sk." (12 dots wide, 7 high) centred in `box` (x, y, w, h)."""
+    x, y, w, h = box
+    cols = 12 if red else 10
+    step = min(w * frac / cols, h * frac / 7)
+    left = x + (w - step * cols) / 2
+    top = y + (h - step * 7) / 2
+    d = ImageDraw.Draw(canvas)
+    for r, row in enumerate(SK_DOTS):
+        for c, ch in enumerate(row):
+            if ch == "X":
+                cx, cy, rad = left + (c + 0.5) * step, top + (r + 0.5) * step, step * 0.44
+                d.ellipse((cx - rad, cy - rad, cx + rad, cy + rad), fill=color + (255,))
+    if red:
+        cx, cy, rad = left + 11.5 * step, top + 6.5 * step, step * 0.5
+        d.ellipse((cx - rad, cy - rad, cx + rad, cy + rad), fill=NOTHING_RED + (255,))
+
+
+def dot_tile(size: int, *, radius_frac: float = 0.0, inset_frac: float = 0.0, full_bleed: bool = False) -> Image.Image:
+    """White "sk." on a black tile, drawn at 4x and scaled down smoothly."""
+    s = size * 4
+    canvas = Image.new("RGBA", (s, s), (0, 0, 0, 0))
+    inset = round(s * inset_frac)
+    box = (inset, inset, s - 2 * inset, s - 2 * inset)
+    d = ImageDraw.Draw(canvas)
+    if full_bleed:
+        d.rectangle((0, 0, s, s), fill=(0, 0, 0, 255))
+    else:
+        r = round(box[2] * radius_frac)
+        d.rounded_rectangle((box[0], box[1], box[0] + box[2] - 1, box[1] + box[3] - 1), r, fill=(0, 0, 0, 255))
+    dot_logo(canvas, box)
+    return canvas.resize((size, size), Image.LANCZOS)
+
+
+def nothing() -> None:
+    # iPhone: the alternate icon (ASSETCATALOG_COMPILER_ALTERNATE_APPICON_NAMES).
+    folder = APP / "ios/Runner/Assets.xcassets/AppIcon-Nothing.appiconset"
+    folder.mkdir(parents=True, exist_ok=True)
+    dot_tile(1024, full_bleed=True).convert("RGB").save(folder / "icon-1024.png", optimize=True)
+    (folder / "Contents.json").write_text(
+        json.dumps(
+            {
+                "images": [{"filename": "icon-1024.png", "idiom": "universal", "platform": "ios", "size": "1024x1024"}],
+                "info": {"author": "xcode", "version": 1},
+            },
+            indent=2,
+        )
+        + "\n"
+    )
+    # Android: the launcher alias's icons (legacy and adaptive).
+    res = APP / "android/app/src/main/res"
+    for name, k in {"mdpi": 1, "hdpi": 1.5, "xhdpi": 2, "xxhdpi": 3, "xxxhdpi": 4}.items():
+        out = res / f"mipmap-{name}"
+        out.mkdir(parents=True, exist_ok=True)
+        dot_tile(round(48 * k), radius_frac=0.22).save(out / "ic_launcher_nothing.png", optimize=True)
+        px = round(108 * k)
+        fg = Image.new("RGBA", (px * 4, px * 4), (0, 0, 0, 0))
+        dot_logo(fg, (0, 0, px * 4, px * 4), frac=0.64 * 66 / 108)
+        fg.resize((px, px), Image.LANCZOS).save(out / "ic_launcher_nothing_foreground.png", optimize=True)
+    (res / "mipmap-anydpi-v26/ic_launcher_nothing.xml").write_text(
+        '<?xml version="1.0" encoding="utf-8"?>\n'
+        '<adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">\n'
+        '    <background android:drawable="@color/ic_launcher_nothing_background" />\n'
+        '    <foreground android:drawable="@mipmap/ic_launcher_nothing_foreground" />\n'
+        '    <monochrome android:drawable="@mipmap/ic_launcher_nothing_foreground" />\n'
+        "</adaptive-icon>\n"
+    )
+    # Mac (the Dock, while running) and Windows (window and taskbar), as
+    # app assets; plus the default Windows icon, to switch back.
+    icons = APP / "assets/icons"
+    icons.mkdir(parents=True, exist_ok=True)
+    dot_tile(512, radius_frac=0.225, inset_frac=0.1).save(icons / "nothing_dock.png", optimize=True)
+    write_ico(icons / "nothing.ico", [dot_tile(s, radius_frac=0.2) for s in (16, 20, 24, 32, 40, 48, 64, 128, 256)])
+    shutil.copyfile(APP / "windows/runner/resources/app_icon.ico", icons / "default.ico")
+    # The tray (Windows) and the menu bar (Mac: a black template, no red).
+    tray = APP / "assets/tray"
+    write_ico(tray / "tray_nothing.ico", [dot_tile(s, radius_frac=0.2) for s in (16, 20, 24, 32, 40, 48)])
+    template = Image.new("RGBA", (176, 176), (0, 0, 0, 0))
+    dot_logo(template, (0, 0, 176, 176), color=(0, 0, 0), red=False, frac=0.95)
+    template.resize((44, 44), Image.LANCZOS).save(tray / "tray_mac_nothing.png", optimize=True)
+
+
 if __name__ == "__main__":
+    import sys
+
+    if sys.argv[1:] == ["nothing"]:  # only the Nothing look's icons
+        nothing()
+        print("Nothing icons written.")
+        raise SystemExit
     tray()
     windows()
     android()
@@ -305,4 +405,5 @@ if __name__ == "__main__":
     icon_composer()
     website()
     in_app()
+    nothing()  # after windows(): it copies the default .ico
     print("Icons written.")

@@ -15,6 +15,7 @@ import 'platform/desktop_window.dart';
 import 'platform/sound.dart';
 import 'ui/corner_popup.dart';
 import 'ui/glass.dart';
+import 'ui/nothing.dart';
 import 'ui/widgets.dart';
 import 'ui/shell.dart';
 import 'ui/startup.dart';
@@ -55,12 +56,14 @@ Future<void> main([List<String> args = const []]) async {
 Future<void> _showLoading() async {
   var seed = themeColors['purple']!.$2;
   var mode = ThemeMode.system;
+  var nothing = false;
   try {
     final prefs = await SharedPreferences.getInstance();
     seed = themeColors[prefs.getString('themeColor')]?.$2 ?? seed;
     mode = ThemeMode.values.asNameMap()[prefs.getString('themeMode')] ?? mode;
+    nothing = prefs.getString('look') == 'nothing';
   } catch (_) {}
-  runApp(LoadingApp(seed: seed, themeMode: mode));
+  runApp(LoadingApp(seed: seed, themeMode: mode, nothing: nothing));
 }
 
 /// Errors nothing else caught are logged instead of taking the app down,
@@ -255,10 +258,12 @@ class SidekickApp extends StatelessWidget {
   static final _themes = <Object, ThemeData>{};
 
   ThemeData _themeFor(ColorScheme? dynamic, Brightness brightness) {
-    final key = (state.themeColor, state.pureBlack, brightness, dynamic, _glass);
+    final key = (state.themeColor, state.pureBlack, brightness, dynamic, _glass, state.nothingLook);
     final theme = _themes[key];
     if (theme != null) return theme;
     if (_themes.length > 8) _themes.clear();
+    // Settings → Theme → Nothing: its own colors, whatever the color choice.
+    if (state.nothingLook) return _themes[key] = nothingTheme(_theme(nothingScheme(brightness)));
     final material = _theme(_scheme(dynamic, brightness));
     return _themes[key] = _glass ? glassTheme(material) : material;
   }

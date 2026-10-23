@@ -91,6 +91,12 @@ flutter:
     - assets/sounds/ping.wav
     - assets/tray/tray.ico
     - assets/tray/tray_mac.png
+    # Settings → Theme → Nothing (tool/make_icons.py nothing)
+    - assets/tray/tray_nothing.ico
+    - assets/tray/tray_mac_nothing.png
+    - assets/icons/nothing.ico
+    - assets/icons/default.ico
+    - assets/icons/nothing_dock.png
 
   # To add assets to your application, add an assets section, like this:
   # assets:

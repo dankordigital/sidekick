@@ -13,22 +13,31 @@ class ThemeChooser extends StatelessWidget {
   Widget build(BuildContext context) => Column(
     crossAxisAlignment: CrossAxisAlignment.stretch,
     children: [
-      // iOS and macOS 26+: Apple's Liquid Glass, or the default Material look.
-      if (liquidGlassAvailable)
-        ListTile(
-          leading: const IconTile(Icons.auto_awesome_outlined),
-          title: const Text('Theme'),
-          trailing: DropdownButton<bool>(
-            value: state.liquidGlass,
-            underline: const SizedBox(),
-            borderRadius: BorderRadius.circular(16),
-            items: const [
-              DropdownMenuItem(value: false, child: Text('Default')),
-              DropdownMenuItem(value: true, child: Text('Liquid Glass')),
-            ],
-            onChanged: (v) => state.setLiquidGlass(v ?? false),
-          ),
+      // The look: Default (Material), Nothing (a trial, every platform), and
+      // on iOS and macOS 26+ Apple's Liquid Glass.
+      ListTile(
+        leading: const IconTile(Icons.auto_awesome_outlined),
+        title: const Text('Theme'),
+        trailing: DropdownButton<String>(
+          value: state.nothingLook
+              ? 'nothing'
+              : state.liquidGlass && liquidGlassAvailable
+              ? 'glass'
+              : 'default',
+          underline: const SizedBox(),
+          borderRadius: BorderRadius.circular(16),
+          items: [
+            const DropdownMenuItem(value: 'default', child: Text('Default')),
+            const DropdownMenuItem(value: 'nothing', child: Text('Nothing')),
+            if (liquidGlassAvailable) const DropdownMenuItem(value: 'glass', child: Text('Liquid Glass')),
+          ],
+          onChanged: (v) => switch (v) {
+            'nothing' => state.setNothingLook(true),
+            'glass' => state.setLiquidGlass(true),
+            _ => state.nothingLook ? state.setNothingLook(false) : state.setLiquidGlass(false),
+          },
         ),
+      ),
       Padding(
         padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
         child: SegmentedButton<ThemeMode>(
@@ -41,56 +50,59 @@ class ThemeChooser extends StatelessWidget {
           onSelectionChanged: (s) => state.setThemeMode(s.first),
         ),
       ),
-      Padding(
-        padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
-        child: Align(
-          alignment: Alignment.centerLeft,
-          child: Text('Color', style: Theme.of(context).textTheme.titleSmall),
-        ),
-      ),
-      Padding(
-        padding: const EdgeInsets.fromLTRB(12, 4, 12, 8),
-        child: Wrap(
-          spacing: 4,
-          runSpacing: 4,
-          children: [
-            if (!hostIsIOS)
-              _ColorChoice(
-                label: switch (hostOS) {
-                  'android' => 'Wallpaper',
-                  _ => 'System accent',
-                },
-                selected: state.themeColor == 'system',
-                onTap: () => state.setThemeColor('system'),
-              ),
-            for (final MapEntry(:key, value: (label, color)) in themeColors.entries)
-              _ColorChoice(
-                label: label,
-                color: color,
-                mono: key == 'mono',
-                // iOS has no system colors; its default is purple.
-                selected: state.themeColor == key || (hostIsIOS && state.themeColor == 'system' && key == 'purple'),
-                onTap: () => state.setThemeColor(key),
-              ),
-          ],
-        ),
-      ),
-      if (state.themeColor == 'system' && !hostIsIOS)
+      // The Nothing look has its own colors: black, white, grey and red.
+      if (!state.nothingLook) ...[
         Padding(
-          padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-          child: Text(switch (hostOS) {
-            'android' => 'Follows your wallpaper colors (Android 12 and newer).',
-            'macos' => "Follows your Mac's accent color (System Settings → Appearance).",
-            _ => 'Follows your Windows accent color (Settings → Personalization → Colors).',
-          }, style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant, fontSize: 13)),
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
+          child: Align(
+            alignment: Alignment.centerLeft,
+            child: Text('Color', style: Theme.of(context).textTheme.titleSmall),
+          ),
         ),
-      SwitchListTile(
-        secondary: const IconTile(Icons.contrast_rounded),
-        title: const Text('Pure black in dark mode'),
-        subtitle: const Text('Darker backgrounds; saves battery on OLED screens'),
-        value: state.pureBlack,
-        onChanged: state.setPureBlack,
-      ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(12, 4, 12, 8),
+          child: Wrap(
+            spacing: 4,
+            runSpacing: 4,
+            children: [
+              if (!hostIsIOS)
+                _ColorChoice(
+                  label: switch (hostOS) {
+                    'android' => 'Wallpaper',
+                    _ => 'System accent',
+                  },
+                  selected: state.themeColor == 'system',
+                  onTap: () => state.setThemeColor('system'),
+                ),
+              for (final MapEntry(:key, value: (label, color)) in themeColors.entries)
+                _ColorChoice(
+                  label: label,
+                  color: color,
+                  mono: key == 'mono',
+                  // iOS has no system colors; its default is purple.
+                  selected: state.themeColor == key || (hostIsIOS && state.themeColor == 'system' && key == 'purple'),
+                  onTap: () => state.setThemeColor(key),
+                ),
+            ],
+          ),
+        ),
+        if (state.themeColor == 'system' && !hostIsIOS)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+            child: Text(switch (hostOS) {
+              'android' => 'Follows your wallpaper colors (Android 12 and newer).',
+              'macos' => "Follows your Mac's accent color (System Settings → Appearance).",
+              _ => 'Follows your Windows accent color (Settings → Personalization → Colors).',
+            }, style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant, fontSize: 13)),
+          ),
+        SwitchListTile(
+          secondary: const IconTile(Icons.contrast_rounded),
+          title: const Text('Pure black in dark mode'),
+          subtitle: const Text('Darker backgrounds; saves battery on OLED screens'),
+          value: state.pureBlack,
+          onChanged: state.setPureBlack,
+        ),
+      ],
     ],
   );
 }

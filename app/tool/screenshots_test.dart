@@ -26,6 +26,7 @@ import 'package:sidekick/main.dart';
 import 'package:sidekick/platform/files.dart';
 import 'package:sidekick/platform/desktop_window.dart';
 import 'package:sidekick/platform/input.dart';
+import 'package:sidekick/ui/nothing.dart';
 import 'package:sidekick/ui/startup.dart';
 import 'package:sidekick/ui/tray_panel.dart';
 import 'package:sidekick/ui/widgets.dart';
@@ -42,6 +43,12 @@ Future<void> _loadFonts() async {
         ..addFont(read('Roboto-Bold.ttf')))
       .load();
   await (FontLoader('MaterialIcons')..addFont(read('MaterialIcons-Regular.otf'))).load();
+  // The Nothing look's labels use the system's monospaced font ("monospace"
+  // on Linux); any mono font on this machine stands in for it.
+  const mono = '/usr/share/fonts/truetype/liberation/LiberationMono-Regular.ttf';
+  if (File(mono).existsSync()) {
+    await (FontLoader('monospace')..addFont(Future.value(ByteData.sublistView(File(mono).readAsBytesSync())))).load();
+  }
 }
 
 void main() {
@@ -273,6 +280,33 @@ void main() {
     tester.view.physicalSize = const Size(412, 915);
     debugHostPlatform = null;
 
+    // Nothing (Settings → Theme → Nothing, every platform). Its tab bar has
+    // no labels, so tabs are found by their icons (outlined, or filled when on).
+    Finder tab(IconData off, IconData on) =>
+        find.byIcon(off).evaluate().isNotEmpty ? find.byIcon(off).last : find.byIcon(on).last;
+    state.setNothingLook(true);
+    state.setThemeMode(ThemeMode.dark);
+    await settle();
+    await tester.tap(tab(Icons.devices_outlined, Icons.devices));
+    await shot('nothing-phone-devices');
+    await tester.tap(find.text('Pixel 9').first);
+    await shot('nothing-phone-device');
+    await tester.tap(find.byTooltip('Back'));
+    await settle();
+    await tester.tap(tab(Icons.settings_outlined, Icons.settings));
+    await shot('nothing-phone-settings');
+    state.setThemeMode(ThemeMode.light);
+    await tester.tap(tab(Icons.devices_outlined, Icons.devices));
+    await shot('nothing-phone-devices-light');
+    debugForceMobile = false;
+    tester.view.physicalSize = const Size(1280, 840);
+    state.setThemeMode(ThemeMode.dark);
+    await shot('nothing-mac-devices');
+    state.setNothingLook(false);
+    state.setThemeMode(ThemeMode.light);
+    debugForceMobile = true;
+    tester.view.physicalSize = const Size(412, 915);
+
     // The startup animation, a few frames in (desktop, light).
     debugForceMobile = false;
     state.setThemeColor('purple');
@@ -312,26 +346,35 @@ void main() {
     // The panel the tray / menu-bar icon opens (Windows, Mac).
     tester.view.physicalSize = DesktopWindow.panelSize * 2;
     tester.view.devicePixelRatio = 2;
-    await tester.pumpWidget(
-      RepaintBoundary(
-        key: boundary,
-        child: MaterialApp(
-          debugShowCheckedModeBanner: false,
-          theme: ThemeData(colorSchemeSeed: const Color(0xFF6750A4), fontFamily: 'Roboto'),
-          home: TrayPanel(state: state),
-        ),
+    for (final (name, theme) in [
+      ('tray-panel', ThemeData(colorSchemeSeed: const Color(0xFF6750A4), fontFamily: 'Roboto')),
+      (
+        'tray-panel-nothing',
+        nothingTheme(ThemeData(colorScheme: nothingScheme(Brightness.dark), fontFamily: 'Roboto')),
       ),
-    );
-    await settle();
-    for (var i = 0; i < 10; i++) {
-      await tester.pump(const Duration(milliseconds: 100));
+    ]) {
+      await tester.pumpWidget(
+        RepaintBoundary(
+          key: boundary,
+          child: MaterialApp(
+            key: ValueKey(name),
+            debugShowCheckedModeBanner: false,
+            theme: theme,
+            home: TrayPanel(state: state),
+          ),
+        ),
+      );
+      await settle();
+      for (var i = 0; i < 10; i++) {
+        await tester.pump(const Duration(milliseconds: 100));
+      }
+      await tester.runAsync(() async {
+        final render = boundary.currentContext!.findRenderObject()! as RenderRepaintBoundary;
+        final image = await render.toImage(pixelRatio: 2);
+        final bytes = await image.toByteData(format: ui.ImageByteFormat.png);
+        File(p.join(out.path, '$name.png')).writeAsBytesSync(bytes!.buffer.asUint8List());
+      });
     }
-    await tester.runAsync(() async {
-      final render = boundary.currentContext!.findRenderObject()! as RenderRepaintBoundary;
-      final image = await render.toImage(pixelRatio: 2);
-      final bytes = await image.toByteData(format: ui.ImageByteFormat.png);
-      File(p.join(out.path, 'tray-panel.png')).writeAsBytesSync(bytes!.buffer.asUint8List());
-    });
 
     await tester.runAsync(() async {
       await phone.stop();

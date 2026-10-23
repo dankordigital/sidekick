@@ -8,6 +8,8 @@ import '../app_state.dart';
 import '../core/server.dart';
 import '../platform/sound.dart';
 import 'widgets.dart';
+import 'nothing.dart';
+import 'nothing_screens.dart' show NothingSendView;
 
 // ------------------------------------------------------------------ sender
 
@@ -108,6 +110,11 @@ class _SendingScreenState extends State<SendingScreen> {
       SendPhase.noAnswer => ('No answer', 'Nobody accepted on ${d.name} in time. Nothing was sent.'),
       SendPhase.failed => ("Couldn't send", send.error ?? 'Something went wrong'),
     };
+    // The Nothing look draws it its own way (nothing_screens.dart).
+    if (isNothing(context)) {
+      final (action, onAction) = _action;
+      return NothingSendView(send: send, onBack: _leave, action: action, onAction: onAction);
+    }
     return Scaffold(
       body: SafeArea(
         child: Center(
@@ -207,13 +214,15 @@ class _SendingScreenState extends State<SendingScreen> {
     );
   }
 
+  (String, VoidCallback) get _action => switch (send.phase) {
+    SendPhase.connecting || SendPhase.waiting => ('Cancel', _cancel),
+    // It keeps going in the background; the Files tab shows it.
+    SendPhase.sending => ('Hide', _leave),
+    _ => ('Close', _leave),
+  };
+
   Widget _actions() {
-    final (label, onPressed) = switch (send.phase) {
-      SendPhase.connecting || SendPhase.waiting => ('Cancel', _cancel),
-      // It keeps going in the background; the Files tab shows it.
-      SendPhase.sending => ('Hide', _leave),
-      _ => ('Close', _leave),
-    };
+    final (label, onPressed) = _action;
     return SizedBox(
       width: double.infinity,
       child: send.phase == SendPhase.failed
