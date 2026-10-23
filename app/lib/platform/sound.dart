@@ -1,11 +1,12 @@
-import 'dart:ffi';
 import 'dart:io';
 
-import 'package:ffi/ffi.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
+
+import 'sound_platform.dart' if (dart.library.js_interop) 'sound_platform_web.dart';
+import '../core/host.dart';
 
 /// Plays Sidekick's sounds on every platform, with what the system already
 /// has: no audio plugin. The sounds come from tool/sounds/ (prepared by
@@ -16,6 +17,7 @@ import 'package:path_provider/path_provider.dart';
 /// * Windows: `PlaySound` from winmm.dll.
 /// * iPhone: AVAudioPlayer on the media volume, mixed with other audio.
 /// * Android: MediaPlayer on the media volume.
+/// * The website's preview (a browser): an HTML audio element.
 ///
 /// Never throws: a missing chime is not worth an error.
 Future<void> playStartupSound() => _play('startup');
@@ -34,15 +36,11 @@ Future<void> playDeclineSound() => _play('decline');
 /// alarm volume, so it's heard even on silent. Plays whatever Settings →
 /// Sound says: someone asked for it.
 Future<void> startPingRingtone() async {
+  if (kIsWeb) return webPlaySound('ping', loop: true);
   try {
     final path = await _soundFile('ping');
-    if (Platform.isWindows) {
-      const sndAsync = 0x0001, sndNoDefault = 0x0002, sndLoop = 0x0008, sndFilename = 0x00020000;
-      _windowsPlaySound(
-        _windowsPaths[path] ??= path.toNativeUtf16(),
-        0,
-        sndFilename | sndAsync | sndLoop | sndNoDefault,
-      );
+    if (Host.isWindows) {
+      windowsPlaySound(path, loop: true);
     } else if (_channel case final channel?) {
       await channel.invokeMethod<void>('loopSound', {'path': path});
     }
@@ -53,9 +51,10 @@ Future<void> startPingRingtone() async {
 
 /// Found It: the ringtone stops.
 Future<void> stopPingRingtone() async {
+  if (kIsWeb) return webStopSound();
   try {
-    if (Platform.isWindows) {
-      _windowsPlaySound(nullptr, 0, 0);
+    if (Host.isWindows) {
+      windowsStopSound();
     } else if (_channel case final channel?) {
       await channel.invokeMethod<void>('stopLoop');
     }
@@ -65,28 +64,29 @@ Future<void> stopPingRingtone() async {
 }
 
 /// The platform channel with `loopSound` / `stopLoop` (not Windows).
-MethodChannel? get _channel => Platform.isMacOS
+MethodChannel? get _channel => Host.isMacOS
     ? const MethodChannel('sidekick/macos')
-    : Platform.isIOS
+    : Host.isIOS
     ? const MethodChannel('sidekick/ios')
-    : Platform.isAndroid
+    : Host.isAndroid
     ? const MethodChannel('sidekick/android')
     : null;
 
 Future<void> _play(String name) async {
+  if (kIsWeb) return webPlaySound(name);
   try {
     final path = await _soundFile(name);
-    if (Platform.isMacOS) {
+    if (Host.isMacOS) {
       var played = false;
       try {
         played = await const MethodChannel('sidekick/macos').invokeMethod<bool>('playSound', {'path': path}) ?? false;
       } catch (_) {}
       if (!played) await Process.start('/usr/bin/afplay', [path], mode: ProcessStartMode.detached);
-    } else if (Platform.isWindows) {
-      _playOnWindows(path);
-    } else if (Platform.isIOS) {
+    } else if (Host.isWindows) {
+      windowsPlaySound(path);
+    } else if (Host.isIOS) {
       await const MethodChannel('sidekick/ios').invokeMethod('playSound', {'path': path});
-    } else if (Platform.isAndroid) {
+    } else if (Host.isAndroid) {
       await const MethodChannel('sidekick/android').invokeMethod('playSound', {'path': path});
     }
   } catch (e) {
@@ -115,19 +115,4 @@ Future<Directory> _soundDir() async {
   } catch (_) {
     return Directory.systemTemp;
   }
-}
-
-typedef _PlaySoundNative = Int32 Function(Pointer<Utf16> sound, IntPtr module, Uint32 flags);
-typedef _PlaySoundDart = int Function(Pointer<Utf16> sound, int module, int flags);
-
-/// Kept for the life of the app: an asynchronous PlaySound may still be
-/// reading the name after the call returns.
-final Map<String, Pointer<Utf16>> _windowsPaths = {};
-
-final _windowsPlaySound = DynamicLibrary.open('winmm.dll')
-    .lookupFunction<_PlaySoundNative, _PlaySoundDart>('PlaySoundW');
-
-void _playOnWindows(String path) {
-  const sndAsync = 0x0001, sndNoDefault = 0x0002, sndFilename = 0x00020000;
-  _windowsPlaySound(_windowsPaths[path] ??= path.toNativeUtf16(), 0, sndFilename | sndAsync | sndNoDefault);
 }

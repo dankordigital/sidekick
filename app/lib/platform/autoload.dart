@@ -3,6 +3,8 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:path/path.dart' as p;
 
+import '../core/host.dart';
+
 /// Auto-load (Settings, Windows and Mac, on by default): Sidekick starts by
 /// itself when you log in, straight into the tray / menu bar.
 ///
@@ -14,7 +16,7 @@ import 'package:path/path.dart' as p;
 /// Written again at every start while on, so it follows the app if it
 /// moves. Phones can't start apps at login.
 abstract final class AutoLoad {
-  static bool get supported => Platform.isWindows || Platform.isMacOS;
+  static bool get supported => Host.isWindows || Host.isMacOS;
 
   /// The arguments Sidekick was started with (main's).
   static List<String> args = const [];
@@ -30,7 +32,7 @@ abstract final class AutoLoad {
   /// Turns it on or off. Never throws.
   static Future<void> apply(bool on) async {
     try {
-      if (Platform.isWindows) {
+      if (Host.isWindows) {
         final exe = Platform.resolvedExecutable;
         final result = on
             ? await Process.run('reg', [
@@ -47,7 +49,7 @@ abstract final class AutoLoad {
             : await Process.run('reg', ['delete', _runKey, '/v', 'Sidekick', '/f']);
         // Deleting what isn't there "fails"; that's fine.
         if (on && result.exitCode != 0) debugPrint('Sidekick: auto-load: ${result.stderr}');
-      } else if (Platform.isMacOS) {
+      } else if (Host.isMacOS) {
         final file = File(_agent);
         if (!on) {
           if (file.existsSync()) await file.delete();

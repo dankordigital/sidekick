@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter/services.dart';
 
@@ -12,6 +10,7 @@ import 'direct_wifi.dart';
 import 'ping.dart';
 import 'qr_pairing.dart';
 import 'widgets.dart';
+import '../core/host.dart';
 
 class DevicesPage extends StatelessWidget {
   const DevicesPage({super.key, required this.state, required this.onOpen});
@@ -490,7 +489,7 @@ class _Searching extends StatelessWidget {
                             ? 'No Wi-Fi here. Turn on Bluetooth, and open Sidekick on the other device.'
                             : 'Searching over Bluetooth. Open Sidekick on the other device.'
                       : 'Open Sidekick on your other device and it shows up here.'
-                            '${Platform.isWindows ? ' If Windows asks, allow Sidekick on private networks.' : ''}',
+                            '${Host.isWindows ? ' If Windows asks, allow Sidekick on private networks.' : ''}',
                   style: TextStyle(color: scheme.onSurfaceVariant),
                 ),
                 // Every way to connect (Wi-Fi, QR code, Bluetooth when there's no Wi-Fi…).

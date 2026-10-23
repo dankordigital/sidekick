@@ -1,8 +1,9 @@
 import 'dart:async';
-import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
+
+import '../core/host.dart';
 
 /// Apple's peer-to-peer Wi-Fi (the link AirDrop uses) between iPhones and
 /// Macs, with no router or shared network: SidekickP2P.swift. Each device
@@ -18,7 +19,7 @@ class AppleP2P {
   }
 
   factory AppleP2P.forCurrentPlatform() =>
-      AppleP2P._(Platform.isIOS || Platform.isMacOS ? const MethodChannel('sidekick/p2p') : null);
+      AppleP2P._(Host.isIOS || Host.isMacOS ? const MethodChannel('sidekick/p2p') : null);
 
   /// Nothing to offer (Windows and Android, and tests).
   factory AppleP2P.none() => AppleP2P._(null);

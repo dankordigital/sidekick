@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:io';
 
 import 'package:flutter/gestures.dart';
 import 'package:material_ui/material_ui.dart';
@@ -9,6 +8,7 @@ import '../app_state.dart';
 import '../core/client.dart';
 import '../core/models.dart';
 import 'widgets.dart';
+import '../core/host.dart';
 
 /// What to send so text that reads [before] ends up reading [after]:
 /// that many backspaces, then [insert]. Handles autocorrect rewrites.
@@ -203,7 +203,7 @@ class _RemoteState extends State<_Remote> {
     // so Cmd+C on a Mac copies on a Windows PC, and Control stays Control
     // when Mac controls Mac.
     final targetMac = widget.device.platform == DevicePlatform.macos;
-    final fromMac = Platform.isMacOS;
+    final fromMac = Host.isMacOS;
     final mods = [
       if (keyboard.isControlPressed) fromMac && targetMac ? 'macctrl' : 'ctrl',
       if (keyboard.isAltPressed) 'alt',

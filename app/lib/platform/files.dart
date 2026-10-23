@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:path/path.dart' as p;
 
 import '../core/models.dart';
+import '../core/host.dart';
 
 /// Local file-system access used to answer peers' browse requests.
 class FileService {
@@ -11,7 +12,7 @@ class FileService {
   final String _home;
 
   static String _defaultHome() {
-    if (Platform.isAndroid) return '/storage/emulated/0';
+    if (Host.isAndroid) return '/storage/emulated/0';
     return Platform.environment['USERPROFILE'] ?? Platform.environment['HOME'] ?? Directory.current.path;
   }
 
@@ -22,17 +23,17 @@ class FileService {
     final entries = <RemoteEntry>[];
     // iOS apps only see their own sandbox: Sidekick's Documents folder, which
     // is also what the Files app shows under On My iPhone → Sidekick.
-    if (Platform.isIOS) return [RemoteEntry(name: 'Sidekick files', path: _home, isDir: true)];
-    final folders = Platform.isAndroid
+    if (Host.isIOS) return [RemoteEntry(name: 'Sidekick files', path: _home, isDir: true)];
+    final folders = Host.isAndroid
         ? ['DCIM', 'Pictures', 'Download', 'Documents', 'Music', 'Movies']
         : ['Desktop', 'Documents', 'Downloads', 'Pictures', 'Music', 'Videos'];
     for (final name in folders) {
       final dir = Directory(p.join(_home, name));
       if (await dir.exists()) entries.add(RemoteEntry(name: name, path: dir.path, isDir: true));
     }
-    entries.add(RemoteEntry(name: Platform.isAndroid ? 'Internal storage' : 'Home', path: _home, isDir: true));
-    if (Platform.isAndroid) return entries;
-    if (Platform.isWindows) {
+    entries.add(RemoteEntry(name: Host.isAndroid ? 'Internal storage' : 'Home', path: _home, isDir: true));
+    if (Host.isAndroid) return entries;
+    if (Host.isWindows) {
       for (var c = 0x41; c <= 0x5A; c++) {
         final drive = '${String.fromCharCode(c)}:\\';
         if (await Directory(drive).exists()) {

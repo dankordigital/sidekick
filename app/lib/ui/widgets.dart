@@ -7,6 +7,7 @@ import 'package:material_ui/material_ui.dart';
 import '../app_state.dart';
 import '../core/models.dart';
 import 'direct_wifi.dart';
+import '../core/host.dart';
 
 IconData platformIcon(DevicePlatform platform) => switch (platform) {
   DevicePlatform.windows => Icons.desktop_windows_outlined,
@@ -39,17 +40,17 @@ String formatDuration(Duration d) {
 bool debugForceMobile = false;
 
 /// Running on a phone or tablet (touch-first, soft keyboard).
-bool get isMobile => debugForceMobile || Platform.isAndroid || Platform.isIOS;
+bool get isMobile => debugForceMobile || Host.isAndroid || Host.isIOS;
 
 /// Lets the screenshot tool render the UI as another platform would.
 DevicePlatform? debugHostPlatform;
 
-bool get hostIsIOS => debugHostPlatform == null ? Platform.isIOS : debugHostPlatform == DevicePlatform.ios;
-bool get hostIsAndroid => debugHostPlatform == null ? Platform.isAndroid : debugHostPlatform == DevicePlatform.android;
+bool get hostIsIOS => debugHostPlatform == null ? Host.isIOS : debugHostPlatform == DevicePlatform.ios;
+bool get hostIsAndroid => debugHostPlatform == null ? Host.isAndroid : debugHostPlatform == DevicePlatform.android;
 
 /// A Mac or a Windows PC (not a phone).
 bool get hostIsComputer => !hostIsIOS && !hostIsAndroid;
-bool get hostIsMacOS => debugHostPlatform == null ? Platform.isMacOS : debugHostPlatform == DevicePlatform.macos;
+bool get hostIsMacOS => debugHostPlatform == null ? Host.isMacOS : debugHostPlatform == DevicePlatform.macos;
 
 /// `Platform.operatingSystem`, or the overridden platform's name.
 String get hostOS => debugHostPlatform?.name ?? Platform.operatingSystem;
@@ -60,7 +61,8 @@ bool debugGlassAvailable = false;
 /// The major version of iOS or macOS ("Version 26.0 (Build …)" → 26), or
 /// null elsewhere.
 int? get appleOsMajor {
-  if (!Platform.isIOS && !Platform.isMacOS) return null;
+  // The website's preview has no OS version: it shows the default look.
+  if (Host.isWeb || (!Host.isIOS && !Host.isMacOS)) return null;
   final m = RegExp(r'(\d+)\.\d').firstMatch(Platform.operatingSystemVersion);
   return m == null ? null : int.tryParse(m.group(1)!);
 }
@@ -579,7 +581,7 @@ class MaybeDropTarget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (Platform.isIOS) return child;
+    if (Host.isIOS) return child;
     return DropTarget(
       enable: enable,
       onDragEntered: (_) => onHover?.call(true),
@@ -592,6 +594,10 @@ class MaybeDropTarget extends StatelessWidget {
     );
   }
 }
+
+/// The website's preview (a browser, which can't hand over real files)
+/// picks sample files here instead: media (photos and videos) or any.
+Future<List<File>> Function({required bool media})? debugPickFiles;
 
 /// Lets the user pick files to send. Phones get a choice between the photo
 /// gallery and the file browser.
@@ -622,6 +628,7 @@ Future<List<File>> pickFilesToSend(BuildContext context, {required String title}
     if (choice == null) return const [];
     type = choice;
   }
+  if (debugPickFiles case final pick?) return pick(media: type == FileType.media);
   try {
     await prepareFilePicker();
     final picked = await FilePicker.pickFiles(dialogTitle: title, type: type);
@@ -642,7 +649,7 @@ bool _filePickerReady = false;
 /// opens. Sidekick isn't sandboxed (it can read any file already), so that
 /// check only gets in the way; turn it off once.
 Future<void> prepareFilePicker() async {
-  if (_filePickerReady || !Platform.isMacOS) return;
+  if (_filePickerReady || !Host.isMacOS) return;
   try {
     await FilePicker.skipEntitlementsChecks();
   } catch (_) {

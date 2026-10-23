@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:io';
 
 import 'package:material_ui/material_ui.dart';
 
@@ -8,6 +7,7 @@ import '../core/models.dart';
 import '../platform/desktop_window.dart';
 import 'ping.dart';
 import 'widgets.dart';
+import '../core/host.dart';
 
 /// What a click on the tray / menu-bar icon opens (Windows and Mac), like
 /// CleanMyMac's: how Sidekick is doing, this device's network, the last
@@ -136,7 +136,7 @@ class _Header extends StatelessWidget {
           ),
         ),
         const SizedBox(width: 12),
-        GradientBadge(icon: Platform.isMacOS ? Icons.laptop_mac_rounded : Icons.desktop_windows_rounded, size: 52),
+        GradientBadge(icon: Host.isMacOS ? Icons.laptop_mac_rounded : Icons.desktop_windows_rounded, size: 52),
       ],
     );
   }

@@ -5,6 +5,8 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 
+import '../core/host.dart';
+
 /// The computer's own notifications (Notification Center on the Mac,
 /// Windows' toasts), for phone notifications and screenshots that arrive.
 ///
@@ -17,13 +19,13 @@ abstract final class DesktopNotify {
   static const _mac = MethodChannel('sidekick/macos');
   static const appId = 'Sidekick.Sidekick';
 
-  static bool get supported => Platform.isMacOS || Platform.isWindows;
+  static bool get supported => Host.isMacOS || Host.isWindows;
 
   static Future<void> show({required String title, String subtitle = '', required String body}) async {
     try {
-      if (Platform.isMacOS) {
+      if (Host.isMacOS) {
         await _mac.invokeMethod<void>('showNotification', {'title': title, 'subtitle': subtitle, 'body': body});
-      } else if (Platform.isWindows) {
+      } else if (Host.isWindows) {
         await _windowsToast(subtitle.isEmpty ? title : '$title · $subtitle', body);
       }
     } catch (e) {

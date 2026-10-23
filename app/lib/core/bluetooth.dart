@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:convert';
-import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:flutter/services.dart' show PlatformException;
@@ -9,6 +8,7 @@ import 'ble_backend.dart';
 import 'ble_protocol.dart';
 import 'models.dart';
 import 'server.dart';
+import 'host.dart';
 
 /// A Sidekick device seen over Bluetooth.
 class BleSighting {
@@ -87,7 +87,7 @@ class BluetoothService {
   /// This device's Bluetooth can't advertise at all (many PC adapters).
   bool get cannotBeFound => _peripheralState == BleRadio.unsupported;
 
-  bool get canOpenBluetoothSettings => Platform.isMacOS || Platform.isWindows;
+  bool get canOpenBluetoothSettings => Host.isMacOS || Host.isWindows;
 
   Future<void> openBluetoothSettings() async {
     try {

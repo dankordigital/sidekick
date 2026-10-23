@@ -5,15 +5,17 @@ import 'package:flutter/services.dart';
 import 'package:mime/mime.dart';
 import 'package:path/path.dart' as p;
 
+import '../core/host.dart';
+
 /// Photos and videos a phone receives go straight to Photos (iPhone) or the
 /// gallery (Android), like AirDrop: the native side moves them there
 /// (`saveToGallery` on `sidekick/ios` and `sidekick/android`). Everything
 /// else stays in the receive folder.
 abstract final class Gallery {
-  static bool get supported => Platform.isIOS || Platform.isAndroid;
+  static bool get supported => Host.isIOS || Host.isAndroid;
 
   /// What the phone calls its library, for messages.
-  static String get name => Platform.isIOS ? 'Photos' : 'the gallery';
+  static String get name => Host.isIOS ? 'Photos' : 'the gallery';
 
   // What each library can show. iPhone Photos can't play WebM or MKV.
   static const _photos = {'.jpg', '.jpeg', '.png', '.gif', '.heic', '.heif', '.webp', '.dng'};
@@ -28,13 +30,13 @@ abstract final class Gallery {
     return null;
   }
 
-  static MethodChannel get _channel => MethodChannel(Platform.isIOS ? 'sidekick/ios' : 'sidekick/android');
+  static MethodChannel get _channel => MethodChannel(Host.isIOS ? 'sidekick/ios' : 'sidekick/android');
 
   /// Moves [file] into the library. [why] is null when it's there (with
   /// [uri], where it is on Android), otherwise why not (the file then stays
   /// where it is).
   static Future<({String? why, String? uri})> save(File file) async {
-    final kind = kindOf(file.path, android: Platform.isAndroid);
+    final kind = kindOf(file.path, android: Host.isAndroid);
     if (kind == null) return (why: 'not a photo or video', uri: null);
     try {
       final uri = await _channel.invokeMethod<String>('saveToGallery', {

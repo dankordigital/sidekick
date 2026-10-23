@@ -5,6 +5,7 @@ import 'package:bluetooth_low_energy/bluetooth_low_energy.dart';
 import 'package:flutter/services.dart';
 
 import 'ble_protocol.dart';
+import 'host.dart';
 
 /// What a Bluetooth radio role can do right now.
 enum BleRadio { unknown, on, off, unauthorized, unsupported }
@@ -39,7 +40,7 @@ class BleDiscovery {
 /// Writes are at most one packet ([open] returns the size), so a peripheral
 /// always gets whole chunks.
 abstract class BleBackend {
-  factory BleBackend.forThisDevice() => Platform.isIOS || Platform.isMacOS ? AppleBleBackend() : PluginBleBackend();
+  factory BleBackend.forThisDevice() => Host.isIOS || Host.isMacOS ? AppleBleBackend() : PluginBleBackend();
 
   /// Finding others.
   BleRadio get centralState;
@@ -412,7 +413,7 @@ class PluginBleBackend implements BleBackend {
     // On Windows adding the service already advertises it (discoverable
     // and connectable); its general advertiser refuses service ids ("The
     // parameter is incorrect").
-    if (Platform.isWindows) return;
+    if (Host.isWindows) return;
     // Just the service id: advertisements are tiny (31 bytes), and a name
     // here would rename an Android phone's Bluetooth. Names come from info.
     await _peripheralManager.startAdvertising(Advertisement(serviceUUIDs: [bleServiceUuid]));
@@ -580,7 +581,7 @@ class PluginBleBackend implements BleBackend {
 
   @override
   Future<void> openBluetoothSettings() async {
-    if (Platform.isWindows) await Process.start('explorer.exe', ['ms-settings:bluetooth']);
+    if (Host.isWindows) await Process.start('explorer.exe', ['ms-settings:bluetooth']);
   }
 
   @override

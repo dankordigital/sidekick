@@ -5,6 +5,8 @@ import 'dart:io';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../core/host.dart';
+
 /// Keeps Sidekick's secrets (this device's private key, pairing tokens and
 /// pairing keys) out of plain app settings:
 /// * iPhone: the Keychain; Android: the Keystore; Windows: DPAPI storage.
@@ -146,7 +148,7 @@ class SecretStore {
   }
 
   static Future<void> _restrict(File f) async {
-    if (Platform.isWindows) return;
+    if (Host.isWindows) return;
     try {
       await Process.run('/bin/chmod', ['600', f.path]);
     } catch (_) {}

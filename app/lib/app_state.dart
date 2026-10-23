@@ -33,6 +33,9 @@ import 'platform/phone_relay.dart';
 import 'platform/input.dart';
 import 'platform/secret_store.dart';
 import 'platform/sound.dart';
+import 'core/host.dart';
+
+part 'demo/demo_state.dart';
 
 /// The color themes in Settings → Theme: name and seed color.
 const themeColors = <String, (String, Color)>{
@@ -149,17 +152,12 @@ class Notice {
   final String? galleryUri;
 }
 
-/// Renders (tool/) set this to draw another platform's app.
-@visibleForTesting
-DevicePlatform? debugCurrentPlatform;
-
 DevicePlatform get currentPlatform {
-  if (debugCurrentPlatform case final p?) return p;
-  if (Platform.isWindows) return DevicePlatform.windows;
-  if (Platform.isMacOS) return DevicePlatform.macos;
-  if (Platform.isLinux) return DevicePlatform.linux;
-  if (Platform.isAndroid) return DevicePlatform.android;
-  if (Platform.isIOS) return DevicePlatform.ios;
+  if (Host.isWindows) return DevicePlatform.windows;
+  if (Host.isMacOS) return DevicePlatform.macos;
+  if (Host.isLinux) return DevicePlatform.linux;
+  if (Host.isAndroid) return DevicePlatform.android;
+  if (Host.isIOS) return DevicePlatform.ios;
   return DevicePlatform.unknown;
 }
 
@@ -416,7 +414,7 @@ class AppState extends ChangeNotifier {
     _prefs.setString('id', id);
     name = _prefs.getString('name') ?? _defaultName();
     themeMode = ThemeMode.values.asNameMap()[_prefs.getString('themeMode')] ?? ThemeMode.system;
-    themeColor = _prefs.getString('themeColor') ?? (Platform.isIOS ? 'purple' : 'system');
+    themeColor = _prefs.getString('themeColor') ?? (Host.isIOS ? 'purple' : 'system');
     if (themeColor != 'system' && !themeColors.containsKey(themeColor)) themeColor = 'system';
     pureBlack = _prefs.getBool('pureBlack') ?? false;
     liquidGlass = _prefs.getString('look') == 'glass';
@@ -444,7 +442,7 @@ class AppState extends ChangeNotifier {
     // asking for the password, since the app isn't signed by a paid account.
     secrets = SecretStore(
       _prefs,
-      file: Platform.isMacOS ? File(p.join((await getApplicationSupportDirectory()).path, 'secrets.json')) : null,
+      file: Host.isMacOS ? File(p.join((await getApplicationSupportDirectory()).path, 'secrets.json')) : null,
     );
     List<String> list(String? json) => json == null ? const [] : [for (final e in jsonDecode(json) as List) '$e'];
     String? legacyList(String key) {
@@ -509,7 +507,7 @@ class AppState extends ChangeNotifier {
     app: appVersion.isEmpty ? null : appVersion,
     wifi: wifiConnected,
     capabilities: Capabilities(
-      files: permissions.files && (!Platform.isAndroid || AndroidBridge.permissions.allFiles),
+      files: permissions.files && (!Host.isAndroid || AndroidBridge.permissions.allFiles),
       input: permissions.input && input.supported,
     ),
   );
@@ -518,7 +516,7 @@ class AppState extends ChangeNotifier {
     try {
       appVersion = (await PackageInfo.fromPlatform()).version;
     } catch (_) {}
-    if (Platform.isAndroid) {
+    if (Host.isAndroid) {
       try {
         await AndroidBridge.acquireMulticastLock();
         await AndroidBridge.refresh();
@@ -526,15 +524,15 @@ class AppState extends ChangeNotifier {
         // Discovery may be flaky, but Add by IP still works.
       }
     }
-    if (Platform.isMacOS) {
+    if (Host.isMacOS) {
       try {
         await MacBridge.refresh();
       } catch (_) {}
     }
-    if (Platform.isIOS) unawaited(setIosKeepAlive(keepRunning));
-    if (Platform.isAndroid) unawaited(AndroidBackground.keepRunning(keepRunning));
+    if (Host.isIOS) unawaited(setIosKeepAlive(keepRunning));
+    if (Host.isAndroid) unawaited(AndroidBackground.keepRunning(keepRunning));
     // iOS apps can only share their own Documents folder.
-    files = Platform.isIOS ? FileService(home: (await getApplicationDocumentsDirectory()).path) : FileService();
+    files = Host.isIOS ? FileService(home: (await getApplicationDocumentsDirectory()).path) : FileService();
     server = SidekickServer(
       identity: identity,
       self: () => me,
@@ -562,11 +560,11 @@ class AppState extends ChangeNotifier {
     } catch (e) {
       // iOS needs a special Apple entitlement for multicast; the scan below
       // covers it. Elsewhere, say why devices may not show up.
-      if (!Platform.isIOS) {
+      if (!Host.isIOS) {
         networkError ??= "Couldn't search the network ($e). Use Scan network or Add by IP.";
       }
     }
-    if (Platform.isIOS) {
+    if (Host.isIOS) {
       unawaited(scanNetwork());
       _scanTimer = Timer.periodic(const Duration(seconds: 30), (_) => scanNetwork());
     }
@@ -579,7 +577,7 @@ class AppState extends ChangeNotifier {
     // Written again each start while on: it follows the app if it moved.
     if (AutoLoad.supported) unawaited(AutoLoad.apply(autoLoad));
 
-    if (Platform.isMacOS) {
+    if (Host.isMacOS) {
       // Coming back from System Settings doesn't always count as "resumed".
       _permissionTimer = Timer.periodic(const Duration(seconds: 3), (_) {
         if (!MacBridge.accessibility) unawaited(_inputReady());
@@ -617,7 +615,7 @@ class AppState extends ChangeNotifier {
   }
 
   /// Bluetooth works on these; [bluetoothOn] says whether it's turned on.
-  static bool get bluetoothSupported => Platform.isAndroid || Platform.isIOS || Platform.isMacOS || Platform.isWindows;
+  static bool get bluetoothSupported => Host.isAndroid || Host.isIOS || Host.isMacOS || Host.isWindows;
 
   /// The user turned Bluetooth on in Sidekick (off by default: Wi-Fi only).
   bool bluetoothOn = false;
@@ -685,9 +683,9 @@ class AppState extends ChangeNotifier {
   /// were in the background (Android permissions).
   Future<void> refreshPlatform() async {
     try {
-      if (Platform.isAndroid) {
+      if (Host.isAndroid) {
         await AndroidBridge.refresh();
-      } else if (Platform.isMacOS) {
+      } else if (Host.isMacOS) {
         await MacBridge.refresh();
       } else {
         return;
@@ -704,8 +702,8 @@ class AppState extends ChangeNotifier {
   Future<bool> _inputReady() async {
     final before = input.supported;
     try {
-      if (Platform.isMacOS) await MacBridge.refresh();
-      if (Platform.isAndroid) await AndroidBridge.refresh();
+      if (Host.isMacOS) await MacBridge.refresh();
+      if (Host.isAndroid) await AndroidBridge.refresh();
     } catch (_) {}
     if (input.supported != before) {
       discovery.announce();
@@ -1163,7 +1161,7 @@ class AppState extends ChangeNotifier {
   /// sockets, so check the server still answers (restart it if not) and
   /// rejoin the network; everywhere, pick up permission changes.
   Future<void> resumed() async {
-    if ((Platform.isIOS || Platform.isAndroid) && !_healing) {
+    if ((Host.isIOS || Host.isAndroid) && !_healing) {
       _healing = true;
       try {
         final port = server.port;
@@ -1630,7 +1628,7 @@ class AppState extends ChangeNotifier {
           _notices.add(Notice('Received ${p.basename(file.path)} from ${from.name}', revealPath: file.path));
         }
       case InputBlocked(:final peer):
-        final where = Platform.isMacOS
+        final where = Host.isMacOS
             ? 'Allow Sidekick in Settings → Accessibility (if it\'s already on there, remove it and add it again).'
             : 'Allow remote control in Settings.';
         _notices.add(Notice('${peer.name} tried to control this device. $where'));
@@ -1647,7 +1645,7 @@ class AppState extends ChangeNotifier {
   // ---------------------------------------------------------------- transfers
 
   /// A photo or video this phone can put in Photos / the gallery.
-  bool _forGallery(File file) => Gallery.supported && Gallery.kindOf(file.path, android: Platform.isAndroid) != null;
+  bool _forGallery(File file) => Gallery.supported && Gallery.kindOf(file.path, android: Host.isAndroid) != null;
 
   /// Moves a photo or video that arrived on this phone into Photos / the
   /// gallery. If that fails it stays in the receive folder, and the notice
@@ -1669,8 +1667,8 @@ class AppState extends ChangeNotifier {
   Future<String> receiveDir() async {
     if (_receiveDir != null) return _receiveDir!;
     // Shows up in the Files app under On My iPhone → Sidekick.
-    if (Platform.isIOS) return (await getApplicationDocumentsDirectory()).path;
-    if (Platform.isAndroid) {
+    if (Host.isIOS) return (await getApplicationDocumentsDirectory()).path;
+    if (Host.isAndroid) {
       // The public Download folder needs "All files access"; otherwise use
       // Sidekick's own folder under Android/data.
       if (AndroidBridge.permissions.allFiles) return '/storage/emulated/0/Download/Sidekick';
@@ -1887,8 +1885,8 @@ class AppState extends ChangeNotifier {
   void setKeepRunning(bool value) {
     keepRunning = value;
     _prefs.setBool('keepRunning', value);
-    if (Platform.isIOS) unawaited(setIosKeepAlive(value));
-    if (Platform.isAndroid) unawaited(AndroidBackground.keepRunning(value));
+    if (Host.isIOS) unawaited(setIosKeepAlive(value));
+    if (Host.isAndroid) unawaited(AndroidBackground.keepRunning(value));
     notifyListeners();
   }
 
@@ -2000,23 +1998,23 @@ class AppState extends ChangeNotifier {
 bool get canRevealFiles => true;
 
 /// What the "open" button says.
-String get revealLabel => Platform.isIOS || Platform.isAndroid ? 'Show in Files' : 'Show in folder';
+String get revealLabel => Host.isIOS || Host.isAndroid ? 'Show in Files' : 'Show in folder';
 
 /// Opens Explorer (or Finder) with [path] selected; on a phone, the Files
 /// app at the folder it's in (iPhone: On My iPhone → Sidekick).
 Future<void> revealInFolder(String path) async {
-  if (Platform.isIOS || Platform.isAndroid) {
+  if (Host.isIOS || Host.isAndroid) {
     try {
-      await MethodChannel(Platform.isIOS ? 'sidekick/ios' : 'sidekick/android')
+      await MethodChannel(Host.isIOS ? 'sidekick/ios' : 'sidekick/android')
           .invokeMethod('openFolder', {'path': p.dirname(path)});
     } catch (e) {
       debugPrint('Sidekick: openFolder: $e');
     }
-  } else if (Platform.isWindows) {
+  } else if (Host.isWindows) {
     await Process.run('explorer.exe', ['/select,', path]);
-  } else if (Platform.isMacOS) {
+  } else if (Host.isMacOS) {
     await Process.run('open', ['-R', path]);
-  } else if (Platform.isLinux) {
+  } else if (Host.isLinux) {
     await Process.run('xdg-open', [p.dirname(path)]);
   }
 }

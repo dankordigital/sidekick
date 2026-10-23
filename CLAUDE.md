@@ -11,7 +11,7 @@ website (`index.html` at the top of the repo; its images live in
 OVHcloud; it was at sk.dankor.digital on cyber_Folks before). Use
 getsidekick.app wherever an address is shown (ads, trailers, the app).
 The owner uploads with FileZilla: `index.html`, `index.php`, `wishlist.php`, `np7dpanel.php`, `privacy.html`, `preview.html`,
-`404.html`, `.htaccess`, `robots.txt` and `website/` go in the site's root
+`404.html`, `.htaccess`, `robots.txt` and `website/` (with `website/app/`, the preview's app) go in the site's root
 folder (`www`). The
 pages link only with relative or `/…` paths, so nothing in them names the
 domain. `.github/workflows/website.yml`
@@ -254,16 +254,27 @@ release. Keep this file for how things work now, not for history.
   (`tool/ad_frames_test.dart`), transparent so the page's colors show.
   There is no Media anywhere on the site (removed with the feature).
 - **`preview.html`** (top of the repo; the hero's "Try it in your browser"):
-  a MacBook and an iPhone with the real app on them, clickable: tabs on
-  both, Send on the iPhone → the Mac's Accept / Decline card → progress on
-  both, and the iPhone's touchpad moves the Mac's pointer. The screens are
-  the app itself: `app/tool/preview_shots_test.dart` renders them (one
-  device per run: `--dart-define=DEVICE=iphone`, then `=mac`; Inter in
-  `app/build/fonts/x/` stands in for San Francisco), and
-  `app/tool/make_preview.py` turns them into `website/preview/` (WebP stills,
-  animated WebPs at 15 fps, `preview.json` with where the buttons are).
-  Re-render after UI changes. `debugCurrentPlatform` (app_state.dart) lets
-  the renders be an iPhone or a Mac.
+  **the real app, running in the page**, twice: Sidekick compiled for a
+  browser (`app/lib/demo/preview_main.dart`, built by
+  `app/tool/build_preview.sh` into `website/app/`, ~20 MB, CanvasKit served
+  from the site, no CDN), in a MacBook frame (`?device=mac`) and an iPhone
+  frame (`?device=iphone`). The page passes `postMessage`s between the two
+  like the network would, and moves the Mac's pointer for the iPhone's
+  touchpad. `DemoAppState` (`app/lib/demo/demo_state.dart`, a `part` of
+  app_state.dart so it can override private members) stands in for what a
+  browser lacks: the two are paired and on Wi-Fi; Send → the real Accept
+  card → progress on both; Ping; browsing each other's sample files;
+  Remote (the "is controlling this computer" banner); picked files are
+  samples (`debugPickFiles`). On the web there's no `dart:io` `Platform`:
+  **use `Host.isIOS` etc. (`core/host.dart`), never `Platform.isX`** (same
+  answers natively; in the preview, the device it plays). The theme's
+  `platform` follows it (release builds can't override the target
+  platform). Windows FFI lives in `input_windows.dart` /
+  `sound_platform.dart`, with web stand-ins picked by conditional imports;
+  the preview plays the app's WAVs through an `Audio` element. Inter
+  (subset) stands in for San Francisco. **Rebuild with
+  `app/tool/build_preview.sh` after UI changes** and upload `website/app/`.
+  Test it: `php -S localhost:8000` at the top, open /preview.html.
 - `404.html` (top of the repo): the not-found page, for any missing
   address, so every link in it is absolute (`/…`). `.htaccess` makes the
   server show it for every wrong address, keeping the address and a real

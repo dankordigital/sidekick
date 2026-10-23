@@ -2,6 +2,8 @@ import 'dart:io';
 
 import 'package:device_info_plus/device_info_plus.dart';
 
+import '../core/host.dart';
+
 /// A friendly name for this device, used until the user picks their own in
 /// Settings:
 /// * Windows: the PC's name (e.g. "ambiaPC")
@@ -14,30 +16,30 @@ import 'package:device_info_plus/device_info_plus.dart';
 Future<String> detectDeviceName() async {
   final info = DeviceInfoPlugin();
   try {
-    if (Platform.isWindows) {
+    if (Host.isWindows) {
       return _clean(_host()) ?? _clean((await info.windowsInfo).computerName) ?? 'Windows PC';
     }
-    if (Platform.isMacOS) {
+    if (Host.isMacOS) {
       final mac = await info.macOsInfo;
       return _clean(mac.computerName) ?? _clean(_host()) ?? _clean(mac.modelName) ?? 'Mac';
     }
-    if (Platform.isIOS) {
+    if (Host.isIOS) {
       final ios = await info.iosInfo;
       final kind = ios.model.toLowerCase().contains('ipad') ? 'iPad' : 'iPhone';
       return iosName(name: ios.name, modelName: ios.modelName, kind: kind);
     }
-    if (Platform.isAndroid) {
+    if (Host.isAndroid) {
       final android = await info.androidInfo;
       return androidName(name: android.name, manufacturer: android.manufacturer, model: android.model);
     }
-    if (Platform.isLinux) {
+    if (Host.isLinux) {
       return _clean(_host()) ?? _clean((await info.linuxInfo).prettyName) ?? 'Linux PC';
     }
   } catch (_) {
     // Fall through to the generic names below.
   }
-  if (Platform.isIOS) return 'Unknown iPhone';
-  if (Platform.isAndroid) return 'Unknown Android';
+  if (Host.isIOS) return 'Unknown iPhone';
+  if (Host.isAndroid) return 'Unknown Android';
   return _clean(_host()) ?? 'My computer';
 }
 

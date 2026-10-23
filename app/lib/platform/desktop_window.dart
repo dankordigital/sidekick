@@ -8,6 +8,7 @@ import 'package:tray_manager/tray_manager.dart';
 import 'package:window_manager/window_manager.dart';
 
 import '../core/server.dart';
+import '../core/host.dart';
 
 /// Windows and Mac: closing the window keeps Sidekick running in the tray
 /// (the menu bar on a Mac), still able to receive. A request that arrives
@@ -17,7 +18,7 @@ class DesktopWindow with WindowListener, TrayListener {
   DesktopWindow._();
   static final instance = DesktopWindow._();
 
-  static bool get supported => Platform.isWindows || Platform.isMacOS;
+  static bool get supported => Host.isWindows || Host.isMacOS;
 
   /// The size of the corner window.
   static const popupSize = Size(380, 172);
@@ -76,7 +77,7 @@ class DesktopWindow with WindowListener, TrayListener {
     // never quits after the last window: 2.6.6 and 2.7.0 still quit on it.
     // Set first, needing no menu-bar icon: Sidekick stays in the Dock, and
     // a click there always brings the window back.
-    if (Platform.isMacOS) {
+    if (Host.isMacOS) {
       _mac.setMethodCallHandler((call) async {
         switch (call.method) {
           case 'closedToMenuBar':
@@ -94,8 +95,8 @@ class DesktopWindow with WindowListener, TrayListener {
     }
     try {
       await trayManager.setIcon(
-        Platform.isWindows ? 'assets/tray/tray.ico' : 'assets/tray/tray_mac.png',
-        isTemplate: Platform.isMacOS,
+        Host.isWindows ? 'assets/tray/tray.ico' : 'assets/tray/tray_mac.png',
+        isTemplate: Host.isMacOS,
       );
       await trayManager.setToolTip('Sidekick');
       await trayManager.setContextMenu(
@@ -112,7 +113,7 @@ class DesktopWindow with WindowListener, TrayListener {
       // No tray icon. Windows has no other way back: closing quits, as
       // before. (The Mac still has its Dock icon.)
       debugPrint('Sidekick: no tray icon: $e');
-      if (Platform.isWindows) {
+      if (Host.isWindows) {
         await windowManager.setPreventClose(false);
         // No tray to come back from: never start hidden.
         if (startHidden) await windowManager.show();
@@ -123,7 +124,7 @@ class DesktopWindow with WindowListener, TrayListener {
     // never showed the window; the Mac hides it.)
     if (startHidden) {
       _hidden = true;
-      if (Platform.isMacOS) await _mac.invokeMethod('hideToMenuBar');
+      if (Host.isMacOS) await _mac.invokeMethod('hideToMenuBar');
     }
   }
 
@@ -148,7 +149,7 @@ class DesktopWindow with WindowListener, TrayListener {
     await windowManager.setResizable(false);
     await windowManager.setAlwaysOnTop(true);
     // The Mac window can't usually be this small.
-    if (Platform.isMacOS) await windowManager.setMinimumSize(size);
+    if (Host.isMacOS) await windowManager.setMinimumSize(size);
   }
 
   /// Back to the full window's look and place, hidden.
@@ -156,7 +157,7 @@ class DesktopWindow with WindowListener, TrayListener {
     await windowManager.setAlwaysOnTop(false);
     await windowManager.setResizable(true);
     await windowManager.setTitleBarStyle(TitleBarStyle.normal);
-    if (Platform.isMacOS) await windowManager.setMinimumSize(_macMinSize);
+    if (Host.isMacOS) await windowManager.setMinimumSize(_macMinSize);
     if (_bounds case final bounds?) await windowManager.setBounds(bounds);
     _bounds = null;
   }
@@ -178,10 +179,10 @@ class DesktopWindow with WindowListener, TrayListener {
     final icon = await trayManager.getBounds();
     // Mac: under the menu bar, below the icon. Windows: above the taskbar
     // in the corner, where the tray is.
-    final left = Platform.isMacOS && icon != null
+    final left = Host.isMacOS && icon != null
         ? (icon.center.dx - panelSize.width / 2).clamp(area.left + margin, area.right - panelSize.width - margin)
         : area.right - panelSize.width - margin;
-    final top = Platform.isMacOS ? area.top + margin : area.bottom - panelSize.height - margin;
+    final top = Host.isMacOS ? area.top + margin : area.bottom - panelSize.height - margin;
     await windowManager.setBounds(Rect.fromLTWH(left, top, panelSize.width, panelSize.height));
     // Taking focus, so a click anywhere else closes it (onWindowBlur).
     await windowManager.show();
@@ -197,7 +198,7 @@ class DesktopWindow with WindowListener, TrayListener {
 
   Future<void> _closePanel() async {
     _panelClosedAt = DateTime.now();
-    if (Platform.isMacOS) {
+    if (Host.isMacOS) {
       await _mac.invokeMethod('hidePopup');
     } else {
       await windowManager.hide();
@@ -231,7 +232,7 @@ class DesktopWindow with WindowListener, TrayListener {
     );
     // Without taking focus from whatever you're doing (window_manager's
     // show always activates the app on a Mac). The Mac fades it in itself.
-    if (Platform.isMacOS) {
+    if (Host.isMacOS) {
       await windowManager.setBounds(target);
       await _mac.invokeMethod('showPopup');
     } else {
@@ -259,7 +260,7 @@ class DesktopWindow with WindowListener, TrayListener {
       popup.value = _queue.removeAt(0);
       return;
     }
-    if (Platform.isMacOS) {
+    if (Host.isMacOS) {
       await _mac.invokeMethod('hidePopup');
     } else {
       await windowManager.hide();
@@ -295,7 +296,7 @@ class DesktopWindow with WindowListener, TrayListener {
   void onWindowClose() {
     if (popup.value != null) return;
     _hidden = true;
-    unawaited(Platform.isMacOS ? _mac.invokeMethod('hideToMenuBar') : windowManager.hide());
+    unawaited(Host.isMacOS ? _mac.invokeMethod('hideToMenuBar') : windowManager.hide());
   }
 
   // Shown some other way (on a Mac, clicking the Dock icon).

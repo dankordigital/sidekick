@@ -1,11 +1,11 @@
 import 'dart:async';
-import 'dart:io';
 
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter/services.dart';
 
 import '../core/server.dart';
 import '../ui/widgets.dart';
+import '../core/host.dart';
 
 /// Phones: a request that arrives while Sidekick isn't on screen shows a
 /// notification with Accept and Decline (`notifyOffer` on `sidekick/ios`
@@ -14,9 +14,9 @@ import '../ui/widgets.dart';
 /// small "Ready to receive" notification while Sidekick runs in the
 /// background.
 abstract final class OfferNotifications {
-  static bool get supported => Platform.isIOS || Platform.isAndroid;
+  static bool get supported => Host.isIOS || Host.isAndroid;
 
-  static final _channel = MethodChannel(Platform.isIOS ? 'sidekick/ios' : 'sidekick/android');
+  static final _channel = MethodChannel(Host.isIOS ? 'sidekick/ios' : 'sidekick/android');
 
   /// Requests with a notification up, by id.
   static final _shown = <String, TransferOffer>{};
@@ -70,7 +70,7 @@ abstract final class OfferNotifications {
         offer.progress.listen(
           (bytes) {
             final now = DateTime.now();
-            if (!Platform.isAndroid || now.difference(last).inMilliseconds < 500) return;
+            if (!Host.isAndroid || now.difference(last).inMilliseconds < 500) return;
             last = now;
             _call('offerProgress', {
               'id': offer.id,

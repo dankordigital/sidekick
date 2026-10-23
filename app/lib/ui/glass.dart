@@ -1,11 +1,11 @@
 import 'dart:async';
-import 'dart:io' show Platform;
 import 'dart:ui' show ImageFilter;
 
 import 'package:flutter/services.dart' show MethodChannel, StandardMessageCodec;
 import 'package:material_ui/material_ui.dart';
 
 import 'widgets.dart' show appleOsMajor;
+import '../core/host.dart';
 
 /// Settings → Theme → Liquid Glass (iOS and macOS 26+): the same app, with
 /// frosted, translucent surfaces over a soft backdrop in the theme's colors,
@@ -39,7 +39,7 @@ Color glassRim(ColorScheme scheme) =>
 /// The real thing: Apple's Liquid Glass views (UIGlassEffect on iOS 26,
 /// as a platform view; on the Mac Sidekick draws its own). Elsewhere (and in the
 /// screenshot tool) [GlassPanel] draws a frosted look of its own.
-bool get nativeGlass => Platform.isIOS && (appleOsMajor ?? 0) >= 26;
+bool get nativeGlass => Host.isIOS && (appleOsMajor ?? 0) >= 26;
 
 /// Frosted glass: blurs what's behind it, tints it and draws a bright rim.
 class GlassPanel extends StatelessWidget {
@@ -368,7 +368,7 @@ class NativeTabBar extends StatefulWidget {
   final ValueChanged<int> onSelected;
 
   /// Only on a real iPhone running iOS 26 or newer.
-  static bool get supported => Platform.isIOS && nativeGlass;
+  static bool get supported => Host.isIOS && nativeGlass;
 
   @override
   State<NativeTabBar> createState() => _NativeTabBarState();

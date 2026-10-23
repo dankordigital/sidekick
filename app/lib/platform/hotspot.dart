@@ -7,6 +7,7 @@ import 'package:flutter/services.dart';
 import 'package:path/path.dart' as p;
 
 import '../core/models.dart';
+import '../core/host.dart';
 
 /// A private Wi-Fi network one device opens for another, AirDrop style:
 /// Bluetooth carries the name and password, then files and remote control
@@ -81,10 +82,10 @@ abstract class DirectLink {
   Future<void> leave() async {}
 
   static DirectLink forCurrentPlatform() {
-    if (Platform.isAndroid) return AndroidDirectLink();
-    if (Platform.isWindows) return WindowsDirectLink();
-    if (Platform.isMacOS) return MacDirectLink();
-    if (Platform.isIOS) return IosDirectLink();
+    if (Host.isAndroid) return AndroidDirectLink();
+    if (Host.isWindows) return WindowsDirectLink();
+    if (Host.isMacOS) return MacDirectLink();
+    if (Host.isIOS) return IosDirectLink();
     return NoDirectLink();
   }
 }

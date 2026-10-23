@@ -4,10 +4,11 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Try Sidekick</title>
-<meta name="description" content="Try Sidekick in your browser: the real app on a Mac and an iPhone. Switch tabs, send files from the iPhone and accept them on the Mac.">
-<!-- The screens are Sidekick itself, rendered by app/tool/preview_shots_test.dart
-     and app/tool/make_preview.py into /website/preview/. System fonts only,
-     like privacy.html: it loads nothing from anyone else. -->
+<meta name="description" content="Try Sidekick in your browser: the real app, running on a Mac and an iPhone side by side.">
+<!-- Sidekick itself runs here, twice: the app compiled for a browser
+     (app/lib/demo/, built into /website/app/ by app/tool/build_preview.sh),
+     once as a Mac and once as an iPhone. This page passes messages between
+     the two, like the network would. Everything loads from this site. -->
 <meta name="robots" content="noindex, nofollow, noarchive, nosnippet, noimageindex">
 <link rel="icon" type="image/png" sizes="64x64" href="/website/favicon.png">
 <link rel="apple-touch-icon" href="/website/apple-touch-icon.png">
@@ -124,25 +125,23 @@ header .wrap { display: flex; align-items: center; justify-content: space-betwee
 .status .icons { display: flex; gap: 6px; align-items: center; }
 .homebar { position: absolute; left: 50%; bottom: 8px; width: 134px; height: 5px; margin-left: -67px; border-radius: 3px; background: #1d1b20; z-index: 4; pointer-events: none; }
 
-.content img, .phone .screen img.app { position: absolute; left: 0; top: 0; width: 100%; height: 100%; display: block; user-select: none; -webkit-user-drag: none; }
-.phone .screen img.app { width: 393px; height: 852px; }
-
-.hot { position: absolute; z-index: 3; padding: 0; margin: 0; border: 0; background: transparent; cursor: pointer; border-radius: 20px; }
-.hot:focus-visible { outline: 3px solid var(--primary); outline-offset: 2px; }
-.hot[hidden] { display: none; }
-.pulse { position: absolute; z-index: 2; pointer-events: none; border-radius: 999px; }
-.pulse::before, .pulse::after { content: ""; position: absolute; inset: -6px; border-radius: inherit; border: 3px solid #7c5cff; animation: ping 1.6s ease-out infinite; }
-.pulse::after { animation-delay: .8s; }
-@keyframes ping { from { opacity: .9; transform: scale(.92); } to { opacity: 0; transform: scale(1.35); } }
-.pad { position: absolute; z-index: 3; cursor: grab; touch-action: none; border-radius: 28px; }
-.pad:active { cursor: grabbing; }
-.pointer { position: absolute; z-index: 6; left: 700px; top: 470px; width: 22px; height: 33px; pointer-events: none; opacity: 0; transition: opacity .2s; }
+.content iframe, .phone .screen iframe { position: absolute; left: 0; top: 0; border: 0; display: block; background: #fdf7ff; }
+.content iframe { width: 1280px; height: 800px; }
+.phone .screen iframe { width: 393px; height: 852px; }
+.loading { position: absolute; inset: 0; z-index: 3; display: grid; place-items: center; background: #fdf7ff; color: #6b6480;
+  font: 500 15px/1.4 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; transition: opacity .4s; }
+.loading.done { opacity: 0; pointer-events: none; }
+.loading img { width: 72px; height: 72px; border-radius: 18px; display: block; margin: 0 auto 14px; animation: breathe 1.6s ease-in-out infinite; }
+@keyframes breathe { 50% { transform: scale(.94); opacity: .7; } }
+.pointer { position: absolute; z-index: 6; left: 700px; top: 470px; width: 22px; height: 33px; pointer-events: none; opacity: 0; transition: opacity .3s; }
 .pointer.on { opacity: 1; }
 .pointer svg { position: absolute; left: 0; top: 0; }
 .pointer i { position: absolute; left: -14px; top: -14px; width: 28px; height: 28px; border-radius: 50%; background: rgba(124, 92, 255, .45); transform: scale(0); }
 .pointer i.go { animation: click .35s ease-out; }
 @keyframes click { from { transform: scale(.3); opacity: 1; } to { transform: scale(1.4); opacity: 0; } }
-
+.again { display: inline-flex; align-items: center; gap: 6px; margin: 14px auto 0; padding: 8px 16px; border: 0; border-radius: 999px; cursor: pointer;
+  background: var(--surface-container); color: var(--on-surface-variant); font: inherit; font-size: 14px; }
+.center { text-align: center; }
 .steps { display: flex; justify-content: center; flex-wrap: wrap; gap: 10px; margin: 18px 0 0; padding: 0; list-style: none; }
 .steps li { padding: 8px 16px; border-radius: 999px; background: var(--surface-container); color: var(--on-surface-variant); font-size: 15px; }
 .steps li.now { background: var(--primary-container); color: var(--on-primary-container); font-weight: 600; }
@@ -150,7 +149,7 @@ header .wrap { display: flex; align-items: center; justify-content: space-betwee
 .cta { text-align: center; margin: 28px 0 0; }
 footer { margin-top: 48px; padding: 24px 0 32px; color: var(--on-surface-variant); font-size: 14px; }
 footer .wrap { display: flex; gap: 18px; justify-content: center; flex-wrap: wrap; }
-@media (prefers-reduced-motion: reduce) { .pulse::before, .pulse::after, .pointer i.go { animation: none; } }
+@media (prefers-reduced-motion: reduce) { .pointer i.go, .loading img { animation: none; } }
 </style>
 </head>
 <body>
@@ -164,14 +163,15 @@ footer .wrap { display: flex; gap: 18px; justify-content: center; flex-wrap: wra
 <main class="wrap">
   <section class="intro">
     <h1>Try Sidekick, no download needed.</h1>
-    <p>This is the real app on a Mac and an iPhone, drawn by Sidekick itself. Switch tabs on either one, send files from the
-      iPhone and accept them on the Mac, or drag on the iPhone's touchpad to move the Mac's pointer.</p>
+    <p>This is the real app, running right here: once as a Mac and once as an iPhone, paired and on the same Wi-Fi.
+      Use it like you would on your own devices.</p>
   </section>
 
-  <ol class="steps" id="steps" aria-live="polite">
-    <li id="step1" class="now">1. Tap Send on the iPhone</li>
-    <li id="step2">2. Accept or Decline on the Mac</li>
-    <li id="step3">3. Try Remote on the iPhone</li>
+  <ol class="steps" aria-label="Things to try">
+    <li class="now">Tap Send on the iPhone, then Accept on the Mac</li>
+    <li>Browse the Mac's files from the iPhone</li>
+    <li>Use the iPhone's Remote tab as a touchpad</li>
+    <li>Ping the iPhone from the Mac</li>
   </ol>
 
   <div class="stage" id="stage">
@@ -183,11 +183,14 @@ footer .wrap { display: flex; gap: 18px; justify-content: center; flex-wrap: wra
           <div class="menubar" aria-hidden="true">
             <svg width="16" height="19" viewBox="0 0 170 200" fill="#fff"><path d="M150 170c-8 12-17 24-30 24s-17-8-32-8-20 8-32 8-22-13-30-25C9 145-3 101 14 72c8-15 24-24 41-24 13 0 25 9 33 9s23-11 39-9c7 0 25 3 37 20-1 1-22 13-22 38 0 30 26 40 27 40-1 2-5 14-19 24zM113 21c7-8 11-19 10-30-10 0-21 7-28 15-6 7-12 18-10 29 11 1 21-6 28-14z"/></svg>
             <b>Sidekick</b><span>File</span><span>Edit</span><span>View</span><span>Window</span><span>Help</span>
-            <span class="right"><img src="/website/favicon.png" alt=""><span id="clock">Thu 9:41</span></span>
+            <span class="right"><img src="/website/favicon.png" alt=""><span id="clock">9:41</span></span>
           </div>
           <div class="window">
             <div class="titlebar"><span class="lights"><i></i><i></i><i></i></span>Sidekick</div>
-            <div class="content" id="macContent"><img id="macImg" src="/website/preview/mac-devices.webp" width="1280" height="800" alt="Sidekick on the Mac: the Devices tab, with an iPhone paired and connected."></div>
+            <div class="content">
+              <iframe id="macFrame" title="Sidekick on the Mac" src="/website/app/index.html?device=mac" allow="autoplay"></iframe>
+              <div class="loading" id="macLoading"><div><img src="/website/apple-touch-icon.png" alt="">Starting Sidekick…</div></div>
+            </div>
           </div>
           <div class="pointer" id="pointer" aria-hidden="true"><i></i><svg viewBox="0 0 22 33" width="22" height="33"><path d="M1.5 1.5v26l6.4-6.2 4.1 9.6 4.3-1.8-4-9.4h9z" fill="#000" stroke="#fff" stroke-width="1.6" stroke-linejoin="round"/></svg></div>
         </div>
@@ -198,7 +201,7 @@ footer .wrap { display: flex; gap: 18px; justify-content: center; flex-wrap: wra
     <div class="device phone" id="phone" role="group" aria-label="Sidekick on an iPhone">
       <div class="box">
         <div class="frame"></div>
-        <div class="screen" id="phoneContent">
+        <div class="screen">
           <div class="island"></div>
           <div class="status" aria-hidden="true">
             <span>9:41</span>
@@ -208,16 +211,18 @@ footer .wrap { display: flex; gap: 18px; justify-content: center; flex-wrap: wra
               <svg width="27" height="13" viewBox="0 0 27 13"><rect x=".5" y=".5" width="23" height="12" rx="3.8" fill="none" stroke="currentColor" opacity=".4"/><rect x="2" y="2" width="20" height="9" rx="2.5" fill="currentColor"/><path d="M25 4.5v4c.8-.3 1.3-1.1 1.3-2s-.5-1.7-1.3-2z" fill="currentColor" opacity=".45"/></svg>
             </span>
           </div>
-          <img class="app" id="phoneImg" src="/website/preview/iphone-devices.webp" width="393" height="852" alt="Sidekick on the iPhone: the Devices tab, with a MacBook paired and connected.">
+          <iframe id="phoneFrame" title="Sidekick on the iPhone" src="/website/app/index.html?device=iphone" allow="autoplay"></iframe>
+          <div class="loading" id="phoneLoading"><div><img src="/website/apple-touch-icon.png" alt="">Starting Sidekick…</div></div>
           <div class="homebar"></div>
         </div>
       </div>
     </div>
   </div>
+  <p class="center"><button class="again" id="again" type="button">↺ Start over</button></p>
 
-  <p class="fine">Every screen here is Sidekick itself, rendered from the same code as the Mac and iPhone apps, in its
-    default look (on macOS and iOS 26 you can also pick Liquid Glass). The preview uses Inter for Apple's system font.
-    Nothing is sent anywhere: it all happens in this page.</p>
+  <p class="fine">This is Sidekick's own code, compiled to run in a browser, in its default look (on macOS and iOS 26
+    you can also pick Liquid Glass). A browser can't reach your real devices or files, so the two copies talk through
+    this page, and the files you send are samples. Inter stands in for Apple's system font. Nothing leaves this page.</p>
   <p class="cta"><a class="btn" href="/#wishlist">Join the wishlist</a></p>
 </main>
 
@@ -231,214 +236,65 @@ footer .wrap { display: flex; gap: 18px; justify-content: center; flex-wrap: wra
 
 <script>
 (() => {
-  const BASE = '/website/preview/';
   const $ = (id) => document.getElementById(id);
-  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
-  let M = null;              // preview.json
-  const blobs = {};          // animation file -> Blob, so each play starts from its first frame
-  const view = { mac: { tab: 'Devices' }, iphone: { tab: 'Devices' } };
-  let flow = null;           // 'asking' | 'accepted' | 'declined' while a send runs
-  const timers = [];
+  const frames = { mac: $('macFrame'), iphone: $('phoneFrame') };
+  const loading = { mac: $('macLoading'), iphone: $('phoneLoading') };
 
-  const device = { mac: { el: $('mac'), host: $('macContent'), img: $('macImg'), w: 1720, h: 1076 },
-                   iphone: { el: $('phone'), host: $('phoneContent'), img: $('phoneImg'), w: 421, h: 880 } };
-
-  // ---- fitting both devices on the screen
+  // ---- fitting both devices on the screen (each is drawn at its real size in points, then scaled)
   function fit() {
-    const stage = $('stage');
-    const width = stage.clientWidth;
+    const width = $('stage').clientWidth;
     let mac, phone;
-    if (width <= 760 - 32) {
+    if (width <= 728) {
       mac = width / 1720;
       phone = Math.min(1, (width * 0.82) / 421);
     } else {
-      // The phone a little taller than the Mac's screen, side by side.
-      // Both whole on the screen: as wide as there's room for, and no taller than most of the window.
       mac = Math.min(0.62, (width - 72) / (1720 + 421 * 1.1), (innerHeight * 0.78) / 1076);
       phone = mac * 1.1;
     }
-    device.mac.el.style.setProperty('--s', mac);
-    device.iphone.el.style.setProperty('--s', phone);
+    $('mac').style.setProperty('--s', mac);
+    $('phone').style.setProperty('--s', phone);
   }
   addEventListener('resize', fit);
   fit();
 
-  // ---- screens and animations
-  function still(dev, screen) {
-    const src = BASE + M[dev].screens[screen];
-    if (device[dev].img.dataset.src !== src) {
-      device[dev].img.dataset.src = src;
-      device[dev].img.src = src;
-    }
-  }
+  // ---- the network between the two: each copy posts its messages here, and they go to the other
+  addEventListener('message', (e) => {
+    if (e.source !== frames.mac.contentWindow && e.source !== frames.iphone.contentWindow) return;
+    let m;
+    try { m = JSON.parse(e.data); } catch { return; }
+    const from = e.source === frames.mac.contentWindow ? 'mac' : 'iphone';
+    if (m.t === 'ready') { loading[from].classList.add('done'); return; }
+    if (m.t === 'input' && from === 'iphone') remote(JSON.parse(m.msg));
+    if (m.t === 'remote') $('pointer').classList.toggle('on', m.active === true && from === 'iphone');
+    // The app calls the two "macos" and "ios".
+    const to = from === 'mac' ? 'iphone' : 'mac';
+    frames[to].contentWindow.postMessage(JSON.stringify({ ...m, to: to === 'mac' ? 'macos' : 'ios' }), '*');
+  });
 
-  /** Plays an animation once (or looping) from its first frame; resolves when it ends. */
-  function play(dev, seq) {
-    const s = M[dev].sequences[seq];
-    const img = device[dev].img;
-    const blob = blobs[s.src];
-    if (img.dataset.blob) URL.revokeObjectURL(img.dataset.blob);
-    if (blob) {
-      const url = URL.createObjectURL(blob);
-      img.dataset.blob = url;
-      img.src = url;
-    } else {
-      img.dataset.blob = '';
-      img.src = BASE + s.src + '?' + Date.now();
-    }
-    img.dataset.src = '';
-    return new Promise((done) => later(done, s.loop ? 0 : s.ms));
-  }
-
-  function later(fn, ms) { timers.push(setTimeout(fn, ms)); }
-
-  // ---- clickable areas, in the app's own coordinates
-  function hotspot(dev, rect, label, onClick, round) {
-    const b = document.createElement('button');
-    b.type = 'button';
-    b.className = 'hot';
-    b.setAttribute('aria-label', label);
-    place(dev, b, rect);
-    if (round) b.style.borderRadius = '999px';
-    b.addEventListener('click', onClick);
-    device[dev].host.appendChild(b);
-    return b;
-  }
-
-  function place(dev, el, [x, y, w, h]) {
-    Object.assign(el.style, { left: x + 'px', top: y + 'px', width: w + 'px', height: h + 'px' });
-  }
-
-  const pulse = document.createElement('div');
-  pulse.className = 'pulse';
-  pulse.hidden = true;
-  function hint(dev, rect) {
-    if (!rect || reduce) { pulse.hidden = true; return; }
-    device[dev].host.appendChild(pulse);
-    place(dev, pulse, rect);
-    pulse.hidden = false;
-  }
-
-  function step(n) {
-    for (const i of [1, 2, 3]) $('step' + i).classList.toggle('now', i === n);
-  }
-
-  // ---- tabs
-  const tabButtons = { mac: {}, iphone: {} };
-  function showTab(dev, tab) {
-    if (flow) return;
-    view[dev].tab = tab;
-    still(dev, tab.toLowerCase());
-    sendBtn.hidden = view.iphone.tab !== 'Devices';
-    pad.hidden = view.iphone.tab !== 'Remote';
-    $('pointer').classList.toggle('on', view.iphone.tab === 'Remote');
-    if (view.iphone.tab === 'Remote') { step(3); hint(null); }
-    else if (view.iphone.tab === 'Devices') { hint('iphone', M.iphone.send); }
-    else hint(null);
-  }
-
-  // ---- sending from the iPhone to the Mac
-  let sendBtn, acceptBtn, declineBtn, pad;
-  function startSend() {
-    if (flow) return;
-    flow = 'asking';
-    sendBtn.hidden = true;
-    hint(null);
-    step(2);
-    // The card arrives on top of whatever the Mac shows; here, its Devices tab.
-    view.mac.tab = 'Devices';
-    play('iphone', 'send-wait');
-    play('mac', 'offer');
-    later(() => {
-      acceptBtn.hidden = declineBtn.hidden = false;
-      hint('mac', M.mac.accept);
-    }, 500);
-  }
-
-  async function answer(accept) {
-    if (flow !== 'asking') return;
-    flow = accept ? 'accepted' : 'declined';
-    acceptBtn.hidden = declineBtn.hidden = true;
-    hint(null);
-    if (accept) {
-      play('iphone', 'send-progress').then(() => play('iphone', 'send-done'));
-      await play('mac', 'receive-progress');
-      await play('mac', 'receive-done');
-    } else {
-      play('iphone', 'send-declined');
-      await play('mac', 'declined');
-      await new Promise((r) => later(r, 1200));
-    }
-    later(() => {
-      flow = null;
-      still('mac', 'devices');
-      still('iphone', 'devices');
-      view.iphone.tab = view.mac.tab = 'Devices';
-      showTab('iphone', 'Devices');
-      step(3);
-      hint('iphone', M.iphone.tabs.Remote);
-    }, 400);
-  }
-
-  // ---- the touchpad moves the Mac's pointer
+  // ---- the iPhone's touchpad moves the Mac's pointer (macOS draws it, not the app)
   const pointer = { x: 700, y: 470 };
-  function movePointer(dx, dy) {
-    pointer.x = Math.max(0, Math.min(1500, pointer.x + dx));
-    pointer.y = Math.max(32, Math.min(975, pointer.y + dy));
-    $('pointer').style.left = pointer.x + 'px';
-    $('pointer').style.top = pointer.y + 'px';
-  }
-  function makePad() {
-    pad = document.createElement('div');
-    pad.className = 'pad';
-    pad.setAttribute('aria-label', 'Touchpad: drag to move the Mac\'s pointer, tap to click');
-    place('iphone', pad, M.iphone.touchpad);
-    pad.hidden = true;
-    device.iphone.host.appendChild(pad);
-    let last = null, moved = 0;
-    pad.addEventListener('pointerdown', (e) => { last = e; moved = 0; pad.setPointerCapture(e.pointerId); });
-    pad.addEventListener('pointermove', (e) => {
-      if (!last) return;
-      // Screen pixels → the phone's points → a little faster on the Mac, like the app's default speed.
-      const s = parseFloat(device.iphone.el.style.getPropertyValue('--s')) || 1;
-      const dx = (e.clientX - last.clientX) / s, dy = (e.clientY - last.clientY) / s;
-      moved += Math.abs(dx) + Math.abs(dy);
-      movePointer(dx * 2.2, dy * 2.2);
-      last = e;
-    });
-    const up = () => {
-      if (last && moved < 6) {
-        const ring = $('pointer').querySelector('i');
-        ring.classList.remove('go'); void ring.offsetWidth; ring.classList.add('go');
-      }
-      last = null;
-    };
-    pad.addEventListener('pointerup', up);
-    pad.addEventListener('pointercancel', up);
-  }
-
-  // ---- start
-  fetch(BASE + 'preview.json').then((r) => r.json()).then((manifest) => {
-    M = manifest;
-    for (const dev of ['mac', 'iphone']) {
-      for (const [tab, rect] of Object.entries(M[dev].tabs)) {
-        tabButtons[dev][tab] = hotspot(dev, rect, tab + ' tab', () => showTab(dev, tab));
-      }
-      // Load the animations in the background, so they play at once.
-      for (const s of Object.values(M[dev].sequences)) {
-        fetch(BASE + s.src).then((r) => r.ok ? r.blob() : null).then((b) => { if (b) blobs[s.src] = b; }).catch(() => {});
-      }
-      for (const name of Object.values(M[dev].screens)) new Image().src = BASE + name;
+  function remote(msg) {
+    const el = $('pointer');
+    el.classList.add('on');
+    if (msg.t === 'move') {
+      pointer.x = Math.max(0, Math.min(1500, pointer.x + msg.dx));
+      pointer.y = Math.max(32, Math.min(975, pointer.y + msg.dy));
+      el.style.left = pointer.x + 'px';
+      el.style.top = pointer.y + 'px';
+    } else if (msg.t === 'click' || msg.t === 'down') {
+      const ring = el.querySelector('i');
+      ring.classList.remove('go'); void ring.offsetWidth; ring.classList.add('go');
     }
-    sendBtn = hotspot('iphone', M.iphone.send, 'Send files to MacBook Pro', startSend, true);
-    acceptBtn = hotspot('mac', M.mac.accept, 'Accept', () => answer(true), true);
-    declineBtn = hotspot('mac', M.mac.decline, 'Decline', () => answer(false), true);
-    acceptBtn.hidden = declineBtn.hidden = true;
-    makePad();
-    showTab('iphone', 'Devices');
-  }).catch(() => {});
+  }
 
-  // The menu bar's clock: today, at 9:41 like Apple's own pictures.
+  $('again').addEventListener('click', () => {
+    for (const d of ['mac', 'iphone']) {
+      loading[d].classList.remove('done');
+      frames[d].src = frames[d].src;
+    }
+    $('pointer').classList.remove('on');
+  });
+
   $('clock').textContent = new Date().toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }) + '  9:41';
 })();
 </script>

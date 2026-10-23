@@ -604,12 +604,25 @@ class PeerClient {
 /// A live remote-control connection. Small mouse moves are coalesced so a
 /// fast touchpad doesn't flood the network.
 class InputSession {
-  InputSession._(this._channel) {
-    _channel.stream.listen((_) {}, onDone: () => _closed.complete(), onError: (_) {});
+  InputSession._(IOWebSocketChannel channel) : _out = channel.sink.add, _close = channel.sink.close {
+    channel.stream.listen((_) {}, onDone: _ended, onError: (_) {});
   }
 
-  final IOWebSocketChannel _channel;
+  /// A session that hands each message to [send] instead of a WebSocket:
+  /// the website's preview (lib/demo/) passes it to the other device on
+  /// the page. [onClose] ends it.
+  InputSession.custom({required void Function(String message) send, required Future<void> Function() onClose})
+    : _out = send,
+      _close = onClose;
+
+  final void Function(String) _out;
+  final Future<void> Function() _close;
   final _closed = Completer<void>();
+
+  void _ended() {
+    if (!_closed.isCompleted) _closed.complete();
+  }
+
   double _dx = 0, _dy = 0;
   Timer? _flush;
 
@@ -617,7 +630,7 @@ class InputSession {
   bool get isOpen => !_closed.isCompleted;
 
   void _raw(Map<String, Object?> msg) {
-    if (isOpen) _channel.sink.add(jsonEncode(msg));
+    if (isOpen) _out(jsonEncode(msg));
   }
 
   /// Sends [msg] after any pending movement, so a click lands where the
@@ -651,6 +664,7 @@ class InputSession {
 
   Future<void> close() async {
     _flush?.cancel();
-    await _channel.sink.close();
+    await _close();
+    _ended();
   }
 }

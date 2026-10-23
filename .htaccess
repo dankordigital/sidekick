@@ -24,3 +24,7 @@ DirectoryIndex index.php index.html
   RewriteEngine On
   RewriteRule ^index\.html$ /index.php [L]
 </IfModule>
+
+# The preview (preview.html) runs Sidekick compiled for a browser, from
+# website/app/: browsers want its WebAssembly served as such.
+AddType application/wasm .wasm

@@ -1,11 +1,11 @@
 import 'dart:async';
-import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 
 import '../app_state.dart';
 import '../core/server.dart';
+import '../core/host.dart';
 
 /// iPhone: a transfer's progress on the Lock Screen and in the Dynamic
 /// Island (Live Activities, iOS 16.2+): `liveStart`, `liveUpdate` and
@@ -13,7 +13,7 @@ import '../core/server.dart';
 /// by the SidekickLive widget extension. Updates go at most once a second,
 /// as iOS asks; a finished one stays for a few seconds.
 abstract final class LiveTransfers {
-  static bool get supported => Platform.isIOS;
+  static bool get supported => Host.isIOS;
   static const _channel = MethodChannel('sidekick/ios');
   static const _every = Duration(seconds: 1);
 

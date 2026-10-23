@@ -1,8 +1,9 @@
 import 'dart:async';
-import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
+
+import '../core/host.dart';
 
 /// What a phone passes on to paired computers by itself:
 ///
@@ -20,8 +21,8 @@ abstract final class PhoneRelay {
   static const _android = MethodChannel('sidekick/background');
   static const _ios = MethodChannel('sidekick/ios');
 
-  static bool get notificationsSupported => Platform.isAndroid;
-  static bool get screenshotsSupported => Platform.isAndroid || Platform.isIOS;
+  static bool get notificationsSupported => Host.isAndroid;
+  static bool get screenshotsSupported => Host.isAndroid || Host.isIOS;
 
   static void listen({
     required void Function(String app, String title, String text) onNotification,
@@ -50,8 +51,7 @@ abstract final class PhoneRelay {
 
   /// Starts or stops watching for new screenshots. Asks for the photo
   /// permission it needs the first time; false if it wasn't given.
-  static Future<bool> watchScreenshots(bool on) =>
-      _ask(Platform.isIOS ? _ios : _android, 'watchScreenshots', {'on': on});
+  static Future<bool> watchScreenshots(bool on) => _ask(Host.isIOS ? _ios : _android, 'watchScreenshots', {'on': on});
 
   static Future<bool> _ask(MethodChannel channel, String method, [Map<String, Object?>? args]) async {
     try {

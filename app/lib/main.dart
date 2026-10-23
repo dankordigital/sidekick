@@ -7,6 +7,8 @@ import 'package:cupertino_ui/cupertino_ui.dart' show CupertinoPageTransitionsBui
 import 'package:material_ui/material_ui.dart';
 
 import 'app_state.dart';
+import 'core/host.dart';
+import 'core/models.dart';
 import 'platform/autoload.dart';
 import 'platform/desktop_window.dart';
 import 'platform/sound.dart';
@@ -118,7 +120,22 @@ class SidekickApp extends StatelessWidget {
   /// Material You, Sidekick style: the colors come from the wallpaper or the
   /// chosen theme; shapes are soft and generous, headlines bold.
   static ThemeData _theme(ColorScheme scheme) {
-    final base = ThemeData(colorScheme: scheme, useMaterial3: true, visualDensity: VisualDensity.standard);
+    final base = ThemeData(
+      colorScheme: scheme,
+      useMaterial3: true,
+      visualDensity: VisualDensity.standard,
+      // The website's preview runs in a browser on any computer: it looks
+      // like the Mac or iPhone it plays (fonts, scrolling, switches).
+      platform: Host.isWeb
+          ? switch (Host.web) {
+              DevicePlatform.ios => TargetPlatform.iOS,
+              DevicePlatform.macos => TargetPlatform.macOS,
+              DevicePlatform.android => TargetPlatform.android,
+              DevicePlatform.windows => TargetPlatform.windows,
+              _ => null,
+            }
+          : null,
+    );
     final text = base.textTheme;
     TextStyle? bold(TextStyle? s, FontWeight w, [double spacing = 0]) =>
         s?.copyWith(fontWeight: w, letterSpacing: spacing);
