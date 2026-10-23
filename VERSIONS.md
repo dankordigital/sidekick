@@ -4,6 +4,15 @@ Every release, newest first, with its biggest features and fixes. Add an
 entry here with each release (see "Releasing" in `CLAUDE.md`). The history
 starts at 1.1.3.
 
+## 2.17.3
+- **Wi-Fi first, and it looks it:** the Devices page no longer offers
+  "Pair over Bluetooth"; a **Connect** link (chain icon) opens every way to
+  connect, Wi-Fi first and Bluetooth last. The welcome screen says "Works
+  over Wi-Fi".
+- **Bluetooth lets go once Wi-Fi works:** when Wi-Fi reaches a device,
+  Sidekick hangs up its own Bluetooth connection to it (after 15 s idle).
+  Only that one: headphones and other Bluetooth devices stay connected.
+
 ## 2.17.2
 - No app changes since 2.17.1: a rebuild of the same app, released after
   the repo gained `sync.sh` and its syncing notes in `CLAUDE.md`.
