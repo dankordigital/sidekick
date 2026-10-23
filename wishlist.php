@@ -382,7 +382,9 @@ function by_token(array &$rows, string $token): ?string {
 // in sidekick-wishlist/site.json: a wishlist (the default) or released,
 // with downloads for one version. Visits are counted per day in
 // sidekick-wishlist/visits.json (a day's visitors only as short hashes of
-// IP + browser, salted with the day, so nobody can be traced back).
+// IP + browser, salted with the day, so nobody can be traced back). The IP
+// addresses themselves (bots too) are kept 30 days in ips.json, for the
+// panel's "Who visited" list.
 
 const REPO = 'dankordigital/sidekick';
 const VISIT_DAYS = 400;        // days of visits kept
@@ -422,6 +424,25 @@ function release_files(string $v): array {
     ];
 }
 
+/** [status code, body or false] for a GET over HTTPS, with curl or PHP's own. */
+function http_get(string $url, array $headers = [], int $timeout = 10): array {
+    $headers[] = 'User-Agent: Sidekick-website';
+    if (function_exists('curl_init')) {
+        $c = curl_init($url);
+        curl_setopt_array($c, [CURLOPT_RETURNTRANSFER => true, CURLOPT_HTTPHEADER => $headers, CURLOPT_TIMEOUT => $timeout,
+                               CURLOPT_FOLLOWLOCATION => true]);
+        $body = curl_exec($c);
+        $code = (int)curl_getinfo($c, CURLINFO_HTTP_CODE);
+        curl_close($c);
+        return [$code, $body];
+    }
+    if (!ini_get('allow_url_fopen')) return [0, false];
+    $ctx = stream_context_create(['http' => ['header' => implode("\r\n", $headers), 'timeout' => $timeout, 'ignore_errors' => true]]);
+    $body = @file_get_contents($url, false, $ctx);
+    $code = preg_match('/^HTTP\/\S+ (\d+)/', $http_response_header[0] ?? '', $m) ? (int)$m[1] : 0;
+    return [$code, $body];
+}
+
 /** The newest release on GitHub: ['version' => '2.17.2', 'published' => …,
  *  'url' => …], or ['error' => why]. Asked at most every 10 minutes
  *  (GitHub limits how often a server may ask), unless [$fresh]. */
@@ -429,22 +450,7 @@ function latest_release(bool $fresh = false): array {
     $cache = data_dir() . '/latest-release.json';
     $saved = json_decode((string)@file_get_contents($cache), true);
     if (!$fresh && is_array($saved) && time() - (int)($saved['checked'] ?? 0) < 600) return $saved;
-    $url = 'https://api.github.com/repos/' . REPO . '/releases/latest';
-    $headers = ['User-Agent: Sidekick-website', 'Accept: application/vnd.github+json'];
-    $body = false;
-    $code = 0;
-    if (function_exists('curl_init')) {
-        $c = curl_init($url);
-        curl_setopt_array($c, [CURLOPT_RETURNTRANSFER => true, CURLOPT_HTTPHEADER => $headers, CURLOPT_TIMEOUT => 10,
-                               CURLOPT_FOLLOWLOCATION => true]);
-        $body = curl_exec($c);
-        $code = (int)curl_getinfo($c, CURLINFO_HTTP_CODE);
-        curl_close($c);
-    } elseif (ini_get('allow_url_fopen')) {
-        $ctx = stream_context_create(['http' => ['header' => implode("\r\n", $headers), 'timeout' => 10, 'ignore_errors' => true]]);
-        $body = @file_get_contents($url, false, $ctx);
-        $code = preg_match('/^HTTP\/\S+ (\d+)/', $http_response_header[0] ?? '', $m) ? (int)$m[1] : 0;
-    }
+    [$code, $body] = http_get('https://api.github.com/repos/' . REPO . '/releases/latest', ['Accept: application/vnd.github+json']);
     $json = is_string($body) ? json_decode($body, true) : null;
     $version = ltrim((string)($json['tag_name'] ?? ''), 'vV');
     if ($code === 200 && preg_match('/^\d+\.\d+\.\d+$/', $version)) {
@@ -532,7 +538,9 @@ function is_bot(string $ua): bool {
 /** Counts one visit to the home page (not bots, not the owner's panel). */
 function record_visit(): void {
     $ua = (string)($_SERVER['HTTP_USER_AGENT'] ?? '');
-    if (is_bot($ua) || ($_SERVER['REQUEST_METHOD'] ?? 'GET') !== 'GET') return;
+    if (($_SERVER['REQUEST_METHOD'] ?? 'GET') !== 'GET') return;
+    record_ip($ua);
+    if (is_bot($ua)) return;
     $day = gmdate('Y-m-d');
     $who = substr(hash('sha256', $day . '|' . ($_SERVER['REMOTE_ADDR'] ?? '') . '|' . $ua), 0, 12);
     $from = parse_url((string)($_SERVER['HTTP_REFERER'] ?? ''), PHP_URL_HOST) ?: '';
@@ -560,6 +568,83 @@ function record_visit(): void {
     fflush($f);
     flock($f, LOCK_UN);
     fclose($f);
+}
+
+const IP_DAYS = 30;            // days an IP address is kept
+const IP_MAX = 3000;           // addresses kept at most
+
+/** Notes the visitor's IP address (bots too, marked) in
+ *  sidekick-wishlist/ips.json for np7dpanel.php → Visits: when it came
+ *  first and last, how often, its browser. Kept IP_DAYS days. */
+function record_ip(string $ua): void {
+    $ip = (string)($_SERVER['REMOTE_ADDR'] ?? '');
+    if (!filter_var($ip, FILTER_VALIDATE_IP)) return;
+    $f = @fopen(data_dir() . '/ips.json', 'c+');
+    if (!$f) return;
+    flock($f, LOCK_EX);
+    $ips = json_decode(stream_get_contents($f) ?: '', true);
+    if (!is_array($ips)) $ips = [];
+    $now = gmdate('Y-m-d H:i:s');
+    $row = $ips[$ip] ?? ['first' => $now, 'n' => 0];
+    $row['last'] = $now;
+    $row['n']++;
+    // A bot only while every visit looked like one; the browser a person used.
+    $bot = is_bot($ua);
+    if (!$bot || ($row['bot'] ?? true)) $row['ua'] = substr($ua, 0, 300);
+    $row['bot'] = ($row['bot'] ?? true) && $bot;
+    unset($ips[$ip]);
+    $ips[$ip] = $row;   // newest last
+    $cutoff = gmdate('Y-m-d H:i:s', time() - IP_DAYS * 86400);
+    $ips = array_slice(array_filter($ips, fn($r) => $r['last'] >= $cutoff), -IP_MAX, null, true);
+    ftruncate($f, 0);
+    rewind($f);
+    fwrite($f, json_encode($ips));
+    fflush($f);
+    flock($f, LOCK_UN);
+    fclose($f);
+}
+
+/** The IP addresses of the last IP_DAYS days, newest first:
+ *  [ip => ['first', 'last', 'n', 'ua', 'bot']]. */
+function visitor_ips(): array {
+    try {
+        $ips = json_decode((string)@file_get_contents(data_dir() . '/ips.json'), true);
+    } catch (Throwable $e) {
+        return [];
+    }
+    if (!is_array($ips)) return [];
+    $cutoff = gmdate('Y-m-d H:i:s', time() - IP_DAYS * 86400);
+    $ips = array_filter($ips, fn($r) => ($r['last'] ?? '') >= $cutoff);
+    uasort($ips, fn($a, $b) => strcmp($b['last'], $a['last']));
+    return $ips;
+}
+
+/** Where IP addresses are: [ip => ['country', 'code', 'city', 'network']],
+ *  from ipwho.is, asked only from the panel and at most [$max] new ones at a
+ *  time; answers are kept in sidekick-wishlist/ip-places.json while the
+ *  address is. */
+function ip_places(array $ips, int $max = 25): array {
+    $file = data_dir() . '/ip-places.json';
+    $places = json_decode((string)@file_get_contents($file), true);
+    if (!is_array($places)) $places = [];
+    $asked = 0;
+    foreach ($ips as $ip) {
+        if (isset($places[$ip]) || $asked >= $max) continue;
+        $asked++;
+        if (!filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE)) {
+            $places[$ip] = ['country' => 'This network', 'code' => '', 'city' => '', 'network' => ''];
+            continue;
+        }
+        [$code, $body] = http_get('https://ipwho.is/' . rawurlencode($ip) . '?fields=success,country,country_code,city,connection', [], 4);
+        $j = is_string($body) ? json_decode($body, true) : null;
+        if ($code !== 200 || !is_array($j) || empty($j['success'])) continue;   // asked again next time
+        $places[$ip] = ['country' => (string)($j['country'] ?? ''), 'code' => (string)($j['country_code'] ?? ''),
+                        'city' => (string)($j['city'] ?? ''),
+                        'network' => (string)($j['connection']['org'] ?? $j['connection']['isp'] ?? '')];
+    }
+    $places = array_intersect_key($places, array_flip($ips));
+    if ($asked) @file_put_contents($file, json_encode($places), LOCK_EX);
+    return $places;
 }
 
 /** ['days' => [date => ['v' => visits, 'u' => [visitor hashes]]], 'from' => [site => visits]] */

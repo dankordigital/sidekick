@@ -104,6 +104,28 @@ function go(string $tab, array $query = []): void {
     exit;
 }
 
+/** "Chrome on Windows" from a browser's User-Agent, or the start of it. */
+function browser_name(string $ua): string {
+    if ($ua === '') return '(none)';
+    $browser = match (true) {
+        str_contains($ua, 'Edg/') => 'Edge',
+        str_contains($ua, 'OPR/') => 'Opera',
+        str_contains($ua, 'Firefox/') => 'Firefox',
+        str_contains($ua, 'Chrome/') => 'Chrome',
+        str_contains($ua, 'Safari/') => 'Safari',
+        default => '',
+    };
+    $os = match (true) {
+        str_contains($ua, 'iPhone') || str_contains($ua, 'iPad') => 'iPhone/iPad',
+        str_contains($ua, 'Android') => 'Android',
+        str_contains($ua, 'Windows') => 'Windows',
+        str_contains($ua, 'Mac OS X') => 'Mac',
+        str_contains($ua, 'Linux') => 'Linux',
+        default => '',
+    };
+    return $browser !== '' && $os !== '' ? "$browser on $os" : substr($ua, 0, 60);
+}
+
 /** Everyone on the list, newest first. */
 function people(): array {
     $rows = array_values(with_list(fn(array &$rows) => $rows));
@@ -741,7 +763,43 @@ $('send').onclick = async () => {
     </table></div>
     <?php endif; ?>
   </div>
-  <p class="muted">Every time someone opens the home page counts as a visit; "visitors" are the different people in a day. Search engines and other bots aren't counted. Nothing that identifies anyone is kept.</p>
+  <?php $ips = function_exists('visitor_ips') ? visitor_ips() : []; $places = $ips ? ip_places(array_keys($ips)) : [];
+    $botsOnly = ($_GET['bots'] ?? '') === '1'; $mine = (string)($_SERVER['REMOTE_ADDR'] ?? '');
+    $countries = [];
+    foreach ($ips as $ip => $r) { if (!$r['bot']) { $c = $places[$ip]['country'] ?? 'Not looked up yet'; $countries[$c] = ($countries[$c] ?? 0) + 1; } }
+    arsort($countries); ?>
+  <?php if ($countries): $cPeak = max($countries); ?>
+  <div class="card">
+    <h2>Countries, last 30 days</h2>
+    <?php foreach (array_slice($countries, 0, 12, true) as $c => $n): ?>
+      <div class="hbar" style="grid-template-columns:160px 1fr 40px"><span style="overflow:hidden;text-overflow:ellipsis"><?= e($c) ?></span><div class="track"><i style="width:<?= round(100 * $n / $cPeak) ?>%"></i></div><span><?= $n ?></span></div>
+    <?php endforeach; ?>
+    <p class="muted">Different IP addresses per country (people, not bots).</p>
+  </div>
+  <?php endif; ?>
+  <div class="card">
+    <h2>Who visited</h2>
+    <p class="muted" style="margin-top:0">Every IP address that opened the home page in the last 30 days, newest first.
+      <?= $botsOnly ? '<a href="?tab=visits">Show people only</a>' : '<a href="?tab=visits&amp;bots=1">Show bots too</a>' ?></p>
+    <?php $shown = array_filter($ips, fn($r) => $botsOnly || !$r['bot']); ?>
+    <?php if (!$shown): ?><p class="muted"><?= function_exists('visitor_ips') ? 'Nobody yet.' : 'Upload the new wishlist.php and index.php for this.' ?></p><?php else: ?>
+    <div class="tablewrap"><table>
+      <tr><th>IP address</th><th>Where</th><th>Network</th><th>Visits</th><th>Last (UTC)</th><th>Browser</th></tr>
+      <?php foreach (array_slice($shown, 0, 300, true) as $ip => $r): $pl = $places[$ip] ?? null; ?>
+        <tr>
+          <td style="white-space:nowrap"><?= e((string)$ip) ?><?= (string)$ip === $mine ? ' <span class="pill good">You</span>' : '' ?><?= $r['bot'] ? ' <span class="pill">bot</span>' : '' ?></td>
+          <td><?= $pl ? e(trim($pl['country'] . ($pl['city'] !== '' ? ' · ' . $pl['city'] : ''))) : '<span class="muted">…</span>' ?></td>
+          <td style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="<?= e($pl['network'] ?? '') ?>"><?= e($pl['network'] ?? '') ?></td>
+          <td><?= (int)$r['n'] ?></td>
+          <td style="white-space:nowrap"><?= e($r['last']) ?></td>
+          <td style="max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="<?= e($r['ua']) ?>"><?= e(browser_name($r['ua'])) ?></td>
+        </tr>
+      <?php endforeach; ?>
+    </table></div>
+    <?php if (count(array_diff_key($ips, $places))): ?><p class="muted">Some places aren't looked up yet: reload the page to look up the next ones.</p><?php endif; ?>
+    <?php endif; ?>
+  </div>
+  <p class="muted">Every time someone opens the home page counts as a visit; "visitors" are the different people in a day. The counts leave out search engines and other bots; "Who visited" can show them. IP addresses are kept 30 days, and where they are comes from ipwho.is. A visit from a far-away country is often a bot or scanner on a cloud server there (its network says so).</p>
 
 <?php elseif ($tab === 'site'): $site = site_state(); $latest = latest_release(); ?>
   <div class="card">

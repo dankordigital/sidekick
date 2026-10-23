@@ -149,7 +149,11 @@ Visits. The home page counts its visits: per day, how many times it was
 opened, how many different visitors that was (each kept only as a short
 scrambled code of your IP address and browser, mixed with that day's date,
 so it can't be traced back to you or matched across days), and which other
-website linked to it, if any. No cookies, nothing else, never shared.
+website linked to it, if any. To spot abuse and see roughly where visitors
+come from, it also keeps each visitor's IP address with the times it
+visited and the browser it said it was, for 30 days. When we look at that
+list, the addresses are sent to ipwho.is to show their country, city and
+network. No cookies, nothing else, never shared.
 
 The website uses no cookies and no third-party analytics. It remembers your light or
 dark choice and color in your browser (local storage). It loads its fonts

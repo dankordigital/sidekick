@@ -18,8 +18,12 @@ detailed developer notes; every release is in `VERSIONS.md`) and
 - **np7dpanel.php:** Website shows the latest GitHub release with
   **Release latest**; new **Edit** tab changes the home page's texts on the
   hosting (`edits.json`, applied by index.php).
+- **Visits tab:** "Who visited" lists every IP address of the last 30
+  days (bots marked, country / city / network from ipwho.is) and a
+  countries chart (the owner suspected visits from Hong Kong). Both privacy
+  policies say so.
 - **Owner to upload:** `index.html`, `index.php`, `wishlist.php`,
-  `np7dpanel.php` (or let the website workflow do it).
+  `np7dpanel.php`, `privacy.html` (or let the website workflow do it).
 
 ## Where things stand (15 October 2026)
 
