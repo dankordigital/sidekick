@@ -56,8 +56,14 @@ wishlist admin panel. Tabs: Overview (counts, sign-ups per day for 30 days,
 devices), Visits (home-page visits and different visitors per day, 30-day
 chart, referring sites; `sidekick-wishlist/visits.json`, visitors only as
 a day-salted hash of IP + browser, bots skipped; both privacy policies say
-so), Website (**Release Sidekick** with a version / **Make it a wishlist
-again**: `sidekick-wishlist/site.json`), People (search, add, remove, send the welcome email again, send it
+so), Website (the newest GitHub release, `latest_release()`: the GitHub API,
+cached 10 minutes in `latest-release.json`, with **Release latest** and
+Check again; **Release Sidekick** with a version / **Make it a wishlist
+again**: `sidekick-wishlist/site.json`), **Edit** (every text on the home
+page in a box, with a search; saved to `sidekick-wishlist/edits.json` as
+{original → new} and put in by index.php (`apply_site_edits`), so
+index.html is never changed and new uploads keep them; an edit whose
+original text is gone does nothing and is listed to forget), People (search, add, remove, send the welcome email again, send it
 to everyone who never got it, CSV export), Email everyone, Past sends
 (`sends/<id>.json`), Mail log (view, clear) and Health (PHP, openssl,
 folder, password, the mail server's ports). Its password is
@@ -314,7 +320,14 @@ release. Keep this file for how things work now, not for history.
     not mobile data, VPNs or virtual adapters) Bluetooth is never used,
     unless the other device says it isn't on Wi-Fi (`DeviceInfo.wifi`,
     sent over Bluetooth). "Not on Wi-Fi" needs two checks in a row. On
-    Wi-Fi, Bluetooth scans once a minute at most.
+    Wi-Fi, Bluetooth scans once a minute at most. Once Wi-Fi reaches a
+    device, Sidekick hangs up its own Bluetooth connection to it after 15 s
+    idle (`_hangUpBluetoothWhereWifiWorks`, `BluetoothService.closeLink`):
+    only that one; the radio and other devices (headphones…) are untouched.
+  - **Sidekick isn't a Bluetooth app** (the owner's call): the Devices
+    page's entries say "Connect" with a link icon and open every way to
+    connect, Wi-Fi first (`showConnectOptions`, `_connectWays`); Bluetooth
+    is the last choice there.
   - Writes are always one packet (MTU minus 3), never long writes.
   - Files go over Bluetooth in 32 KB sealed parts (`/v1/fs/upload/part`),
     each retried if it arrives damaged ("Message failed authentication"),

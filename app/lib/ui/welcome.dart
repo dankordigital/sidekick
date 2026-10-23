@@ -156,7 +156,7 @@ class _WelcomeFlowState extends State<WelcomeFlow> {
       children: const [
         _Feature(Icons.swap_horiz, 'Send files both ways', 'Drag, drop or pick: photos, videos, documents.'),
         _Feature(Icons.mouse_outlined, 'Use one device from another', 'Touchpad, keyboard and shortcuts.'),
-        _Feature(Icons.bluetooth, 'Works without Wi-Fi', 'Nearby devices connect over Bluetooth.'),
+        _Feature(Icons.wifi_rounded, 'Works over Wi-Fi', 'Same network, or a direct link when there isn\'t one.'),
         _Feature(Icons.lock_outline, 'Private by design', 'Everything is encrypted and stays between your devices.'),
       ],
     ),

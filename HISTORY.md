@@ -5,6 +5,22 @@ a new session. Newest first. For how things work, read `CLAUDE.md` (the
 detailed developer notes; every release is in `VERSIONS.md`) and
 `ARCHITECTURE.md` (the big picture).
 
+## 23 October 2026
+
+- **App (unreleased):** the Devices page no longer says "Pair over
+  Bluetooth": a "Connect" link opens every way to connect (Wi-Fi, QR code,
+  IP, Bluetooth last). The welcome screen says "Works over Wi-Fi". When
+  Wi-Fi reaches a device, Sidekick hangs up its own Bluetooth link to it
+  (other Bluetooth devices stay connected).
+- **Website:** features updated to what 2.17 does (direct Wi-Fi, Ping,
+  notifications and screenshots on computers, tray / menu bar, Live
+  Activities); Bluetooth only as a last resort.
+- **np7dpanel.php:** Website shows the latest GitHub release with
+  **Release latest**; new **Edit** tab changes the home page's texts on the
+  hosting (`edits.json`, applied by index.php).
+- **Owner to upload:** `index.html`, `index.php`, `wishlist.php`,
+  `np7dpanel.php` (or let the website workflow do it).
+
 ## Where things stand (15 October 2026)
 
 - **App:** latest release **2.17.2** (same app as 2.17.1), published on GitHub (Windows .exe,

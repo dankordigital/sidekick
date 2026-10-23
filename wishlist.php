@@ -422,6 +422,109 @@ function release_files(string $v): array {
     ];
 }
 
+/** The newest release on GitHub: ['version' => '2.17.2', 'published' => …,
+ *  'url' => …], or ['error' => why]. Asked at most every 10 minutes
+ *  (GitHub limits how often a server may ask), unless [$fresh]. */
+function latest_release(bool $fresh = false): array {
+    $cache = data_dir() . '/latest-release.json';
+    $saved = json_decode((string)@file_get_contents($cache), true);
+    if (!$fresh && is_array($saved) && time() - (int)($saved['checked'] ?? 0) < 600) return $saved;
+    $url = 'https://api.github.com/repos/' . REPO . '/releases/latest';
+    $headers = ['User-Agent: Sidekick-website', 'Accept: application/vnd.github+json'];
+    $body = false;
+    $code = 0;
+    if (function_exists('curl_init')) {
+        $c = curl_init($url);
+        curl_setopt_array($c, [CURLOPT_RETURNTRANSFER => true, CURLOPT_HTTPHEADER => $headers, CURLOPT_TIMEOUT => 10,
+                               CURLOPT_FOLLOWLOCATION => true]);
+        $body = curl_exec($c);
+        $code = (int)curl_getinfo($c, CURLINFO_HTTP_CODE);
+        curl_close($c);
+    } elseif (ini_get('allow_url_fopen')) {
+        $ctx = stream_context_create(['http' => ['header' => implode("\r\n", $headers), 'timeout' => 10, 'ignore_errors' => true]]);
+        $body = @file_get_contents($url, false, $ctx);
+        $code = preg_match('/^HTTP\/\S+ (\d+)/', $http_response_header[0] ?? '', $m) ? (int)$m[1] : 0;
+    }
+    $json = is_string($body) ? json_decode($body, true) : null;
+    $version = ltrim((string)($json['tag_name'] ?? ''), 'vV');
+    if ($code === 200 && preg_match('/^\d+\.\d+\.\d+$/', $version)) {
+        $latest = ['version' => $version, 'published' => str_replace(['T', 'Z'], [' ', ''], (string)($json['published_at'] ?? '')),
+                   'url' => (string)($json['html_url'] ?? ''), 'checked' => time()];
+    } else {
+        $why = $body === false ? 'couldn\'t reach GitHub' : ($code === 404 ? 'GitHub has no release yet' : "GitHub answered $code");
+        // Keep showing the last good answer, saying it couldn't check again.
+        $latest = is_array($saved) && isset($saved['version']) ? $saved + ['error' => $why] : ['error' => $why];
+        $latest['checked'] = time();
+    }
+    @file_put_contents($cache, json_encode($latest), LOCK_EX);
+    return $latest;
+}
+
+// ------------------------------------------------------------------ the home page's texts
+// np7dpanel.php → Edit changes the home page's texts without uploading
+// index.html again: the edits live in sidekick-wishlist/edits.json and
+// index.php puts them in as it serves the page. index.html itself is never
+// changed, so a new upload doesn't lose them. Each edit says which text it
+// replaces; if that text isn't on the page any more, the edit does nothing.
+
+/** Every piece of text on [$html] someone reads, as [key => text], in order.
+ *  Scripts, styles, comments and icon names aren't text. */
+function page_texts(string $html): array {
+    $texts = [];
+    page_text_walk($html, function (string $text) use (&$texts) {
+        $texts[text_key($text)] = $text;
+        return null;
+    });
+    return $texts;
+}
+
+/** [$html] with the edits put in. */
+function apply_site_edits(string $html, ?array $edits = null): string {
+    $edits ??= site_edits();
+    if (!$edits) return $html;
+    return page_text_walk($html, function (string $text) use ($edits) {
+        $edit = $edits[text_key($text)] ?? null;
+        return $edit !== null && $edit['from'] === $text ? $edit['to'] : null;
+    });
+}
+
+/** Calls [$visit] with each text; where it returns a string, that replaces
+ *  the text (whitespace around it kept). */
+function page_text_walk(string $html, callable $visit): string {
+    $parts = preg_split('/(<!--.*?-->|<script\b.*?<\/script>|<style\b.*?<\/style>)/is', $html, -1, PREG_SPLIT_DELIM_CAPTURE);
+    foreach ($parts as $i => $part) {
+        if ($i % 2) continue;
+        $parts[$i] = preg_replace_callback('/(<[^>]+>)([^<]*)/', function ($m) use ($visit) {
+            if (preg_match('/class="(?:[^"]*\s)?icon(?:\s[^"]*)?"/', $m[1])) return $m[0];
+            $text = preg_replace('/\s+/u', ' ', trim(html_entity_decode($m[2], ENT_QUOTES | ENT_HTML5, 'UTF-8')));
+            if (!preg_match('/\p{L}/u', $text)) return $m[0];
+            $new = $visit($text);
+            if ($new === null) return $m[0];
+            preg_match('/^(\s*).*?(\s*)$/s', $m[2], $ws);
+            return $m[1] . $ws[1] . htmlspecialchars($new, ENT_NOQUOTES | ENT_HTML5, 'UTF-8') . $ws[2];
+        }, $part);
+    }
+    return implode('', $parts);
+}
+
+function text_key(string $text): string {
+    return substr(sha1($text), 0, 12);
+}
+
+/** The saved edits: [key => ['from' => text on the page, 'to' => new text]]. */
+function site_edits(): array {
+    try {
+        $saved = json_decode((string)@file_get_contents(data_dir() . '/edits.json'), true);
+    } catch (Throwable $e) {
+        return [];
+    }
+    return is_array($saved) ? $saved : [];
+}
+
+function save_site_edits(array $edits): bool {
+    return file_put_contents(data_dir() . '/edits.json', json_encode($edits, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT), LOCK_EX) !== false;
+}
+
 function is_bot(string $ua): bool {
     return $ua === '' || (bool)preg_match('/bot|crawl|spider|slurp|preview|fetch|monitor|curl|wget|python|scan|headless|lighthouse/i', $ua);
 }

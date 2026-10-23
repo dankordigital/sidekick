@@ -1,7 +1,9 @@
 <?php
 // Sidekick's admin panel: the wishlist at a glance, everyone on it, emailing
 // them all, past sends, the mail log, a health check, the website's visits,
-// and switching the website between a wishlist and released (downloads).
+// switching the website between a wishlist and released (downloads, with the
+// newest version on GitHub one button away), and editing the home page's
+// texts without uploading index.html again.
 //
 // Upload next to wishlist.php (in www). It uses wishlist.php's list and mail
 // settings, and asks for the password in wishlist-config.php
@@ -295,6 +297,53 @@ if ($action !== '' && $action !== 'login') {
             flash($release ? "Released: the website now offers Sidekick $version to download." : 'The website is a wishlist again.');
             go('site');
 
+        case 'release_latest':
+            $latest = latest_release(true);
+            if (!isset($latest['version']) || isset($latest['error'])) {
+                flash('Couldn\'t get the latest version from GitHub: ' . ($latest['error'] ?? 'no answer') . '.', true);
+                go('site');
+            }
+            if (!save_site_state(true, $latest['version'])) {
+                flash('Couldn\'t save the website\'s mode (the private folder isn\'t writable).', true);
+                go('site');
+            }
+            flash("Released: the website now offers Sidekick {$latest['version']}, the latest on GitHub.");
+            go('site');
+
+        case 'check_latest':
+            $latest = latest_release(true);
+            flash(isset($latest['error']) ? "Couldn't check GitHub: {$latest['error']}." : "The latest on GitHub is {$latest['version']}.", isset($latest['error']));
+            go('site');
+
+        case 'edits':
+            $texts = page_texts((string)@file_get_contents(__DIR__ . '/index.html'));
+            $edits = site_edits();
+            $changed = 0;
+            foreach ((array)($_POST['t'] ?? []) as $key => $value) {
+                $key = (string)$key;
+                if (!isset($texts[$key])) continue;
+                $value = preg_replace('/\s+/u', ' ', trim((string)$value));
+                $before = $edits[$key]['to'] ?? $texts[$key];
+                if ($value === '' || $value === $texts[$key]) {
+                    unset($edits[$key]);
+                } else {
+                    $edits[$key] = ['from' => $texts[$key], 'to' => $value];
+                }
+                if (($edits[$key]['to'] ?? $texts[$key]) !== $before) $changed++;
+            }
+            foreach ((array)($_POST['forget'] ?? []) as $key) {
+                if (isset($edits[(string)$key])) {
+                    unset($edits[(string)$key]);
+                    $changed++;
+                }
+            }
+            if (!save_site_edits($edits)) {
+                flash('Couldn\'t save the edits (the private folder isn\'t writable).', true);
+                go('edit');
+            }
+            flash($changed ? "Saved $changed change" . ($changed === 1 ? '' : 's') . '. The website shows them now.' : 'Nothing was changed.');
+            go('edit', ['q' => $_POST['q'] ?? '']);
+
         case 'clear_log':
             @file_put_contents(data_dir() . '/mail.log', '');
             flash('Mail log cleared.');
@@ -342,7 +391,7 @@ if (signed_in() && ($_GET['export'] ?? '') === 'csv') {
 
 // ------------------------------------------------------------------ page
 
-$tabs = ['overview' => 'Overview', 'visits' => 'Visits', 'site' => 'Website', 'people' => 'People', 'email' => 'Email everyone', 'sends' => 'Past sends', 'log' => 'Mail log', 'health' => 'Health'];
+$tabs = ['overview' => 'Overview', 'visits' => 'Visits', 'site' => 'Website', 'edit' => 'Edit', 'people' => 'People', 'email' => 'Email everyone', 'sends' => 'Past sends', 'log' => 'Mail log', 'health' => 'Health'];
 $tab = array_key_exists($_GET['tab'] ?? '', $tabs) ? $_GET['tab'] : 'overview';
 $flash = $_SESSION['flash'] ?? null;
 unset($_SESSION['flash']);
@@ -443,7 +492,7 @@ function form_start(string $action, string $tab, array $hidden = []): string {
   </nav>
   <?php if ($flash): ?><div class="notice <?= $flash[1] ? 'bad' : '' ?>"><?= e($flash[0]) ?></div><?php endif; ?>
 
-<?php if (in_array($tab, ['visits', 'site'], true) && !function_exists('site_state')): ?>
+<?php if ((in_array($tab, ['visits', 'site'], true) && !function_exists('site_state')) || (in_array($tab, ['site', 'edit'], true) && !function_exists('page_texts'))): ?>
   <div class="notice bad">This tab needs the new wishlist.php: upload it from the repo next to this page (and index.php, index.html and .htaccess for the website).</div>
 <?php elseif ($tab === 'overview'):
     $now = time();
@@ -694,7 +743,28 @@ $('send').onclick = async () => {
   </div>
   <p class="muted">Every time someone opens the home page counts as a visit; "visitors" are the different people in a day. Search engines and other bots aren't counted. Nothing that identifies anyone is kept.</p>
 
-<?php elseif ($tab === 'site'): $site = site_state(); ?>
+<?php elseif ($tab === 'site'): $site = site_state(); $latest = latest_release(); ?>
+  <div class="card">
+    <h2>Latest on GitHub</h2>
+    <?php if (isset($latest['version'])): ?>
+      <p><b>Sidekick <?= e($latest['version']) ?></b><?php if ($latest['published']): ?> <span class="muted">· published <?= e($latest['published']) ?> UTC</span><?php endif; ?>
+        <?php if ($latest['url']): ?> · <a href="<?= e($latest['url']) ?>" target="_blank" rel="noopener">Release notes →</a><?php endif; ?></p>
+      <?php if (isset($latest['error'])): ?><p class="bad">Couldn't check again just now (<?= e($latest['error']) ?>): this is the last version it saw.</p><?php endif; ?>
+      <?php if ($site['released'] && $site['version'] === $latest['version']): ?>
+        <p><span class="pill good">Up to date</span> The website already offers this version.</p>
+      <?php else: ?>
+        <p class="muted"><?= $site['released'] ? 'The website offers ' . e($site['version']) . '.' : 'The website is a wishlist.' ?> This puts Sidekick <?= e($latest['version']) ?> up to download.</p>
+      <?php endif; ?>
+    <?php else: ?>
+      <p class="bad">Couldn't get the latest version from GitHub: <?= e($latest['error'] ?? 'no answer') ?>.</p>
+    <?php endif; ?>
+    <div class="row">
+      <?php if (isset($latest['version']) && !($site['released'] && $site['version'] === $latest['version'])): ?>
+        <?= form_start('release_latest', 'site') ?><button class="primary" type="submit" onclick="return confirm(<?= e(json_encode('Release Sidekick ' . $latest['version'] . ' on the website?' . ($site['released'] ? '' : ' The wishlist is replaced by downloads.'))) ?>)">Release latest</button></form>
+      <?php endif; ?>
+      <?= form_start('check_latest', 'site') ?><button type="submit">Check again</button></form>
+    </div>
+  </div>
   <div class="card">
     <h2>Website</h2>
     <?php if ($site['released']): ?>
@@ -720,6 +790,73 @@ $('send').onclick = async () => {
     <?php endif; ?>
   </div>
   <p class="muted">Releasing doesn't email the wishlist: do that on the Email everyone tab.</p>
+
+<?php elseif ($tab === 'edit'):
+  $texts = page_texts((string)@file_get_contents(__DIR__ . '/index.html'));
+  $edits = site_edits();
+  $gone = array_diff_key($edits, $texts);
+  $q = trim((string)($_GET['q'] ?? ''));
+  $edited = count(array_intersect_key($edits, $texts)); ?>
+  <div class="card">
+    <h2>Edit the home page</h2>
+    <p class="muted" style="margin-top:0">Change any text and press Save: the website shows it at once, no upload needed. Empty a box, or put the original back, to undo.
+      Text that appears in several places (like "Join the wishlist") changes everywhere. <?= $edited ?> text<?= $edited === 1 ? '' : 's' ?> changed so far. <a href="/" target="_blank" rel="noopener">Open the website →</a></p>
+    <?php if (!$texts): ?>
+      <p class="bad">index.html isn't next to this page, so there's nothing to edit.</p>
+    <?php else: ?>
+    <input type="search" id="find" placeholder="Find a text…" value="<?= e($q) ?>" autocomplete="off">
+    <?= form_start('edits', 'edit') ?>
+      <input type="hidden" name="q" id="q" value="<?= e($q) ?>">
+      <div id="texts">
+      <?php foreach ($texts as $key => $text): $now = $edits[$key]['to'] ?? $text; ?>
+        <div class="edit-row" data-text="<?= e($text . ' ' . $now) ?>">
+          <textarea name="t[<?= e($key) ?>]" rows="<?= max(1, min(6, (int)ceil(strlen($now) / 90))) ?>" data-original="<?= e($text) ?>"><?= e($now) ?></textarea>
+          <?php if (isset($edits[$key])): ?><small class="muted">Changed · was: <?= e($text) ?></small><?php endif; ?>
+        </div>
+      <?php endforeach; ?>
+      </div>
+      <?php if ($gone): ?>
+        <h2 style="margin-top:24px">Edits for text that's no longer on the page</h2>
+        <p class="muted" style="margin-top:0">index.html changed since, so these do nothing now. Tick to forget them.</p>
+        <?php foreach ($gone as $key => $edit): ?>
+          <label class="checks" style="font-weight:400"><input type="checkbox" name="forget[]" value="<?= e((string)$key) ?>"> "<?= e($edit['from']) ?>" → "<?= e($edit['to']) ?>"</label>
+        <?php endforeach; ?>
+      <?php endif; ?>
+      <div class="row save-row"><button class="primary" type="submit">Save</button><span class="muted" id="dirty"></span></div>
+    </form>
+    <?php endif; ?>
+  </div>
+  <p class="muted">Only the words change: to move things around or add a section, index.html still needs an upload. Texts the page's scripts write (the demo's messages) aren't here.</p>
+  <style>
+    .edit-row { padding:8px 0; border-bottom:1px solid var(--line); }
+    .edit-row textarea { min-height:0; padding:8px 11px; }
+    .edit-row textarea.changed { border-color:var(--accent); }
+    .edit-row small { display:block; margin-top:4px; }
+    .save-row { position:sticky; bottom:0; background:var(--card); padding:12px 0; margin-top:8px; }
+    #find { margin:8px 0; }
+  </style>
+  <script>
+  (() => {
+    const find = document.getElementById('find'), rows = document.querySelectorAll('.edit-row');
+    const filter = () => {
+      const q = find.value.trim().toLowerCase();
+      document.getElementById('q').value = find.value.trim();
+      rows.forEach((r) => { r.hidden = q !== '' && !r.dataset.text.toLowerCase().includes(q); });
+    };
+    find.addEventListener('input', filter);
+    filter();
+    const dirty = document.getElementById('dirty');
+    const boxes = document.querySelectorAll('.edit-row textarea');
+    const initial = new Map([...boxes].map((b) => [b, b.value]));
+    boxes.forEach((b) => b.addEventListener('input', () => {
+      b.classList.toggle('changed', b.value !== initial.get(b));
+      const n = [...boxes].filter((x) => x.value !== initial.get(x)).length;
+      dirty.textContent = n ? n + ' unsaved change' + (n === 1 ? '' : 's') : '';
+    }));
+    window.addEventListener('beforeunload', (e) => { if (dirty.textContent && !window.saving) e.preventDefault(); });
+    document.querySelector('.save-row').closest('form').addEventListener('submit', () => { window.saving = true; });
+  })();
+  </script>
 
 <?php elseif ($tab === 'log'): $lines = mail_lines(200); ?>
   <div class="card">

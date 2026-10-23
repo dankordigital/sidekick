@@ -535,6 +535,23 @@ class BluetoothService {
     }();
   }
 
+  /// Sidekick has its own connection open to the device with Bluetooth id [id].
+  bool hasLink(String id) => _links.containsKey(id);
+
+  /// Hangs up Sidekick's own connection to the device with Bluetooth id [id],
+  /// if it's been quiet for [idle] (so a request in flight finishes first).
+  /// Only that one connection: the radio stays on, and other Bluetooth
+  /// devices (headphones, keyboards…) are never touched. Requests later
+  /// reconnect by themselves. True if it hung up.
+  Future<bool> closeLink(String id, {Duration idle = const Duration(seconds: 15)}) async {
+    final link = _links[id];
+    if (link == null || DateTime.now().difference(link.lastUsed) < idle) return false;
+    _links.remove(id);
+    _log('Hung up Bluetooth with ${id.substring(0, id.length.clamp(0, 8))}: Wi-Fi reaches it');
+    await link.close();
+    return true;
+  }
+
   /// A request client for the device with Bluetooth id [id]. It connects on
   /// first use and reconnects if the link drops.
   BleRpcClient clientFor(String id) {
@@ -542,7 +559,10 @@ class BluetoothService {
     StreamSubscription<Uint8List>? relay;
     Future<_Link> ready() async {
       final link = await _link(id);
-      relay ??= link.incoming.stream.listen(incoming.add, onDone: () => relay = null);
+      relay ??= link.incoming.stream.listen((data) {
+        link.lastUsed = DateTime.now();
+        incoming.add(data);
+      }, onDone: () => relay = null);
       return link;
     }
 
@@ -563,7 +583,13 @@ class _Link {
   final int maxWrite;
   final incoming = StreamController<Uint8List>.broadcast();
 
-  Future<void> write(Uint8List chunk) => _ble.write(id, chunk).timeout(const Duration(seconds: 15));
+  /// The last time anything went either way.
+  DateTime lastUsed = DateTime.now();
+
+  Future<void> write(Uint8List chunk) {
+    lastUsed = DateTime.now();
+    return _ble.write(id, chunk).timeout(const Duration(seconds: 15));
+  }
 
   Future<void> close() async {
     await incoming.close();

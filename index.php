@@ -3,6 +3,7 @@
 // saying whether the site is a wishlist or released (np7dpanel.php →
 // Website switches it). Released: <html class="released"> shows the
 // downloads instead of the wishlist, and SIDEKICK_RELEASE has the links.
+// Texts changed in np7dpanel.php → Edit are put in here (edits.json).
 // .htaccess sends "/" and "/index.html" here; without PHP, index.html is
 // still the wishlist.
 
@@ -14,6 +15,10 @@ require __DIR__ . '/wishlist.php';
 $page = (string)file_get_contents(__DIR__ . '/index.html');
 try {
     record_visit();
+} catch (Throwable $e) {
+}
+try {
+    $page = apply_site_edits($page);
 } catch (Throwable $e) {
 }
 $state = site_state();

@@ -9,7 +9,7 @@
 <!-- The page lives at the top of the repo; its images stay in website/. -->
 <link rel="icon" type="image/png" sizes="64x64" href="/website/favicon.png">
 <link rel="apple-touch-icon" href="/website/apple-touch-icon.png">
-<meta name="description" content="Sidekick links your phone and computer. Control either device from the other, and browse and send files, over Wi-Fi or Bluetooth.">
+<meta name="description" content="Sidekick links your phone and computer over Wi-Fi. Send files both ways, browse and control one device from the other, ping your phone, and see its notifications on your computer.">
 <meta name="theme-color" content="#f7f5fb">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -842,8 +842,9 @@ footer nav a:hover { color: var(--on-surface); }
         <span class="eyebrow"><span class="icon">bolt</span> Local-first · No account · No cloud</span>
         <h1>Your phone and PC, <em>finally</em> working together.</h1>
         <p class="lede">
-          Sidekick links your devices over your own Wi-Fi, or Bluetooth when there's none. Use your phone as a remote for your
-          computer, open your phone's files from your desktop, and send anything in a tap.
+          Sidekick links your devices over your own Wi-Fi, or a direct Wi-Fi link when there's no router. Send files both ways,
+          use your phone as a remote for your computer, open one device's files from the other, and see your phone's
+          notifications on your desktop.
         </p>
         <div class="cta-row">
           <a class="btn btn-filled only-released" id="heroDownload" href="#download"><span class="icon" id="heroDownloadIcon">download</span><span id="heroDownloadLabel">Download Sidekick</span></a>
@@ -887,7 +888,7 @@ footer nav a:hover { color: var(--on-surface); }
       <div class="section-head reveal">
         <div class="kicker">Features</div>
         <h2>One app for all of it.</h2>
-        <p>Sidekick does three things: remote control, file browsing and file sharing. It runs the same way on every device.</p>
+        <p>Send files, browse the other device, control your computer, ring a lost phone and more. It works the same way on every device.</p>
       </div>
 
       <div class="bento">
@@ -926,13 +927,49 @@ footer nav a:hover { color: var(--on-surface); }
         <article class="card span-6 reveal">
           <div class="card-icon s"><span class="icon">send</span></div>
           <h3>Send anything, with a yes first</h3>
-          <p>Drag and drop or pick photos and files. The other device asks before accepting, then both show the progress. Nothing goes through the internet.</p>
+          <p>Drag and drop or pick photos and files. The other device asks before accepting, then both show the progress. Photos and videos land straight in your phone's Photos or gallery. Nothing goes through the internet.</p>
         </article>
 
         <article class="card span-6 accent reveal">
           <div class="card-icon"><span class="icon">lock</span></div>
           <h3>Private by design</h3>
-          <p>Pair once with a 6-digit code. Everything between your devices is encrypted, over Wi-Fi and over Bluetooth when there's no Wi-Fi at all. No accounts, no servers.</p>
+          <p>Pair once by scanning a QR code or typing a 6-digit code. Everything between your devices is encrypted. No accounts, no servers, no analytics.</p>
+        </article>
+
+        <article class="card span-4 reveal">
+          <div class="card-icon s"><span class="icon">wifi_tethering</span></div>
+          <h3>No router? No problem</h3>
+          <p>On the same Wi-Fi, devices find each other by themselves. Without one, Sidekick sets up a direct Wi-Fi link between them. Bluetooth is only a last resort.</p>
+        </article>
+
+        <article class="card span-4 reveal">
+          <div class="card-icon t"><span class="icon">notifications_active</span></div>
+          <h3>Ping your phone</h3>
+          <p>Can't find your phone? Ping it from your computer and it rings, even on silent, until you tap Found it.</p>
+        </article>
+
+        <article class="card span-4 reveal">
+          <div class="card-icon"><span class="icon">mark_chat_unread</span></div>
+          <h3>Phone notifications on your computer</h3>
+          <p>See your Android phone's notifications on your Mac or PC. Turn it on in Settings when you want it.</p>
+        </article>
+
+        <article class="card span-4 reveal">
+          <div class="card-icon s"><span class="icon">screenshot_monitor</span></div>
+          <h3>Screenshots, straight over</h3>
+          <p>Take a screenshot on your phone and it appears on your computer a moment later. Also off until you turn it on.</p>
+        </article>
+
+        <article class="card span-4 reveal">
+          <div class="card-icon t"><span class="icon">dock_to_bottom</span></div>
+          <h3>Always one click away</h3>
+          <p>On a computer Sidekick lives in the tray or menu bar: a quick panel to send or ping, and a small pop-up in the corner to accept files.</p>
+        </article>
+
+        <article class="card span-4 reveal">
+          <div class="card-icon"><span class="icon">dynamic_feed</span></div>
+          <h3>Live Activities on iPhone</h3>
+          <p>Follow a transfer on the Lock Screen and in the Dynamic Island while you use other apps.</p>
         </article>
       </div>
     </div>
@@ -963,9 +1000,7 @@ footer nav a:hover { color: var(--on-surface); }
                 <div><h3>Devices</h3><small>2 paired · 2 connected</small></div>
                 <span class="grow"></span>
                 <div class="win-actions" aria-hidden="true">
-                  <span><span class="icon">radar</span>Search</span>
-                  <span><span class="icon">bluetooth_searching</span>Bluetooth</span>
-                  <span><span class="icon">add_link</span>Add by IP</span>
+                  <span><span class="icon">add_link</span>Connect device</span>
                 </div>
               </div>
               <div class="this-device">
@@ -973,7 +1008,7 @@ footer nav a:hover { color: var(--on-surface); }
                 <div>
                   <small>This device</small>
                   <b>Gaming PC</b>
-                  <div class="pills"><span class="spill"><i></i>Wi-Fi · 192.168.1.20</span><span class="spill bt"><i></i>Bluetooth · findable</span></div>
+                  <div class="pills"><span class="spill"><i></i>Wi-Fi · 192.168.1.20</span><span class="spill bt"><i></i>Encrypted</span></div>
                 </div>
               </div>
               <div class="win-section">Paired</div>
@@ -993,7 +1028,7 @@ footer nav a:hover { color: var(--on-surface); }
                 <div class="pcard">
                   <div class="pcard-top">
                     <span class="av"><span class="icon">phone_iphone</span></span>
-                    <div class="grow"><b>iPhone 12</b><span class="spill bt"><i></i>Connected via Bluetooth</span></div>
+                    <div class="grow"><b>iPhone 12</b><span class="spill bt"><i></i>Connected via direct Wi-Fi</span></div>
                     <span class="icon more">more_vert</span>
                   </div>
                   <div class="pcard-actions">
@@ -1068,32 +1103,41 @@ footer nav a:hover { color: var(--on-surface); }
         <div class="platform reveal">
           <div class="platform-head"><div class="card-icon"><span class="icon">android</span></div><h3>Android</h3></div>
           <ul class="caps">
-            <li><span class="icon">check_circle</span>Control your PC</li>
-            <li><span class="icon">check_circle</span>Be controlled from your PC</li>
+            <li><span class="icon">check_circle</span>Control your computer</li>
+            <li><span class="icon">check_circle</span>Be controlled from your computer</li>
             <li><span class="icon">check_circle</span>Browse and share files</li>
+            <li><span class="icon">check_circle</span>Notifications and screenshots on your computer</li>
+            <li><span class="icon">check_circle</span>Scan QR codes to pair</li>
           </ul>
         </div>
         <div class="platform reveal">
           <div class="platform-head"><div class="card-icon"><span class="icon">phone_iphone</span></div><h3>iOS &amp; iPadOS</h3></div>
           <ul class="caps">
-            <li><span class="icon">check_circle</span>Control your PC</li>
+            <li><span class="icon">check_circle</span>Control your computer</li>
             <li><span class="icon">check_circle</span>Browse and share files</li>
+            <li><span class="icon">check_circle</span>Screenshots on your computer</li>
+            <li><span class="icon">check_circle</span>Live Activities</li>
+            <li><span class="icon">check_circle</span>Scan QR codes to pair</li>
           </ul>
         </div>
         <div class="platform reveal">
           <div class="platform-head"><div class="card-icon"><span class="icon">desktop_windows</span></div><h3>Windows</h3></div>
           <ul class="caps">
-            <li><span class="icon">check_circle</span>Control your phone</li>
+            <li><span class="icon">check_circle</span>Control an Android phone</li>
             <li><span class="icon">check_circle</span>Be controlled from your phone</li>
             <li><span class="icon">check_circle</span>Browse and share files</li>
+            <li><span class="icon">check_circle</span>Your phone's notifications</li>
+            <li><span class="icon">check_circle</span>Lives in the tray</li>
           </ul>
         </div>
         <div class="platform reveal">
           <div class="platform-head"><div class="card-icon"><span class="icon">laptop_mac</span></div><h3>macOS</h3></div>
           <ul class="caps">
-            <li><span class="icon">check_circle</span>Control your phone</li>
+            <li><span class="icon">check_circle</span>Control an Android phone</li>
             <li><span class="icon">check_circle</span>Be controlled from your phone</li>
             <li><span class="icon">check_circle</span>Browse and share files</li>
+            <li><span class="icon">check_circle</span>Your phone's notifications</li>
+            <li><span class="icon">check_circle</span>Lives in the menu bar</li>
           </ul>
         </div>
       </div>
@@ -1121,7 +1165,7 @@ footer nav a:hover { color: var(--on-surface); }
         <div class="step reveal">
           <div class="step-num">3</div>
           <h3>Start using it</h3>
-          <p>When both devices are on the same Wi-Fi, they connect on their own.</p>
+          <p>On the same Wi-Fi they connect on their own. Without one, Sidekick links them directly.</p>
         </div>
       </div>
     </div>

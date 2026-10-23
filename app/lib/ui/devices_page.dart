@@ -46,33 +46,12 @@ class DevicesPage extends StatelessWidget {
                 label: const Text('Connect device'),
               ),
               menuChildren: [
-                MenuItemButton(
-                  leadingIcon: const Icon(Icons.wifi_rounded),
-                  onPressed: state.scanning ? null : state.scanNetwork,
-                  child: _MenuOption(
-                    title: 'Wi-Fi',
-                    detail: state.scanning ? 'Looking on this network…' : 'Find devices on the same Wi-Fi',
-                  ),
-                ),
-                if (state.bluetooth != null)
+                for (final way in _connectWays(context, state))
                   MenuItemButton(
-                    leadingIcon: const Icon(Icons.bluetooth_rounded),
-                    onPressed: () => showBluetoothPairing(context, state),
-                    child: const _MenuOption(title: 'Bluetooth', detail: 'When there\'s no shared Wi-Fi'),
+                    leadingIcon: Icon(way.icon),
+                    onPressed: way.onTap,
+                    child: _MenuOption(title: way.title, detail: way.detail),
                   ),
-                MenuItemButton(
-                  leadingIcon: const Icon(Icons.qr_code_2_rounded),
-                  onPressed: () => showMyQrCode(context, state),
-                  child: _MenuOption(
-                    title: 'QR code',
-                    detail: canScanQr ? 'Show or scan a code, nothing to type' : 'Show a code to scan with your phone',
-                  ),
-                ),
-                MenuItemButton(
-                  leadingIcon: const Icon(Icons.dialpad_rounded),
-                  onPressed: () => _addByIp(context),
-                  child: const _MenuOption(title: 'IP address', detail: 'Type the other device\'s address'),
-                ),
               ],
             ),
           ],
@@ -134,16 +113,16 @@ class DevicesPage extends StatelessWidget {
                             label: const Text('Pair'),
                           ),
                         ),
-                      // Always reachable, not only when nothing's nearby.
-                      if (state.bluetooth != null)
-                        ListTile(
-                          contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 6),
-                          leading: const IconTile(Icons.bluetooth_searching_rounded, tone: TileTone.tertiary, size: 44),
-                          title: const Text('Pair over Bluetooth'),
-                          subtitle: const Text('For a device that isn\'t on this Wi-Fi'),
-                          trailing: const Icon(Icons.chevron_right),
-                          onTap: () => showBluetoothPairing(context, state),
-                        ),
+                      // Always reachable, not only when nothing's nearby. Every way to
+                      // connect, Wi-Fi first: Sidekick isn't a Bluetooth app.
+                      ListTile(
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 6),
+                        leading: const IconTile(Icons.link_rounded, tone: TileTone.tertiary, size: 44),
+                        title: const Text('Connect a device'),
+                        subtitle: const Text('Wi-Fi, QR code or another way'),
+                        trailing: const Icon(Icons.chevron_right),
+                        onTap: () => showConnectOptions(context, state),
+                      ),
                     ],
                   ),
                 ),
@@ -152,41 +131,6 @@ class DevicesPage extends StatelessWidget {
         );
       },
     );
-  }
-
-  Future<void> _addByIp(BuildContext context) async {
-    final controller = TextEditingController();
-    final address = await showDialog<String>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Add a device by IP'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text("Use this if the device doesn't show up by itself. Its IP address is shown on its Devices tab."),
-            const SizedBox(height: 16),
-            TextField(
-              controller: controller,
-              autofocus: true,
-              decoration: const InputDecoration(labelText: 'IP address', hintText: '192.168.1.23'),
-              onSubmitted: (v) => Navigator.pop(context, v),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
-          FilledButton(onPressed: () => Navigator.pop(context, controller.text), child: const Text('Connect')),
-        ],
-      ),
-    );
-    if (address == null || address.trim().isEmpty || !context.mounted) return;
-    try {
-      final info = await state.addByAddress(address);
-      if (context.mounted) await pairWith(context, state, info);
-    } catch (e) {
-      if (context.mounted) showError(context, e);
-    }
   }
 }
 
@@ -549,21 +493,117 @@ class _Searching extends StatelessWidget {
                             '${Platform.isWindows ? ' If Windows asks, allow Sidekick on private networks.' : ''}',
                   style: TextStyle(color: scheme.onSurfaceVariant),
                 ),
-                // Without Wi-Fi it offers Bluetooth (asking to turn it on first).
-                if (bt != null || (offline && AppState.bluetoothSupported)) ...[
-                  const SizedBox(height: 12),
-                  FilledButton.tonalIcon(
-                    onPressed: () => showBluetoothPairing(context, state),
-                    icon: const Icon(Icons.bluetooth_searching_rounded),
-                    label: const Text('Pair over Bluetooth'),
-                  ),
-                ],
+                // Every way to connect (Wi-Fi, QR code, Bluetooth when there's no Wi-Fi…).
+                const SizedBox(height: 12),
+                FilledButton.tonalIcon(
+                  onPressed: () => showConnectOptions(context, state),
+                  icon: const Icon(Icons.link_rounded),
+                  label: const Text('Connect'),
+                ),
               ],
             ),
           ),
         ],
       ),
     );
+  }
+}
+
+typedef _ConnectWay = ({IconData icon, String title, String detail, VoidCallback? onTap});
+
+/// The ways to connect a device, Wi-Fi first. Bluetooth is only the fallback
+/// for when there's no shared Wi-Fi.
+List<_ConnectWay> _connectWays(BuildContext context, AppState state) => [
+  (
+    icon: Icons.wifi_rounded,
+    title: 'Wi-Fi',
+    detail: state.scanning ? 'Looking on this network…' : 'Find devices on the same Wi-Fi',
+    onTap: state.scanning ? null : state.scanNetwork,
+  ),
+  (
+    icon: Icons.qr_code_2_rounded,
+    title: 'QR code',
+    detail: canScanQr ? 'Show or scan a code, nothing to type' : 'Show a code to scan with your phone',
+    onTap: () => showMyQrCode(context, state),
+  ),
+  (
+    icon: Icons.dialpad_rounded,
+    title: 'IP address',
+    detail: 'Type the other device\'s address',
+    onTap: () => _addByIp(context, state),
+  ),
+  if (state.bluetooth != null || AppState.bluetoothSupported)
+    (
+      icon: Icons.bluetooth_rounded,
+      title: 'Bluetooth',
+      detail: 'Only when there\'s no shared Wi-Fi',
+      onTap: () => showBluetoothPairing(context, state),
+    ),
+];
+
+/// The same choices as the Connect device button, as a sheet.
+Future<void> showConnectOptions(BuildContext context, AppState state) => showModalBottomSheet<void>(
+  context: context,
+  showDragHandle: true,
+  builder: (sheet) => SafeArea(
+    child: Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(24, 0, 24, 8),
+          child: Text('Connect a device', style: Theme.of(sheet).textTheme.titleLarge),
+        ),
+        for (final way in _connectWays(context, state))
+          ListTile(
+            contentPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 2),
+            leading: IconTile(way.icon, size: 40),
+            title: Text(way.title),
+            subtitle: Text(way.detail),
+            enabled: way.onTap != null,
+            onTap: () {
+              Navigator.pop(sheet);
+              way.onTap?.call();
+            },
+          ),
+        const SizedBox(height: 12),
+      ],
+    ),
+  ),
+);
+
+/// Adds a device by its IP address, then pairs.
+Future<void> _addByIp(BuildContext context, AppState state) async {
+  final controller = TextEditingController();
+  final address = await showDialog<String>(
+    context: context,
+    builder: (context) => AlertDialog(
+      title: const Text('Add a device by IP'),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text("Use this if the device doesn't show up by itself. Its IP address is shown on its Devices tab."),
+          const SizedBox(height: 16),
+          TextField(
+            controller: controller,
+            autofocus: true,
+            decoration: const InputDecoration(labelText: 'IP address', hintText: '192.168.1.23'),
+            onSubmitted: (v) => Navigator.pop(context, v),
+          ),
+        ],
+      ),
+      actions: [
+        TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
+        FilledButton(onPressed: () => Navigator.pop(context, controller.text), child: const Text('Connect')),
+      ],
+    ),
+  );
+  if (address == null || address.trim().isEmpty || !context.mounted) return;
+  try {
+    final info = await state.addByAddress(address);
+    if (context.mounted) await pairWith(context, state, info);
+  } catch (e) {
+    if (context.mounted) showError(context, e);
   }
 }
 

@@ -1083,6 +1083,7 @@ class AppState extends ChangeNotifier {
   Future<void> _maybeScanBluetooth() async {
     final bt = bluetooth;
     if (bt == null) return;
+    await _hangUpBluetoothWhereWifiWorks(bt);
     await bt.refresh();
     if (!bt.canScan) return;
     // No Wi-Fi at all (a field, a train): Bluetooth is the only way, so look
@@ -1096,6 +1097,19 @@ class AppState extends ChangeNotifier {
   }
 
   int _bleTick = 0;
+
+  /// Wi-Fi first: once a device Sidekick talked to over Bluetooth is
+  /// reachable over Wi-Fi (or Bluetooth isn't allowed for it any more),
+  /// Sidekick hangs up its own Bluetooth connection to it. Only that one:
+  /// Bluetooth stays on, and headphones and other devices stay connected.
+  Future<void> _hangUpBluetoothWhereWifiWorks(BluetoothService bt) async {
+    for (final entry in _bleSeen.entries.toList()) {
+      final id = entry.key;
+      final bleId = entry.value.bleId;
+      if (!bt.hasLink(bleId) || viaBluetooth(id)) continue;
+      if (await bt.closeLink(bleId)) _bleClients.remove(id);
+    }
+  }
 
   void _onFound(DeviceInfo info) {
     final existing = _nearby[info.id];
