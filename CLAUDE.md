@@ -58,7 +58,9 @@ chart, referring sites; `sidekick-wishlist/visits.json`, visitors only as
 a day-salted hash of IP + browser, bots skipped; plus **Who visited**: every
 IP address (bots marked) for 30 days in `ips.json` (`record_ip`), with
 country, city and network from ipwho.is, looked up only from the panel
-(`ip_places`, 25 a load, `ip-places.json`), and a countries chart; both
+(`ip_places`, 25 a load, `ip-places.json`), and a countries chart; visits from
+cloud / hosting / scanner networks (`is_cloud_network`: Tencent's "6 Collyer
+Quay", Alibaba, Censys…) count as bots, marked "cloud"; both
 privacy policies say so), Website (the newest GitHub release, `latest_release()`: the GitHub API,
 cached 10 minutes in `latest-release.json`, with **Release latest** and
 Check again; **Release Sidekick** with a version / **Make it a wishlist

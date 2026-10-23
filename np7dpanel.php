@@ -104,6 +104,17 @@ function go(string $tab, array $query = []): void {
     exit;
 }
 
+/** A network that's a cloud provider, hosting company or scanner, not
+ *  somebody's internet at home or on their phone: visits from it are bots,
+ *  whatever browser they claim to be. ("6 Collyer Quay" is Tencent Cloud's
+ *  address in Singapore.) */
+function is_cloud_network(string $network): bool {
+    return $network !== '' && (bool)preg_match('/alibaba|aliyun|tencent|collyer quay|amazon|aws|google cloud|google llc|microsoft|azure|'
+        . 'digitalocean|linode|akamai|ovh|hetzner|vultr|choopa|oracle|censys|shodan|leaseweb|m247|datacamp|cdn77|contabo|'
+        . 'scaleway|hostinger|ionos|cloudflare|huawei|byteplus|bytedance|zenlayer|psychz|quadranet|colocrossing|'
+        . 'hosting|datacenter|data center|server|cloud/i', $network);
+}
+
 /** "Chrome on Windows" from a browser's User-Agent, or the start of it. */
 function browser_name(string $ua): string {
     if ($ua === '') return '(none)';
@@ -766,7 +777,9 @@ $('send').onclick = async () => {
   <?php $ips = function_exists('visitor_ips') ? visitor_ips() : []; $places = $ips ? ip_places(array_keys($ips)) : [];
     $botsOnly = ($_GET['bots'] ?? '') === '1'; $mine = (string)($_SERVER['REMOTE_ADDR'] ?? '');
     $countries = [];
-    foreach ($ips as $ip => $r) { if (!$r['bot']) { $c = $places[$ip]['country'] ?? 'Not looked up yet'; $countries[$c] = ($countries[$c] ?? 0) + 1; } }
+    // Bots, and "visitors" on a cloud server's network (scanners pretending to be an iPhone).
+    $machine = fn($ip, $r) => $r['bot'] || is_cloud_network($places[$ip]['network'] ?? '');
+    foreach ($ips as $ip => $r) { if (!$machine($ip, $r)) { $c = $places[$ip]['country'] ?? 'Not looked up yet'; $countries[$c] = ($countries[$c] ?? 0) + 1; } }
     arsort($countries); ?>
   <?php if ($countries): $cPeak = max($countries); ?>
   <div class="card">
@@ -780,14 +793,14 @@ $('send').onclick = async () => {
   <div class="card">
     <h2>Who visited</h2>
     <p class="muted" style="margin-top:0">Every IP address that opened the home page in the last 30 days, newest first.
-      <?= $botsOnly ? '<a href="?tab=visits">Show people only</a>' : '<a href="?tab=visits&amp;bots=1">Show bots too</a>' ?></p>
-    <?php $shown = array_filter($ips, fn($r) => $botsOnly || !$r['bot']); ?>
+      <?= $botsOnly ? '<a href="?tab=visits">Show people only</a>' : '<a href="?tab=visits&amp;bots=1">Show bots and cloud servers too</a>' ?></p>
+    <?php $shown = array_filter($ips, fn($r, $ip) => $botsOnly || !$machine($ip, $r), ARRAY_FILTER_USE_BOTH); ?>
     <?php if (!$shown): ?><p class="muted"><?= function_exists('visitor_ips') ? 'Nobody yet.' : 'Upload the new wishlist.php and index.php for this.' ?></p><?php else: ?>
     <div class="tablewrap"><table>
       <tr><th>IP address</th><th>Where</th><th>Network</th><th>Visits</th><th>Last (UTC)</th><th>Browser</th></tr>
       <?php foreach (array_slice($shown, 0, 300, true) as $ip => $r): $pl = $places[$ip] ?? null; ?>
         <tr>
-          <td style="white-space:nowrap"><?= e((string)$ip) ?><?= (string)$ip === $mine ? ' <span class="pill good">You</span>' : '' ?><?= $r['bot'] ? ' <span class="pill">bot</span>' : '' ?></td>
+          <td style="white-space:nowrap"><?= e((string)$ip) ?><?= (string)$ip === $mine ? ' <span class="pill good">You</span>' : '' ?><?= $r['bot'] ? ' <span class="pill">bot</span>' : (is_cloud_network($pl['network'] ?? '') ? ' <span class="pill">cloud</span>' : '') ?></td>
           <td><?= $pl ? e(trim($pl['country'] . ($pl['city'] !== '' ? ' · ' . $pl['city'] : ''))) : '<span class="muted">…</span>' ?></td>
           <td style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="<?= e($pl['network'] ?? '') ?>"><?= e($pl['network'] ?? '') ?></td>
           <td><?= (int)$r['n'] ?></td>
@@ -799,7 +812,7 @@ $('send').onclick = async () => {
     <?php if (count(array_diff_key($ips, $places))): ?><p class="muted">Some places aren't looked up yet: reload the page to look up the next ones.</p><?php endif; ?>
     <?php endif; ?>
   </div>
-  <p class="muted">Every time someone opens the home page counts as a visit; "visitors" are the different people in a day. The counts leave out search engines and other bots; "Who visited" can show them. IP addresses are kept 30 days, and where they are comes from ipwho.is. A visit from a far-away country is often a bot or scanner on a cloud server there (its network says so).</p>
+  <p class="muted">Every time someone opens the home page counts as a visit; "visitors" are the different people in a day. The counts leave out search engines and other bots; "Who visited" can show them. IP addresses are kept 30 days, and where they are comes from ipwho.is. Visits from cloud and hosting networks (Tencent, Alibaba, Amazon, scanners like Censys…) are marked "cloud" and left out of the countries and the list: they're bots, even when they say they're an iPhone.</p>
 
 <?php elseif ($tab === 'site'): $site = site_state(); $latest = latest_release(); ?>
   <div class="card">
