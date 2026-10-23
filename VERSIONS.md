@@ -4,6 +4,15 @@ Every release, newest first, with its biggest features and fixes. Add an
 entry here with each release (see "Releasing" in `CLAUDE.md`). The history
 starts at 1.1.3.
 
+## 2.17.5
+- **Fixed: the iPhone froze for good** when the Liquid Glass bar's area was
+  tapped during the intro. The glass never holds a touch now.
+- **The intro plays once,** the first time Sidekick opens. Every other
+  start shows a plain loading screen (logo and a moving bar); waits inside
+  the app (opening a folder) use the same bar.
+- **A cleaner, flatter look:** no decorative gradients or glows on the send
+  and receive screens, welcome, QR code, Accept buttons or the tray panel.
+
 ## 2.17.4
 - **Fixed: the iPhone crashed when the Liquid Glass tab bar was tapped**
   (iOS 26). The tab bar is now Sidekick's own, on Apple's Liquid Glass.
