@@ -141,7 +141,15 @@ import UIKit
       p2p = SidekickP2P.register(messenger: registrar.messenger())
     }
     if let registrar = engineBridge.pluginRegistry.registrar(forPlugin: "SidekickGlass") {
-      registrar.register(GlassViewFactory(), withId: "sidekick/glass")
+      // Only something to look at: touches on it must never wait for Flutter
+      // to decide who gets them. With the default policy a tap where Flutter
+      // didn't hit-test the view (the intro on top of it, spam taps) left the
+      // touch held forever, and the whole app froze.
+      registrar.register(
+        GlassViewFactory(),
+        withId: "sidekick/glass",
+        gestureRecognizersBlockingPolicy: FlutterPlatformViewGestureRecognizersBlockingPolicyDoNotBlockGesture
+      )
     }
   }
 }
@@ -178,6 +186,7 @@ final class GlassPlatformView: NSObject, FlutterPlatformView {
     effectView.layer.cornerRadius = radius
     effectView.layer.cornerCurve = .continuous
     effectView.clipsToBounds = true
+    effectView.isUserInteractionEnabled = false
     // Follow the app's light/dark choice, not only the system's.
     effectView.overrideUserInterfaceStyle = dark ? .dark : .light
     super.init()

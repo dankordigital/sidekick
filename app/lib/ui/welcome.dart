@@ -304,14 +304,7 @@ class _Page extends StatelessWidget {
           child: Container(
             width: 72,
             height: 72,
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [scheme.primary, scheme.tertiary],
-              ),
-              borderRadius: BorderRadius.circular(24),
-            ),
+            decoration: BoxDecoration(color: scheme.primary, borderRadius: BorderRadius.circular(24)),
             child: Icon(icon, color: scheme.onPrimary, size: 36),
           ),
         ),

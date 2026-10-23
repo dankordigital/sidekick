@@ -66,11 +66,7 @@ class PairingQrCode extends StatelessWidget {
             height: tile,
             padding: EdgeInsets.all(tile * 0.2),
             decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [scheme.primary, scheme.tertiary],
-              ),
+              color: scheme.primary,
               borderRadius: BorderRadius.circular(tile * 0.28),
               border: Border.all(color: Colors.white, width: 3),
             ),

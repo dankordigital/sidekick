@@ -262,7 +262,7 @@ class _CornerPopupState extends State<CornerPopup> with TickerProviderStateMixin
                           ),
                         ),
                         child: switch (_stage) {
-                          _Stage.asking => _Answer(pulse: _pulse, onAccept: _accept, onDecline: _decline),
+                          _Stage.asking => _Answer(onAccept: _accept, onDecline: _decline),
                           _Stage.receiving || _Stage.done => _Progress(
                             key: const ValueKey('progress'),
                             fraction: _stage == _Stage.done ? 1 : fraction,
@@ -456,14 +456,12 @@ class _FileChip extends StatelessWidget {
 }
 
 class _Answer extends StatelessWidget {
-  const _Answer({required this.pulse, required this.onAccept, required this.onDecline});
-  final Animation<double> pulse;
+  const _Answer({required this.onAccept, required this.onDecline});
   final VoidCallback onAccept;
   final VoidCallback onDecline;
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
     const shape = Size(0, 40);
     return Row(
       children: [
@@ -476,27 +474,11 @@ class _Answer extends StatelessWidget {
         ),
         const SizedBox(width: 10),
         Expanded(
-          // A soft glow that breathes, inviting a click.
-          child: AnimatedBuilder(
-            animation: pulse,
-            builder: (_, button) => DecoratedBox(
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(20),
-                boxShadow: [
-                  BoxShadow(
-                    color: scheme.primary.withValues(alpha: 0.12 + 0.16 * math.sin(pulse.value * math.pi)),
-                    blurRadius: 14,
-                  ),
-                ],
-              ),
-              child: button,
-            ),
-            child: FilledButton.icon(
-              onPressed: onAccept,
-              style: FilledButton.styleFrom(minimumSize: shape, padding: EdgeInsets.zero),
-              icon: const Icon(Icons.download_rounded, size: 18),
-              label: const Text('Accept'),
-            ),
+          child: FilledButton.icon(
+            onPressed: onAccept,
+            style: FilledButton.styleFrom(minimumSize: shape, padding: EdgeInsets.zero),
+            icon: const Icon(Icons.download_rounded, size: 18),
+            label: const Text('Accept'),
           ),
         ),
       ],

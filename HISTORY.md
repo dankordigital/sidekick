@@ -7,6 +7,12 @@ detailed developer notes; every release is in `VERSIONS.md`) and
 
 ## 23 October 2026
 
+- **App 2.17.5:** fixed the iPhone freezing for good when the Liquid Glass
+  tab bar area was tapped during the intro (the glass platform view now
+  never holds touches). The intro plays only on the first launch; every
+  other start shows a plain loading screen (logo + moving bar), and
+  in-app waits use the same bar (`Loading`). Decorative gradients and
+  glows removed everywhere (flat theme colors; tray panel solid).
 - **App 2.17.3:** the Devices page no longer says "Pair over
   Bluetooth": a "Connect" link opens every way to connect (Wi-Fi, QR code,
   IP, Bluetooth last). The welcome screen says "Works over Wi-Fi". When

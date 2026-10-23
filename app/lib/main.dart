@@ -5,6 +5,7 @@ import 'package:dynamic_color/dynamic_color.dart';
 import 'package:flutter/foundation.dart';
 import 'package:cupertino_ui/cupertino_ui.dart' show CupertinoPageTransitionsBuilder;
 import 'package:material_ui/material_ui.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'app_state.dart';
 import 'core/host.dart';
@@ -33,11 +34,13 @@ Future<void> main([List<String> args = const []]) async {
         debugPrint('Sidekick: no tray: $e');
       }
     }
-    final state = await AppState.load();
-    await state.start();
     // Started at login (Auto-load): quietly, in the tray.
     final quiet = AutoLoad.launchedHidden;
-    runApp(SidekickApp(state: state, splash: !quiet));
+    if (!quiet) await _showLoading();
+    final state = await AppState.load();
+    await state.start();
+    // The intro plays once, before setup; after that the app just opens.
+    runApp(SidekickApp(state: state, splash: !quiet && !state.welcomed));
     // Its own call, not part of the animation: with "Reduce motion" on
     // there's no animation, but the chime still plays.
     if (state.sound && !quiet) unawaited(playStartupSound());
@@ -45,6 +48,19 @@ Future<void> main([List<String> args = const []]) async {
     // Never a blank window: say what went wrong and offer to try again.
     runApp(_StartupFailed(error: error, retry: main));
   }
+}
+
+/// The loading screen, until the app is ready. Only the theme's color and
+/// light/dark are read for it; everything else loads behind it.
+Future<void> _showLoading() async {
+  var seed = themeColors['purple']!.$2;
+  var mode = ThemeMode.system;
+  try {
+    final prefs = await SharedPreferences.getInstance();
+    seed = themeColors[prefs.getString('themeColor')]?.$2 ?? seed;
+    mode = ThemeMode.values.asNameMap()[prefs.getString('themeMode')] ?? mode;
+  } catch (_) {}
+  runApp(LoadingApp(seed: seed, themeMode: mode));
 }
 
 /// Errors nothing else caught are logged instead of taking the app down,
@@ -114,7 +130,7 @@ class SidekickApp extends StatelessWidget {
 
   final AppState state;
 
-  /// Play the startup animation (and on a Mac, the chime) first.
+  /// Play the intro first (the first time Sidekick opens).
   final bool splash;
 
   /// Material You, Sidekick style: the colors come from the wallpaper or the

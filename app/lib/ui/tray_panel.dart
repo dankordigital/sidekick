@@ -20,11 +20,8 @@ class TrayPanel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    // Always the deep, vivid look, in the theme's color.
-    final hue = HSLColor.fromColor(scheme.primary);
-    final top = hue.withSaturation(0.62).withLightness(0.30).toColor();
-    final bottom = hue.withHue((hue.hue + 18) % 360).withSaturation(0.55).withLightness(0.12).toColor();
-    final glow = hue.withHue((hue.hue + 40) % 360).withSaturation(0.9).withLightness(0.55).toColor();
+    // Always dark, in a deep shade of the theme's color.
+    final background = HSLColor.fromColor(scheme.primary).withSaturation(0.4).withLightness(0.14).toColor();
     return Theme(
       data: ThemeData(
         brightness: Brightness.dark,
@@ -32,44 +29,30 @@ class TrayPanel extends StatelessWidget {
         fontFamily: Theme.of(context).textTheme.bodyMedium?.fontFamily,
       ),
       child: Material(
-        child: DecoratedBox(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(begin: Alignment.topLeft, end: Alignment.bottomRight, colors: [top, bottom]),
-          ),
-          child: DecoratedBox(
-            // A soft light from the top right, like CleanMyMac's panel.
-            decoration: BoxDecoration(
-              gradient: RadialGradient(
-                center: const Alignment(0.9, -0.95),
-                radius: 1.1,
-                colors: [glow.withValues(alpha: 0.35), glow.withValues(alpha: 0)],
+        color: background,
+        child: ListenableBuilder(
+          listenable: state,
+          builder: (context, _) => Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Expanded(
+                child: ListView(
+                  padding: const EdgeInsets.fromLTRB(16, 18, 16, 8),
+                  children: [
+                    Entrance(child: _Header(state: state)),
+                    const SizedBox(height: 14),
+                    Entrance(index: 1, child: _StatusCard(state: state)),
+                    const SizedBox(height: 10),
+                    Entrance(index: 2, child: _ReceivedCard(state: state)),
+                    const SizedBox(height: 10),
+                    Entrance(index: 3, child: _DevicesCard(state: state)),
+                    const SizedBox(height: 18),
+                    Entrance(index: 4, child: const _Tip()),
+                  ],
+                ),
               ),
-            ),
-            child: ListenableBuilder(
-              listenable: state,
-              builder: (context, _) => Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Expanded(
-                    child: ListView(
-                      padding: const EdgeInsets.fromLTRB(16, 18, 16, 8),
-                      children: [
-                        Entrance(child: _Header(state: state)),
-                        const SizedBox(height: 14),
-                        Entrance(index: 1, child: _StatusCard(state: state)),
-                        const SizedBox(height: 10),
-                        Entrance(index: 2, child: _ReceivedCard(state: state)),
-                        const SizedBox(height: 10),
-                        Entrance(index: 3, child: _DevicesCard(state: state)),
-                        const SizedBox(height: 18),
-                        Entrance(index: 4, child: const _Tip()),
-                      ],
-                    ),
-                  ),
-                  const _Footer(),
-                ],
-              ),
-            ),
+              const _Footer(),
+            ],
           ),
         ),
       ),

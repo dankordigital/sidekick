@@ -169,7 +169,7 @@ class _BrowserState extends State<_Browser> {
   }
 
   Widget _buildList(List<RemoteEntry> entries) {
-    if (_loading) return const Center(child: CircularProgressIndicator());
+    if (_loading) return const Loading(label: 'Opening folder…');
     if (_error != null) {
       return EmptyState(
         icon: Icons.error_outline,

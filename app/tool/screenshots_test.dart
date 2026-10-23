@@ -26,6 +26,7 @@ import 'package:sidekick/main.dart';
 import 'package:sidekick/platform/files.dart';
 import 'package:sidekick/platform/desktop_window.dart';
 import 'package:sidekick/platform/input.dart';
+import 'package:sidekick/ui/startup.dart';
 import 'package:sidekick/ui/tray_panel.dart';
 import 'package:sidekick/ui/widgets.dart';
 
@@ -118,7 +119,13 @@ void main() {
 
     /// Waits until the page has loaded (no spinner left), up to ~10 s.
     Future<void> loaded() async {
-      for (var i = 0; i < 20 && find.byType(CircularProgressIndicator).evaluate().isNotEmpty; i++) {
+      for (
+        var i = 0;
+        i < 20 &&
+            (find.byType(CircularProgressIndicator).evaluate().isNotEmpty ||
+                find.byType(Loading).evaluate().isNotEmpty);
+        i++
+      ) {
         await tester.runAsync(() => Future<void>.delayed(const Duration(milliseconds: 500)));
         await tester.pump(const Duration(milliseconds: 100));
       }
@@ -291,6 +298,16 @@ void main() {
       });
     }
     await tester.pump(const Duration(seconds: 1));
+
+    // The loading screen, while Sidekick starts.
+    await tester.pumpWidget(
+      RepaintBoundary(
+        key: boundary,
+        child: LoadingApp(seed: themeColors['purple']!.$2, themeMode: ThemeMode.light),
+      ),
+    );
+    await tester.pump(const Duration(milliseconds: 600));
+    await shot('loading');
 
     // The panel the tray / menu-bar icon opens (Windows, Mac).
     tester.view.physicalSize = DesktopWindow.panelSize * 2;

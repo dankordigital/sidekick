@@ -1,10 +1,12 @@
 import 'package:material_ui/material_ui.dart';
 
-/// The startup animation, played once when Sidekick opens.
+import 'widgets.dart';
+
+/// The intro, played once: the first time Sidekick opens, before setup.
 ///
-/// The "sk" tile pops in, two ripples spread from it, the name rises into
-/// place, then the whole thing zooms away and the app settles in behind it.
-/// A tap skips it; with reduced motion it doesn't play at all.
+/// The "sk" tile pops in and the name rises under it, then it fades into the
+/// app. The app isn't built until it's done, so nothing under it can be
+/// touched. A tap skips it; with reduced motion it doesn't play at all.
 class StartupSplash extends StatefulWidget {
   const StartupSplash({super.key, required this.child});
 
@@ -15,7 +17,7 @@ class StartupSplash extends StatefulWidget {
 }
 
 class _StartupSplashState extends State<StartupSplash> with SingleTickerProviderStateMixin {
-  late final AnimationController _c = AnimationController(vsync: this, duration: const Duration(milliseconds: 1700));
+  late final AnimationController _c = AnimationController(vsync: this, duration: const Duration(milliseconds: 1400));
   bool _done = false;
   bool _started = false;
 
@@ -28,9 +30,11 @@ class _StartupSplashState extends State<StartupSplash> with SingleTickerProvider
       _done = true;
       return;
     }
-    _c.forward().whenComplete(() {
-      if (mounted) setState(() => _done = true);
-    });
+    _c.forward().whenComplete(_finish);
+  }
+
+  void _finish() {
+    if (mounted && !_done) setState(() => _done = true);
   }
 
   @override
@@ -39,14 +43,8 @@ class _StartupSplashState extends State<StartupSplash> with SingleTickerProvider
     super.dispose();
   }
 
-  /// A tap jumps to the zoom-away part.
-  void _skip() {
-    if (_c.value < 0.72) _c.animateTo(0.72, duration: const Duration(milliseconds: 120));
-  }
-
   @override
   Widget build(BuildContext context) {
-    if (_done) return widget.child;
     final scheme = Theme.of(context).colorScheme;
     final text = Theme.of(context).textTheme;
 
@@ -54,58 +52,31 @@ class _StartupSplashState extends State<StartupSplash> with SingleTickerProvider
       parent: _c,
       curve: Interval(from, to, curve: curve),
     );
-    final pop = part(0.0, 0.42, Curves.elasticOut);
-    final ripple = part(0.18, 0.85, Curves.easeOut);
-    final title = part(0.28, 0.55);
-    final leave = part(0.72, 1.0, Curves.easeInCubic);
-    final reveal = part(0.72, 1.0);
+    final pop = part(0.0, 0.4, Curves.easeOutBack);
+    final title = part(0.2, 0.5);
 
-    return Stack(
-      fit: StackFit.expand,
-      children: [
-        // The app underneath grows into place as the splash leaves.
-        AnimatedBuilder(
-          animation: reveal,
-          builder: (context, child) => Transform.scale(scale: 0.94 + 0.06 * reveal.value, child: child),
-          child: widget.child,
-        ),
-        GestureDetector(
-          onTap: _skip,
-          child: AnimatedBuilder(
-            animation: _c,
-            builder: (context, _) => Opacity(
-              opacity: 1 - leave.value,
-              child: DecoratedBox(
-                decoration: BoxDecoration(
-                  gradient: RadialGradient(
-                    radius: 1.1,
-                    colors: [Color.lerp(scheme.surface, scheme.primaryContainer, 0.55)!, scheme.surface],
-                  ),
-                ),
+    return AnimatedSwitcher(
+      duration: const Duration(milliseconds: 300),
+      child: _done
+          ? widget.child
+          : GestureDetector(
+              key: const ValueKey('splash'),
+              behavior: HitTestBehavior.opaque,
+              onTap: _finish,
+              child: ColoredBox(
+                color: scheme.surface,
                 child: Center(
-                  child: Transform.scale(
-                    scale: 1 + 0.35 * leave.value,
-                    child: Column(
+                  child: AnimatedBuilder(
+                    animation: _c,
+                    builder: (context, _) => Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        SizedBox.square(
-                          dimension: 260,
-                          child: Stack(
-                            alignment: Alignment.center,
-                            children: [
-                              for (final delay in [0.0, 0.22])
-                                _Ripple(
-                                  t: ((ripple.value - delay) / (1 - delay)).clamp(0.0, 1.0),
-                                  color: scheme.primary,
-                                ),
-                              Transform.scale(scale: pop.value, child: _LogoTile(size: 112)),
-                            ],
-                          ),
-                        ),
+                        Transform.scale(scale: pop.value, child: const LogoTile(size: 96)),
+                        const SizedBox(height: 24),
                         Opacity(
                           opacity: title.value,
                           child: Transform.translate(
-                            offset: Offset(0, 14 * (1 - title.value)),
+                            offset: Offset(0, 10 * (1 - title.value)),
                             child: Column(
                               children: [
                                 Text('Sidekick', style: text.headlineMedium?.copyWith(color: scheme.onSurface)),
@@ -124,65 +95,34 @@ class _StartupSplashState extends State<StartupSplash> with SingleTickerProvider
                 ),
               ),
             ),
-          ),
-        ),
-      ],
     );
   }
 }
 
-/// A ring that grows from the logo and fades as it goes.
-class _Ripple extends StatelessWidget {
-  const _Ripple({required this.t, required this.color});
-  final double t;
-  final Color color;
+/// What shows while Sidekick starts: the logo and a bar that keeps moving.
+/// It runs before the settings are read, so it follows the system's light
+/// or dark and the chosen color only.
+class LoadingApp extends StatelessWidget {
+  const LoadingApp({super.key, required this.seed, this.themeMode = ThemeMode.system});
+
+  final Color seed;
+  final ThemeMode themeMode;
 
   @override
   Widget build(BuildContext context) {
-    if (t <= 0 || t >= 1) return const SizedBox.shrink();
-    final size = 112 + 148 * t;
-    return Container(
-      width: size,
-      height: size,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        border: Border.all(
-          color: color.withValues(alpha: 0.45 * (1 - t)),
-          width: 2 + 4 * (1 - t),
-        ),
-      ),
+    ThemeData theme(Brightness b) => ThemeData(
+      colorScheme: ColorScheme.fromSeed(seedColor: seed, brightness: b),
+      useMaterial3: true,
+      // ignore: deprecated_member_use
+      progressIndicatorTheme: const ProgressIndicatorThemeData(year2023: false),
     );
-  }
-}
-
-/// The "sk" monogram in white on the primary → tertiary gradient tile.
-class _LogoTile extends StatelessWidget {
-  const _LogoTile({required this.size});
-  final double size;
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    return Container(
-      width: size,
-      height: size,
-      padding: EdgeInsets.all(size * 0.24),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [scheme.primary, scheme.tertiary],
-        ),
-        borderRadius: BorderRadius.circular(size * 0.3),
-        boxShadow: [
-          BoxShadow(
-            color: scheme.primary.withValues(alpha: 0.35),
-            blurRadius: size * 0.35,
-            offset: Offset(0, size * 0.1),
-          ),
-        ],
-      ),
-      child: Image.asset('assets/logo/logo.png', color: scheme.onPrimary, semanticLabel: 'Sidekick'),
+    return MaterialApp(
+      title: 'Sidekick',
+      debugShowCheckedModeBanner: false,
+      themeMode: themeMode,
+      theme: theme(Brightness.light),
+      darkTheme: theme(Brightness.dark),
+      home: const Scaffold(body: Loading(child: LogoTile(size: 72))),
     );
   }
 }

@@ -109,67 +109,58 @@ class _SendingScreenState extends State<SendingScreen> {
       SendPhase.failed => ("Couldn't send", send.error ?? 'Something went wrong'),
     };
     return Scaffold(
-      body: DecoratedBox(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [scheme.primaryContainer.withValues(alpha: 0.55), scheme.surface],
-          ),
-        ),
-        child: SafeArea(
-          child: Center(
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 480),
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
-                child: Column(
-                  children: [
-                    const Spacer(flex: 2),
-                    SizedBox(
-                      width: 260,
-                      height: 260,
-                      child: _SendGraphic(send: send, icon: platformIcon(d.platform)),
+      body: SafeArea(
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 480),
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
+              child: Column(
+                children: [
+                  const Spacer(flex: 2),
+                  SizedBox(
+                    width: 260,
+                    height: 260,
+                    child: _SendGraphic(send: send, icon: platformIcon(d.platform)),
+                  ),
+                  const SizedBox(height: 32),
+                  AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 300),
+                    transitionBuilder: (child, a) => FadeTransition(
+                      opacity: a,
+                      child: SlideTransition(
+                        position: Tween(begin: const Offset(0, 0.25), end: Offset.zero).animate(a),
+                        child: child,
+                      ),
                     ),
-                    const SizedBox(height: 32),
-                    AnimatedSwitcher(
-                      duration: const Duration(milliseconds: 300),
-                      transitionBuilder: (child, a) => FadeTransition(
-                        opacity: a,
-                        child: SlideTransition(
-                          position: Tween(begin: const Offset(0, 0.25), end: Offset.zero).animate(a),
-                          child: child,
+                    child: Column(
+                      key: ValueKey(send.phase),
+                      children: [
+                        Text(
+                          title,
+                          textAlign: TextAlign.center,
+                          style: text.headlineMedium?.copyWith(fontWeight: FontWeight.w700),
                         ),
-                      ),
-                      child: Column(
-                        key: ValueKey(send.phase),
-                        children: [
-                          Text(
-                            title,
-                            textAlign: TextAlign.center,
-                            style: text.headlineMedium?.copyWith(fontWeight: FontWeight.w700),
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            subtitle,
-                            textAlign: TextAlign.center,
-                            maxLines: 3,
-                            overflow: TextOverflow.ellipsis,
-                            style: text.bodyLarge?.copyWith(color: scheme.onSurfaceVariant),
-                          ),
-                        ],
-                      ),
+                        const SizedBox(height: 8),
+                        Text(
+                          subtitle,
+                          textAlign: TextAlign.center,
+                          maxLines: 3,
+                          overflow: TextOverflow.ellipsis,
+                          style: text.bodyLarge?.copyWith(color: scheme.onSurfaceVariant),
+                        ),
+                      ],
                     ),
-                    const SizedBox(height: 28),
-                    AnimatedSize(
-                      duration: const Duration(milliseconds: 300),
-                      curve: Curves.easeOutCubic,
-                      child: send.phase == SendPhase.sending ? _progress(context) : const SizedBox(width: 1),
-                    ),
-                    const Spacer(flex: 3),
-                    _actions(),
-                  ],
-                ),
+                  ),
+                  const SizedBox(height: 28),
+                  AnimatedSize(
+                    duration: const Duration(milliseconds: 300),
+                    curve: Curves.easeOutCubic,
+                    child: send.phase == SendPhase.sending ? _progress(context) : const SizedBox(width: 1),
+                  ),
+                  const Spacer(flex: 3),
+                  _actions(),
+                ],
               ),
             ),
           ),
@@ -296,22 +287,11 @@ class _SendGraphicState extends State<_SendGraphic> with SingleTickerProviderSta
           height: ok || bad ? 150 : 120,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: bad
-                  ? [scheme.errorContainer, scheme.errorContainer]
-                  : ok
-                  ? [Colors.green.shade400, Colors.green.shade700]
-                  : [scheme.primary, scheme.tertiary],
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: (bad ? scheme.error : scheme.primary).withValues(alpha: 0.3),
-                blurRadius: 32,
-                spreadRadius: 2,
-              ),
-            ],
+            color: bad
+                ? scheme.errorContainer
+                : ok
+                ? Colors.green.shade600
+                : scheme.primary,
           ),
           child: AnimatedSwitcher(
             duration: const Duration(milliseconds: 450),
@@ -742,30 +722,11 @@ class _IncomingOfferState extends State<_IncomingOffer> with TickerProviderState
                                 ),
                                 const SizedBox(width: 12),
                                 Expanded(
-                                  // A soft glow that breathes, inviting a tap.
-                                  child: AnimatedBuilder(
-                                    animation: _loop,
-                                    builder: (_, button) => DecoratedBox(
-                                      decoration: BoxDecoration(
-                                        borderRadius: BorderRadius.circular(26),
-                                        boxShadow: [
-                                          BoxShadow(
-                                            color: scheme.primary.withValues(
-                                              alpha: 0.18 + 0.17 * math.sin(_loop.value * 2 * math.pi).abs(),
-                                            ),
-                                            blurRadius: 18,
-                                            spreadRadius: 1,
-                                          ),
-                                        ],
-                                      ),
-                                      child: button,
-                                    ),
-                                    child: FilledButton.icon(
-                                      onPressed: _accept,
-                                      icon: const Icon(Icons.download_rounded),
-                                      label: const Text('Accept'),
-                                      style: FilledButton.styleFrom(minimumSize: const Size(0, 52)),
-                                    ),
+                                  child: FilledButton.icon(
+                                    onPressed: _accept,
+                                    icon: const Icon(Icons.download_rounded),
+                                    label: const Text('Accept'),
+                                    style: FilledButton.styleFrom(minimumSize: const Size(0, 52)),
                                   ),
                                 ),
                               ],
@@ -857,15 +818,11 @@ class _IncomingOfferState extends State<_IncomingOffer> with TickerProviderState
             height: done ? 104 : 88,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: done
-                    ? [Colors.green.shade400, Colors.green.shade700]
-                    : gone
-                    ? [scheme.surfaceContainerHighest, scheme.surfaceContainerHighest]
-                    : [scheme.primary, scheme.tertiary],
-              ),
+              color: done
+                  ? Colors.green.shade600
+                  : gone
+                  ? scheme.surfaceContainerHighest
+                  : scheme.primary,
             ),
             child: AnimatedSwitcher(
               duration: const Duration(milliseconds: 450),
@@ -881,8 +838,8 @@ class _IncomingOfferState extends State<_IncomingOffer> with TickerProviderState
                     : platformIcon(offer.from.platform),
                 key: ValueKey(_stage),
                 size: done ? 60 : 44,
-                // On the theme's gradient the icon takes the matching "on" color:
-                // fixed white vanished on light gradients (dark mode, mono).
+                // On the theme's color the icon takes the matching "on" color:
+                // fixed white vanished on light ones (dark mode, mono).
                 color: gone
                     ? scheme.onSurfaceVariant
                     : done

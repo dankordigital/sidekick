@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:desktop_drop/desktop_drop.dart';
@@ -367,6 +368,80 @@ class GradientBadge extends StatelessWidget {
       child: Icon(icon, size: size * 0.46, color: scheme.onSurface),
     );
   }
+}
+
+/// The "sk" monogram on a flat tile in the theme's color.
+class LogoTile extends StatelessWidget {
+  const LogoTile({super.key, this.size = 72});
+  final double size;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Container(
+      width: size,
+      height: size,
+      padding: EdgeInsets.all(size * 0.24),
+      decoration: BoxDecoration(color: scheme.primary, borderRadius: BorderRadius.circular(size * 0.3)),
+      child: Image.asset('assets/logo/logo.png', color: scheme.onPrimary, semanticLabel: 'Sidekick'),
+    );
+  }
+}
+
+/// Something is loading: a bar that keeps moving, under [child] if given,
+/// with an optional [label]. It shows only after [delay], so whatever loads
+/// quickly doesn't flash it.
+class Loading extends StatefulWidget {
+  const Loading({super.key, this.child, this.label, this.delay = const Duration(milliseconds: 250)});
+  final Widget? child;
+  final String? label;
+  final Duration delay;
+
+  @override
+  State<Loading> createState() => _LoadingState();
+}
+
+class _LoadingState extends State<Loading> {
+  Timer? _timer;
+  late bool _shown = widget.delay == Duration.zero;
+
+  @override
+  void initState() {
+    super.initState();
+    if (!_shown) _timer = Timer(widget.delay, () => setState(() => _shown = true));
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => Center(
+    child: AnimatedOpacity(
+      opacity: _shown ? 1 : 0,
+      duration: const Duration(milliseconds: 200),
+      child: Semantics(
+        label: widget.label ?? 'Loading',
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (widget.child != null) ...[widget.child!, const SizedBox(height: 28)],
+            const SizedBox(width: 160, child: LinearProgressIndicator()),
+            if (widget.label != null) ...[
+              const SizedBox(height: 12),
+              Text(
+                widget.label!,
+                style: Theme.of(context).textTheme.bodyMedium
+                    ?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant),
+              ),
+            ],
+          ],
+        ),
+      ),
+    ),
+  );
 }
 
 /// A status: a small colored dot (or icon) and a word, no background.

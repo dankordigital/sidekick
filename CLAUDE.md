@@ -133,8 +133,15 @@ release. Keep this file for how things work now, not for history.
     the top, a ring fills while receiving, a check pops in, and the
     contents fade out (`CornerPopup.exit`) before `onDone`. Reduced motion
     turns all of it off.
-  - `startup.dart`: the startup animation (every platform; a tap skips it,
-    reduced motion turns it off).
+  - `startup.dart`: the intro, **only on the very first launch** (before
+    setup; the owner's call), and `LoadingApp`, the loading screen (logo and
+    a moving bar) shown while Sidekick starts. The app isn't built under the
+    intro, so nothing can be tapped through it. In-app waits use `Loading`
+    (widgets.dart: a moving bar, shown after 250 ms so quick loads don't
+    flash it).
+  - **Flat look** (the owner's call: "less vibecoded"): no decorative
+    gradients or glows (solid theme colors; the glass theme's backdrop is
+    the exception).
   - Motion is Apple-like (2.17.1): Apple's push between pages on every
     platform (`CupertinoPageTransitionsBuilder`, from `cupertino_ui`), tabs
     switch at once with a quick fade-in, and `Entrance` fades in rising a
@@ -183,7 +190,7 @@ release. Keep this file for how things work now, not for history.
   CleanMyMac's): a click on the tray / menu-bar icon while Sidekick is in
   the tray turns the same window into a 380×640 panel by the icon
   (`togglePanel`; Mac under the menu bar at the icon, Windows above the
-  taskbar's corner), deep purple gradient in the theme's hue with a glow,
+  taskbar's corner), a solid deep shade of the theme's hue,
   translucent cards: "Sidekick: Ready", encrypted / ready to receive and
   the network, the last file received (Show), every
   paired device with Send / Ping, a "Did you know?" tip, and
@@ -486,7 +493,9 @@ release. Keep this file for how things work now, not for history.
   screen (MaterialApp `builder`); `GlassPanel` (blur, tint, bright rim)
   frames the phone's floating tab bar and the computer's content panel
   (shell.dart). On iOS 26 the iPhone's tab bar is Flutter's on Apple's
-  `UIGlassEffect` (a `sidekick/glass` platform view under it, IgnorePointer):
+  `UIGlassEffect` (a `sidekick/glass` platform view under it, IgnorePointer,
+  registered with the `DoNotBlockGesture` policy: with the default one, taps
+  on it during the intro froze the app for good, 2.17.5):
   **never embed Apple's `UITabBar` as a platform view**: tapping it crashed
   the app (2.17.4). If Sidekick closes within 10 s of starting with Liquid
   Glass (or turning it on), the next start turns it off and says so
