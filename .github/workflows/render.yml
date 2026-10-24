@@ -19,6 +19,10 @@ jobs:
             file: Sidekick-trailer-16x9.mp4
           - composition: Vertical
             file: Sidekick-trailer-9x16.mp4
+          - composition: NothingVertical
+            file: Sidekick-Nothing-ad-9x16.mp4
+          - composition: NothingHorizontal
+            file: Sidekick-Nothing-ad-16x9.mp4
     runs-on: ubuntu-latest
     timeout-minutes: 90
     defaults:

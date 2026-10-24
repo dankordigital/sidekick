@@ -7,6 +7,16 @@ detailed developer notes; every release is in `VERSIONS.md`) and
 
 ## 24 October 2026
 
+- **The Nothing ad** (the owner's music, "Funky Funky Music", 42 s): the
+  app's Nothing look on a 3D silver iPhone 17 Pro and a MacBook Pro, every
+  cut on the beat. PHONE + COMPUTER = ONE, the "sk." logo, then 01 send
+  iPhone → Mac (real Accept card and progress on both), 02 Mac → iPhone,
+  03 screenshots land on the Mac, 04 browse the Mac's files, 05 touchpad
+  and typing, 06 Ping, 07 no Wi-Fi (direct link), works on all four, end
+  card "Join the wishlist · getsidekick.app"; the app's request / accept /
+  ping sounds. 9:16 and 16:9 (`trailer/`, NothingVertical /
+  NothingHorizontal; also rendered by `render.yml`). The screens come from
+  `app/tool/ad_nothing_test.dart`.
 - **App 2.19.0: Make theme** (the owner's plan from the day before):
   Settings → Theme → Make theme…, templates Default / Liquid Glass /
   Nothing, four colors with swatches and gradient sliders, a live preview,
