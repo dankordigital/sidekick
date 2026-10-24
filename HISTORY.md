@@ -7,6 +7,13 @@ detailed developer notes; every release is in `VERSIONS.md`) and
 
 ## 24 October 2026
 
+- **Planned (the owner's words, not built yet): custom themes.** Settings →
+  Theme dropdown gets a **"Make theme"** option. It opens a theme maker,
+  like Discord's custom theme maker: pick a template to start from
+  (Default, Liquid Glass on Apple devices where it's offered, or Nothing),
+  then edit its colors and background, seeing the result live in a preview
+  as you change it. You can also edit a selected (existing) theme, and
+  save your own.
 - **Open, waiting on the owner:** a Nothing OS "widgets" direction (from a
   Nothing home-screen screenshot): round dark tiles and circles, dotted
   glyphs (15×15 icon set drawn), dot-matrix numbers ("2 READY",
