@@ -7,6 +7,17 @@ detailed developer notes; every release is in `VERSIONS.md`) and
 
 ## 24 October 2026
 
+- **Open, waiting on the owner:** a Nothing OS "widgets" direction (from a
+  Nothing home-screen screenshot): round dark tiles and circles, dotted
+  glyphs (15×15 icon set drawn), dot-matrix numbers ("2 READY",
+  "47 MB SENT TODAY"), a red-dot "SEND FILES" pill, the tab bar as a long
+  pill. Mock-ups only. To decide: plain paper/black background or a
+  coloured blur, and whether it replaces the Nothing theme or becomes the
+  default look. Also discussed (not done): renumbering to 1.0 for the
+  public launch (old releases stay; Android build numbers must keep
+  rising), store publishing, and a free launch with a later one-time
+  "Plus" or tip jar.
+
 - **App 2.18.0: the Nothing look redesigned** from the owner's approved
   "paper" mock-ups (light and dark): Devices · Send · Remote · Settings
   with dotted tab icons; Send works like LocalSend's (File / Folder /
