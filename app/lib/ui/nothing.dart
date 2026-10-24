@@ -22,9 +22,16 @@ class NothingLook extends ThemeExtension<NothingLook> {
   NothingLook lerp(NothingLook? other, double t) => t < 0.5 ? this : (other ?? this);
 }
 
+/// The look's red (or a custom theme's accent): outside the Nothing look,
+/// where the scheme's tertiary is something else, still red.
+Color _accent(BuildContext context) => isNothing(context) ? Theme.of(context).colorScheme.tertiary : nothingRed;
+
 /// Whether the Nothing look is on for this part of the app.
 bool isNothing(BuildContext context) => Theme.of(context).extension<NothingLook>()?.on ?? false;
 
+/// The look's red: its one action color. Screens use the theme's
+/// [ColorScheme.tertiary] (see [nothingScheme]), so a custom theme can
+/// change it.
 const nothingRed = Color(0xFFD71921);
 
 /// Only for "connected" (red reads as "something's wrong").
@@ -33,7 +40,7 @@ const nothingGreen = Color(0xFF22C55E);
 /// The look's colors: ink on paper, or paper on ink. Lines instead of
 /// cards; [ColorScheme.outlineVariant] is the hairline,
 /// [ColorScheme.outline] the faint grey of things that are off.
-ColorScheme nothingScheme(Brightness brightness) {
+ColorScheme nothingScheme(Brightness brightness, {Color accent = nothingRed}) {
   final dark = brightness == Brightness.dark;
   final ink = dark ? const Color(0xFFF0F0EC) : const Color(0xFF0D0D0D);
   final paper = dark ? const Color(0xFF0A0A0A) : const Color(0xFFF2F2EF);
@@ -51,8 +58,8 @@ ColorScheme nothingScheme(Brightness brightness) {
     onSecondary: paper,
     secondaryContainer: raised,
     onSecondaryContainer: ink,
-    tertiary: nothingRed,
-    onTertiary: Colors.white,
+    tertiary: accent,
+    onTertiary: accent.computeLuminance() > 0.45 ? Colors.black : Colors.white,
     tertiaryContainer: raised,
     onTertiaryContainer: ink,
     error: nothingRed,
@@ -97,14 +104,14 @@ ThemeData nothingTheme(ThemeData base) {
       ),
     ),
     // ignore: deprecated_member_use
-    progressIndicatorTheme: const ProgressIndicatorThemeData(year2023: false, color: nothingRed),
+    progressIndicatorTheme: ProgressIndicatorThemeData(year2023: false, color: scheme.tertiary),
     switchTheme: SwitchThemeData(
       thumbIcon: const WidgetStatePropertyAll(null),
       thumbColor: WidgetStateProperty.resolveWith(
         (states) => states.contains(WidgetState.selected) ? Colors.white : scheme.onSurfaceVariant,
       ),
       trackColor: WidgetStateProperty.resolveWith(
-        (states) => states.contains(WidgetState.selected) ? nothingRed : scheme.surfaceContainerHighest,
+        (states) => states.contains(WidgetState.selected) ? scheme.tertiary : scheme.surfaceContainerHighest,
       ),
       trackOutlineColor: const WidgetStatePropertyAll(Colors.transparent),
     ),
@@ -257,14 +264,17 @@ class DotLogo extends StatelessWidget {
     image: true,
     child: CustomPaint(
       size: Size(height / 7 * 12, height),
-      painter: _DotLogoPainter(color ?? Theme.of(context).colorScheme.onSurface),
+      painter: _DotLogoPainter(color ?? Theme.of(context).colorScheme.onSurface, _accent(context)),
     ),
   );
 }
 
 class _DotLogoPainter extends CustomPainter {
-  _DotLogoPainter(this.color);
+  _DotLogoPainter(this.color, this.dot);
   final Color color;
+
+  /// The full stop.
+  final Color dot;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -275,11 +285,11 @@ class _DotLogoPainter extends CustomPainter {
         if (_sk[y][x] == 'X') canvas.drawCircle(Offset((x + 0.5) * step, (y + 0.5) * step), step * 0.44, paint);
       }
     }
-    canvas.drawCircle(Offset(11.5 * step, 6.5 * step), step * 0.5, Paint()..color = nothingRed);
+    canvas.drawCircle(Offset(11.5 * step, 6.5 * step), step * 0.5, Paint()..color = dot);
   }
 
   @override
-  bool shouldRepaint(_DotLogoPainter old) => old.color != color;
+  bool shouldRepaint(_DotLogoPainter old) => old.color != color || old.dot != dot;
 }
 
 // ------------------------------------------------------------------ pieces
@@ -616,7 +626,7 @@ class NothingButton extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final enabled = onPressed != null;
-    final fg = red ? Colors.white : scheme.onSurface;
+    final fg = red ? scheme.onTertiary : scheme.onSurface;
     final child = Row(
       mainAxisAlignment: MainAxisAlignment.center,
       mainAxisSize: MainAxisSize.min,
@@ -637,7 +647,7 @@ class NothingButton extends StatelessWidget {
     return Opacity(
       opacity: enabled ? 1 : 0.4,
       child: Material(
-        color: red ? nothingRed : Colors.transparent,
+        color: red ? scheme.tertiary : Colors.transparent,
         shape: StadiumBorder(
           side: red ? BorderSide.none : BorderSide(color: mono ? scheme.outlineVariant : scheme.onSurface, width: 1.3),
         ),
@@ -703,8 +713,8 @@ class NothingSendDot extends StatelessWidget {
       minimumSize: const Size.square(40),
       padding: EdgeInsets.zero,
       tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-      backgroundColor: nothingRed,
-      foregroundColor: Colors.white,
+      backgroundColor: Theme.of(context).colorScheme.tertiary,
+      foregroundColor: Theme.of(context).colorScheme.onTertiary,
       disabledBackgroundColor: Theme.of(context).colorScheme.outlineVariant,
       disabledForegroundColor: Theme.of(context).colorScheme.onSurfaceVariant,
     ),

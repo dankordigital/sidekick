@@ -4,6 +4,16 @@ Every release, newest first, with its biggest features and fixes. Add an
 entry here with each release (see "Releasing" in `CLAUDE.md`). The history
 starts at 1.1.3.
 
+## 2.19.0
+- **Make your own theme** (Settings → Theme → Make theme…): start from
+  Default, Liquid Glass (on Apple devices that have it) or Nothing, pick
+  light or dark, then change the accent, background, card and text colors
+  with ready-made swatches or Hue / Saturation / Brightness sliders. A
+  live preview shows the app changing as you go. Save it with a name;
+  it's in the Theme list from then on, with Edit theme and Delete.
+- A theme made from Nothing keeps the Nothing screens and app icon, with
+  your accent in place of the red.
+
 ## 2.18.0
 - **The Nothing theme, redesigned** (Settings → Theme → Nothing): ink on
   paper in light mode, paper on ink in dark, lines instead of cards, dotted

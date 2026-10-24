@@ -1374,12 +1374,12 @@ class _Action extends StatelessWidget {
     final scheme = Theme.of(context).colorScheme;
     final enabled = onTap != null;
     final red = accent && enabled;
-    final fg = red ? Colors.white : (enabled ? scheme.onSurface : scheme.outline);
+    final fg = red ? scheme.onTertiary : (enabled ? scheme.onSurface : scheme.outline);
     return Expanded(
       child: AspectRatio(
         aspectRatio: 0.92,
         child: Material(
-          color: red ? nothingRed : Colors.transparent,
+          color: red ? scheme.tertiary : Colors.transparent,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
             side: red ? BorderSide.none : BorderSide(color: scheme.outlineVariant, width: 1.2),
@@ -1392,7 +1392,7 @@ class _Action extends StatelessWidget {
               children: [
                 Icon(icon, size: 22, color: fg),
                 const SizedBox(height: 8),
-                NothingLabel(label, size: 9, color: red ? Colors.white : (enabled ? null : scheme.outline)),
+                NothingLabel(label, size: 9, color: red ? scheme.onTertiary : (enabled ? null : scheme.outline)),
               ],
             ),
           ),
@@ -1439,7 +1439,7 @@ class _TransferRow extends StatelessWidget {
                   child: Icon(
                     t.upload ? Icons.north_east_rounded : Icons.south_west_rounded,
                     size: 16,
-                    color: t.state == TransferState.failed ? nothingRed : scheme.onSurfaceVariant,
+                    color: t.state == TransferState.failed ? scheme.error : scheme.onSurfaceVariant,
                   ),
                 ),
                 Expanded(
@@ -1888,7 +1888,7 @@ class _NothingIncomingState extends State<_NothingIncoming> {
               child: LinearProgressIndicator(
                 value: total > 0 ? value : null,
                 minHeight: 8,
-                color: nothingRed,
+                color: scheme.tertiary,
                 backgroundColor: scheme.outlineVariant,
               ),
             ),
@@ -2063,7 +2063,7 @@ class _NothingSendViewState extends State<NothingSendView> {
                         child: LinearProgressIndicator(
                           value: value,
                           minHeight: 10,
-                          color: nothingRed,
+                          color: scheme.tertiary,
                           backgroundColor: scheme.surfaceContainerHighest,
                         ),
                       ),

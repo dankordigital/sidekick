@@ -628,7 +628,11 @@ class _NothingPanel extends StatelessWidget {
                           child: Row(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              const Icon(Icons.lightbulb_outline_rounded, size: 20, color: nothingRed),
+                              Icon(
+                                Icons.lightbulb_outline_rounded,
+                                size: 20,
+                                color: Theme.of(context).colorScheme.tertiary,
+                              ),
                               const SizedBox(width: 12),
                               Expanded(
                                 child: Column(

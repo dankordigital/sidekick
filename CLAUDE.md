@@ -544,6 +544,27 @@ release. Keep this file for how things work now, not for history.
   Windows touch no icon unless Nothing is on). Icons:
   `python app/tool/make_icons.py nothing`. Rendered by the screenshot tools
   (`nothing-*.png`, `tray-panel-nothing.png`, `send_nothing.png`).
+- **Make theme** (2.19.0, the owner's idea: like Discord's theme maker,
+  every platform): Settings → Theme's dropdown ends with **Make theme…**,
+  which opens `ui/theme_maker.dart` (`ThemeMakerPage`, full screen; editor
+  left and live preview right on computers, preview on top on phones).
+  Start from a template (Default, Liquid Glass where
+  `liquidGlassAvailable`, Nothing; `starterTheme`), Light / Dark, then four
+  colors (Accent, Background, Cards, Text) with presets and Hue /
+  Saturation / Brightness sliders on gradient tracks; the preview (a made-up
+  Devices screen in the real theme, `customThemeData`) changes at once; a
+  warning shows when text is hard to read (contrast under 3). One made
+  theme is kept (`core/custom_theme.dart` `CustomTheme`, pref
+  `customTheme`; `AppState.customTheme`, `customLook` = pref `look`
+  `custom`), shown by name in the dropdown with Edit theme / Delete. Its
+  background decides light or dark, so it ignores the light/dark choice.
+  Made from Nothing: the Nothing screens and app icon (`nothingIcon`), its
+  accent replacing the red (the Nothing pieces use
+  `ColorScheme.tertiary`, `nothingScheme(accent:)`). Made from Liquid
+  Glass: the glass crash guard covers it (`_glassOn`). The app's base
+  theme is `ui/app_theme.dart` `sidekickTheme`, shared by main.dart and
+  the maker. Rendered by `tool/theme_maker_shots_test.dart`
+  (`theme-maker-*.png`).
 - **Always accept from a device / Quick save** (2.18.0, every look): the
   Accept card's "Always accept from …" tick and the Nothing device page's
   switch add the device to `AppState.alwaysAccept` (pref `alwaysAccept`,

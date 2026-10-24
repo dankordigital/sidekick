@@ -14,6 +14,7 @@ import 'core/ble_protocol.dart';
 import 'core/bluetooth.dart';
 import 'core/client.dart';
 import 'core/crypto.dart';
+import 'core/custom_theme.dart';
 import 'core/discovery.dart';
 import 'core/models.dart';
 import 'core/pairing_qr.dart';
@@ -190,6 +191,20 @@ class AppState extends ChangeNotifier {
   /// Settings → Theme: "Nothing" (pref `look` = `nothing`), on every
   /// platform. A trial look; see ui/nothing.dart.
   bool nothingLook = false;
+
+  /// Settings → Theme → Make theme: the theme made there (pref
+  /// `customTheme`), kept while another look is on so it can be picked again.
+  CustomTheme? customTheme;
+
+  /// The made theme is the one in use (pref `look` = `custom`).
+  bool customLook = false;
+
+  /// Whether the app's icon is the Nothing one: the Nothing look, or a theme
+  /// made from it.
+  bool get nothingIcon => nothingLook || (customLook && customTheme?.template == ThemeTemplate.nothing);
+
+  /// Liquid Glass is on: the look, or a theme made from it.
+  bool get _glassOn => liquidGlass || (customLook && customTheme?.template == ThemeTemplate.glass);
 
   /// The first-launch welcome has been shown (it never shows again).
   bool welcomed = false;
@@ -443,8 +458,11 @@ class AppState extends ChangeNotifier {
     pureBlack = _prefs.getBool('pureBlack') ?? false;
     liquidGlass = _prefs.getString('look') == 'glass';
     nothingLook = _prefs.getString('look') == 'nothing';
-    if (liquidGlass && (_prefs.getBool('glassCheck') ?? false)) {
+    customTheme = CustomTheme.decode(_prefs.getString('customTheme'));
+    customLook = _prefs.getString('look') == 'custom' && customTheme != null;
+    if (_glassOn && (_prefs.getBool('glassCheck') ?? false)) {
       liquidGlass = false;
+      customLook = false;
       _glassCrashed = true;
       _prefs
         ..setString('look', 'material')
@@ -514,7 +532,7 @@ class AppState extends ChangeNotifier {
       }
     }
     trust.onChanged = _saveTrusted;
-    if (liquidGlass) _watchGlass();
+    if (_glassOn) _watchGlass();
     if (_glassCrashed) {
       _notices.add(
         Notice(
@@ -637,7 +655,7 @@ class AppState extends ChangeNotifier {
     _presenceTimer = Timer.periodic(const Duration(seconds: 10), (_) => _checkPresence());
     unawaited(_checkPresence());
     // Settings → Theme → Nothing changes the app's icon (and puts it back).
-    unawaited(AppIcon.apply(nothing: nothingLook));
+    unawaited(AppIcon.apply(nothing: nothingIcon));
     notifyListeners();
   }
 
@@ -2022,8 +2040,9 @@ class AppState extends ChangeNotifier {
   void setLiquidGlass(bool value) {
     liquidGlass = value;
     if (value) nothingLook = false;
+    customLook = false;
     _prefs.setString('look', value ? 'glass' : 'material');
-    unawaited(AppIcon.apply(nothing: nothingLook));
+    unawaited(AppIcon.apply(nothing: nothingIcon));
     if (value) _watchGlass();
     notifyListeners();
   }
@@ -2031,9 +2050,38 @@ class AppState extends ChangeNotifier {
   void setNothingLook(bool value) {
     nothingLook = value;
     if (value) liquidGlass = false;
+    customLook = false;
     _prefs.setString('look', value ? 'nothing' : 'material');
     // The app's icon follows: "sk." in dots, or the usual one.
-    unawaited(AppIcon.apply(nothing: value));
+    unawaited(AppIcon.apply(nothing: nothingIcon));
+    notifyListeners();
+  }
+
+  /// Saves [theme] (Make theme → Save) and puts it on.
+  void setCustomTheme(CustomTheme theme) {
+    customTheme = theme;
+    _prefs.setString('customTheme', theme.encode());
+    useCustomTheme();
+  }
+
+  /// Puts the made theme back on (Settings → Theme → its name).
+  void useCustomTheme() {
+    final theme = customTheme;
+    if (theme == null) return;
+    customLook = true;
+    liquidGlass = false;
+    nothingLook = false;
+    _prefs.setString('look', 'custom');
+    unawaited(AppIcon.apply(nothing: nothingIcon));
+    if (theme.template == ThemeTemplate.glass) _watchGlass();
+    notifyListeners();
+  }
+
+  /// Forgets the made theme (back to Default if it was on).
+  void deleteCustomTheme() {
+    customTheme = null;
+    _prefs.remove('customTheme');
+    if (customLook) setNothingLook(false);
     notifyListeners();
   }
 

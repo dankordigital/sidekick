@@ -1,6 +1,7 @@
 import 'package:material_ui/material_ui.dart';
 
 import '../app_state.dart';
+import 'theme_maker.dart';
 import 'widgets.dart';
 
 /// Light/dark mode, color theme and pure black: used in Settings → Theme and
@@ -13,13 +14,16 @@ class ThemeChooser extends StatelessWidget {
   Widget build(BuildContext context) => Column(
     crossAxisAlignment: CrossAxisAlignment.stretch,
     children: [
-      // The look: Default (Material), Nothing (a trial, every platform), and
-      // on iOS and macOS 26+ Apple's Liquid Glass.
+      // The look: Default (Material), Nothing (every platform), on iOS and
+      // macOS 26+ Apple's Liquid Glass, the theme made in Make theme, and
+      // Make theme itself.
       ListTile(
         leading: const IconTile(Icons.auto_awesome_outlined),
         title: const Text('Theme'),
         trailing: DropdownButton<String>(
-          value: state.nothingLook
+          value: state.customLook
+              ? 'custom'
+              : state.nothingLook
               ? 'nothing'
               : state.liquidGlass && liquidGlassAvailable
               ? 'glass'
@@ -30,28 +34,69 @@ class ThemeChooser extends StatelessWidget {
             const DropdownMenuItem(value: 'default', child: Text('Default')),
             const DropdownMenuItem(value: 'nothing', child: Text('Nothing')),
             if (liquidGlassAvailable) const DropdownMenuItem(value: 'glass', child: Text('Liquid Glass')),
+            if (state.customTheme case final made?)
+              DropdownMenuItem(
+                value: 'custom',
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 160),
+                  child: Text(made.name, maxLines: 1, overflow: TextOverflow.ellipsis),
+                ),
+              ),
+            const DropdownMenuItem(
+              value: 'make',
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [Icon(Icons.palette_outlined, size: 18), SizedBox(width: 8), Text('Make theme…')],
+              ),
+            ),
           ],
           onChanged: (v) => switch (v) {
+            'make' => showThemeMaker(context, state),
+            'custom' => state.useCustomTheme(),
             'nothing' => state.setNothingLook(true),
             'glass' => state.setLiquidGlass(true),
-            _ => state.nothingLook ? state.setNothingLook(false) : state.setLiquidGlass(false),
+            _ => state.setNothingLook(false),
           },
         ),
       ),
-      Padding(
-        padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-        child: SegmentedButton<ThemeMode>(
-          segments: const [
-            ButtonSegment(value: ThemeMode.system, icon: Icon(Icons.brightness_auto_outlined), label: Text('System')),
-            ButtonSegment(value: ThemeMode.light, icon: Icon(Icons.light_mode_outlined), label: Text('Light')),
-            ButtonSegment(value: ThemeMode.dark, icon: Icon(Icons.dark_mode_outlined), label: Text('Dark')),
-          ],
-          selected: {state.themeMode},
-          onSelectionChanged: (s) => state.setThemeMode(s.first),
+      // The made theme: change it, or throw it away.
+      if (state.customLook && state.customTheme != null)
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
+          child: Row(
+            children: [
+              Expanded(
+                child: Text(
+                  'Made themes keep their own colors, light or dark.',
+                  style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant, fontSize: 13),
+                ),
+              ),
+              TextButton(onPressed: () => _delete(context), child: const Text('Delete')),
+              const SizedBox(width: 4),
+              FilledButton.tonalIcon(
+                onPressed: () => showThemeMaker(context, state, start: state.customTheme),
+                icon: const Icon(Icons.edit_outlined, size: 18),
+                label: const Text('Edit theme'),
+              ),
+            ],
+          ),
         ),
-      ),
-      // The Nothing look has its own colors: black, white, grey and red.
-      if (!state.nothingLook) ...[
+      if (!state.customLook)
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+          child: SegmentedButton<ThemeMode>(
+            segments: const [
+              ButtonSegment(value: ThemeMode.system, icon: Icon(Icons.brightness_auto_outlined), label: Text('System')),
+              ButtonSegment(value: ThemeMode.light, icon: Icon(Icons.light_mode_outlined), label: Text('Light')),
+              ButtonSegment(value: ThemeMode.dark, icon: Icon(Icons.dark_mode_outlined), label: Text('Dark')),
+            ],
+            selected: {state.themeMode},
+            onSelectionChanged: (s) => state.setThemeMode(s.first),
+          ),
+        ),
+      // The Nothing look has its own colors: black, white, grey and red; a
+      // made theme has the ones it was made with.
+      if (!state.nothingLook && !state.customLook) ...[
         Padding(
           padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
           child: Align(
@@ -105,6 +150,23 @@ class ThemeChooser extends StatelessWidget {
       ],
     ],
   );
+}
+
+extension on ThemeChooser {
+  Future<void> _delete(BuildContext context) async {
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Delete "${state.customTheme?.name}"?'),
+        content: const Text('Sidekick goes back to the Default theme. You can make a new one any time.'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
+          FilledButton(onPressed: () => Navigator.pop(context, true), child: const Text('Delete')),
+        ],
+      ),
+    );
+    if (ok == true) state.deleteCustomTheme();
+  }
 }
 
 /// A round color swatch with its name, for Settings → Theme.
