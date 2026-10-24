@@ -5,6 +5,18 @@ a new session. Newest first. For how things work, read `CLAUDE.md` (the
 detailed developer notes; every release is in `VERSIONS.md`) and
 `ARCHITECTURE.md` (the big picture).
 
+## 24 October 2026
+
+- **App 2.18.0: the Nothing look redesigned** from the owner's approved
+  "paper" mock-ups (light and dark): Devices · Send · Remote · Settings
+  with dotted tab icons; Send works like LocalSend's (File / Folder /
+  Media / Text / Paste, devices in reach with red send buttons, Browse
+  files full screen with New folder, a new `/v1/fs/mkdir`); computers get
+  a Receive column (this device, Quick save, recent). New for every look:
+  "Always accept from …" (`AppState.alwaysAccept`) and Quick save
+  (`QuickSave` off / favourites / on, replacing "Ask before receiving").
+  A rebranded website was mocked up as an artifact (not uploaded).
+
 ## 23 October 2026
 
 - **App 2.17.6: the Nothing look** (Settings → Theme → Nothing, a trial).

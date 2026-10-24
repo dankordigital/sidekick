@@ -482,14 +482,14 @@ class _Arc extends CustomPainter {
 /// Asks whether to accept [offer], with an animated card. Once accepted it
 /// shows the files coming in and closes when they're all here. Closes by
 /// itself if the sender gives up or time runs out.
-Future<void> showIncomingOffer(BuildContext context, TransferOffer offer, {bool sounds = false}) =>
+Future<void> showIncomingOffer(BuildContext context, TransferOffer offer, {AppState? state, bool sounds = false}) =>
     showGeneralDialog<void>(
       context: context,
       barrierDismissible: false,
       barrierLabel: 'Incoming files',
       barrierColor: Colors.black38,
       transitionDuration: const Duration(milliseconds: 600),
-      pageBuilder: (_, _, _) => _IncomingOffer(offer: offer, sounds: sounds),
+      pageBuilder: (_, _, _) => _IncomingOffer(offer: offer, state: state, sounds: sounds),
       // The app behind softly blurs while the card springs up from below.
       transitionBuilder: (_, animation, _, child) {
         final fade = CurvedAnimation(parent: animation, curve: Curves.easeOut);
@@ -512,8 +512,11 @@ Future<void> showIncomingOffer(BuildContext context, TransferOffer offer, {bool 
     );
 
 class _IncomingOffer extends StatefulWidget {
-  const _IncomingOffer({required this.offer, required this.sounds});
+  const _IncomingOffer({required this.offer, required this.state, required this.sounds});
   final TransferOffer offer;
+
+  /// For "Always accept from …" (none in the screenshot tools).
+  final AppState? state;
 
   /// Play the accept/decline sounds (Settings → Transfer sounds).
   final bool sounds;
@@ -550,6 +553,9 @@ class _IncomingOfferState extends State<_IncomingOffer> with TickerProviderState
   int _received = 0;
   StreamSubscription<int>? _progress;
   bool _closing = false;
+
+  /// "Always accept from …", ticked: Accept makes the device a favourite.
+  late bool _always = widget.state?.alwaysAccept.contains(offer.from.id) ?? false;
 
   @override
   void initState() {
@@ -588,6 +594,7 @@ class _IncomingOfferState extends State<_IncomingOffer> with TickerProviderState
   }
 
   void _accept() {
+    if (_always) widget.state?.setAlwaysAccept(offer.from.id, true);
     offer.accept();
     if (widget.sounds) unawaited(playAcceptSound());
     _receive();
@@ -719,6 +726,17 @@ class _IncomingOfferState extends State<_IncomingOffer> with TickerProviderState
                                 ),
                               ),
                             ),
+                            if (widget.state != null) ...[
+                              const SizedBox(height: 8),
+                              CheckboxListTile(
+                                value: _always,
+                                onChanged: (v) => setState(() => _always = v ?? false),
+                                controlAffinity: ListTileControlAffinity.leading,
+                                contentPadding: EdgeInsets.zero,
+                                dense: true,
+                                title: Text('Always accept from ${offer.from.name}'),
+                              ),
+                            ],
                             const SizedBox(height: 16),
                             Row(
                               children: [

@@ -505,27 +505,34 @@ release. Keep this file for how things work now, not for history.
   blur on controls or the computer's content panel** (2.17.1): only the
   soft backdrop is behind them, and a BackdropFilter per button made
   screens slow; only the phone's floating tab bar blurs. Rendered by `tool/screenshots_test.dart` (`glass-*.png`).
-- **The Nothing look** (2.17.6, a trial the owner may delete: Settings →
-  Theme → Nothing, every platform; pref `look` = `nothing`,
-  `AppState.nothingLook`, off by default): built 1:1 from the owner's
-  approved mock-ups. Black (or light grey) with dark grey (white) cards,
-  pill buttons, small uppercase mono labels, page titles in dots
-  (`DotText`, a 5×7 dot font), red for progress, the Send tile and the
-  logo's full stop, **green only for "connected" dots** (the owner's dad:
-  red reads as "broken"), plain line icons (dotted icons were tried and
-  dropped). `ui/nothing.dart`: theme (`nothingScheme`, `nothingTheme`,
-  `NothingLook` / `isNothing`), `DotText`, `DotLogo` ("sk." in dots), and
-  the pieces (`NothingTile`, `NothingPill`, `NothingRound`,
-  `NothingStatus`). The round widgets are plain circles: a ring of dots
-  filling up read like a countdown (2.17.7, the owner's call). `ui/nothing_screens.dart`: its own
-  Devices home (phone: "SIDEKICK", In reach + network widgets, Paired,
-  Nearby; computer: "DEVICES", the transfer card, the in-reach ring,
-  Paired, This computer), a device's page (name in dots, Send / Files /
-  Remote / Ping tiles, Recent), the floating tab bar (no labels, current
-  icon white), the computer's side bar, and the sending screen
-  (`NothingSendView`); the tray panel has `_NothingPanel`. Files, Remote and
-  Settings keep their layout in its colors (`PageFrame` titles in dots,
-  `SectionLabel` in mono). **The app icon follows** (`platform/app_icon.dart`
+- **The Nothing look** (2.17.6, redesigned in 2.18.0 from the owner's
+  approved "paper" mock-ups: Settings → Theme → Nothing, every platform;
+  pref `look` = `nothing`, `AppState.nothingLook`, off by default). Ink on
+  paper (`#F2F2EF` / `#0D0D0D`) or paper on ink (`#0A0A0A` / `#F0F0EC`),
+  hairlines instead of cards (`outlineVariant`), small uppercase mono
+  labels, page titles in dots (`DotText`, a 5×7 dot font), **one red
+  action per screen** (`nothingRed`), **green only for "connected" dots**
+  (the owner's dad: red reads as "broken"). `ui/nothing.dart`: theme
+  (`nothingScheme`, `nothingTheme`, `NothingLook` / `isNothing`), `DotText`,
+  `DotLogo` ("sk." in dots), `DotIcon` (the four tab icons in dots), and the
+  pieces (`NothingHair`, `NothingSection`, `NothingRing`, `NothingDot`,
+  `NothingButton`, `NothingChip`, `NothingSendDot`, `NothingSegments`).
+  `ui/nothing_screens.dart`: tabs **Devices · Send · Remote · Settings**
+  (`nothingTabs`; Files is gone from the bar, the owner's call, like
+  LocalSend): Devices (count of ready devices in dots, rows that open the
+  device, red Send files), **Send** (`NothingSendPage`: File / Media /
+  Text / Paste on phones, File / Folder / Text / Paste on computers;
+  `sendSelection` stays until Clear; devices in reach with red send
+  buttons; + Add by address), **Browse files** (`NothingBrowsePage`, full
+  screen, X to close, device switcher, New folder → `/v1/fs/mkdir`, Upload
+  here), a device's page (Send / Files / Remote / Ping, Always accept,
+  Recent), the Accept screen (`showNothingIncoming`, full screen on phones,
+  a card on computers), the tab bar, the computer's side bar and its
+  **Receive** column (`NothingReceivePanel`: this device, Quick save,
+  recent; beside Devices and Send when the window is 1100+ wide), and the
+  sending screen (`NothingSendView`); the tray panel has `_NothingPanel`.
+  Remote and Settings keep their layout in its colors. **The app icon
+  follows** (`platform/app_icon.dart`
   `AppIcon.apply`, at start and on every look change): iPhone
   `setAppIcon` → alternate icon `AppIcon-Nothing` (build setting
   `ASSETCATALOG_COMPILER_ALTERNATE_APPICON_NAMES`; only asked when it
@@ -537,6 +544,15 @@ release. Keep this file for how things work now, not for history.
   Windows touch no icon unless Nothing is on). Icons:
   `python app/tool/make_icons.py nothing`. Rendered by the screenshot tools
   (`nothing-*.png`, `tray-panel-nothing.png`, `send_nothing.png`).
+- **Always accept from a device / Quick save** (2.18.0, every look): the
+  Accept card's "Always accept from …" tick and the Nothing device page's
+  switch add the device to `AppState.alwaysAccept` (pref `alwaysAccept`,
+  dropped on unpair). `AppState.quickSave` (`QuickSave`: off = everyone
+  asks, favourites = those devices don't, on = no paired device asks; pref
+  `quickSave`, default favourites; the old `askBeforeReceiving` false
+  becomes on) is Settings → Quick save. The server asks per device
+  (`askBeforeReceiving(peerId)` → `asksBeforeReceivingFrom`): when it
+  doesn't ask, the offer is accepted at once and no card shows.
 - Devices announce their release (`DeviceInfo.app`, "2.2.0"); a paired card
   shows "Update Sidekick on it" when the other device runs an older one.
 - **iPhones can't be controlled** (Apple allows no app to): Remote on an

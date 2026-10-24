@@ -221,9 +221,9 @@ class SidekickServer {
     Permissions Function()? permissions,
     DirectLink? link,
     Future<bool> Function()? inputReady,
-    bool Function()? askBeforeReceiving,
+    bool Function(String peerId)? askBeforeReceiving,
     bool Function()? ringing,
-  }) : askBeforeReceiving = askBeforeReceiving ?? (() => true),
+  }) : askBeforeReceiving = askBeforeReceiving ?? ((_) => true),
        ringing = ringing ?? (() => false),
        inputReady = inputReady ?? (() async => input.supported),
        permissions = permissions ?? (() => const Permissions()),
@@ -247,8 +247,9 @@ class SidekickServer {
   /// Opens or joins a direct Wi-Fi link when a peer asks over Bluetooth.
   final DirectLink link;
 
-  /// Whether files sent here wait for the user to accept them.
-  final bool Function() askBeforeReceiving;
+  /// Whether files a paired device sends here wait for the user to accept
+  /// them (Quick save, and "Always accept from" a device).
+  final bool Function(String peerId) askBeforeReceiving;
 
   /// A ping is ringing here until someone taps Found It: another one is
   /// refused (409), and the device that sent it says so.
@@ -375,6 +376,7 @@ class SidekickServer {
       ..get('/v1/fs/roots', _authed(_roots, (p) => p.files))
       ..get('/v1/fs/list', _authed(_list, (p) => p.files))
       ..get('/v1/fs/download', _authed(_download, (p) => p.files))
+      ..post('/v1/fs/mkdir', _authed(_mkdir, (p) => p.files))
       ..post('/v1/fs/upload', _authed(_upload, (p) => p.files))
       ..post('/v1/fs/upload/part', _authed(_uploadPart, (p) => p.files))
       ..post('/v1/transfer/offer', _authed(_offer, (p) => p.files))
@@ -688,6 +690,23 @@ class SidekickServer {
     return _json((await files.list(path)).map((e) => e.toJson()).toList());
   }
 
+  /// `POST /v1/fs/mkdir`, body `{path, name}`: a new folder [name] in the
+  /// folder [path] (Browse files → New folder).
+  Future<Response> _mkdir(Request r) async {
+    final body = await _body(r);
+    final parent = body['path'], name = body['name'];
+    if (parent is! String || parent.isEmpty || name is! String) return _error(400, 'Missing path or name');
+    final clean = name.trim();
+    if (clean.isEmpty || clean == '.' || clean == '..' || clean.contains(RegExp(r'[/\\:*?"<>|]'))) {
+      return _error(400, 'Not a folder name');
+    }
+    if (!await Directory(parent).exists()) return _error(404, 'Folder not found');
+    final dir = Directory(p.join(parent, clean));
+    if (await dir.exists()) return _error(409, 'That folder already exists');
+    await dir.create();
+    return _json({'path': dir.path});
+  }
+
   Future<Response> _download(Request r) async {
     final path = r.url.queryParameters['path'];
     if (path == null || path.isEmpty) return _error(400, 'Missing path');
@@ -726,7 +745,7 @@ class SidekickServer {
       return _error(429, 'Too many offers waiting. Try again in a minute.');
     }
     final offer = TransferOffer(id: id, from: peer, files: files);
-    if (askBeforeReceiving()) {
+    if (askBeforeReceiving(peer.id)) {
       _offers[id] = offer;
       _events.add(TransferOffered(offer));
       Timer(offerTimeout, () => offer._close(OfferAnswer.timedOut));
@@ -762,7 +781,7 @@ class SidekickServer {
         DateTime.now().isBefore(ticket.expires) &&
         ticket.uses < ticket.offer.files.length;
     if (!valid) {
-      if (askBeforeReceiving()) {
+      if (askBeforeReceiving(_peer(r).id)) {
         return (
           null,
           _error(403, '${self().name} asks before receiving files. Update Sidekick on this device and send again.'),

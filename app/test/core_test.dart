@@ -418,6 +418,14 @@ void main() {
     expect(listing.map((e) => e.name).toList(), ['Projects', 'notes.txt'], reason: 'folders first');
     expect(listing.last.size, 17);
 
+    // Browse files → New folder.
+    await client.makeFolder(docs.path, 'Trips');
+    expect(Directory(p.join(docs.path, 'Trips')).existsSync(), isTrue);
+    await expectLater(client.makeFolder(docs.path, 'Trips'), throwsA(anything), reason: 'already there');
+    await expectLater(client.makeFolder(docs.path, '../out'), throwsA(anything), reason: 'a name, not a path');
+    expect(Directory(p.join(pc.home.path, 'out')).existsSync(), isFalse);
+    Directory(p.join(docs.path, 'Trips')).deleteSync();
+
     final dest = File(p.join(tmp.path, 'notes-copy.txt'));
     var progress = 0;
     await client.download(listing.last.path, dest, onProgress: (d, _) => progress = d);

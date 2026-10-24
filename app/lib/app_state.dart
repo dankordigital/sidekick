@@ -82,6 +82,10 @@ class Transfer {
   double? get fraction => total > 0 ? done / total : null;
 }
 
+/// Which paired devices' files come in without asking (like LocalSend's
+/// Quick save): none, the favourites ("Always accept from"), or all.
+enum QuickSave { off, favourites, on }
+
 enum SendPhase { connecting, waiting, sending, done, declined, noAnswer, failed }
 
 /// Files being sent with Send: asks the other device first, then uploads.
@@ -307,7 +311,22 @@ class AppState extends ChangeNotifier {
   Stream<OutgoingSend> get sends => _sends.stream;
 
   /// Ask before accepting files sent to this device (Settings → Files).
-  bool askBeforeReceiving = true;
+  /// Quick save: which paired devices' files come in without Accept.
+  QuickSave quickSave = QuickSave.favourites;
+
+  /// Devices whose files are always accepted ("Always accept from …" on
+  /// the Accept card or the device's page): the favourites.
+  final Set<String> alwaysAccept = {};
+
+  /// Settings → Ask before receiving files (off is Quick save "On").
+  bool get askBeforeReceiving => quickSave != QuickSave.on;
+
+  /// Whether files from [deviceId] wait for Accept.
+  bool asksBeforeReceivingFrom(String deviceId) => switch (quickSave) {
+    QuickSave.off => true,
+    QuickSave.favourites => !alwaysAccept.contains(deviceId),
+    QuickSave.on => false,
+  };
 
   /// Settings → Auto-load (Windows, Mac; on by default): starts at login,
   /// in the tray.
@@ -434,7 +453,11 @@ class AppState extends ChangeNotifier {
     keepRunning = _prefs.getBool('keepRunning') ?? true;
     relayNotifications = _prefs.getBool('relayNotifications') ?? false;
     sendScreenshots = _prefs.getBool('sendScreenshots') ?? false;
-    askBeforeReceiving = _prefs.getBool('askBeforeReceiving') ?? true;
+    // Before 2.18.0 a single switch: off meant every device's files came in.
+    quickSave =
+        QuickSave.values.asNameMap()[_prefs.getString('quickSave')] ??
+        ((_prefs.getBool('askBeforeReceiving') ?? true) ? QuickSave.favourites : QuickSave.on);
+    alwaysAccept.addAll(_prefs.getStringList('alwaysAccept') ?? const []);
     autoLoad = _prefs.getBool('autoLoad') ?? true;
     // One switch since 2.4.1; before, two (off if either was off).
     sound =
@@ -564,7 +587,7 @@ class AppState extends ChangeNotifier {
       permissions: () => permissions,
       link: directLink,
       inputReady: _inputReady,
-      askBeforeReceiving: () => askBeforeReceiving,
+      askBeforeReceiving: asksBeforeReceivingFrom,
       ringing: () => ringingFrom != null,
     );
     server.events.listen(_onServerEvent);
@@ -1580,6 +1603,7 @@ class AppState extends ChangeNotifier {
     _paired.remove(deviceId);
     trust.remove(deviceId);
     _savePaired();
+    setAlwaysAccept(deviceId, false);
     notifyListeners();
   }
 
@@ -1891,9 +1915,20 @@ class AppState extends ChangeNotifier {
     notifyListeners();
   }
 
-  void setAskBeforeReceiving(bool value) {
-    askBeforeReceiving = value;
-    _prefs.setBool('askBeforeReceiving', value);
+  void setAskBeforeReceiving(bool value) => setQuickSave(value ? QuickSave.favourites : QuickSave.on);
+
+  void setQuickSave(QuickSave value) {
+    quickSave = value;
+    _prefs.setString('quickSave', value.name);
+    notifyListeners();
+  }
+
+  /// "Always accept from [deviceId]". Turning it on with Quick save off
+  /// turns Quick save to favourites, or the tick would do nothing.
+  void setAlwaysAccept(String deviceId, bool value) {
+    if (value ? !alwaysAccept.add(deviceId) : !alwaysAccept.remove(deviceId)) return;
+    if (value && quickSave == QuickSave.off) setQuickSave(QuickSave.favourites);
+    _prefs.setStringList('alwaysAccept', alwaysAccept.toList());
     notifyListeners();
   }
 

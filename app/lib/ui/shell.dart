@@ -107,7 +107,11 @@ class _ShellState extends State<Shell> {
     if (DesktopWindow.supported && DesktopWindow.instance.show(offer)) return;
     // Phones in the background: a notification too; the card waits in the app.
     OfferNotifications.show(offer);
-    showIncomingOffer(context, offer, sounds: state.sound);
+    if (isNothing(context)) {
+      showNothingIncoming(context, state, offer);
+    } else {
+      showIncomingOffer(context, offer, state: state, sounds: state.sound);
+    }
   }
 
   void _showSend(OutgoingSend send) {
@@ -155,7 +159,9 @@ class _ShellState extends State<Shell> {
     final pages = [
       // The Nothing look has its own Devices home (nothing_screens.dart).
       nothing ? NothingDevicesPage(state: state, onOpen: _go) : DevicesPage(state: state, onOpen: _go),
-      FilesPage(state: state, onGoToDevices: () => _go(0)),
+      // The Nothing look's second tab is Send (LocalSend-style); Browse
+      // files opens from it full screen.
+      nothing ? NothingSendPage(state: state) : FilesPage(state: state, onGoToDevices: () => _go(0)),
       RemotePage(state: state, onGoToDevices: () => _go(0)),
       SettingsPage(state: state),
     ];
@@ -202,19 +208,21 @@ class _ShellState extends State<Shell> {
     );
 
     final glass = isGlass(context);
-    // The Nothing look: a floating bar of icons on phones, a side bar of
-    // words on computers, everything on black.
+    // The Nothing look: dotted tab icons with their names on phones; on
+    // computers a side bar, and Receive at the right of Devices and Send.
     if (nothing) {
+      final receive = wide && _index <= 1 && MediaQuery.sizeOf(context).width >= 1100;
       return Scaffold(
         body: wide
             ? Row(
                 children: [
-                  NothingSideBar(destinations: _destinations, index: _index, onTap: _go, state: state),
+                  NothingSideBar(index: _index, onTap: _go, state: state),
                   Expanded(child: body),
+                  if (receive) NothingReceivePanel(state: state),
                 ],
               )
             : SafeArea(bottom: false, child: body),
-        bottomNavigationBar: wide ? null : NothingTabBar(destinations: _destinations, index: _index, onTap: _go),
+        bottomNavigationBar: wide ? null : NothingTabBar(index: _index, onTap: _go),
       );
     }
     if (!wide) {

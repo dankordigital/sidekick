@@ -4,10 +4,22 @@ Every release, newest first, with its biggest features and fixes. Add an
 entry here with each release (see "Releasing" in `CLAUDE.md`). The history
 starts at 1.1.3.
 
-## 2.17.7
-- **Nothing theme: no more "timer" rings.** The Wi-Fi circle and the
-  computer's "in reach" circle lost their ring of dots, which looked like a
-  countdown.
+## 2.18.0
+- **The Nothing theme, redesigned** (Settings → Theme → Nothing): ink on
+  paper in light mode, paper on ink in dark, lines instead of cards, dotted
+  tab icons with their names, and one red button per screen. Green dots
+  still mean "connected".
+- **Send tab** (in the Nothing theme, where Files used to be), like
+  LocalSend: pick files, photos, text or the clipboard (a folder on
+  computers), then tap the red button on any device in reach. What's picked
+  stays until Clear, so it can go to several devices. **Browse files**
+  opens another device's folders full screen (X to close), with **New
+  folder** and **Upload here**.
+- **Always accept from a device:** tick it on the Accept card, or switch it
+  on the device's page, and that device's files come straight in.
+  **Quick save** (Settings, and on computers beside Send) picks who skips
+  the question: nobody, those favourites, or every paired device.
+- **No more "timer" rings** in the Nothing theme.
 - Mac and Windows no longer touch the window, Dock or tray icon at start
   unless the Nothing theme is on.
 

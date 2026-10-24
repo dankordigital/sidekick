@@ -400,6 +400,9 @@ class PeerClient {
       .map((e) => RemoteEntry.fromJson(e as Map<String, dynamic>))
       .toList();
 
+  /// Makes a folder [name] inside [parent] on the other device.
+  Future<void> makeFolder(String parent, String name) => _postJson('/v1/fs/mkdir', {'path': parent, 'name': name});
+
   /// Downloads [remotePath] into [destination]. The file is written under a
   /// temporary name and only renamed once complete.
   Future<File> download(String remotePath, File destination, {Progress? onProgress}) async {

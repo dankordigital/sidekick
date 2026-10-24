@@ -132,7 +132,7 @@ class DemoAppState extends AppState {
       receiveDir: receiveDir,
       permissions: () => permissions,
       inputReady: () async => true,
-      askBeforeReceiving: () => askBeforeReceiving,
+      askBeforeReceiving: asksBeforeReceivingFrom,
       ringing: () => ringingFrom != null,
     );
     addresses = [_isPhone ? '192.168.1.31' : '192.168.1.24'];
@@ -411,7 +411,8 @@ class DemoAppState extends AppState {
           files: [for (final f in m['files']! as List) OfferedFile((f as List)[0] as String, (f[1] as num).toInt())],
         );
         _incoming[offer.id] = offer;
-        if (!askBeforeReceiving) offer.accept();
+        final ask = asksBeforeReceivingFrom(offer.from.id);
+        if (!ask) offer.accept();
         unawaited(
           offer.answer.then(
             (a) => _reply(m, {
@@ -424,7 +425,7 @@ class DemoAppState extends AppState {
             }),
           ),
         );
-        if (askBeforeReceiving) _offers.add(offer);
+        if (ask) _offers.add(offer);
       case 'cancel':
         _incoming.remove(m['id'])?.decline();
       case 'progress':

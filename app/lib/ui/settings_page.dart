@@ -102,12 +102,30 @@ class _SettingsPageState extends State<SettingsPage> {
                           value: state.autoLoad,
                           onChanged: state.setAutoLoad,
                         ),
-                      SwitchListTile(
-                        secondary: const IconTile(Icons.front_hand_outlined, tone: TileTone.tertiary),
-                        title: const Text('Ask before receiving files'),
-                        subtitle: const Text('Accept or decline each time'),
-                        value: state.askBeforeReceiving,
-                        onChanged: state.setAskBeforeReceiving,
+                      // Like LocalSend's Quick save: which devices' files come
+                      // in without Accept ("Always accept from …" makes a favourite).
+                      ListTile(
+                        leading: const IconTile(Icons.front_hand_outlined, tone: TileTone.tertiary),
+                        title: const Text('Quick save'),
+                        subtitle: Text(switch (state.quickSave) {
+                          QuickSave.off => 'Accept or decline each time',
+                          QuickSave.favourites =>
+                            state.alwaysAccept.isEmpty
+                                ? 'Devices you always accept from skip the question'
+                                : '${state.paired.where((d) => state.alwaysAccept.contains(d.id)).map((d) => d.name).join(', ')} skip the question',
+                          QuickSave.on => 'Files from paired devices come in without asking',
+                        }),
+                        trailing: DropdownButton<QuickSave>(
+                          value: state.quickSave,
+                          underline: const SizedBox.shrink(),
+                          borderRadius: BorderRadius.circular(16),
+                          onChanged: (v) => state.setQuickSave(v!),
+                          items: const [
+                            DropdownMenuItem(value: QuickSave.off, child: Text('Off')),
+                            DropdownMenuItem(value: QuickSave.favourites, child: Text('Favourites')),
+                            DropdownMenuItem(value: QuickSave.on, child: Text('On')),
+                          ],
+                        ),
                       ),
                       // One switch for every sound Sidekick makes.
                       SwitchListTile(

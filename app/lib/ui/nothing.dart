@@ -2,11 +2,11 @@ import 'package:material_ui/material_ui.dart';
 
 import '../core/host.dart';
 
-/// Settings → Theme → Nothing: black, white and grey like Nothing's phones,
-/// dot-matrix page titles, small uppercase mono labels, red for progress and
-/// the logo's full stop, green only for "connected". A trial look (the
-/// owner's call): Default stays the default, and this can be deleted with
-/// its pref value (`look` = `nothing`).
+/// Settings → Theme → Nothing: ink on paper (or paper on ink), lines
+/// instead of cards, dot-matrix titles and tab icons, small uppercase mono
+/// labels, one red action per screen, green only for "connected". A look
+/// people can switch to (the owner's call): Default stays the default, and
+/// this can be deleted with its pref value (`look` = `nothing`).
 ///
 /// The theme carries [NothingLook]; screens ask [isNothing].
 @immutable
@@ -30,45 +30,48 @@ const nothingRed = Color(0xFFD71921);
 /// Only for "connected" (red reads as "something's wrong").
 const nothingGreen = Color(0xFF22C55E);
 
-/// The look's colors: black with dark grey cards, or light grey with white ones.
+/// The look's colors: ink on paper, or paper on ink. Lines instead of
+/// cards; [ColorScheme.outlineVariant] is the hairline,
+/// [ColorScheme.outline] the faint grey of things that are off.
 ColorScheme nothingScheme(Brightness brightness) {
   final dark = brightness == Brightness.dark;
-  final fg = dark ? Colors.white : Colors.black;
-  final bg = dark ? Colors.black : const Color(0xFFEDEDED);
-  final card = dark ? const Color(0xFF151515) : Colors.white;
-  final raised = dark ? const Color(0xFF262626) : const Color(0xFFE2E2E2);
-  final muted = dark ? const Color(0xFF8C8C8C) : const Color(0xFF6E6E6E);
+  final ink = dark ? const Color(0xFFF0F0EC) : const Color(0xFF0D0D0D);
+  final paper = dark ? const Color(0xFF0A0A0A) : const Color(0xFFF2F2EF);
+  final raised = dark ? const Color(0xFF161615) : const Color(0xFFE8E8E4);
+  final grey = dark ? const Color(0xFF8A8A85) : const Color(0xFF85857F);
+  final faint = dark ? const Color(0xFF3E3E3A) : const Color(0xFFC4C4BE);
+  final line = dark ? const Color(0xFF242422) : const Color(0xFFDCDCD6);
   return ColorScheme(
     brightness: brightness,
-    primary: fg,
-    onPrimary: bg,
+    primary: ink,
+    onPrimary: paper,
     primaryContainer: raised,
-    onPrimaryContainer: fg,
-    secondary: muted,
-    onSecondary: bg,
+    onPrimaryContainer: ink,
+    secondary: grey,
+    onSecondary: paper,
     secondaryContainer: raised,
-    onSecondaryContainer: fg,
+    onSecondaryContainer: ink,
     tertiary: nothingRed,
     onTertiary: Colors.white,
     tertiaryContainer: raised,
-    onTertiaryContainer: fg,
+    onTertiaryContainer: ink,
     error: nothingRed,
     onError: Colors.white,
-    errorContainer: dark ? const Color(0xFF3A1214) : const Color(0xFFFADADB),
-    onErrorContainer: fg,
-    surface: bg,
-    onSurface: fg,
-    onSurfaceVariant: muted,
-    surfaceContainerLowest: bg,
-    surfaceContainerLow: card,
-    surfaceContainer: card,
-    surfaceContainerHigh: dark ? const Color(0xFF1C1C1C) : const Color(0xFFF7F7F7),
-    surfaceContainerHighest: raised,
-    outline: dark ? const Color(0xFF3A3A3A) : const Color(0xFFC4C4C4),
-    outlineVariant: dark ? const Color(0xFF262626) : const Color(0xFFDADADA),
-    inverseSurface: fg,
-    onInverseSurface: bg,
-    inversePrimary: muted,
+    errorContainer: dark ? const Color(0xFF3A1214) : const Color(0xFFF6D9D9),
+    onErrorContainer: ink,
+    surface: paper,
+    onSurface: ink,
+    onSurfaceVariant: grey,
+    surfaceContainerLowest: paper,
+    surfaceContainerLow: raised,
+    surfaceContainer: raised,
+    surfaceContainerHigh: dark ? const Color(0xFF121211) : const Color(0xFFF7F7F4),
+    surfaceContainerHighest: line,
+    outline: faint,
+    outlineVariant: line,
+    inverseSurface: ink,
+    onInverseSurface: paper,
+    inversePrimary: grey,
     shadow: Colors.black,
     scrim: Colors.black,
     surfaceTint: Colors.transparent,
@@ -104,6 +107,13 @@ ThemeData nothingTheme(ThemeData base) {
         (states) => states.contains(WidgetState.selected) ? nothingRed : scheme.surfaceContainerHighest,
       ),
       trackOutlineColor: const WidgetStatePropertyAll(Colors.transparent),
+    ),
+    dividerTheme: DividerThemeData(color: scheme.outlineVariant, thickness: 1, space: 1),
+    checkboxTheme: CheckboxThemeData(
+      side: BorderSide(color: scheme.onSurfaceVariant, width: 1.3),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+      fillColor: WidgetStateProperty.resolveWith((s) => s.contains(WidgetState.selected) ? scheme.onSurface : null),
+      checkColor: WidgetStatePropertyAll(scheme.surface),
     ),
     extensions: [...base.extensions.values, const NothingLook(on: true)],
   );
@@ -422,4 +432,331 @@ class NothingStatus extends StatelessWidget {
       Flexible(child: NothingLabel(text, size: size)),
     ],
   );
+}
+
+// ------------------------------------------------------------------ the paper look
+
+/// The tab icons, each drawn in dots on an 11 × 11 grid.
+const _tabIcons = <String, List<String>>{
+  'Devices': [
+    '...........',
+    '...........',
+    'XXXXXXX....',
+    'X.....X.XXX',
+    'X.....X.X.X',
+    'X.....X.X.X',
+    'XXXXXXX.X.X',
+    '...X....X.X',
+    '..XXX...XXX',
+    '...........',
+    '...........',
+  ],
+  'Send': [
+    '.....X.....',
+    '....XXX....',
+    '...X.X.X...',
+    '..X..X..X..',
+    '.....X.....',
+    '.....X.....',
+    '.....X.....',
+    '...........',
+    'X.........X',
+    'X.........X',
+    'XXXXXXXXXXX',
+  ],
+  'Remote': [
+    '...XXXXX...',
+    '..X..X..X..',
+    '.X...X...X.',
+    '.X...X...X.',
+    '.XXXXXXXXX.',
+    '.X.......X.',
+    '.X.......X.',
+    '.X.......X.',
+    '.X.......X.',
+    '..X.....X..',
+    '...XXXXX...',
+  ],
+  'Settings': [
+    '...........',
+    '..X........',
+    'XXXXXXXXXXX',
+    '..X........',
+    '.......X...',
+    'XXXXXXXXXXX',
+    '.......X...',
+    '....X......',
+    'XXXXXXXXXXX',
+    '....X......',
+    '...........',
+  ],
+};
+
+/// A tab's icon in dots: Devices, Send, Remote or Settings.
+class DotIcon extends StatelessWidget {
+  const DotIcon(this.name, {super.key, this.size = 24, this.color});
+  final String name;
+  final double size;
+  final Color? color;
+
+  @override
+  Widget build(BuildContext context) => CustomPaint(
+    size: Size.square(size),
+    painter: _DotIconPainter(_tabIcons[name] ?? _tabIcons['Devices']!, color ?? IconTheme.of(context).color!),
+  );
+}
+
+class _DotIconPainter extends CustomPainter {
+  _DotIconPainter(this.rows, this.color);
+  final List<String> rows;
+  final Color color;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final step = size.width / 11;
+    final paint = Paint()..color = color;
+    for (var y = 0; y < 11; y++) {
+      for (var x = 0; x < 11; x++) {
+        if (rows[y][x] == 'X') canvas.drawCircle(Offset((x + 0.5) * step, (y + 0.5) * step), step * 0.42, paint);
+      }
+    }
+  }
+
+  @override
+  bool shouldRepaint(_DotIconPainter old) => old.rows != rows || old.color != color;
+}
+
+/// A hairline between rows.
+class NothingHair extends StatelessWidget {
+  const NothingHair({super.key});
+
+  @override
+  Widget build(BuildContext context) => Container(height: 1, color: Theme.of(context).colorScheme.outlineVariant);
+}
+
+/// A section's name in small mono, and a count or state in the corner.
+class NothingSection extends StatelessWidget {
+  const NothingSection(this.name, {super.key, this.trailing});
+  final String name;
+  final String? trailing;
+
+  @override
+  Widget build(BuildContext context) => Padding(
+    padding: const EdgeInsets.only(bottom: 6),
+    child: Row(
+      children: [
+        Expanded(child: NothingLabel(name, size: 10.5)),
+        if (trailing != null) NothingLabel(trailing!, size: 10.5),
+      ],
+    ),
+  );
+}
+
+/// A device's (or this device's) icon in a thin ring.
+class NothingRing extends StatelessWidget {
+  const NothingRing(this.icon, {super.key, this.size = 44, this.on = true, this.highlight = false});
+  final IconData icon;
+  final double size;
+  final bool on;
+
+  /// The ring in ink (a drop target being hovered).
+  final bool highlight;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        border: Border.all(color: highlight ? scheme.onSurface : scheme.outlineVariant, width: 1.2),
+      ),
+      child: Icon(icon, size: size * 0.45, color: on ? scheme.onSurface : scheme.onSurfaceVariant),
+    );
+  }
+}
+
+/// A small dot: green for "connected", faint otherwise.
+class NothingDot extends StatelessWidget {
+  const NothingDot({super.key, required this.on, this.size = 6});
+  final bool on;
+  final double size;
+
+  @override
+  Widget build(BuildContext context) => Container(
+    width: size,
+    height: size,
+    decoration: BoxDecoration(shape: BoxShape.circle, color: on ? nothingGreen : Theme.of(context).colorScheme.outline),
+  );
+}
+
+/// The big button at the bottom of a screen: red (the screen's one main
+/// action) or an ink outline.
+class NothingButton extends StatelessWidget {
+  const NothingButton({
+    super.key,
+    required this.label,
+    required this.onPressed,
+    this.icon,
+    this.red = true,
+    this.height = 54,
+    this.mono = false,
+  });
+  final String label;
+  final VoidCallback? onPressed;
+  final IconData? icon;
+  final bool red;
+  final double height;
+
+  /// The label in small mono capitals (the quieter buttons, like Decline).
+  final bool mono;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final enabled = onPressed != null;
+    final fg = red ? Colors.white : scheme.onSurface;
+    final child = Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        if (icon != null) ...[Icon(icon, size: 20, color: fg), const SizedBox(width: 10)],
+        Flexible(
+          child: mono
+              ? NothingLabel(label, size: 11.5, color: fg)
+              : Text(
+                  label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(color: fg, fontSize: 16, fontWeight: red ? FontWeight.w600 : FontWeight.w500),
+                ),
+        ),
+      ],
+    );
+    return Opacity(
+      opacity: enabled ? 1 : 0.4,
+      child: Material(
+        color: red ? nothingRed : Colors.transparent,
+        shape: StadiumBorder(
+          side: red ? BorderSide.none : BorderSide(color: mono ? scheme.outlineVariant : scheme.onSurface, width: 1.3),
+        ),
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: onPressed,
+          child: SizedBox(
+            height: height,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 18),
+              child: Center(child: child),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// A small outlined pill with a mono label (+ Connect, Send, Pair).
+class NothingChip extends StatelessWidget {
+  const NothingChip({super.key, required this.label, required this.onPressed, this.ink = true});
+  final String label;
+  final VoidCallback? onPressed;
+
+  /// An ink outline (an action); otherwise a faint one.
+  final bool ink;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final on = onPressed != null;
+    return Material(
+      color: Colors.transparent,
+      shape: StadiumBorder(side: BorderSide(color: on && ink ? scheme.onSurface : scheme.outlineVariant, width: 1.2)),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: onPressed,
+        child: Container(
+          height: 36,
+          padding: const EdgeInsets.symmetric(horizontal: 14),
+          alignment: Alignment.center,
+          child: NothingLabel(label, size: 11, color: on ? scheme.onSurface : scheme.outline),
+        ),
+      ),
+    );
+  }
+}
+
+/// The round red send button on a device's row.
+class NothingSendDot extends StatelessWidget {
+  const NothingSendDot({super.key, required this.onPressed, this.tooltip = 'Send'});
+  final VoidCallback? onPressed;
+  final String tooltip;
+
+  @override
+  Widget build(BuildContext context) => IconButton(
+    tooltip: tooltip,
+    onPressed: onPressed,
+    icon: const Icon(Icons.north_east_rounded, size: 20),
+    style: IconButton.styleFrom(
+      fixedSize: const Size.square(40),
+      minimumSize: const Size.square(40),
+      padding: EdgeInsets.zero,
+      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+      backgroundColor: nothingRed,
+      foregroundColor: Colors.white,
+      disabledBackgroundColor: Theme.of(context).colorScheme.outlineVariant,
+      disabledForegroundColor: Theme.of(context).colorScheme.onSurfaceVariant,
+    ),
+  );
+}
+
+/// A choice of a few, the chosen one filled in ink (Quick save).
+class NothingSegments<T> extends StatelessWidget {
+  const NothingSegments({
+    super.key,
+    required this.values,
+    required this.labels,
+    required this.value,
+    required this.onChanged,
+  });
+  final List<T> values;
+  final List<String> labels;
+  final T value;
+  final ValueChanged<T> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Container(
+      height: 44,
+      padding: const EdgeInsets.all(3),
+      decoration: BoxDecoration(
+        border: Border.all(color: scheme.outlineVariant, width: 1.2),
+        borderRadius: BorderRadius.circular(22),
+      ),
+      child: Row(
+        children: [
+          for (final (i, v) in values.indexed)
+            Expanded(
+              child: Semantics(
+                selected: v == value,
+                button: true,
+                child: Material(
+                  color: v == value ? scheme.onSurface : Colors.transparent,
+                  shape: const StadiumBorder(),
+                  clipBehavior: Clip.antiAlias,
+                  child: InkWell(
+                    onTap: () => onChanged(v),
+                    child: Center(
+                      child: NothingLabel(labels[i], size: 10.5, color: v == value ? scheme.surface : null),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
 }
