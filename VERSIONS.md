@@ -4,6 +4,28 @@ Every release, newest first, with its biggest features and fixes. Add an
 entry here with each release (see "Releasing" in `CLAUDE.md`). The history
 starts at 1.1.3.
 
+## 3.0.0
+- **Transfers survive a dropped connection.** If Wi-Fi blinks, the other
+  device sleeps for a moment or moves to another network, Sidekick finds it
+  again and carries on from where it stopped, instead of failing and
+  starting over. Both ways: sending, and downloading from the other
+  device's files. (Both devices need 3.0.)
+- **Stop a transfer part-way:** the sending screen has Stop, and the other
+  device stops waiting and drops the half-sent file.
+- **Time left** while sending ("2 min left").
+- **One clear "can't reach" screen:** Files and Remote no longer show a red
+  paragraph and a technical error. They say "Looking for …", when the
+  device was last seen and what to check, with Try again, and open by
+  themselves as soon as the device answers.
+- **Remote reconnects by itself** when the connection drops.
+- **Device cards say how a device is connected:** Same Wi-Fi, Direct Wi-Fi
+  or Bluetooth, or "Not reachable · seen 4 min ago" with Try again
+  (instead of a greyed-out Send).
+- **Errors in plain words** everywhere (no more "SocketException" or
+  "No host specified in URI").
+- **Tidier look:** one card colour everywhere, Settings lined up with its
+  title, device cards in even columns, clearer first-run steps.
+
 ## 2.19.0
 - **Make your own theme** (Settings → Theme → Make theme…): start from
   Default, Liquid Glass (on Apple devices that have it) or Nothing, pick

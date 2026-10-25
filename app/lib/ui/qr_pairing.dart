@@ -5,6 +5,7 @@ import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 
 import '../app_state.dart';
+import '../core/errors.dart';
 import '../core/models.dart';
 import '../core/pairing_qr.dart';
 import '../core/trust.dart';
@@ -282,7 +283,7 @@ class _PairingProgressState extends State<_PairingProgress> {
       final paired = await widget.state.pairWithInvite(widget.code);
       if (mounted) Navigator.pop(context, paired);
     } catch (e) {
-      if (mounted) setState(() => _error = '$e');
+      if (mounted) setState(() => _error = describeError(e));
     }
   }
 

@@ -8,6 +8,7 @@ import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 
 import '../app_state.dart';
+import '../core/errors.dart';
 import '../core/models.dart';
 import '../core/server.dart';
 import '../platform/gallery.dart';
@@ -33,7 +34,10 @@ String _how(AppState state, PairedDevice d) {
   if (state.connectingDirect.contains(d.id)) return 'Setting up direct Wi-Fi';
   if (state.viaDirectWifi(d.id) || state.viaDirectLinkOnly(d.id)) return 'Direct Wi-Fi';
   if (state.viaBluetooth(d.id)) return 'Bluetooth';
-  return state.isOnline(d.id) ? 'Wi-Fi' : 'Offline';
+  if (state.isOnline(d.id)) return 'Wi-Fi';
+  if (state.isFinding(d.id)) return 'Looking';
+  final seen = state.lastSeen(d.id);
+  return seen == null ? 'Offline' : 'Seen ${formatAgo(seen)}';
 }
 
 Future<void> _ping(BuildContext context, AppState state, PairedDevice d) async {
@@ -404,7 +408,7 @@ class _NothingSendPageState extends State<NothingSendPage> {
           if (f.path != null) File(f.path!),
       ];
     } catch (e) {
-      if (mounted) showError(context, "Couldn't open the file picker: $e");
+      if (mounted) showError(context, "Couldn't open the file picker: ${describeError(e)}");
       return const [];
     }
   }
@@ -424,7 +428,7 @@ class _NothingSendPageState extends State<NothingSendPage> {
       if (files.isEmpty && mounted) showError(context, 'That folder has no files in it.');
       _addToSelection(files);
     } catch (e) {
-      if (mounted) showError(context, "Couldn't read that folder: $e");
+      if (mounted) showError(context, "Couldn't read that folder: ${describeError(e)}");
     }
   }
 
@@ -439,7 +443,7 @@ class _NothingSendPageState extends State<NothingSendPage> {
       await file.writeAsString(text);
       _addToSelection([file]);
     } catch (e) {
-      if (mounted) showError(context, "Couldn't keep that text: $e");
+      if (mounted) showError(context, "Couldn't keep that text: ${describeError(e)}");
     }
   }
 
@@ -872,7 +876,16 @@ class _NothingBrowsePageState extends State<NothingBrowsePage> {
   @override
   void initState() {
     super.initState();
-    if (_device != null) _load();
+    final device = _device;
+    if (device == null) return;
+    // Out of reach: look for it first, then open.
+    if (state.isOnline(device.id)) {
+      _load();
+    } else {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _find(device);
+      });
+    }
   }
 
   Future<void> _load() async {
@@ -896,7 +909,7 @@ class _NothingBrowsePageState extends State<NothingBrowsePage> {
     } catch (e) {
       if (!mounted) return;
       setState(() {
-        _error = '$e';
+        _error = describeError(e);
         _loading = false;
       });
     }
@@ -957,7 +970,7 @@ class _NothingBrowsePageState extends State<NothingBrowsePage> {
       await state.clientFor(device).makeFolder(here, name.trim());
       if (mounted) unawaited(_load());
     } catch (e) {
-      if (mounted) showError(context, "Couldn't make the folder: $e");
+      if (mounted) showError(context, "Couldn't make the folder: ${describeError(e)}");
     }
   }
 
@@ -1100,8 +1113,37 @@ class _NothingBrowsePageState extends State<NothingBrowsePage> {
     );
   }
 
+  /// Looks for [device] (Try again) and opens its files once it answers.
+  Future<void> _find(PairedDevice device) async {
+    if (await state.findDevice(device) && mounted && device == _device) await _load();
+  }
+
   Widget _list(PairedDevice device, ColorScheme scheme) {
     if (_loading) return const Loading(label: 'Opening folder…');
+    if (!state.isOnline(device.id) && (_error != null || _entries.isEmpty)) {
+      final looking = state.isFinding(device.id);
+      final seen = state.lastSeen(device.id);
+      return Padding(
+        padding: const EdgeInsets.symmetric(vertical: 18),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              looking ? 'Looking for ${device.name}…' : "Can't reach ${device.name}",
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              '${seen == null ? '' : 'Last seen ${formatAgo(seen)}. '}'
+              'Open Sidekick on it, on the same Wi-Fi.',
+              style: TextStyle(color: scheme.onSurfaceVariant),
+            ),
+            const SizedBox(height: 14),
+            NothingChip(label: looking ? 'Looking…' : 'Try again', onPressed: looking ? null : () => _find(device)),
+          ],
+        ),
+      );
+    }
     if (_error != null) {
       return Padding(
         padding: const EdgeInsets.symmetric(vertical: 18),
@@ -1356,6 +1398,7 @@ class NothingDevicePage extends StatelessWidget {
 }
 
 String _transferMeta(Transfer t) => switch (t.state) {
+  TransferState.running when t.reconnecting => 'Reconnecting',
   TransferState.running => '${t.total > 0 ? (t.done * 100 ~/ t.total) : 0}%',
   TransferState.done => formatBytes(t.total),
   TransferState.failed => 'Failed',
@@ -1784,8 +1827,8 @@ class _NothingIncomingState extends State<_NothingIncoming> {
       (bytes) => setState(() => _received = bytes),
       onDone: () {
         if (!mounted) return;
-        setState(() => _stage = _Stage.done);
-        Timer(const Duration(milliseconds: 1200), _leave);
+        setState(() => _stage = offer.stopped ? _Stage.gone : _Stage.done);
+        Timer(const Duration(milliseconds: 1300), _leave);
       },
     );
   }
@@ -1949,11 +1992,15 @@ class NothingSendView extends StatefulWidget {
     required this.onBack,
     required this.action,
     required this.onAction,
+    this.onStop,
   });
   final OutgoingSend send;
   final VoidCallback onBack;
   final String action;
   final VoidCallback onAction;
+
+  /// Stops the send part-way (shown while sending).
+  final VoidCallback? onStop;
 
   @override
   State<NothingSendView> createState() => _NothingSendViewState();
@@ -2005,6 +2052,7 @@ class _NothingSendViewState extends State<NothingSendView> {
                       child: NothingLabel(switch (send.phase) {
                         SendPhase.connecting => 'Connecting',
                         SendPhase.waiting => 'Waiting for an answer',
+                        SendPhase.sending when send.reconnecting => 'Reconnecting',
                         SendPhase.sending => 'Sending',
                         SendPhase.done => 'Sent',
                         SendPhase.declined => 'Declined',
@@ -2075,7 +2123,10 @@ class _NothingSendViewState extends State<NothingSendView> {
                         if (send.phase == SendPhase.sending)
                           NothingLabel(
                             [
-                              if (left != null) '$left s left',
+                              if (send.reconnecting)
+                                'Waiting for ${d.name}'
+                              else if (left != null)
+                                formatTimeLeft(Duration(seconds: left)),
                               if (send.names.length > 1) '${send.current + 1} of ${send.names.length}',
                             ].join('  ·  '),
                           ),
@@ -2085,6 +2136,10 @@ class _NothingSendViewState extends State<NothingSendView> {
                 ),
               ),
               const SizedBox(height: 14),
+              if (widget.onStop != null && send.phase == SendPhase.sending) ...[
+                NothingPill(label: 'Stop', solid: false, height: 52, onPressed: widget.onStop),
+                const SizedBox(height: 10),
+              ],
               NothingPill(label: widget.action, solid: false, height: 52, onPressed: widget.onAction),
             ],
           ),

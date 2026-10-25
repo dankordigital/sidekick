@@ -7,6 +7,14 @@ detailed developer notes; every release is in `VERSIONS.md`) and
 
 ## 25 October 2026
 
+- **App 3.0.0, "polished"** (the owner asked for a polished 3.0: design,
+  connectivity, simplicity). Transfers resume after a dropped connection
+  (Wi-Fi parts + downloads from an offset; Sidekick looks for the device
+  and carries on), Stop while sending, time left, one calm "Can't reach"
+  card in Files and Remote that retries by itself, Remote redials, device
+  cards say how they're connected, plain-language errors everywhere, one
+  card colour, Settings aligned, devices in even columns. See VERSIONS.md.
+
 - **The Nothing ad's source, as a zip** (the owner asked for the code, not
   the MP4): `sidekick-nothing-ad.zip` (20 MB), a standalone Remotion
   project with only the Nothing ad: `src/nothing/` as in `trailer/`, its

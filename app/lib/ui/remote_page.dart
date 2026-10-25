@@ -5,6 +5,7 @@ import 'package:material_ui/material_ui.dart';
 import 'package:flutter/services.dart';
 
 import '../app_state.dart';
+import '../core/errors.dart';
 import '../core/client.dart';
 import '../core/models.dart';
 import 'widgets.dart';
@@ -136,10 +137,33 @@ class _RemoteState extends State<_Remote> {
   final _liveController = TextEditingController();
   String _live = '';
 
+  bool get _online => widget.state.isOnline(widget.device.id);
+  late bool _wasOnline = _online;
+
+  /// Tries in a row after the connection dropped by itself.
+  int _redials = 0;
+
   @override
   void initState() {
     super.initState();
-    _connect();
+    if (_online) {
+      _connect();
+    } else {
+      _conn = _Conn.failed;
+    }
+  }
+
+  @override
+  void didUpdateWidget(_Remote old) {
+    super.didUpdateWidget(old);
+    // Back in reach: connect again without being asked.
+    final online = _online;
+    if (online && !_wasOnline && _conn == _Conn.failed) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _connect();
+      });
+    }
+    _wasOnline = online;
   }
 
   @override
@@ -171,22 +195,31 @@ class _RemoteState extends State<_Remote> {
       setState(() {
         _session = session;
         _conn = _Conn.connected;
+        _redials = 0;
       });
       unawaited(
         session.closed.then((_) {
-          if (mounted && _session == session) {
-            setState(() {
-              _conn = _Conn.failed;
-              _error = 'Disconnected';
+          if (!mounted || _session != session) return;
+          // Wi-Fi blinked or the other device slept: dial again, a few times.
+          if (_redials < 3) {
+            _redials++;
+            Timer(Duration(seconds: _redials), () {
+              if (mounted && _session == session) _connect();
             });
+            setState(() => _conn = _Conn.connecting);
+            return;
           }
+          setState(() {
+            _conn = _Conn.failed;
+            _error = 'The connection dropped.';
+          });
         }),
       );
     } catch (e) {
       if (mounted) {
         setState(() {
           _conn = _Conn.failed;
-          _error = '$e';
+          _error = describeError(e);
         });
       }
     }
@@ -255,93 +288,99 @@ class _RemoteState extends State<_Remote> {
       title: 'Remote',
       subtitle: 'Use ${widget.device.name} from here',
       actions: [
-        _StatusChip(conn: _conn, onRetry: _connect),
-        const SizedBox(width: 8),
+        if (_online) ...[_StatusChip(conn: _conn, onRetry: _connect), const SizedBox(width: 8)],
         DevicePicker(state: widget.state),
       ],
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          OfflineBanner(state: widget.state, device: widget.device),
-          if (!supported)
-            const Padding(
-              padding: EdgeInsets.only(bottom: 16),
-              child: Text(
-                "This device doesn't accept remote control (it's off in its settings, or its platform doesn't allow it).",
-              ),
-            ),
-          if (_conn == _Conn.failed && _error != null)
-            Padding(
-              padding: const EdgeInsets.only(bottom: 16),
-              child: Text(_error!, style: TextStyle(color: scheme.error)),
-            ),
-          _Touchpad(
-            enabled: _s != null,
-            onMove: (d) => _s?.move(d.dx * _speed, d.dy * _speed),
-            onClick: () => _s?.click(),
-            onRightClick: () => _s?.click(button: 'right'),
-            onScroll: (dx, dy) => _s?.scroll(dx: dx, dy: dy),
-          ),
-          const SizedBox(height: 12),
-          Row(
-            children: [
-              Expanded(
-                child: _BigButton(label: 'Left click', onPressed: _s == null ? null : () => _s!.click()),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: _BigButton(
-                  label: 'Right click',
-                  onPressed: _s == null ? null : () => _s!.click(button: 'right'),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Tooltip(
-                message: 'Hold the left button down, for dragging and selecting',
-                child: SizedBox(
-                  height: 56,
-                  child: FilterChip(
-                    label: const Text('Hold'),
-                    avatar: const Icon(Icons.pan_tool_alt_outlined, size: 18),
-                    selected: _holding,
-                    onSelected: _s == null
-                        ? null
-                        : (v) {
-                            v ? _s!.buttonDown() : _s!.buttonUp();
-                            setState(() => _holding = v);
-                          },
+      child: !_online
+          ? Container(
+              decoration: BoxDecoration(color: scheme.surfaceContainerLow, borderRadius: BorderRadius.circular(28)),
+              child: UnreachableDevice(state: widget.state, device: widget.device),
+            )
+          : Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                OfflineBanner(state: widget.state, device: widget.device),
+                if (!supported)
+                  const Padding(
+                    padding: EdgeInsets.only(bottom: 16),
+                    child: Text(
+                      "This device doesn't accept remote control (it's off in its settings, or its platform doesn't allow it).",
+                    ),
                   ),
+                if (_conn == _Conn.failed && _error != null)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 16),
+                    child: Text(_error!, style: TextStyle(color: scheme.error)),
+                  ),
+                _Touchpad(
+                  enabled: _s != null,
+                  onMove: (d) => _s?.move(d.dx * _speed, d.dy * _speed),
+                  onClick: () => _s?.click(),
+                  onRightClick: () => _s?.click(button: 'right'),
+                  onScroll: (dx, dy) => _s?.scroll(dx: dx, dy: dy),
                 ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Row(
-            children: [
-              const Icon(Icons.speed, size: 20),
-              const SizedBox(width: 8),
-              const Text('Pointer speed'),
-              Expanded(
-                child: Slider(value: _speed, min: 0.5, max: 4, onChanged: (v) => setState(() => _speed = v)),
-              ),
-            ],
-          ),
-          const SectionLabel('Keyboard'),
-          if (isMobile) _liveTyping() else ..._desktopKeyboard(scheme),
-          const SectionLabel('Shortcuts'),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: [
-              for (final (label, key, mods) in _shortcutsFor(widget.device.platform))
-                ActionChip(
-                  label: _arrows[label] == null ? Text(label) : Icon(_arrows[label], size: 18, semanticLabel: key),
-                  onPressed: _s == null ? null : () => _s!.key(key, modifiers: mods),
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    Expanded(
+                      child: _BigButton(label: 'Left click', onPressed: _s == null ? null : () => _s!.click()),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: _BigButton(
+                        label: 'Right click',
+                        onPressed: _s == null ? null : () => _s!.click(button: 'right'),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Tooltip(
+                      message: 'Hold the left button down, for dragging and selecting',
+                      child: SizedBox(
+                        height: 56,
+                        child: FilterChip(
+                          label: const Text('Hold'),
+                          avatar: const Icon(Icons.pan_tool_alt_outlined, size: 18),
+                          selected: _holding,
+                          onSelected: _s == null
+                              ? null
+                              : (v) {
+                                  v ? _s!.buttonDown() : _s!.buttonUp();
+                                  setState(() => _holding = v);
+                                },
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-            ],
-          ),
-        ],
-      ),
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    const Icon(Icons.speed, size: 20),
+                    const SizedBox(width: 8),
+                    const Text('Pointer speed'),
+                    Expanded(
+                      child: Slider(value: _speed, min: 0.5, max: 4, onChanged: (v) => setState(() => _speed = v)),
+                    ),
+                  ],
+                ),
+                const SectionLabel('Keyboard'),
+                if (isMobile) _liveTyping() else ..._desktopKeyboard(scheme),
+                const SectionLabel('Shortcuts'),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: [
+                    for (final (label, key, mods) in _shortcutsFor(widget.device.platform))
+                      ActionChip(
+                        label: _arrows[label] == null
+                            ? Text(label)
+                            : Icon(_arrows[label], size: 18, semanticLabel: key),
+                        onPressed: _s == null ? null : () => _s!.key(key, modifiers: mods),
+                      ),
+                  ],
+                ),
+              ],
+            ),
     );
   }
 

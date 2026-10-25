@@ -2,6 +2,7 @@ import 'package:file_picker/file_picker.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../app_state.dart';
+import '../core/errors.dart';
 import '../platform/android.dart';
 import '../core/bluetooth.dart';
 import '../core/models.dart';
@@ -44,7 +45,7 @@ class _SettingsPageState extends State<SettingsPage> {
       await prepareFilePicker();
       dir = await FilePicker.getDirectoryPath(dialogTitle: 'Save received files to…');
     } catch (e) {
-      if (mounted) showError(context, "Couldn't open the folder picker: $e");
+      if (mounted) showError(context, "Couldn't open the folder picker: ${describeError(e)}");
       return;
     }
     if (dir == null) return;
@@ -61,9 +62,11 @@ class _SettingsPageState extends State<SettingsPage> {
         return PageFrame(
           title: 'Settings',
           subtitle: state.appVersion.isEmpty ? null : 'Sidekick ${state.appVersion}',
+          // One readable column, the title lined up with it.
+          maxWidth: 760,
           child: Center(
             child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 720),
+              constraints: const BoxConstraints(maxWidth: 760),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [

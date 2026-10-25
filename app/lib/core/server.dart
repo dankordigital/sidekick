@@ -134,6 +134,15 @@ class TransferOffer {
   void accept() => _close(OfferAnswer.accepted);
   void decline() => _close(OfferAnswer.declined);
 
+  /// The sender stopped part-way (Cancel while sending): [progress] closes
+  /// without every file in.
+  bool stopped = false;
+
+  void _stop() {
+    stopped = true;
+    if (!_progress.isClosed) _progress.close();
+  }
+
   void _close(OfferAnswer answer) {
     if (!_answer.isCompleted) _answer.complete(answer);
   }
@@ -714,12 +723,17 @@ class SidekickServer {
     if (!await file.exists()) return _error(404, 'File not found');
     final length = await file.length();
     final name = p.basename(path);
+    // `offset` (3.0): the rest of a download that was cut off. The answer
+    // says where it starts, so a client never appends to the wrong place.
+    final offset = (int.tryParse(r.url.queryParameters['offset'] ?? '') ?? 0).clamp(0, length);
     return Response.ok(
-      file.openRead(),
+      file.openRead(offset),
       headers: {
         'content-type': lookupMimeType(path) ?? 'application/octet-stream',
-        'content-length': '$length',
+        'content-length': '${length - offset}',
         'content-disposition': "attachment; filename*=UTF-8''${Uri.encodeComponent(name)}",
+        'x-sidekick-offset': '$offset',
+        'x-sidekick-size': '$length',
       },
     );
   }
@@ -764,8 +778,19 @@ class SidekickServer {
   /// `POST /v1/transfer/cancel`, body `{id}`: the sender stopped waiting.
   Future<Response> _cancelOffer(Request r) async {
     final id = (await _body(r))['id'];
-    final offer = _offers[id];
-    if (offer != null && offer.from.id == _peer(r).id) offer._close(OfferAnswer.cancelled);
+    final offer = _offers[id] ?? _tickets.values.map((t) => t.offer).where((o) => o.id == id).firstOrNull;
+    if (offer == null || offer.from.id != _peer(r).id) return _json({'ok': true});
+    if (offer.isOpen) {
+      offer._close(OfferAnswer.cancelled);
+    } else if (!offer.complete) {
+      // Already accepted and on its way: stop taking it, and drop the halves.
+      _tickets.removeWhere((_, t) => t.offer == offer);
+      for (final e in _partUploads.entries.where((e) => e.value.ticket?.offer == offer).toList()) {
+        _partUploads.remove(e.key);
+        await e.value.partial.delete().catchError((_) => e.value.partial);
+      }
+      offer._stop();
+    }
     return _json({'ok': true});
   }
 
@@ -793,8 +818,14 @@ class SidekickServer {
     return (ticket, null);
   }
 
+  /// The biggest part [_uploadPart] takes.
+  static const maxUploadPart = 16 * 1024 * 1024;
+
   /// Uploads arriving in parts (see [_uploadPart]), by upload id.
   final Map<String, _PartUpload> _partUploads = {};
+
+  /// Part uploads finished in the last 10 minutes, by upload id.
+  final Map<String, ({String peerId, String path, int size, DateTime at})> _finishedUploads = {};
 
   /// `POST /v1/fs/upload/part?name=…&upload=<id>&offset=<n>&total=<n>[&dir=…][&ticket=…]`,
   /// one piece of a file. Bluetooth sends files this way: each part is
@@ -802,6 +833,10 @@ class SidekickServer {
   /// that part instead of the whole file. Parts must come in order; a part
   /// that was already stored (a retry) is simply acknowledged. Answers
   /// `{received}` until the last part, then `{path, size}`.
+  ///
+  /// Since 3.0 files go this way over Wi-Fi too, in bigger parts: if the
+  /// connection drops, the sender asks again and carries on from
+  /// `received` instead of starting over.
   Future<Response> _uploadPart(Request r) async {
     final q = r.url.queryParameters;
     final id = q['upload'] ?? '';
@@ -809,6 +844,10 @@ class SidekickServer {
     final total = int.tryParse(q['total'] ?? '');
     if (id.isEmpty || id.length > 64 || offset == null || offset < 0 || total == null || total < 0) {
       return _error(400, 'Bad upload part');
+    }
+    // Parts are held in memory until written: keep them small.
+    if ((int.tryParse(r.headers['content-length'] ?? '') ?? 0) > maxUploadPart) {
+      return _error(413, 'Upload part too big');
     }
     final body = await r
         .read()
@@ -821,6 +860,14 @@ class SidekickServer {
       _partUploads.remove(stale.key);
       stale.value.ticket?.offer._fileDone(0);
       await stale.value.partial.delete().catchError((_) => stale.value.partial);
+    }
+
+    // Already finished, but the sender didn't hear (the connection dropped
+    // just then): tell it again rather than starting a second copy.
+    _finishedUploads.removeWhere((_, f) => now.difference(f.at).inMinutes >= 10);
+    final finished = _finishedUploads[id];
+    if (finished != null && finished.peerId == _peer(r).id) {
+      return _json({'path': finished.path, 'size': finished.size, 'received': finished.size});
     }
 
     var up = _partUploads[id];
@@ -862,6 +909,8 @@ class SidekickServer {
         rethrow;
       }
       up.received += body.length;
+      // Over Bluetooth, [bleReceiving] already counted it on arrival.
+      if (!_overBluetooth(r)) up.ticket?.offer._addReceived(body.length);
     }
     if (up.received < up.total) return _json({'received': up.received});
 
@@ -871,6 +920,7 @@ class SidekickServer {
         ? const TransferSecurity.bluetooth()
         : TransferSecurity.wifi(certificate: _peer(r).fingerprint);
     up.ticket?.offer._fileDone(up.total);
+    _finishedUploads[id] = (peerId: up.peerId, path: saved.path, size: up.total, at: now);
     _events.add(FileReceived(_peer(r), saved, up.total, security, toReceiveFolder: up.toReceiveFolder));
     return _json({'path': saved.path, 'size': up.total, 'received': up.total});
   }

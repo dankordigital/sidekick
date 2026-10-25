@@ -241,12 +241,12 @@ class _WelcomeFlowState extends State<WelcomeFlow> {
         _Feature(
           Icons.looks_one_outlined,
           'Open Sidekick on both',
-          'On the same Wi-Fi, or close by with Bluetooth on.',
+          'Best on the same Wi-Fi. No Wi-Fi? Keep them close: Sidekick links them directly.',
         ),
         _Feature(
           Icons.looks_two_outlined,
           'Tap Pair next to the other device',
-          'It shows up under Nearby on the Devices tab. No Wi-Fi? Tap Bluetooth there.',
+          'It shows up under Nearby on the Devices tab. Or scan its QR code: Connect device → QR code.',
         ),
         _Feature(
           Icons.looks_3_outlined,

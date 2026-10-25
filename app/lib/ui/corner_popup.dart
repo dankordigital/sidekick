@@ -153,6 +153,12 @@ class _CornerPopupState extends State<CornerPopup> with TickerProviderStateMixin
       (bytes) => setState(() => _received = bytes),
       onDone: () {
         if (!mounted) return;
+        if (offer.stopped) {
+          _gone = 'Stopped sending';
+          _settle(_Stage.gone);
+          _finish(after: const Duration(milliseconds: 1400));
+          return;
+        }
         _settle(_Stage.done);
         _finish(after: const Duration(milliseconds: 1100));
       },

@@ -16,6 +16,7 @@ import 'core/client.dart';
 import 'core/crypto.dart';
 import 'core/custom_theme.dart';
 import 'core/discovery.dart';
+import 'core/errors.dart';
 import 'core/models.dart';
 import 'core/pairing_qr.dart';
 import 'core/server.dart';
@@ -77,6 +78,10 @@ class Transfer {
   /// A received photo or video that went to Photos / the gallery.
   bool inGallery = false;
 
+  /// The connection dropped and Sidekick is waiting for the other device,
+  /// to carry on where it stopped.
+  bool reconnecting = false;
+
   /// Where it is there (Android), to open it.
   String? galleryUri;
 
@@ -106,23 +111,48 @@ class OutgoingSend extends ChangeNotifier {
   bool cancelled = false;
   Future<void> Function()? _cancelOffer;
 
+  /// The connection dropped mid-way; waiting for the device to carry on.
+  bool reconnecting = false;
+
+  void _reconnecting(bool value) {
+    reconnecting = value;
+    _mark = null;
+    notifyListeners();
+  }
+
   bool get finished => phase.index >= SendPhase.done.index;
   double get fraction => total > 0 ? (done / total).clamp(0.0, 1.0) : (phase == SendPhase.done ? 1 : 0);
 
   void _set(SendPhase p, {String? error}) {
     phase = p;
     this.error = error;
+    if (p == SendPhase.sending) _mark = null;
     notifyListeners();
   }
 
   void _progress(int bytes) {
     done = bytes;
+    _mark ??= (at: DateTime.now(), bytes: bytes);
     notifyListeners();
   }
 
-  /// Stops waiting for an answer (the other device's prompt closes too).
+  /// Where the speed is measured from (reset after a reconnect).
+  ({DateTime at, int bytes})? _mark;
+
+  /// About how long the rest takes, once there's enough to tell.
+  Duration? get remaining {
+    final mark = _mark;
+    if (mark == null || reconnecting || phase != SendPhase.sending) return null;
+    final seconds = DateTime.now().difference(mark.at).inMilliseconds / 1000;
+    final moved = done - mark.bytes;
+    if (seconds < 1.5 || moved <= 0) return null;
+    return Duration(seconds: ((total - done) * seconds / moved).ceil());
+  }
+
+  /// Stops the send: before the answer (the other device's prompt closes
+  /// too) or part-way (what's half-sent is dropped there).
   Future<void> cancel() async {
-    if (phase != SendPhase.connecting && phase != SendPhase.waiting) return;
+    if (finished || cancelled) return;
     cancelled = true;
     notifyListeners();
     try {
@@ -623,7 +653,7 @@ class AppState extends ChangeNotifier {
       // iOS needs a special Apple entitlement for multicast; the scan below
       // covers it. Elsewhere, say why devices may not show up.
       if (!Host.isIOS) {
-        networkError ??= "Couldn't search the network ($e). Use Scan network or Add by IP.";
+        networkError ??= "Couldn't search the network. Use Connect device → Wi-Fi, QR code or IP address.";
       }
     }
     if (Host.isIOS) {
@@ -877,9 +907,9 @@ class AppState extends ChangeNotifier {
 
   /// Adds "update it" to an error when [d] runs an older Sidekick.
   String _withUpdateHint(PairedDevice d, Object error) => runsOlderApp(d)
-      ? '$error\n${d.name} runs an older Sidekick${appVersionOf(d) == null ? '' : ' (${appVersionOf(d)})'}: '
+      ? '${describeError(error)}\n${d.name} runs an older Sidekick${appVersionOf(d) == null ? '' : ' (${appVersionOf(d)})'}: '
             'update it to $appVersion.'
-      : '$error';
+      : describeError(error);
 
   /// Remembers a device whose certificate changed, so it shows "Pair again".
   void _noteFailure(PairedDevice d, Object error) {
@@ -949,6 +979,24 @@ class AppState extends ChangeNotifier {
   }
 
   bool isOnline(String id) => reachableViaWifi(id) || viaBluetooth(id) || viaDirectLinkOnly(id);
+
+  /// When [id] last answered, however (since Sidekick started).
+  DateTime? lastSeen(String id) {
+    final times = [_lastContact[id], _p2pContact[id], _bleSeen[id]?.seen].whereType<DateTime>();
+    return times.isEmpty ? null : times.reduce((a, b) => a.isAfter(b) ? a : b);
+  }
+
+  /// How [id] is reached right now, in a few words ("Same Wi-Fi"), or null
+  /// when it isn't.
+  String? connectionLabel(String id) {
+    if (_finding.containsKey(id) && !isOnline(id)) return null;
+    if (_directConnecting.containsKey(id)) return 'Setting up direct Wi-Fi…';
+    if (viaDirectWifi(id) || (_onLan(id) && _directIdle.containsKey(id))) return 'Direct Wi-Fi';
+    if (_onLan(id)) return 'Same Wi-Fi';
+    if (viaBluetooth(id)) return 'Bluetooth';
+    if (viaDirectLinkOnly(id)) return 'Nearby · direct Wi-Fi';
+    return null;
+  }
 
   PairedDevice? get selected {
     final d = pairedById(selectedId);
@@ -1054,7 +1102,7 @@ class AppState extends ChangeNotifier {
       }
     } catch (e) {
       await _releaseDirect(d, ble);
-      _notices.add(Notice("Couldn't set up a direct Wi-Fi link: $e"));
+      _notices.add(Notice("Couldn't set up a direct Wi-Fi link: ${describeError(e)}"));
       return false;
     }
     // Give both sides a moment to finish getting on the network.
@@ -1114,6 +1162,96 @@ class AppState extends ChangeNotifier {
     if (viaDirectLinkOnly(d.id) || (viaBluetooth(d.id) && bytes > directLinkThreshold)) await connectDirect(d);
     if (_directIdle.containsKey(d.id)) _keepDirect(d);
     return clientFor(d);
+  }
+
+  /// Devices being looked for right now ([findDevice]).
+  final Map<String, Future<bool>> _finding = {};
+
+  /// True while Sidekick looks for [id] (Try again, or after a dropped
+  /// connection).
+  bool isFinding(String id) => _finding.containsKey(id);
+
+  /// Looks for [d] everywhere it could be: its last address, the network
+  /// (a new address after a Wi-Fi switch), Apple's direct link and, when
+  /// it's on, Bluetooth. True once [d] answers (within [within]).
+  Future<bool> findDevice(PairedDevice d, {Duration within = const Duration(seconds: 15)}) {
+    final pending = _finding[d.id];
+    if (pending != null) return pending;
+    final search = _finding[d.id] = _find(d, within);
+    notifyListeners();
+    return search.whenComplete(() {
+      _finding.remove(d.id);
+      notifyListeners();
+    });
+  }
+
+  Future<bool> _find(PairedDevice d, Duration within) async {
+    final since = DateTime.now();
+    bool heard() =>
+        (_lastContact[d.id]?.isAfter(since) ?? false) ||
+        (_p2pContact[d.id]?.isAfter(since) ?? false) ||
+        ((_bleSeen[d.id]?.seen.isAfter(since) ?? false) && isOnline(d.id));
+    unawaited(_restartDiscovery());
+    unawaited(bluetooth?.scan());
+    var swept = false;
+    while (DateTime.now().difference(since) < within) {
+      final address = d.lastAddress;
+      await Future.wait([
+        if (address != null)
+          PeerClient(host: address, port: d.lastPort)
+              .info(timeout: const Duration(seconds: 2))
+              .then((info) {
+                if (info.id == d.id) _onFound(info);
+              })
+              .catchError((_) {}),
+        _checkP2p(),
+      ]);
+      if (heard()) return true;
+      // Not at its last address: maybe it got a new one. Ask the network
+      // (once; it takes a few seconds).
+      if (!swept && DateTime.now().difference(since) > const Duration(seconds: 3)) {
+        swept = true;
+        unawaited(scanNetwork());
+      }
+      await Future<void>.delayed(const Duration(milliseconds: 1500));
+      if (heard()) return true;
+    }
+    return heard();
+  }
+
+  /// Runs [attempt] on [d], and when the connection drops, waits for [d] to
+  /// come back (it looks for it, [findDevice]) and runs it again on a fresh
+  /// connection: transfers carry on where they stopped.
+  Future<T> _resuming<T>(
+    PairedDevice d,
+    int bytes,
+    Future<T> Function(PeerClient client) attempt, {
+    required PeerClient first,
+    void Function(bool waiting)? onWaiting,
+    bool Function()? cancelled,
+  }) async {
+    var client = first;
+    for (var tries = 1; ; tries++) {
+      try {
+        return await attempt(client);
+      } on SidekickException catch (e) {
+        if (!e.connectionLost || tries >= 5 || (cancelled?.call() ?? false)) rethrow;
+        onWaiting?.call(true);
+        try {
+          if (!await findDevice(d, within: const Duration(seconds: 45)) || (cancelled?.call() ?? false)) rethrow;
+          client = await _clientForTransfer(d, bytes);
+        } finally {
+          onWaiting?.call(false);
+        }
+      }
+    }
+  }
+
+  /// [d] runs Sidekick 3.0 or later: transfers to and from it can pick up
+  /// where they stopped.
+  bool _resumes(PairedDevice d) {
+    final theirs = appVersionOf(d);
+    return theirs != null && compareVersions(theirs, '3.0.0') >= 0;
   }
 
   /// Bigger transfers than this set up a direct Wi-Fi link when they'd
@@ -1214,7 +1352,7 @@ class AppState extends ChangeNotifier {
       try {
         await server.start(port: 0);
       } catch (e) {
-        networkError = "Couldn't start the Sidekick server: $e";
+        networkError = "Couldn't start Sidekick's connection (${describeError(e)}). Restart Sidekick.";
       }
     }
   }
@@ -1379,7 +1517,7 @@ class AppState extends ChangeNotifier {
         await _joinByHand(network);
       }
     } on DirectLinkException catch (e) {
-      _notices.add(Notice("Couldn't join ${qr.name}'s Wi-Fi: $e"));
+      _notices.add(Notice("Couldn't join ${qr.name}'s Wi-Fi: ${describeError(e)}"));
       return null;
     }
     for (var attempt = 0; attempt < 8; attempt++) {
@@ -1794,6 +1932,10 @@ class AppState extends ChangeNotifier {
     final PeerClient client;
     String? ticket;
     try {
+      // Not heard from lately: look for it first (a new address, Apple's
+      // direct link…) rather than fail at once.
+      if (!isOnline(d.id)) await findDevice(d, within: const Duration(seconds: 10));
+      if (send.cancelled) return;
       client = await _clientForTransfer(d, total);
       if (remoteDir == null) {
         if (send.cancelled) return;
@@ -1826,37 +1968,74 @@ class AppState extends ChangeNotifier {
     var sent = 0;
     var before = 0;
     Object? failure;
+    final resumes = _resumes(d);
+    var current = client;
     for (var i = 0; i < localFiles.length; i++) {
+      if (send.cancelled) {
+        failure ??= SidekickException(PeerClient.cancelledMessage);
+        break;
+      }
       final file = localFiles[i];
       final t = _startTransfer(names[i], d, upload: true);
       send
         ..current = i
         .._progress(before);
+      // One id per file: asking again with it after a dropped connection
+      // carries on where it stopped.
+      final uploadId = resumes ? newToken().substring(0, 24) : null;
       try {
-        await client.upload(
-          file,
-          name: names[i],
-          remoteDir: remoteDir,
-          ticket: ticket,
-          onProgress: (a, b) {
-            _progress(t, a, b);
-            send._progress(before + a);
+        await _resuming(
+          d,
+          sizes[i],
+          (peer) {
+            current = peer;
+            return peer.upload(
+              file,
+              name: names[i],
+              remoteDir: remoteDir,
+              ticket: ticket,
+              uploadId: uploadId,
+              cancelled: () => send.cancelled,
+              onProgress: (a, b) {
+                _progress(t, a, b);
+                send._progress(before + a);
+              },
+            );
           },
+          first: current,
+          onWaiting: (waiting) {
+            t.reconnecting = waiting;
+            send._reconnecting(waiting);
+            notifyListeners();
+          },
+          // An older Sidekick can't carry on: it would need a new ticket.
+          cancelled: () => send.cancelled || uploadId == null,
         );
         t
           ..state = TransferState.done
-          ..security = client.lastSecurity;
+          ..security = current.lastSecurity;
         sent++;
       } catch (e) {
         failure ??= e;
         _noteFailure(d, e);
         t
           ..state = TransferState.failed
-          ..error = '$e';
+          ..error = describeError(e);
       }
       before += sizes[i];
       send._progress(before);
       notifyListeners();
+    }
+    if (send.cancelled) {
+      // Tell the other device, so it stops waiting for the rest.
+      unawaited(send._cancelOffer?.call().catchError((_) {}));
+      send._set(SendPhase.failed, error: sent == 0 ? 'Cancelled' : 'Cancelled after $sent of ${localFiles.length}');
+      _notices.add(
+        Notice(
+          sent == 0 ? 'Stopped sending to ${d.name}' : 'Stopped: sent $sent of ${localFiles.length} files to ${d.name}',
+        ),
+      );
+      return;
     }
     if (failure == null) {
       send._set(SendPhase.done);
@@ -1870,23 +2049,38 @@ class AppState extends ChangeNotifier {
         failure == null
             ? 'Sent $what to ${d.name}'
             : sent == 0
-            ? "Couldn't send to ${d.name}: $failure"
-            : 'Sent $sent of ${localFiles.length} files to ${d.name}. $failure',
+            ? "Couldn't send to ${d.name}: ${describeError(failure)}"
+            : 'Sent $sent of ${localFiles.length} files to ${d.name}. ${describeError(failure)}',
       ),
     );
   }
 
   Future<File?> download(PairedDevice d, RemoteEntry entry) async {
     final t = _startTransfer(entry.name, d, upload: false);
+    File? dest;
     try {
       final dir = await receiveDir();
       await Directory(dir).create(recursive: true);
-      final dest = await uniqueFile(dir, sanitizeFileName(entry.name));
-      final client = await _clientForTransfer(d, entry.size);
-      final file = await client.download(entry.path, dest, onProgress: (a, b) => _progress(t, a, b));
+      final to = dest = await uniqueFile(dir, sanitizeFileName(entry.name));
+      // A half file left from before (Sidekick quit mid-way) isn't this one.
+      await PeerClient.dropPartialDownload(to);
+      var current = await _clientForTransfer(d, entry.size);
+      final file = await _resuming(
+        d,
+        entry.size,
+        (peer) {
+          current = peer;
+          return peer.download(entry.path, to, resume: true, onProgress: (a, b) => _progress(t, a, b));
+        },
+        first: current,
+        onWaiting: (waiting) {
+          t.reconnecting = waiting;
+          notifyListeners();
+        },
+      );
       t
         ..state = TransferState.done
-        ..security = client.lastSecurity
+        ..security = current.lastSecurity
         ..localPath = file.path;
       notifyListeners();
       if (_forGallery(file)) {
@@ -1896,10 +2090,11 @@ class AppState extends ChangeNotifier {
       }
       return file;
     } catch (e) {
+      if (dest != null) await PeerClient.dropPartialDownload(dest);
       _noteFailure(d, e);
       t
         ..state = TransferState.failed
-        ..error = '$e';
+        ..error = describeError(e);
       notifyListeners();
       return null;
     }

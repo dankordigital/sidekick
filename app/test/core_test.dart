@@ -6,6 +6,7 @@ import 'package:path/path.dart' as p;
 import 'package:sidekick/core/client.dart';
 import 'package:sidekick/core/crypto.dart';
 import 'package:sidekick/core/discovery.dart';
+import 'package:sidekick/core/errors.dart';
 import 'package:sidekick/core/models.dart';
 import 'package:sidekick/core/pairing_qr.dart';
 import 'package:sidekick/core/server.dart';
@@ -456,6 +457,92 @@ void main() {
     expect((await intoFolder).toReceiveFolder, isFalse);
     // No partial files left behind.
     expect(docs.listSync().where((e) => e.path.endsWith('.sidekick-part')), isEmpty);
+  });
+
+  test('transfers carry on where they stopped (3.0)', () async {
+    final client = await pair();
+    final size = PeerClient.wifiPartSize * 2 + 12345;
+    final bytes = List<int>.generate(size, (i) => (i * 31) % 251);
+    final upload = File(p.join(tmp.path, 'video.mp4'))..writeAsBytesSync(bytes);
+    final offered = pc.server.events.only<TransferOffered>().first;
+    final reply = client.offerFiles('offer-r', [('video.mp4', size)]);
+    final offer = (await offered).offer..accept();
+    final ticket = (await reply).ticket!;
+    final seen = <int>[];
+    final progress = offer.progress.listen(seen.add);
+
+    // The connection "drops" after the first part.
+    var parts = 0;
+    await expectLater(
+      client.upload(upload, ticket: ticket, uploadId: 'resume-1', cancelled: () => parts++ >= 2),
+      throwsA(isA<SidekickException>()),
+    );
+    expect(offer.received, PeerClient.wifiPartSize, reason: 'the receiver counts parts over Wi-Fi');
+
+    // Asking again with the same id carries on from there.
+    var first = -1;
+    final saved = await client.upload(
+      upload,
+      ticket: ticket,
+      uploadId: 'resume-1',
+      onProgress: (done, _) => first = first < 0 ? done : first,
+    );
+    expect(first, PeerClient.wifiPartSize, reason: 'starts where it stopped, not at 0');
+    expect(File(saved).readAsBytesSync(), bytes);
+    expect(offer.complete, isTrue);
+    await progress.cancel();
+    expect(seen.last, size);
+
+    // Finished, but the answer got lost: asking again gives the same file.
+    expect(await client.upload(upload, ticket: ticket, uploadId: 'resume-1'), saved);
+    expect(Directory(p.dirname(saved)).listSync().whereType<File>().length, 1);
+
+    // Downloads: what arrived is kept, and only the rest is asked for.
+    final dest = File(p.join(tmp.path, 'back.mp4'));
+    File('${dest.path}.sidekick-part').writeAsBytesSync(bytes.sublist(0, 1000));
+    var from = -1;
+    await client.download(saved, dest, resume: true, onProgress: (done, _) => from = from < 0 ? done : from);
+    expect(dest.readAsBytesSync(), bytes);
+    expect(from, greaterThan(1000));
+    expect(from, lessThanOrEqualTo(1000 + 65536));
+  });
+
+  test('the sender can stop part-way: the receiver stops waiting', () async {
+    final client = await pair();
+    final size = PeerClient.wifiPartSize + 10;
+    final upload = File(p.join(tmp.path, 'big.bin'))..writeAsBytesSync(List.filled(size, 3));
+    final offered = pc.server.events.only<TransferOffered>().first;
+    final reply = client.offerFiles('offer-s', [('big.bin', size)]);
+    final offer = (await offered).offer..accept();
+    final ticket = (await reply).ticket!;
+    final done = offer.progress.drain<void>();
+    var parts = 0;
+    await expectLater(
+      client.upload(upload, ticket: ticket, uploadId: 'stop-1', cancelled: () => parts++ >= 2),
+      throwsA(isA<SidekickException>()),
+    );
+    await client.cancelOffer('offer-s');
+    await done;
+    expect(offer.stopped, isTrue);
+    expect(offer.complete, isFalse);
+    final received = Directory(p.join(pc.home.path, 'Received'));
+    expect(received.listSync(), isEmpty, reason: 'the half-sent file is gone');
+    await expectLater(client.upload(upload, ticket: ticket), throwsA(isA<SidekickException>()));
+  });
+
+  test('errors read like sentences', () {
+    expect(describeError(const SocketException('Connection refused')), contains("Couldn't reach"));
+    expect(describeError(ArgumentError('No host specified in URI https://:1/x')), 'Something went wrong. Try again.');
+    expect(describeError(StateError('Bluetooth is off')), 'Bluetooth is off');
+    expect(describeError(SidekickException('Pair it again.')), 'Pair it again.');
+    expect(
+      describeError(const FileSystemException('x', '/a/b/photo.jpg', OSError('No space left on device', 28))),
+      "There isn't enough space here.",
+    );
+    expect(
+      PeerClient(host: '').info(),
+      throwsA(isA<SidekickException>().having((e) => e.connectionLost, 'lost', true)),
+    );
   });
 
   test('upload names are sanitized', () async {

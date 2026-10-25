@@ -76,11 +76,13 @@ void main() {
       fingerprint: 'f',
       key: 'k',
     );
-    for (final phase in SendPhase.values) {
+    // Every phase, then sending while the connection is back in a moment.
+    for (final (phase, reconnecting) in [for (final p in SendPhase.values) (p, false), (SendPhase.sending, true)]) {
       final send = OutgoingSend(device: mac, names: ['IMG_2041.HEIC', 'IMG_2042.HEIC', 'Trip.mov'], total: 47100000)
         ..phase = phase
         ..done = 31000000
         ..current = 2
+        ..reconnecting = reconnecting
         ..error = phase == SendPhase.failed ? "Can't reach Pixel 9." : null;
       await tester.pumpWidget(
         RepaintBoundary(
@@ -92,7 +94,7 @@ void main() {
           ),
         ),
       );
-      await shot('send_${phase.name}');
+      await shot('send_${phase.name}${reconnecting ? '_reconnecting' : ''}');
     }
 
     // The Nothing look's own sending screen, while sending.

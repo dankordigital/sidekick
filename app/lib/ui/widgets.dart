@@ -6,6 +6,7 @@ import 'package:file_picker/file_picker.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../app_state.dart';
+import '../core/errors.dart';
 import '../core/models.dart';
 import 'direct_wifi.dart';
 import 'nothing.dart';
@@ -29,6 +30,13 @@ String formatBytes(int bytes) {
     unit++;
   }
   return unit == 0 ? '$bytes B' : '${value.toStringAsFixed(value < 10 ? 1 : 0)} ${units[unit]}';
+}
+
+/// "5 s left", "2 min left", "1 h 5 min left".
+String formatTimeLeft(Duration d) {
+  if (d.inSeconds < 60) return '${d.inSeconds} s left';
+  if (d.inMinutes < 60) return '${(d.inSeconds / 60).ceil()} min left';
+  return '${d.inHours} h ${d.inMinutes.remainder(60)} min left';
 }
 
 String formatDuration(Duration d) {
@@ -88,9 +96,13 @@ class PageFrame extends StatelessWidget {
     this.actions = const [],
     required this.child,
     this.scroll = true,
+    this.maxWidth = maxContentWidth,
   });
 
   final String title;
+
+  /// How wide the page gets (title and content alike).
+  final double maxWidth;
 
   /// A short line under the title (what this page is about right now).
   final String? subtitle;
@@ -155,7 +167,7 @@ class PageFrame extends StatelessWidget {
     Widget centered(Widget w, {bool fillHeight = false}) => Align(
       alignment: Alignment.topCenter,
       child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: maxContentWidth),
+        constraints: BoxConstraints(maxWidth: maxWidth),
         child: SizedBox(width: double.infinity, height: fillHeight ? double.infinity : null, child: w),
       ),
     );
@@ -596,7 +608,7 @@ class _OnlineIcon extends StatelessWidget {
   );
 }
 
-/// A banner shown when [device] isn't reachable right now.
+/// A banner shown while [device] is only reached over Bluetooth.
 class OfflineBanner extends StatelessWidget {
   const OfflineBanner({super.key, required this.state, required this.device});
   final AppState state;
@@ -627,10 +639,8 @@ class OfflineBanner extends StatelessWidget {
                 connecting
                     ? 'Setting up a direct Wi-Fi link with ${device.name}…'
                     : direct
-                    ? 'Connected to ${device.name} over Bluetooth because you\'re not on the same Wi-Fi. '
-                          'Big files and remote control switch to a direct Wi-Fi link automatically.'
-                    : 'Connected to ${device.name} over Bluetooth because you\'re not on the same Wi-Fi. '
-                          'Files work but are slower; remote control needs Wi-Fi.',
+                    ? 'Over Bluetooth (no shared Wi-Fi). Big files and Remote switch to direct Wi-Fi by themselves.'
+                    : 'Over Bluetooth (no shared Wi-Fi): files are slower, and Remote needs Wi-Fi.',
                 style: TextStyle(color: scheme.onSecondaryContainer),
               ),
             ),
@@ -640,28 +650,126 @@ class OfflineBanner extends StatelessWidget {
         ),
       );
     }
-    if (state.isOnline(device.id)) return const SizedBox.shrink();
-    return Container(
-      margin: const EdgeInsets.only(bottom: 16),
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      decoration: BoxDecoration(color: scheme.errorContainer, borderRadius: BorderRadius.circular(16)),
-      child: Row(
-        children: [
-          Icon(Icons.cloud_off_outlined, color: scheme.onErrorContainer),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Text(
-              "${device.name} isn't reachable. Make sure Sidekick is open on it, and that both devices are on the same "
-              'Wi-Fi or have Bluetooth on in Sidekick (it finds the other device, then sets up a direct Wi-Fi link).',
-              style: TextStyle(color: scheme.onErrorContainer),
+    return const SizedBox.shrink();
+  }
+}
+
+/// "just now", "4 min ago", "2 h ago", "3 days ago".
+String formatAgo(DateTime t) {
+  final d = DateTime.now().difference(t);
+  if (d.inSeconds < 60) return 'just now';
+  if (d.inMinutes < 60) return '${d.inMinutes} min ago';
+  if (d.inHours < 24) return '${d.inHours} h ago';
+  return d.inDays == 1 ? 'yesterday' : '${d.inDays} days ago';
+}
+
+/// What Files and Remote show while [device] can't be reached: one calm
+/// card that says so, what to check, and Try again (Sidekick looks for it
+/// everywhere: its last address, the whole network, Bluetooth). The page
+/// carries on by itself as soon as the device answers.
+class UnreachableDevice extends StatefulWidget {
+  const UnreachableDevice({super.key, required this.state, required this.device, this.lookAtStart = true});
+  final AppState state;
+  final PairedDevice device;
+
+  /// Look for it as soon as this shows.
+  final bool lookAtStart;
+
+  @override
+  State<UnreachableDevice> createState() => _UnreachableDeviceState();
+}
+
+class _UnreachableDeviceState extends State<UnreachableDevice> {
+  @override
+  void initState() {
+    super.initState();
+    // After this frame: looking redraws the app, which can't happen mid-build.
+    if (widget.lookAtStart) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) unawaited(widget.state.findDevice(widget.device));
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final text = Theme.of(context).textTheme;
+    final state = widget.state;
+    final d = widget.device;
+    final looking = state.isFinding(d.id);
+    final seen = state.lastSeen(d.id);
+    final noWifi = !state.wifiConnected;
+    final offerBluetooth = AppState.bluetoothSupported && !state.bluetoothOn;
+    final tips = [
+      'Open Sidekick on ${d.name}',
+      if (noWifi) 'Connect this device to Wi-Fi' else 'Put both on the same Wi-Fi',
+      if (offerBluetooth) 'No shared Wi-Fi? Find nearby connects them directly',
+    ];
+    return Center(
+      child: SingleChildScrollView(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 420),
+          child: Padding(
+            padding: const EdgeInsets.all(28),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                SizedBox.square(
+                  dimension: 96,
+                  child: looking
+                      ? Radar(icon: platformIcon(d.platform), size: 96)
+                      : Container(
+                          decoration: BoxDecoration(color: scheme.surfaceContainerHighest, shape: BoxShape.circle),
+                          child: Icon(platformIcon(d.platform), size: 40, color: scheme.onSurfaceVariant),
+                        ),
+                ),
+                const SizedBox(height: 20),
+                Text(
+                  looking ? 'Looking for ${d.name}…' : "Can't reach ${d.name}",
+                  style: text.titleLarge,
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  seen == null ? 'Not seen since Sidekick started' : 'Last seen ${formatAgo(seen)}',
+                  style: text.bodyMedium?.copyWith(color: scheme.onSurfaceVariant),
+                ),
+                const SizedBox(height: 20),
+                for (final tip in tips)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 4),
+                    child: Row(
+                      children: [
+                        Icon(Icons.check_circle_outline_rounded, size: 18, color: scheme.onSurfaceVariant),
+                        const SizedBox(width: 10),
+                        Expanded(child: Text(tip, style: text.bodyMedium)),
+                      ],
+                    ),
+                  ),
+                const SizedBox(height: 22),
+                Wrap(
+                  spacing: 10,
+                  runSpacing: 10,
+                  alignment: WrapAlignment.center,
+                  children: [
+                    FilledButton.icon(
+                      onPressed: looking ? null : () => state.findDevice(d),
+                      icon: const Icon(Icons.refresh_rounded),
+                      label: Text(looking ? 'Looking…' : 'Try again'),
+                    ),
+                    if (offerBluetooth)
+                      OutlinedButton.icon(
+                        onPressed: () => askToTurnOnBluetooth(context, state, d.name),
+                        icon: const Icon(Icons.near_me_outlined),
+                        label: const Text('Find nearby'),
+                      ),
+                  ],
+                ),
+              ],
             ),
           ),
-          if (AppState.bluetoothSupported && !state.bluetoothOn)
-            TextButton(
-              onPressed: () => askToTurnOnBluetooth(context, state, device.name),
-              child: const Text('Turn on Bluetooth'),
-            ),
-        ],
+        ),
       ),
     );
   }
@@ -737,7 +845,7 @@ Future<List<File>> pickFilesToSend(BuildContext context, {required String title}
     ];
   } catch (e) {
     // Never fail silently: say why no picker appeared.
-    if (context.mounted) showError(context, "Couldn't open the file picker: $e");
+    if (context.mounted) showError(context, "Couldn't open the file picker: ${describeError(e)}");
     return const [];
   }
 }
@@ -764,7 +872,7 @@ void showError(BuildContext context, Object error) {
         children: [
           Icon(Icons.error_outline_rounded, color: Theme.of(context).colorScheme.inversePrimary),
           const SizedBox(width: 12),
-          Expanded(child: Text('$error')),
+          Expanded(child: Text(error is String ? error : describeError(error))),
         ],
       ),
     ),

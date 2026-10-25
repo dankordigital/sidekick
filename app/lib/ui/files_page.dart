@@ -5,6 +5,7 @@ import 'package:material_ui/material_ui.dart';
 import 'package:path/path.dart' as p;
 
 import '../app_state.dart';
+import '../core/errors.dart';
 import '../core/crypto.dart';
 import '../core/models.dart';
 import '../platform/gallery.dart';
@@ -49,10 +50,31 @@ class _BrowserState extends State<_Browser> {
 
   String? get _current => _stack.isEmpty ? null : _stack.last;
 
+  bool get _online => widget.state.isOnline(widget.device.id);
+  late bool _wasOnline = _online;
+
   @override
   void initState() {
     super.initState();
-    _load();
+    // Out of reach: the page looks for it, and opens once it answers.
+    if (_online) {
+      _load();
+    } else {
+      _loading = false;
+    }
+  }
+
+  @override
+  void didUpdateWidget(_Browser old) {
+    super.didUpdateWidget(old);
+    // Back in reach: pick up where it was.
+    final online = _online;
+    if (online && !_wasOnline && (_error != null || _entries.isEmpty)) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _load();
+      });
+    }
+    _wasOnline = online;
   }
 
   Future<void> _load() async {
@@ -71,7 +93,7 @@ class _BrowserState extends State<_Browser> {
     } catch (e) {
       if (!mounted) return;
       setState(() {
-        _error = '$e';
+        _error = describeError(e);
         _loading = false;
       });
     }
@@ -109,18 +131,20 @@ class _BrowserState extends State<_Browser> {
     final visible = _showHidden ? _entries : _entries.where((e) => !e.name.startsWith('.')).toList();
     return PageFrame(
       title: 'Files',
-      subtitle: 'On ${widget.device.name}. Drop files here to send them.',
+      subtitle: _online ? 'On ${widget.device.name}. Drop files here to send them.' : widget.device.name,
       scroll: false,
       actions: [
         DevicePicker(state: widget.state),
         const SizedBox(width: 8),
-        IconButton(
-          tooltip: _showHidden ? 'Hide hidden files' : 'Show hidden files',
-          onPressed: () => setState(() => _showHidden = !_showHidden),
-          icon: Icon(_showHidden ? Icons.visibility_outlined : Icons.visibility_off_outlined),
-        ),
-        IconButton(tooltip: 'Refresh', onPressed: _load, icon: const Icon(Icons.refresh_rounded)),
-        if (_current != null) ...[
+        if (_online) ...[
+          IconButton(
+            tooltip: _showHidden ? 'Hide hidden files' : 'Show hidden files',
+            onPressed: () => setState(() => _showHidden = !_showHidden),
+            icon: Icon(_showHidden ? Icons.visibility_outlined : Icons.visibility_off_outlined),
+          ),
+          IconButton(tooltip: 'Refresh', onPressed: _load, icon: const Icon(Icons.refresh_rounded)),
+        ],
+        if (_current != null && _online) ...[
           const SizedBox(width: 4),
           FilledButton.icon(
             onPressed: _pickAndUpload,
@@ -133,35 +157,44 @@ class _BrowserState extends State<_Browser> {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           OfflineBanner(state: widget.state, device: widget.device),
-          _Breadcrumbs(
-            device: widget.device,
-            stack: _stack,
-            onRoot: () {
-              _stack.clear();
-              _load();
-            },
-            onJump: _jumpTo,
-            onUp: _stack.isEmpty ? null : _up,
-          ),
-          const SizedBox(height: 12),
-          Expanded(
-            child: MaybeDropTarget(
-              enable: _current != null,
-              onHover: (hovering) => setState(() => _dragging = hovering),
-              onFiles: _send,
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 200),
-                decoration: BoxDecoration(
-                  color: _dragging ? scheme.secondaryContainer : scheme.surfaceContainerLow,
-                  borderRadius: BorderRadius.circular(24),
-                  border: Border.all(color: _dragging ? scheme.primary : Colors.transparent, width: 2),
+          if (!_online)
+            Expanded(
+              child: Container(
+                decoration: BoxDecoration(color: scheme.surfaceContainerLow, borderRadius: BorderRadius.circular(24)),
+                child: UnreachableDevice(state: widget.state, device: widget.device),
+              ),
+            )
+          else ...[
+            _Breadcrumbs(
+              device: widget.device,
+              stack: _stack,
+              onRoot: () {
+                _stack.clear();
+                _load();
+              },
+              onJump: _jumpTo,
+              onUp: _stack.isEmpty ? null : _up,
+            ),
+            const SizedBox(height: 12),
+            Expanded(
+              child: MaybeDropTarget(
+                enable: _current != null,
+                onHover: (hovering) => setState(() => _dragging = hovering),
+                onFiles: _send,
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  decoration: BoxDecoration(
+                    color: _dragging ? scheme.secondaryContainer : scheme.surfaceContainerLow,
+                    borderRadius: BorderRadius.circular(24),
+                    border: Border.all(color: _dragging ? scheme.primary : Colors.transparent, width: 2),
+                  ),
+                  clipBehavior: Clip.antiAlias,
+                  // Transparent Material so list rows can show hover/ink effects.
+                  child: Material(type: MaterialType.transparency, child: _buildList(visible)),
                 ),
-                clipBehavior: Clip.antiAlias,
-                // Transparent Material so list rows can show hover/ink effects.
-                child: Material(type: MaterialType.transparency, child: _buildList(visible)),
               ),
             ),
-          ),
+          ],
           _Transfers(state: widget.state),
         ],
       ),
@@ -172,7 +205,7 @@ class _BrowserState extends State<_Browser> {
     if (_loading) return const Loading(label: 'Opening folder…');
     if (_error != null) {
       return EmptyState(
-        icon: Icons.error_outline,
+        icon: Icons.folder_off_outlined,
         title: "Couldn't open this folder",
         message: _error!,
         action: FilledButton.tonal(onPressed: _load, child: const Text('Try again')),
@@ -371,12 +404,17 @@ class _Transfers extends StatelessWidget {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(t.name, maxLines: 1, overflow: TextOverflow.ellipsis),
-                              if (t.state == TransferState.running)
+                              if (t.state == TransferState.running) ...[
                                 Padding(
                                   padding: const EdgeInsets.only(top: 6),
-                                  child: LinearProgressIndicator(value: t.fraction),
-                                )
-                              else
+                                  child: LinearProgressIndicator(value: t.reconnecting ? null : t.fraction),
+                                ),
+                                if (t.reconnecting)
+                                  Text(
+                                    'Reconnecting to ${t.deviceName}…',
+                                    style: TextStyle(fontSize: 12, color: scheme.onSurfaceVariant),
+                                  ),
+                              ] else
                                 Text(
                                   t.state == TransferState.failed
                                       ? t.error ?? 'Failed'

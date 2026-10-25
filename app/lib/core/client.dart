@@ -21,9 +21,13 @@ class OfferReply {
 }
 
 class SidekickException implements Exception {
-  SidekickException(this.message, {this.status, this.identityChanged = false});
+  SidekickException(this.message, {this.status, this.identityChanged = false, this.connectionLost = false});
   final String message;
   final int? status;
+
+  /// The other device stopped answering (Wi-Fi blinked, it slept, it moved
+  /// to another network): worth trying again once it's back.
+  final bool connectionLost;
 
   /// The device presented a different certificate than it paired with (it
   /// was reset or reinstalled): it has to be paired again.
@@ -58,6 +62,7 @@ class PeerClient {
       port = 0,
       fingerprint = null;
 
+  /// No address known yet: requests fail with "not reachable" (see [_send]).
   factory PeerClient.forDevice(PairedDevice device) => PeerClient(
     host: device.lastAddress ?? '',
     port: device.lastPort,
@@ -116,6 +121,7 @@ class PeerClient {
     Object? json,
     Duration timeout = const Duration(seconds: 10),
   }) async {
+    if (host.isEmpty) throw _unreachable();
     try {
       // A connection kept from earlier can turn out dead (the other device
       // slept, its server restarted, Wi-Fi blinked): one more try on a fresh
@@ -147,13 +153,21 @@ class PeerClient {
     } on TlsException {
       throw _tlsFailure();
     } on SocketException {
-      throw SidekickException("Can't reach $host. Check both devices are on the same network.");
+      throw _unreachable();
     } on TimeoutException {
-      throw SidekickException('$host took too long to answer.');
-    } on HttpException catch (e) {
-      throw SidekickException('Connection problem: ${e.message}');
+      throw _lost('The other device took too long to answer.');
+    } on HttpException {
+      throw _lost();
     }
   }
+
+  static SidekickException _unreachable() => SidekickException(
+    "Couldn't reach the other device. Make sure Sidekick is open on it and both are on the same Wi-Fi.",
+    connectionLost: true,
+  );
+
+  static SidekickException _lost([String message = 'The connection to the other device dropped.']) =>
+      SidekickException(message, connectionLost: true);
 
   static Future<SidekickException> _failure(HttpClientResponse res) async {
     var message = 'Request failed (${res.statusCode})';
@@ -189,7 +203,7 @@ class PeerClient {
         onSent: onSent,
       );
     } on TimeoutException {
-      throw SidekickException('The device took too long to answer over Bluetooth.');
+      throw SidekickException('The device took too long to answer over Bluetooth.', connectionLost: true);
     } on StateError catch (e) {
       throw SidekickException(e.message);
     }
@@ -369,7 +383,7 @@ class PeerClient {
     } on HandshakeException {
       throw _tlsFailure();
     } on SocketException {
-      throw SidekickException('Lost connection to $host while sending.');
+      throw _lost();
     }
   }
 
@@ -405,7 +419,12 @@ class PeerClient {
 
   /// Downloads [remotePath] into [destination]. The file is written under a
   /// temporary name and only renamed once complete.
-  Future<File> download(String remotePath, File destination, {Progress? onProgress}) async {
+  ///
+  /// With [resume], a download cut off by a dropped connection keeps what
+  /// arrived, and the next call for the same [destination] asks only for
+  /// the rest (Sidekick 3.0 and later; older ones send it all again).
+  Future<File> download(String remotePath, File destination, {Progress? onProgress, bool resume = false}) async {
+    final partial = File('${destination.path}.sidekick-part');
     if (ble != null) {
       final res = await _bleSend(
         'GET',
@@ -413,37 +432,61 @@ class PeerClient {
         query: {'path': remotePath},
         timeout: const Duration(minutes: 30),
       );
-      final partial = File('${destination.path}.sidekick-part');
       await partial.writeAsBytes(res.body, flush: true);
       onProgress?.call(res.body.length, res.body.length);
       return partial.rename(destination.path);
     }
+    var have = resume && await partial.exists() ? await partial.length() : 0;
     final res = await _send(
       'GET',
       '/v1/fs/download',
-      query: {'path': remotePath},
+      query: {'path': remotePath, if (have > 0) 'offset': '$have'},
       timeout: const Duration(seconds: 30),
     );
-    final total = res.contentLength < 0 ? 0 : res.contentLength;
-    final partial = File('${destination.path}.sidekick-part');
-    final sink = partial.openWrite();
-    var done = 0;
+    // Where the answer starts: an older Sidekick always starts at 0.
+    final from = int.tryParse(res.headers.value('x-sidekick-offset') ?? '') ?? 0;
+    if (from != have) have = 0;
+    final total = res.contentLength < 0 ? 0 : have + res.contentLength;
+    final sink = partial.openWrite(mode: have > 0 ? FileMode.append : FileMode.write);
+    var done = have;
+    var kept = false;
     try {
-      await sink.addStream(
-        res.map((chunk) {
-          done += chunk.length;
-          onProgress?.call(done, total);
-          return chunk;
-        }),
-      );
+      try {
+        await sink.addStream(
+          // Nothing for 20 s: the connection is gone, even if no error says so.
+          res.timeout(const Duration(seconds: 20)).map((chunk) {
+            done += chunk.length;
+            onProgress?.call(done, total);
+            return chunk;
+          }),
+        );
+      } on TimeoutException {
+        kept = resume;
+        throw _lost();
+      } on SocketException {
+        kept = resume;
+        throw _lost();
+      } on HttpException {
+        kept = resume;
+        throw _lost();
+      }
       await sink.close();
-      if (total > 0 && done != total) throw SidekickException('Download was cut off');
+      if (total > 0 && done != total) {
+        kept = resume;
+        throw _lost();
+      }
       return await partial.rename(destination.path);
     } catch (_) {
       await sink.close().catchError((_) {});
-      if (await partial.exists()) await partial.delete();
+      if (!kept && await partial.exists()) await partial.delete();
       rethrow;
     }
+  }
+
+  /// Removes what a [download] with `resume` kept, when it's given up on.
+  static Future<void> dropPartialDownload(File destination) async {
+    final partial = File('${destination.path}.sidekick-part');
+    if (await partial.exists()) await partial.delete().catchError((_) => partial);
   }
 
   /// Asks the other device to accept [files] (name, size) and waits for the
@@ -472,7 +515,19 @@ class PeerClient {
 
   /// Uploads [file]. Without [remoteDir] it goes to the device's receive
   /// folder. Returns the path it was saved to on the other device.
-  Future<String> upload(File file, {String? name, String? remoteDir, String? ticket, Progress? onProgress}) async {
+  ///
+  /// With an [uploadId] (Sidekick 3.0 and later on the other side) it goes
+  /// in parts over Wi-Fi too, and calling again with the same id after a
+  /// dropped connection carries on where it stopped.
+  Future<String> upload(
+    File file, {
+    String? name,
+    String? remoteDir,
+    String? ticket,
+    String? uploadId,
+    Progress? onProgress,
+    bool Function()? cancelled,
+  }) async {
     final total = await file.length();
     final query = {'name': name ?? file.uri.pathSegments.last, 'dir': ?remoteDir, 'ticket': ?ticket};
     if (ble != null) {
@@ -480,8 +535,10 @@ class PeerClient {
         throw SidekickException('This file is too big for Bluetooth. Connect both devices to the same Wi-Fi.');
       }
       onProgress?.call(0, total);
-      return _bleUploadInParts(file, total, query, onProgress);
+      return _bleUploadInParts(file, total, query, onProgress, uploadId: uploadId);
     }
+    if (host.isEmpty) throw _unreachable();
+    if (uploadId != null) return _wifiUploadInParts(file, total, query, uploadId, onProgress, cancelled);
     try {
       final req = await _http.openUrl('POST', _uri('/v1/fs/upload', query));
       if (token != null) req.headers.set(HttpHeaders.authorizationHeader, 'Bearer $token');
@@ -489,6 +546,7 @@ class PeerClient {
       var done = 0;
       await req.addStream(
         file.openRead().map((chunk) {
+          if (cancelled?.call() ?? false) throw SidekickException(cancelledMessage);
           done += chunk.length;
           onProgress?.call(done, total);
           return chunk;
@@ -502,9 +560,99 @@ class PeerClient {
     } on HandshakeException {
       throw _tlsFailure();
     } on SocketException {
-      throw SidekickException('Lost connection to $host while sending.');
-    } on HttpException catch (e) {
-      throw SidekickException('Connection problem: ${e.message}');
+      throw _lost();
+    } on HttpException {
+      throw _lost();
+    }
+  }
+
+  /// What an upload stopped with Cancel throws.
+  static const cancelledMessage = 'Cancelled';
+
+  /// How much of a file goes in one request over Wi-Fi: big enough to
+  /// stay fast, small enough that a dropped connection costs little.
+  static const wifiPartSize = 4 * 1024 * 1024;
+
+  /// Sends [file] over Wi-Fi in parts (`/v1/fs/upload/part`). It starts by
+  /// asking where the other device is (an empty part), so a second call
+  /// with the same [uploadId] picks up where the first one stopped.
+  Future<String> _wifiUploadInParts(
+    File file,
+    int total,
+    Map<String, String> query,
+    String uploadId,
+    Progress? onProgress,
+    bool Function()? cancelled,
+  ) async {
+    final raf = await file.open();
+    try {
+      List<int> bytes = const [];
+      var offset = 0;
+      var stuck = 0;
+      while (true) {
+        if (cancelled?.call() ?? false) throw SidekickException(cancelledMessage);
+        final start = offset;
+        final length = bytes.length;
+        final answer = await _wifiPart(
+          {...query, 'upload': uploadId, 'offset': '$start', 'total': '$total'},
+          bytes,
+          (sent) => onProgress?.call((start + sent).clamp(0, total), total),
+        );
+        if (answer['path'] is String) {
+          onProgress?.call(total, total);
+          return answer['path'] as String;
+        }
+        offset = (answer['received'] as num).toInt();
+        onProgress?.call(offset, total);
+        // A part went over but nothing moved: something's wrong on the other
+        // side, and asking forever wouldn't fix it.
+        stuck = length > 0 && offset == start ? stuck + 1 : 0;
+        if (stuck >= 3 || offset > total) throw SidekickException('The other device stopped taking the file.');
+        await raf.setPosition(offset);
+        bytes = await raf.read((total - offset).clamp(0, wifiPartSize));
+      }
+    } finally {
+      await raf.close();
+    }
+  }
+
+  /// One part of [_wifiUploadInParts]: the other device's answer.
+  Future<Map<String, dynamic>> _wifiPart(Map<String, String> query, List<int> bytes, void Function(int) sent) async {
+    if (host.isEmpty) throw _unreachable();
+    Future<Map<String, dynamic>> go() async {
+      final req = await _http.openUrl('POST', _uri('/v1/fs/upload/part', query));
+      if (token != null) req.headers.set(HttpHeaders.authorizationHeader, 'Bearer $token');
+      req.contentLength = bytes.length;
+      const slice = 64 * 1024;
+      var done = 0;
+      await req.addStream(
+        Stream.fromIterable([
+          for (var i = 0; i < bytes.length; i += slice) bytes.sublist(i, (i + slice).clamp(0, bytes.length)),
+        ]).map((chunk) {
+          done += chunk.length;
+          sent(done);
+          return chunk;
+        }),
+      );
+      final res = await req.close();
+      if (res.statusCode >= 400) throw await _failure(res);
+      _noteTls(res);
+      return jsonDecode(await utf8.decodeStream(res)) as Map<String, dynamic>;
+    }
+
+    try {
+      // A part takes well under a second on Wi-Fi; a minute means it's stuck.
+      return await go().timeout(const Duration(seconds: 60));
+    } on HandshakeException {
+      throw _tlsFailure();
+    } on TlsException {
+      throw _tlsFailure();
+    } on SocketException {
+      throw _lost();
+    } on HttpException {
+      throw _lost();
+    } on TimeoutException {
+      throw _lost();
     }
   }
 
@@ -515,8 +663,14 @@ class PeerClient {
   /// Sends [file] over Bluetooth in sealed parts (`/v1/fs/upload/part`).
   /// Each part is retried if it gets damaged on the way ("failed
   /// authentication"), times out, or the link hiccups.
-  Future<String> _bleUploadInParts(File file, int total, Map<String, String> query, Progress? onProgress) async {
-    final uploadId = newToken().substring(0, 24);
+  Future<String> _bleUploadInParts(
+    File file,
+    int total,
+    Map<String, String> query,
+    Progress? onProgress, {
+    String? uploadId,
+  }) async {
+    uploadId ??= newToken().substring(0, 24);
     final raf = await file.open();
     try {
       var offset = 0;

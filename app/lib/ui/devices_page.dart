@@ -2,6 +2,7 @@ import 'package:material_ui/material_ui.dart';
 import 'package:flutter/services.dart';
 
 import '../app_state.dart';
+import '../core/errors.dart';
 import '../core/bluetooth.dart';
 import '../core/models.dart';
 import '../core/pairing_qr.dart';
@@ -61,22 +62,27 @@ class DevicesPage extends StatelessWidget {
               if (paired.isNotEmpty) ...[
                 const SectionLabel('Paired', icon: Icons.link_rounded),
                 LayoutBuilder(
-                  // Fixed-width cards on desktop, full width on phones.
-                  builder: (context, constraints) => Wrap(
-                    spacing: 16,
-                    runSpacing: 16,
-                    children: [
-                      for (final (i, d) in paired.indexed)
-                        SizedBox(
-                          width: constraints.maxWidth < 400 ? constraints.maxWidth : 360,
-                          child: Entrance(
-                            key: ValueKey(d.id),
-                            index: i + 1,
-                            child: _PairedCard(state: state, device: d, onOpen: onOpen),
+                  // As many equal columns as fit (cards at least 340 wide),
+                  // lined up with the card above; one column on phones.
+                  builder: (context, constraints) {
+                    final columns = ((constraints.maxWidth + 16) ~/ 356).clamp(1, 3);
+                    final width = (constraints.maxWidth - 16 * (columns - 1)) / columns;
+                    return Wrap(
+                      spacing: 16,
+                      runSpacing: 16,
+                      children: [
+                        for (final (i, d) in paired.indexed)
+                          SizedBox(
+                            width: width,
+                            child: Entrance(
+                              key: ValueKey(d.id),
+                              index: i + 1,
+                              child: _PairedCard(state: state, device: d, onOpen: onOpen),
+                            ),
                           ),
-                        ),
-                    ],
-                  ),
+                      ],
+                    );
+                  },
                 ),
               ],
               const SectionLabel('Nearby', icon: Icons.near_me_outlined),
@@ -176,7 +182,7 @@ class _EnterPinDialogState extends State<_EnterPinDialog> {
     } catch (e) {
       setState(() {
         _busy = false;
-        _error = '$e';
+        _error = describeError(e);
         _controller.clear();
       });
     }
@@ -200,7 +206,7 @@ class _EnterPinDialogState extends State<_EnterPinDialog> {
           if (mounted) {
             setState(() {
               _busy = false;
-              _error = '$e';
+              _error = describeError(e);
             });
           }
         }
@@ -355,19 +361,17 @@ class _PairedCardState extends State<_PairedCard> {
     final caps = state.capabilitiesOf(device.id);
     final reset = state.needsRepair(device) != null;
 
+    final seen = state.lastSeen(device.id);
     final status = _dragging
         ? 'Drop to send'
         : reset
         ? 'Pair again'
-        : state.connectingDirect.contains(device.id)
-        ? 'Setting up direct Wi-Fi…'
-        : state.viaDirectWifi(device.id)
-        ? 'Connected via direct Wi-Fi'
-        : state.viaDirectLinkOnly(device.id)
-        ? 'Nearby · sends over direct Wi-Fi'
-        : state.viaBluetooth(device.id)
-        ? 'Connected via Bluetooth'
-        : (online ? 'Connected' : 'Offline');
+        : state.connectionLabel(device.id) ??
+              (state.isFinding(device.id)
+                  ? 'Looking for it…'
+                  : seen == null
+                  ? 'Not reachable'
+                  : 'Not reachable · seen ${formatAgo(seen)}');
 
     final statusIcon = _dragging
         ? Icons.file_download_outlined
@@ -431,8 +435,14 @@ class _PairedCardState extends State<_PairedCard> {
                 onPressed: () => askToTurnOnBluetooth(context, state, device.name),
                 child: const Text('Find nearby'),
               )
+            else if (!online)
+              // Not a dead, greyed-out Send: look for it.
+              FilledButton.tonal(
+                onPressed: state.isFinding(device.id) ? null : () => state.findDevice(device),
+                child: const Text('Try again'),
+              )
             else
-              FilledButton(onPressed: online ? _pickAndSend : null, child: const Text('Send')),
+              FilledButton(onPressed: _pickAndSend, child: const Text('Send')),
             PopupMenuButton<String>(
               tooltip: 'More',
               icon: const Icon(Icons.more_vert_rounded),

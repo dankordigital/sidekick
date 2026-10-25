@@ -45,7 +45,10 @@ ThemeData sidekickTheme(ColorScheme scheme) {
       titleLarge: bold(text.titleLarge, FontWeight.w600),
       titleMedium: bold(text.titleMedium, FontWeight.w600, 0.1),
     ),
+    // One card color everywhere (Devices, Settings, lists), the one the
+    // theme maker calls "Cards".
     cardTheme: CardThemeData(
+      color: scheme.surfaceContainerLow,
       elevation: 0,
       margin: EdgeInsets.zero,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),

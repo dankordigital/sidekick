@@ -104,6 +104,10 @@ class _SendingScreenState extends State<SendingScreen> {
     final (title, subtitle) = switch (send.phase) {
       SendPhase.connecting => ('Connecting…', 'Reaching ${d.name}'),
       SendPhase.waiting => ('Waiting for permission…', 'Ask ${d.name} to tap Accept'),
+      SendPhase.sending when send.reconnecting => (
+        'Reconnecting…',
+        'The connection to ${d.name} dropped. It carries on from where it stopped.',
+      ),
       SendPhase.sending => ('Sending to ${d.name}', what),
       SendPhase.done => ('Sent!', '$what ${send.names.length == 1 ? 'is' : 'are'} on ${d.name}'),
       SendPhase.declined => ('${d.name} declined', 'Nothing was sent'),
@@ -113,7 +117,13 @@ class _SendingScreenState extends State<SendingScreen> {
     // The Nothing look draws it its own way (nothing_screens.dart).
     if (isNothing(context)) {
       final (action, onAction) = _action;
-      return NothingSendView(send: send, onBack: _leave, action: action, onAction: onAction);
+      return NothingSendView(
+        send: send,
+        onBack: _leave,
+        action: action,
+        onAction: onAction,
+        onStop: action == 'Hide' ? _cancel : null,
+      );
     }
     return Scaffold(
       body: SafeArea(
@@ -141,7 +151,7 @@ class _SendingScreenState extends State<SendingScreen> {
                       ),
                     ),
                     child: Column(
-                      key: ValueKey(send.phase),
+                      key: ValueKey((send.phase, send.reconnecting)),
                       children: [
                         Text(
                           title,
@@ -205,7 +215,8 @@ class _SendingScreenState extends State<SendingScreen> {
               ),
             ),
             Text(
-              '${formatBytes(send.done)} of ${formatBytes(send.total)}',
+              '${formatBytes(send.done)} of ${formatBytes(send.total)}'
+              '${(send.remaining?.inSeconds ?? 0) > 2 ? ' · ${formatTimeLeft(send.remaining!)}' : ''}',
               style: TextStyle(color: scheme.onSurfaceVariant, fontFeatures: const [FontFeature.tabularFigures()]),
             ),
           ],
@@ -216,6 +227,7 @@ class _SendingScreenState extends State<SendingScreen> {
 
   (String, VoidCallback) get _action => switch (send.phase) {
     SendPhase.connecting || SendPhase.waiting => ('Cancel', _cancel),
+    SendPhase.sending when send.reconnecting => ('Stop', _cancel),
     // It keeps going in the background; the Files tab shows it.
     SendPhase.sending => ('Hide', _leave),
     _ => ('Close', _leave),
@@ -223,6 +235,28 @@ class _SendingScreenState extends State<SendingScreen> {
 
   Widget _actions() {
     final (label, onPressed) = _action;
+    // While sending: Hide (it carries on) or Stop.
+    if (send.phase == SendPhase.sending && !send.reconnecting) {
+      return Row(
+        children: [
+          Expanded(
+            child: TextButton(
+              onPressed: _cancel,
+              style: TextButton.styleFrom(minimumSize: const Size(0, 52)),
+              child: const Text('Stop'),
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: OutlinedButton(
+              onPressed: onPressed,
+              style: OutlinedButton.styleFrom(minimumSize: const Size(0, 52)),
+              child: Text(label),
+            ),
+          ),
+        ],
+      );
+    }
     return SizedBox(
       width: double.infinity,
       child: send.phase == SendPhase.failed
@@ -609,6 +643,11 @@ class _IncomingOfferState extends State<_IncomingOffer> with TickerProviderState
       (bytes) => setState(() => _received = bytes),
       onDone: () {
         if (!mounted) return;
+        if (offer.stopped) {
+          setState(() => _stage = _Stage.gone);
+          Timer(const Duration(milliseconds: 1400), _leave);
+          return;
+        }
         setState(() => _stage = _Stage.done);
         _celebrate();
         Timer(const Duration(milliseconds: 1500), _leave);

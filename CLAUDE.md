@@ -483,6 +483,33 @@ release. Keep this file for how things work now, not for history.
   Nap doesn't throttle it in the menu bar; `PeerClient._send` retries once
   on a dead kept-alive connection (always for GET, otherwise only if the
   request never went out).
+- **Transfers carry on after a drop** (3.0.0): to a device on 3.0+
+  (`_resumes`, from its announced version) files go over Wi-Fi in 4 MB
+  parts (`/v1/fs/upload/part`, `PeerClient._wifiUploadInParts`, one
+  `uploadId` per file; it starts with an empty part that asks where the
+  other side is). When the connection drops (`SidekickException.
+  connectionLost`), `AppState._resuming` looks for the device
+  (`findDevice`: last address, the network sweep, Apple's link,
+  Bluetooth; up to 45 s), gets a fresh client (maybe a new address or a
+  direct link) and carries on; the screens say "Reconnecting…".
+  Downloads resume with `offset` (the answer's `x-sidekick-offset` says
+  where it starts). The server remembers finished uploads for 10 min, so
+  a lost last answer never makes a second copy, and counts Wi-Fi parts
+  for the receiver's progress. **Stop** while sending (`OutgoingSend.
+  cancel`) tells the receiver (`/v1/transfer/cancel` on an accepted offer
+  → `TransferOffer.stopped`, half-sent parts deleted). Older devices get
+  the single-stream upload, without resuming.
+- **Plain-language errors** (3.0.0): `core/errors.dart` `describeError`
+  turns any exception into a sentence; `showError` and every screen use
+  it. Never show `'$e'` to people.
+- **Can't reach a device** (3.0.0): Files and Remote show one calm card
+  (`UnreachableDevice`: "Looking for …" / "Can't reach …", last seen,
+  what to check, Try again, Find nearby) and look for it as soon as they
+  open; they load / connect by themselves once it answers. Remote dials
+  again (3 times) when the connection drops. Device cards say how a device
+  is reached (`connectionLabel`: Same Wi-Fi, Direct Wi-Fi, Bluetooth) or
+  "Not reachable · seen 4 min ago" with Try again instead of a dead Send.
+  Sending to a device not heard from lately looks for it first.
 - **Liquid Glass** (2.14.0, the owner's call: Material is the default
   everywhere): on iOS and macOS 26+ (`liquidGlassAvailable`, from
   `appleOsMajor`), Settings → Theme has a "Theme" dropdown: Default /
