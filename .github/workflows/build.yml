@@ -82,21 +82,90 @@ jobs:
             Copy-Item "$env:WINDIR\System32\$dll" build\windows\x64\runner\Release\
           }
 
+      # Sidekick's own installer (app/windows/installer, C# on .NET
+      # Framework 4.8, which every Windows 10/11 has): built once without the
+      # app inside as the uninstaller, which goes into the app's folder, then
+      # again with that folder zipped inside as SidekickSetup.
       - name: Build the installer
         shell: pwsh
         run: |
-          # The script needs Inno Setup 6.3+; install or upgrade to be sure.
-          choco upgrade innosetup -y --no-progress
-          $iscc = Get-ChildItem 'C:\Program Files*\Inno Setup*\ISCC.exe' | Sort-Object LastWriteTime -Descending | Select-Object -First 1
-          if (-not $iscc) { throw 'Inno Setup (ISCC.exe) not found' }
-          & $iscc.FullName "/DAppVersion=${{ steps.version.outputs.version }}" windows\installer\sidekick.iss
+          $v = '${{ steps.version.outputs.version }}'
+          $release = 'build\windows\x64\runner\Release'
+          $out = 'build\installer'
+          New-Item -ItemType Directory -Force $out | Out-Null
+          Copy-Item packaging\privacy.txt "$release\Privacy.txt"
+          dotnet build windows\installer\SidekickSetup.csproj -c Release --no-incremental -p:Version=$v -p:AssemblyName=uninstall '-p:AssemblyTitle=Uninstall Sidekick' '-p:Description=Uninstall Sidekick' -o "$out\uninstaller"
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          Copy-Item "$out\uninstaller\uninstall.exe" "$release\Uninstall Sidekick.exe"
+          Add-Type -AssemblyName System.IO.Compression.FileSystem
+          $zip = Join-Path (Resolve-Path $out) 'payload.zip'
+          Remove-Item $zip -ErrorAction SilentlyContinue
+          [System.IO.Compression.ZipFile]::CreateFromDirectory((Resolve-Path $release), $zip, [System.IO.Compression.CompressionLevel]::Optimal, $false)
+          dotnet build windows\installer\SidekickSetup.csproj -c Release --no-incremental -p:Version=$v "-p:Payload=$zip" -o "$out\setup"
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          Copy-Item "$out\setup\SidekickSetup.exe" "$out\SidekickSetup-$v.exe"
+          Get-Item "$out\SidekickSetup-$v.exe" | Select-Object Name, Length
+
+      # Install, update over it, check everything is in place, remove it,
+      # check it's all gone. Silent (/S), as the runner has no one to click.
+      - name: Try the installer
+        shell: pwsh
+        run: |
+          $v = '${{ steps.version.outputs.version }}'
+          $setup = Resolve-Path "build\installer\SidekickSetup-$v.exe"
+          $dir = Join-Path $env:ProgramFiles 'Sidekick'
+          $startMenu = Join-Path $env:ProgramData 'Microsoft\Windows\Start Menu\Programs\Sidekick.lnk'
+          $desktop = Join-Path $env:PUBLIC 'Desktop\Sidekick.lnk'
+          $key = 'HKLM:\Software\Microsoft\Windows\CurrentVersion\Uninstall\Sidekick'
+          function Fail($why) { Get-Content (Join-Path $env:TEMP 'SidekickSetup.log') -ErrorAction SilentlyContinue; throw $why }
+          foreach ($round in 'install', 'update') {
+            $p = Start-Process $setup -ArgumentList '/S' -Wait -PassThru
+            if ($p.ExitCode -ne 0) { Fail "${round} failed ($($p.ExitCode))" }
+            foreach ($f in 'sidekick.exe', 'flutter_windows.dll', 'data\app.so', 'Privacy.txt', 'Uninstall Sidekick.exe', 'vcruntime140.dll') {
+              if (-not (Test-Path (Join-Path $dir $f))) { Fail "${round}: $f is missing" }
+            }
+            if (-not (Test-Path $startMenu)) { Fail "${round}: no Start menu shortcut" }
+            if (-not (Test-Path $desktop)) { Fail "${round}: no desktop shortcut" }
+            $aumidFile = Join-Path $env:TEMP 'aumid.txt'
+            Start-Process $setup -ArgumentList '--read-aumid', "`"$startMenu`"", "`"$aumidFile`"" -Wait
+            $aumid = Get-Content $aumidFile -Raw
+            if ($aumid -ne 'Sidekick.Sidekick') { Fail "${round}: the shortcut's AppUserModelID is '$aumid'" }
+            $entry = Get-ItemProperty $key -ErrorAction SilentlyContinue
+            if ($entry.DisplayVersion -ne $v) { Fail "${round}: Settings → Apps shows '$($entry.DisplayVersion)'" }
+            netsh advfirewall firewall show rule name=Sidekick | Out-Null
+            if ($LASTEXITCODE -ne 0) { Fail "${round}: no firewall rule" }
+            if ((Test-Path "$dir.new") -or (Test-Path "$dir.old")) { Fail "${round}: left a staging folder behind" }
+            Write-Host "${round}: OK"
+          }
+          $p = Start-Process (Join-Path $dir 'Uninstall Sidekick.exe') -ArgumentList '/S' -Wait -PassThru
+          if ($p.ExitCode -ne 0) { Fail "uninstall failed ($($p.ExitCode))" }
+          Start-Sleep -Seconds 6
+          if (Test-Path $dir) { Fail 'uninstall: the folder is still there' }
+          if ((Test-Path $startMenu) -or (Test-Path $desktop)) { Fail 'uninstall: a shortcut is still there' }
+          if (Test-Path $key) { Fail 'uninstall: still listed in Settings → Apps' }
+          netsh advfirewall firewall show rule name=Sidekick | Out-Null
+          if ($LASTEXITCODE -eq 0) { Fail 'uninstall: the firewall rule is still there' }
+          Write-Host 'uninstall: OK'
+          Get-Content (Join-Path $env:TEMP 'SidekickSetup.log')
+
+      # Every page of the installer, light and dark, to look at.
+      - name: Render the installer's pages
+        shell: pwsh
+        run: |
+          $v = '${{ steps.version.outputs.version }}'
+          $p = Start-Process (Resolve-Path "build\installer\SidekickSetup-$v.exe") -ArgumentList '--screenshots', (Join-Path (Resolve-Path build\installer) 'pages') -Wait -PassThru
+          if ($p.ExitCode -ne 0) { throw "rendering failed ($($p.ExitCode))" }
 
       - uses: actions/upload-artifact@v4
         with:
           name: sidekick-windows
           path: app/build/installer/SidekickSetup-*.exe
           if-no-files-found: error
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: installer-pages
+          path: app/build/installer/pages/*.png
 
   android:
     runs-on: ubuntu-latest
@@ -458,6 +527,8 @@ jobs:
       - uses: actions/download-artifact@v4
         with:
           path: dist
+          # The apps only (not the installer's page renders).
+          pattern: sidekick-*
           merge-multiple: true
       - uses: softprops/action-gh-release@v2
         with:
@@ -467,7 +538,7 @@ jobs:
           body: |
             ## Download
 
-            **Windows 10/11:** download the **SidekickSetup** `.exe` below and run it. The installer adds Start menu and desktop shortcuts, and allows Sidekick through Windows Firewall on private networks.
+            **Windows 10/11:** download the **SidekickSetup** `.exe` below and run it. Click **Install**: it adds Start menu and desktop shortcuts, and lets your devices reach Sidekick through Windows Firewall on private networks. To remove it: Settings → Apps → Sidekick → Uninstall.
 
             **Android 8.0+:** on your phone, download the **Sidekick** `.apk` below and open it. If asked, allow your browser or Files app to install apps.
 

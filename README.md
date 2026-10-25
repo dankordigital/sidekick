@@ -162,7 +162,7 @@ app/android/app/src/main/kotlin/dev/sidekick/sidekick/
 ├── SidekickAccessibilityService.kt    PC → phone taps, swipes, keys, typing
 └── MediaBridge.kt                     phone media sessions and volume
 app/macos/Runner/MainFlutterWindow.swift  Mac input (CGEvent), media keys, volume
-app/windows/installer/sidekick.iss     Windows installer (Inno Setup)
+app/windows/installer/                Windows installer and uninstaller (Sidekick's own, C#)
 app/tool/make_icons.py                 app icons for every platform from your logo
 ```
 

@@ -251,8 +251,8 @@ release. Keep this file for how things work now, not for history.
   Macs get both: the .dmg (drag to Applications) and the .pkg (installs
   into /Applications). CI builds the .pkg with pkgbuild/productbuild.
 - Privacy policy: `privacy.html` at the top of the repo (the website) and
-  `app/packaging/privacy.txt` (shown by the Windows installer before
-  installing, installed as `Privacy.txt`, and the .pkg's second page). Keep
+  `app/packaging/privacy.txt` (the Windows installer's "Privacy policy"
+  page, installed as `Privacy.txt`, and the .pkg's second page). Keep
   the two saying the same thing, and true: no account, no servers, no
   analytics; what's stored on the device; what's announced to nearby
   devices; every permission and why.
@@ -317,6 +317,30 @@ release. Keep this file for how things work now, not for history.
 - Mac: the file picker (`file_picker`) needs the
   `files.user-selected.read-write` entitlement and `prepareFilePicker()`
   (skips its sandbox check), or Send files silently does nothing.
+- **The Windows installer is Sidekick's own** (3.0.1, the owner's call:
+  no Inno Setup; Macs keep the .dmg/.pkg): `app/windows/installer/`, C#
+  WinForms on .NET Framework 4.8 (in every Windows 10/11), one hand-drawn
+  window in Sidekick's look, light/dark following Windows (`SetupForm`:
+  Welcome with what it does, desktop-shortcut tick, folder + Change,
+  Install / Update, Privacy policy page; Installing with a bar; Done with
+  Open Sidekick; Failed with the reason and Try again). It opens without a
+  prompt and asks for admin only on Install, by starting itself again
+  elevated in the same spot (`--go --pos`). `Steps`: stops a running
+  Sidekick, unpacks the zipped app (an embedded `payload.zip`) next to the
+  old folder and swaps it in, Start menu shortcut with the AUMID
+  `Sidekick.Sidekick` (`Shortcuts`, COM) and an optional desktop one, the
+  two firewall rules (as before), Settings → Apps entry
+  (`…\Uninstall\Sidekick`; removes the old Inno entry `{8F3C…}_is1`).
+  Folder: `C:\Program Files\Sidekick`, always a folder of its own (never
+  one with other things in it). The same program built without the
+  payload is `Uninstall Sidekick.exe` in the app's folder (stops Sidekick,
+  shortcuts, firewall rules, the Auto-load `Run` value, the Apps entry,
+  then the folder once it has quit). `/S` installs or removes silently;
+  `--screenshots dir` renders every page; `%TEMP%\SidekickSetup.log`
+  says what happened. CI builds both, installs, updates and uninstalls
+  silently on the runner and checks every step, and uploads the pages as
+  the `installer-pages` artifact. C# can't be compiled here: CI is the
+  check.
 - `.github/workflows/build.yml`: CI and releases.
 
 ## Conventions
@@ -443,7 +467,7 @@ release. Keep this file for how things work now, not for history.
   and PCs show it with `platform/desktop_notify.dart`: Notification Center
   (`showNotification` on `sidekick/macos`, `MacNotifications`) or a Windows
   toast through PowerShell under the AUMID `Sidekick.Sidekick`, which the
-  installer's Start menu shortcut carries (`sidekick.iss`).
+  installer's Start menu shortcut carries (`Steps.Aumid`).
 - **Screenshots to computers** (2.15.0, phones; Settings → Send screenshots
   to computers, pref `sendScreenshots`, off by default): Android's
   `ScreenshotWatcher` (MediaStore observer, READ_MEDIA_IMAGES) and the

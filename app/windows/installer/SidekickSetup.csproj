@@ -1,0 +1,38 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!--
+    Sidekick's own Windows installer (and uninstaller): one window in
+    Sidekick's look. CI builds it twice (.github/workflows/build.yml):
+    without a payload it's "Uninstall Sidekick.exe", which goes into the
+    app's folder; then with -p:Payload=<zip of that folder> it's
+    SidekickSetup-<version>.exe. .NET Framework 4.8 comes with Windows 10
+    and 11, so nothing else is needed to run it.
+  -->
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net48</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <Nullable>disable</Nullable>
+    <AssemblyName>SidekickSetup</AssemblyName>
+    <RootNamespace>SidekickSetup</RootNamespace>
+    <PlatformTarget>x64</PlatformTarget>
+    <ApplicationIcon>..\runner\resources\app_icon.ico</ApplicationIcon>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <Version>0.1.0</Version>
+    <Product>Sidekick</Product>
+    <Company>Sidekick</Company>
+    <!-- What Windows shows in the permission prompt. -->
+    <AssemblyTitle>Sidekick Setup</AssemblyTitle>
+    <Description>Sidekick Setup</Description>
+    <Copyright>Sidekick</Copyright>
+    <DebugType>none</DebugType>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.IO.Compression" />
+    <EmbeddedResource Include="logo.png" LogicalName="logo.png" />
+    <EmbeddedResource Include="..\..\packaging\privacy.txt" LogicalName="privacy.txt" />
+    <EmbeddedResource Include="$(Payload)" LogicalName="payload.zip" Condition="'$(Payload)' != ''" />
+  </ItemGroup>
+</Project>
