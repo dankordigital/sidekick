@@ -5,6 +5,21 @@ a new session. Newest first. For how things work, read `CLAUDE.md` (the
 detailed developer notes; every release is in `VERSIONS.md`) and
 `ARCHITECTURE.md` (the big picture).
 
+## 25 October 2026
+
+- **The Nothing ad's source, as a zip** (the owner asked for the code, not
+  the MP4): `sidekick-nothing-ad.zip` (20 MB), a standalone Remotion
+  project with only the Nothing ad: `src/nothing/` as in `trailer/`, its
+  own `Root.tsx` (NothingVertical / NothingHorizontal only), `public/nothing/`
+  and the two Inter fonts it uses, and a README (`npm install`,
+  `npm run studio`, `npm run build`; what's in each file; headlines are
+  `SCENES` in Ad.tsx, `^` makes a character red). Checked: it typechecks
+  and renders. Made outside the repo (scratchpad); to make it again, copy
+  those parts of `trailer/` into a fresh folder.
+- **Waiting on the owner:** a listen to the ad. The app's sounds were
+  boosted (+10 dB) and the music dips 40 % under them; the levels were only
+  measured, not heard.
+
 ## 24 October 2026
 
 - **The Nothing ad** (the owner's music, "Funky Funky Music", 42 s): the
