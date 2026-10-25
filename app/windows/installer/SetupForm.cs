@@ -93,6 +93,9 @@ namespace SidekickSetup
         internal string dir;
         internal bool desktop = true;
 
+        /// <summary>Removing also forgets paired devices and settings.</summary>
+        internal bool forget = true;
+
         /// <summary>The version already on this PC (an update), if any.</summary>
         internal string installedVersion;
 
@@ -124,6 +127,7 @@ namespace SidekickSetup
             // An update keeps the desktop shortcut the way it was.
             desktop = options.Go || installed.Dir == null ? !options.NoDesktop : File.Exists(Steps.DesktopShortcut);
             page = removing ? Page.ConfirmRemove : Page.Welcome;
+            forget = !options.KeepSettings;
 
             // A copy: a Bitmap made from a stream needs the stream for its whole life.
             using (var stream = Payload.Resource("logo.png"))
@@ -131,7 +135,7 @@ namespace SidekickSetup
             {
                 logo = new Bitmap(image);
             }
-            using (var reader = new StreamReader(Payload.Resource("privacy.txt"))) privacy = reader.ReadToEnd().Trim();
+            using (var reader = new StreamReader(Payload.Resource("privacy.txt"))) privacy = Reflow(reader.ReadToEnd());
 
             Text = removing ? "Uninstall Sidekick" : "Sidekick Setup";
             FormBorderStyle = FormBorderStyle.None;
@@ -236,6 +240,10 @@ namespace SidekickSetup
                     args.Add(dir);
                     if (!desktop) args.Add("--no-desktop");
                 }
+                else if (!forget)
+                {
+                    args.Add("--keep-settings");
+                }
                 var child = Elevation.StartElevated(args);
                 if (child == null)
                 {
@@ -273,7 +281,7 @@ namespace SidekickSetup
                 }));
                 if (removing)
                 {
-                    await Task.Run(() => Steps.Uninstall(dir, report));
+                    await Task.Run(() => Steps.Uninstall(dir, forget, report));
                 }
                 else
                 {
@@ -327,6 +335,59 @@ namespace SidekickSetup
                 notice = Steps.CheckFolder(dir);
                 Invalidate();
             }
+        }
+
+        void ShowLog()
+        {
+            try
+            {
+                System.Diagnostics.Process.Start(Path.Combine(Environment.SystemDirectory, "notepad.exe"), $"\"{Log.Path}\"")?.Dispose();
+            }
+            catch (Exception e)
+            {
+                Log.Write($"Opening the log: {e.Message}");
+            }
+        }
+
+        /// <summary>
+        /// privacy.txt is wrapped at 80 columns for the Mac installer; here
+        /// the lines join up again into paragraphs, list items and headings.
+        /// </summary>
+        internal static string Reflow(string text)
+        {
+            var output = new List<string>();
+            var current = "";
+            var lastWasHeading = false;
+            void Flush()
+            {
+                if (current.Length > 0) output.Add(current);
+                current = "";
+            }
+            foreach (var raw in text.Replace("\r\n", "\n").Split('\n'))
+            {
+                var line = raw.Trim();
+                if (line.Length == 0)
+                {
+                    Flush();
+                    if (output.Count > 0 && output[output.Count - 1].Length > 0) output.Add("");
+                    lastWasHeading = false;
+                    continue;
+                }
+                var heading = line.Any(char.IsLetter) && line == line.ToUpperInvariant();
+                var item = line.StartsWith("- ") || line.StartsWith("* ") || System.Text.RegularExpressions.Regex.IsMatch(line, @"^\d+[.)] ");
+                if (current.Length == 0 || heading || item || lastWasHeading)
+                {
+                    Flush();
+                    current = line;
+                }
+                else
+                {
+                    current += " " + line;
+                }
+                lastWasHeading = heading;
+            }
+            Flush();
+            return string.Join("\n", output).Trim();
         }
 
         void OpenSidekick()
@@ -618,7 +679,7 @@ namespace SidekickSetup
             }
             Centered(g, title, 22, pal.Text, 228, 34, bold: true);
             Draw(g, message, 14, pal.Muted, R(46, 270, 328, 96), TextFormatFlags.WordBreak | TextFormatFlags.HorizontalCenter | TextFormatFlags.NoPrefix);
-            if (failed) Centered(g, "Details: " + Log.Path, 11.5f, pal.Muted, 400, 18);
+            if (failed) Link(g, "log", "Show details", 13, R(40, 396, 340, 22), TextFormatFlags.HorizontalCenter, ShowLog);
 
             if (failed)
             {
@@ -647,6 +708,11 @@ namespace SidekickSetup
                 pal.Muted,
                 R(46, 262, 328, 64),
                 TextFormatFlags.WordBreak | TextFormatFlags.HorizontalCenter);
+            Checkbox(g, "forget", "Also forget paired devices and settings", forget, 42, 384, () =>
+            {
+                forget = !forget;
+                Invalidate();
+            });
             if (notice != null) Centered(g, notice, 12.5f, pal.Danger, 420, 20);
             Button(g, "go", "Remove", R(40, 450, 340, 48), Go);
             Link(g, "close", "Keep Sidekick", 13, R(40, 508, 340, 22), TextFormatFlags.HorizontalCenter, Close);

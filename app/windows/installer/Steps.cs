@@ -309,7 +309,14 @@ namespace SidekickSetup
         /// <summary>The app's folder, removed once this program has quit.</summary>
         static string _removeAtExit;
 
-        public static void Uninstall(string dir, Report report)
+        /// <summary>Where Sidekick keeps settings, pairings and its keys (%APPDATA%\Sidekick).</summary>
+        static string DataDir => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), AppName);
+
+        /// <summary>
+        /// Removes Sidekick; with [forget], also its settings, paired devices
+        /// and keys (the privacy policy says removing Sidekick removes them).
+        /// </summary>
+        public static void Uninstall(string dir, bool forget, Report report)
         {
             dir = Path.GetFullPath(dir).TrimEnd('\\');
             Log.Write($"Removing Sidekick from {dir}");
@@ -347,6 +354,19 @@ namespace SidekickSetup
             catch (Exception e)
             {
                 Log.Write($"Registry: {e.Message}");
+            }
+
+            if (forget)
+            {
+                report(0.7, "Forgetting paired devices and settings…");
+                try
+                {
+                    if (Directory.Exists(DataDir)) Directory.Delete(DataDir, true);
+                }
+                catch (Exception e)
+                {
+                    Log.Write($"Deleting {DataDir}: {e.Message}");
+                }
             }
 
             report(0.75, "Removing Sidekick's files…");

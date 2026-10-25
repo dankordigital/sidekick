@@ -16,7 +16,7 @@ namespace SidekickSetup
     ///
     ///   SidekickSetup.exe                 the window
     ///   SidekickSetup.exe /S [/D=folder] [--no-desktop]   silently (needs admin)
-    ///   "Uninstall Sidekick.exe" [/S]
+    ///   "Uninstall Sidekick.exe" [/S] [--keep-settings]
     ///   --screenshots folder              renders every screen to PNGs (CI)
     ///   --read-aumid shortcut.lnk out.txt  writes a shortcut's AppUserModelID (CI)
     /// </summary>
@@ -78,7 +78,7 @@ namespace SidekickSetup
             }
             else
             {
-                Steps.Uninstall(Steps.OwnDir, (f, what) => { });
+                Steps.Uninstall(Steps.OwnDir, !options.KeepSettings, (f, what) => { });
             }
             return 0;
         }
@@ -90,6 +90,9 @@ namespace SidekickSetup
         public bool Silent;
         public string Dir;
         public bool NoDesktop;
+
+        /// <summary>Uninstalling keeps paired devices and settings.</summary>
+        public bool KeepSettings;
 
         /// <summary>Start at once (the copy started with admin rights).</summary>
         public bool Go;
@@ -120,6 +123,9 @@ namespace SidekickSetup
                         break;
                     case "--no-desktop":
                         o.NoDesktop = true;
+                        break;
+                    case "--keep-settings":
+                        o.KeepSettings = true;
                         break;
                     case "--go":
                         o.Go = true;

@@ -140,12 +140,17 @@ jobs:
             if ((Test-Path "$dir.new") -or (Test-Path "$dir.old")) { Fail "${round}: left a staging folder behind" }
             Write-Host "${round}: OK"
           }
+          # Sidekick's settings and pairings, which removing it forgets.
+          $data = Join-Path $env:APPDATA 'Sidekick\Sidekick'
+          New-Item -ItemType Directory -Force $data | Out-Null
+          Set-Content (Join-Path $data 'shared_preferences.json') '{}'
           $p = Start-Process (Join-Path $dir 'Uninstall Sidekick.exe') -ArgumentList '/S' -Wait -PassThru
           if ($p.ExitCode -ne 0) { Fail "uninstall failed ($($p.ExitCode))" }
           Start-Sleep -Seconds 6
           if (Test-Path $dir) { Fail 'uninstall: the folder is still there' }
           if ((Test-Path $startMenu) -or (Test-Path $desktop)) { Fail 'uninstall: a shortcut is still there' }
           if (Test-Path $key) { Fail 'uninstall: still listed in Settings → Apps' }
+          if (Test-Path (Join-Path $env:APPDATA 'Sidekick')) { Fail 'uninstall: settings and pairings are still there' }
           netsh advfirewall firewall show rule name=Sidekick | Out-Null
           if ($LASTEXITCODE -eq 0) { Fail 'uninstall: the firewall rule is still there' }
           Write-Host 'uninstall: OK'

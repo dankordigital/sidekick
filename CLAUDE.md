@@ -335,7 +335,10 @@ release. Keep this file for how things work now, not for history.
   one with other things in it). The same program built without the
   payload is `Uninstall Sidekick.exe` in the app's folder (stops Sidekick,
   shortcuts, firewall rules, the Auto-load `Run` value, the Apps entry,
-  then the folder once it has quit). `/S` installs or removes silently;
+  with "Also forget paired devices and settings" (on; `--keep-settings`
+  turns it off) `%APPDATA%\Sidekick`, as the privacy policy promises,
+  then the folder once it has quit). The privacy page reflows
+  privacy.txt's 80-column lines (`Reflow`). `/S` installs or removes silently;
   `--screenshots dir` renders every page; `%TEMP%\SidekickSetup.log`
   says what happened. CI builds both, installs, updates and uninstalls
   silently on the runner and checks every step, and uploads the pages as
