@@ -158,6 +158,32 @@ jobs:
           $p = Start-Process (Resolve-Path "build\installer\SidekickSetup-$v.exe") -ArgumentList '--screenshots', (Join-Path (Resolve-Path build\installer) 'pages') -Wait -PassThru
           if ($p.ExitCode -ne 0) { throw "rendering failed ($($p.ExitCode))" }
 
+      # TEMPORARY: one contact sheet of the pages, as text in the log, for a
+      # review from a session that can't download artifacts.
+      - name: Print the pages (temporary)
+        shell: pwsh
+        run: |
+          Add-Type -AssemblyName System.Drawing
+          $dir = Resolve-Path build\installer\pages
+          $names = '1-welcome', '4-privacy', '5-installing', '6-done', '1-welcome-dark', '7-failed', '8-remove', '6-done-dark'
+          $w = 420; $h = 560
+          $sheet = New-Object System.Drawing.Bitmap ($w * 4), ($h * 2)
+          $g = [System.Drawing.Graphics]::FromImage($sheet)
+          $g.InterpolationMode = 'HighQualityBicubic'
+          for ($i = 0; $i -lt $names.Count; $i++) {
+            $img = [System.Drawing.Image]::FromFile((Join-Path $dir "$($names[$i]).png"))
+            $g.DrawImage($img, ($i % 4) * $w, [math]::Floor($i / 4) * $h, $w, $h)
+            $img.Dispose()
+          }
+          $codec = [System.Drawing.Imaging.ImageCodecInfo]::GetImageEncoders() | Where-Object MimeType -eq 'image/jpeg'
+          $params = New-Object System.Drawing.Imaging.EncoderParameters 1
+          $params.Param[0] = New-Object System.Drawing.Imaging.EncoderParameter ([System.Drawing.Imaging.Encoder]::Quality), 72L
+          $out = Join-Path $env:TEMP 'sheet.jpg'
+          $sheet.Save($out, $codec, $params)
+          $b64 = [Convert]::ToBase64String([IO.File]::ReadAllBytes($out))
+          Write-Host "SHEET $($b64.Length)"
+          for ($i = 0; $i -lt $b64.Length; $i += 4000) { Write-Host ("B64:" + $b64.Substring($i, [math]::Min(4000, $b64.Length - $i))) }
+
       - uses: actions/upload-artifact@v4
         with:
           name: sidekick-windows
