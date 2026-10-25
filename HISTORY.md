@@ -14,6 +14,8 @@ detailed developer notes; every release is in `VERSIONS.md`) and
   card in Files and Remote that retries by itself, Remote redials, device
   cards say how they're connected, plain-language errors everywhere, one
   card colour, Settings aligned, devices in even columns. See VERSIONS.md.
+  The website preview (`website/app/`) is rebuilt with it: the website
+  workflow uploads it, or upload `website/app/` by hand.
 
 - **The Nothing ad's source, as a zip** (the owner asked for the code, not
   the MP4): `sidekick-nothing-ad.zip` (20 MB), a standalone Remotion
