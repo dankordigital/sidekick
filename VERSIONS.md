@@ -4,6 +4,20 @@ Every release, newest first, with its biggest features and fixes. Add an
 entry here with each release (see "Releasing" in `CLAUDE.md`). The history
 starts at 1.1.3.
 
+## 3.0.1
+- **A new Windows installer, made for Sidekick:** one clean window in
+  Sidekick's colours (light or dark, like Windows), instead of the old
+  step-by-step wizard. It shows what Sidekick does, a "Put a shortcut on
+  the desktop" tick and where it goes (Change to pick another folder),
+  then Install (or Update), a progress bar, and Open Sidekick. Windows asks
+  for permission only when you click Install. The privacy policy is one
+  click away.
+- **Uninstalling** (Settings → Apps → Sidekick) is the same kind of
+  window, and also forgets paired devices and settings unless you untick
+  it.
+- Updating from 3.0.0 or older keeps everything as it was and replaces the
+  old installer's entry in Settings → Apps.
+
 ## 3.0.0
 - **Transfers survive a dropped connection.** If Wi-Fi blinks, the other
   device sleeps for a moment or moves to another network, Sidekick finds it

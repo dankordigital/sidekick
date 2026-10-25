@@ -7,6 +7,13 @@ detailed developer notes; every release is in `VERSIONS.md`) and
 
 ## 25 October 2026
 
+- **App 3.0.1: Sidekick's own Windows installer** (the owner: "make your
+  own installer for the .exe but keep .dmg's how they are"). Inno Setup is
+  gone; `app/windows/installer/` is a C# WinForms program drawn by hand
+  in Sidekick's look, which is also the uninstaller. CI installs, updates
+  and uninstalls it on the runner and checks each step; its rendered pages
+  go to the hidden ref `refs/ci/installer-pages` (`git fetch origin
+  refs/ci/installer-pages`), since cloud sessions can't download artifacts.
 - **App 3.0.0, "polished"** (the owner asked for a polished 3.0: design,
   connectivity, simplicity). Transfers resume after a dropped connection
   (Wi-Fi parts + downloads from an offset; Sidekick looks for the device
