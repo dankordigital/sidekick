@@ -147,6 +147,8 @@ jobs:
           if ($LASTEXITCODE -eq 0) { Fail 'uninstall: the firewall rule is still there' }
           Write-Host 'uninstall: OK'
           Get-Content (Join-Path $env:TEMP 'SidekickSetup.log')
+          # netsh's "no such rule" above was the good answer, not a failure.
+          exit 0
 
       # Every page of the installer, light and dark, to look at.
       - name: Render the installer's pages
