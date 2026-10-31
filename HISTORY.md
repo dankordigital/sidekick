@@ -7,6 +7,17 @@ detailed developer notes; every release is in `VERSIONS.md`) and
 
 ## 31 October 2026
 
+- **Sidekick Pro preview** (the owner asked for screenshots of Pro features
+  behind a paywall): a design canvas, not in the repo and not in the app:
+  https://claude.ai/artifact/YanGDe2W5oPby8iH6w1MJf (private). Two
+  computer-size screens: the free app's Devices tab (3 of 3 devices,
+  "Send to all" and "Connect device" locked, a "See Sidekick Pro" banner,
+  six greyed-out Pro tiles) and the paywall (what Pro unlocks; Monthly /
+  Yearly switch with "Save 44%"; Start Pro; Lifetime paid once through a
+  payment link sent by email; ✕ top right). The Pro features and the
+  prices ($2.99 / month, $19.99 / year, $39.99 lifetime) are placeholders
+  for the owner to decide; prices are tweakable on the canvas. Nothing
+  decided yet: no payments in the app.
 - **App 3.0.3: the link / note card redesigned** (the owner: make it good
   by UI/UX rules; then: no Close button, an ✕ top right, the icon on the
   left). See CLAUDE.md "Links and notes". Rendered at phone and computer
