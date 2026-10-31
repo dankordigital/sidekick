@@ -184,6 +184,8 @@ void main() {
 
   // The small corner window on Windows and Mac, at its real size (2x).
   testWidgets('received text', (tester) async {
+    // Copy writes to the clipboard: answer it like a device would.
+    tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(SystemChannels.platform, (_) async => null);
     tester.view.physicalSize = const Size(390, 844);
     tester.view.devicePixelRatio = 1;
     await tester.runAsync(_loadFonts);
@@ -197,14 +199,33 @@ void main() {
       fingerprint: 'f',
       key: 'k',
     );
+    Future<void> save(String name) async {
+      final boundary = key.currentContext!.findRenderObject()! as RenderRepaintBoundary;
+      await tester.runAsync(() async {
+        final image = await boundary.toImage(pixelRatio: 2);
+        final bytes = await image.toByteData(format: ui.ImageByteFormat.png);
+        File(p.join(out.path, '$name.png')).writeAsBytesSync(bytes!.buffer.asUint8List());
+      });
+    }
+
     final themes = [
       (ThemeData(colorSchemeSeed: const Color(0xFF6750A4), fontFamily: 'Roboto'), ''),
+      (ThemeData(colorSchemeSeed: const Color(0xFF6750A4), brightness: Brightness.dark, fontFamily: 'Roboto'), '_dark'),
       (nothingTheme(ThemeData(colorScheme: nothingScheme(Brightness.light), fontFamily: 'Roboto')), '_nothing'),
     ];
-    for (final (theme, suffix) in themes) {
+    // A computer's window too (the buttons sit side by side there).
+    final runs = [
+      for (final (theme, look) in themes) (theme, look, const Size(390, 844), ''),
+      (themes[0].$1, '', const Size(1000, 640), '_mac'),
+      (themes[2].$1, '_nothing', const Size(1000, 640), '_mac'),
+    ];
+    for (final (theme, look, size, where) in runs) {
+      tester.view.physicalSize = size;
+      final suffix = '$look$where';
       for (final (text, name) in [
         ('https://www.bbcgoodfood.com/recipes/easy-pancakes', 'text_link'),
-        ('Gate code is 4471#\nParking on level 2, spot 18. Look at https://maps.app.goo.gl/x1y2', 'text_note'),
+        ('Gate code is 4471#\nParking on level 2, spot 18.', 'text_note'),
+        ('Dinner here at 7? https://maps.app.goo.gl/x1y2z3', 'text_note_link'),
       ]) {
         await tester.pumpWidget(
           RepaintBoundary(
@@ -212,21 +233,42 @@ void main() {
             child: MaterialApp(
               theme: theme,
               debugShowCheckedModeBanner: false,
-              home: Scaffold(body: ReceivedTextDialog(message: ReceivedText(from, text))),
+              home: Builder(
+                builder: (context) => Scaffold(
+                  body: Center(
+                    child: TextButton(
+                      onPressed: () => showDialog<bool>(
+                        context: context,
+                        builder: (_) => ReceivedTextDialog(message: ReceivedText(from, text)),
+                      ),
+                      child: const Text('open'),
+                    ),
+                  ),
+                ),
+              ),
             ),
           ),
         );
         // The theme fades in (AnimatedTheme): let it finish.
         await tester.pump(const Duration(milliseconds: 600));
-        final boundary = key.currentContext!.findRenderObject()! as RenderRepaintBoundary;
-        await tester.runAsync(() async {
-          final image = await boundary.toImage(pixelRatio: 2);
-          final bytes = await image.toByteData(format: ui.ImageByteFormat.png);
-          File(p.join(out.path, '$name$suffix.png')).writeAsBytesSync(bytes!.buffer.asUint8List());
-        });
+        await tester.tap(find.text('open'));
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 600));
+        await save('$name$suffix');
+        if (name == 'text_link') {
+          // Copy: "Copied" on the button, then the card closes by itself.
+          await tester.tap(find.text('Copy link'));
+          await tester.pump();
+          await tester.pump(const Duration(milliseconds: 200));
+          expect(find.text('Copied'), findsOneWidget);
+          await save('text_copied$suffix');
+          await tester.pump(const Duration(seconds: 1));
+          await tester.pump(const Duration(milliseconds: 400));
+          expect(find.byType(ReceivedTextDialog), findsNothing);
+        }
+        await tester.pumpWidget(const SizedBox());
       }
     }
-    await tester.pumpWidget(const SizedBox());
   });
 
   testWidgets('corner popup', (tester) async {

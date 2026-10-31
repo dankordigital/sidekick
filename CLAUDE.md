@@ -513,7 +513,14 @@ release. Keep this file for how things work now, not for history.
   link: `linkIn`, http/https only, "www." gets https; a note with a link
   in it gets Open too), **even from favourites / Quick save** (the owner's
   call): never saved as a file (`ui/text_messages.dart`
-  `showReceivedText`, `ReceivedTextDialog`; `AppState.texts`). The tray
+  `showReceivedText`, `ReceivedTextDialog`; `AppState.texts`). The card
+  (3.0.3, the owner's design): the link / note icon on the left of "Pixel 9
+  sent a link", **✕ in the top-right corner and no Close button**; a link
+  shows its site big ("bbcgoodfood.com", `linkSite`) and the rest under it;
+  "Open link" / "Copy link" / "Copy text"; Copy says "Copied" on the button,
+  then the card closes; Enter does the main action, Esc closes; buttons sit
+  side by side on computers, stacked full width (main on top) on phones;
+  the Nothing look gets hairlines and one red action. The tray
   opens the window (like Ping); a phone in the background gets a
   notification (`OfferNotifications.showText`). Opening uses
   `url_launcher`. Longer text, and devices before 3.0.2 (they answer 404),

@@ -4,6 +4,14 @@ Every release, newest first, with its biggest features and fixes. Add an
 entry here with each release (see "Releasing" in `CLAUDE.md`). The history
 starts at 1.1.3.
 
+## 3.0.3
+- **A clearer card for links and notes:** the link or note icon next to who
+  sent it, ✕ in the corner to close, and a link shows which site it goes
+  to ("bbcgoodfood.com") before you open it. Buttons say what they do
+  ("Open link", "Copy link"), Copy says "Copied" right on the button, and
+  on phones the buttons are full width so nothing is cut off. Enter opens
+  (or copies), Esc closes.
+
 ## 3.0.2
 - **Send a link or a note.** On a device's ⋮ menu: "Send text or a link"
   (with Paste); in the Nothing look, Send → Text or Paste. The other

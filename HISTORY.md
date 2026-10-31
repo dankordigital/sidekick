@@ -7,6 +7,10 @@ detailed developer notes; every release is in `VERSIONS.md`) and
 
 ## 31 October 2026
 
+- **App 3.0.3: the link / note card redesigned** (the owner: make it good
+  by UI/UX rules; then: no Close button, an ✕ top right, the icon on the
+  left). See CLAUDE.md "Links and notes". Rendered at phone and computer
+  size, default / dark / Nothing (`text_*.png`).
 - **App 3.0.2: send a link or a note** (the owner picked it from Claude's
   ideas for a feature that surely works on all four platforms, and asked
   that the receiver always be asked Copy or Open, even from favourites,
