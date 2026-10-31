@@ -4,6 +4,16 @@ Every release, newest first, with its biggest features and fixes. Add an
 entry here with each release (see "Releasing" in `CLAUDE.md`). The history
 starts at 1.1.3.
 
+## 3.0.2
+- **Send a link or a note.** On a device's ⋮ menu: "Send text or a link"
+  (with Paste); in the Nothing look, Send → Text or Paste. The other
+  device shows it with **Copy**, and **Open** for a link (it opens in the
+  browser). It always asks, even from favourites whose files are saved
+  without asking, and it's never saved as a .txt file any more.
+- In the tray it opens the window; on a phone in the background it comes
+  as a notification.
+- Devices still on 3.0.1 or older get it as a .txt file, like before.
+
 ## 3.0.1
 - **A new Windows installer, made for Sidekick:** one clean window in
   Sidekick's colours (light or dark, like Windows), instead of the old

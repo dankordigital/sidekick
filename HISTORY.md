@@ -7,6 +7,13 @@ detailed developer notes; every release is in `VERSIONS.md`) and
 
 ## 31 October 2026
 
+- **App 3.0.2: send a link or a note** (the owner picked it from Claude's
+  ideas for a feature that surely works on all four platforms, and asked
+  that the receiver always be asked Copy or Open, even from favourites,
+  instead of getting a .txt file). `/v1/text`, `ui/text_messages.dart`;
+  see CLAUDE.md "Links and notes". Other ideas offered and not built: a
+  "Recent" history in the default look, and "Share to Sidekick" from other
+  apps (needs a Swift share extension, which can't be built here).
 - **Watch preview, then decided against** (the owner asked what Sidekick
   would look like on a watch): a design canvas, not in the repo:
   https://claude.ai/artifact/VLxqyk6VLdSaowDEC3w7S8 (private). Apple Watch:

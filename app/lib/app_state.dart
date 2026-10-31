@@ -20,6 +20,7 @@ import 'core/errors.dart';
 import 'core/models.dart';
 import 'core/pairing_qr.dart';
 import 'core/server.dart';
+import 'core/text_message.dart';
 import 'core/trust.dart';
 import 'platform/app_icon.dart';
 import 'platform/android.dart';
@@ -429,6 +430,38 @@ class AppState extends ChangeNotifier {
     ringingFrom = null;
     unawaited(stopPingRingtone());
     notifyListeners();
+  }
+
+  final _texts = StreamController<ReceivedText>.broadcast();
+
+  /// Text or a link from a paired device: the user is always asked to copy
+  /// it or open the link (`showReceivedText`), even from devices whose files
+  /// are accepted without asking. It's never saved as a file.
+  Stream<ReceivedText> get texts => _texts.stream;
+
+  /// Sends [text] to [d], which asks to copy it or open its link. Text too
+  /// long for a message, or a device before 3.0.2 (it answers 404), gets it
+  /// as a .txt file instead, the way it always did.
+  Future<void> sendText(PairedDevice d, String text) async {
+    final what = isOnlyLink(text) ? 'link' : 'text';
+    try {
+      if (text.length > maxTextMessage) return await _sendTextAsFile(d, text);
+      await (await _clientForTransfer(d, text.length)).sendText(text);
+      _notices.add(Notice('Sent the $what to ${d.name}'));
+    } on SidekickException catch (e) {
+      if (e.status == 404) return _sendTextAsFile(d, text);
+      _noteFailure(d, e);
+      _notices.add(Notice("Couldn't send the $what to ${d.name}: ${_withUpdateHint(d, e)}"));
+    } catch (e) {
+      _notices.add(Notice("Couldn't send the $what to ${d.name}: ${_withUpdateHint(d, e)}"));
+    }
+  }
+
+  Future<void> _sendTextAsFile(PairedDevice d, String text) async {
+    final dir = await (await getTemporaryDirectory()).createTemp('sidekick_text');
+    final file = File(p.join(dir.path, textFileName(isOnlyLink(text) ? 'Link' : 'Text')));
+    await file.writeAsString(text);
+    await sendFiles(d, [file]);
   }
 
   /// The Ping button: [d] rings until someone taps Found It on it. False if
@@ -1789,6 +1822,8 @@ class AppState extends ChangeNotifier {
           _pings.add(from);
           notifyListeners();
         }
+      case TextReceived(:final from, :final text):
+        _texts.add(ReceivedText(from, text));
       case JoinNetworkByHand(:final credentials):
         final joined = waitForSubnet(credentials.addresses, timeout: SidekickServer.joinByHandTime);
         _manualJoins.add(ManualJoin(credentials, joined.then<void>((_) {}, onError: (Object _) {})));

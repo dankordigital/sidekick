@@ -363,6 +363,10 @@ class PeerClient {
   /// already ringing.
   Future<void> ping() => _postJson('/v1/ping', const {});
 
+  /// Shows [text] on the device, which asks to copy it or open its link
+  /// (`/v1/text`). Devices before 3.0.2 answer 404.
+  Future<void> sendText(String text) => _postJson('/v1/text', {'text': text});
+
   /// Shows a notification from this phone on the computer.
   Future<void> sendNotification({required String app, required String title, required String text}) =>
       _postJson('/v1/notification', {'app': app, 'title': title, 'text': text});

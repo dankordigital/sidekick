@@ -16,6 +16,7 @@ import '../platform/input.dart';
 import 'ble_protocol.dart';
 import 'crypto.dart';
 import 'models.dart';
+import 'text_message.dart';
 import 'trust.dart';
 
 /// What this device lets paired peers do. Mirrors the toggles in Settings.
@@ -62,6 +63,15 @@ class PhoneNotification extends ServerEvent {
 class Pinged extends ServerEvent {
   Pinged(this.from);
   final TrustedPeer from;
+}
+
+/// A paired device sent text or a link (`/v1/text`). It's never saved as a
+/// file: the user is asked to copy it or open the link, even when files
+/// from that device are accepted without asking.
+class TextReceived extends ServerEvent {
+  TextReceived(this.from, this.text);
+  final TrustedPeer from;
+  final String text;
 }
 
 /// This iPhone was asked to join a network it can't join by itself: the
@@ -380,6 +390,7 @@ class SidekickServer {
       ..post('/v1/pair/confirm', _pairConfirm)
       ..post('/v1/unpair', _authed(_unpair))
       ..post('/v1/ping', _authed(_ping))
+      ..post('/v1/text', _authed(_text, (p) => p.files))
       ..post('/v1/notification', _authed(_notification))
       ..post('/v1/screenshot', _authed(_screenshot, (p) => p.files))
       ..get('/v1/fs/roots', _authed(_roots, (p) => p.files))
@@ -639,6 +650,14 @@ class SidekickServer {
   Response _ping(Request r) {
     if (ringing()) return _error(409, '${self().name} is already being pinged');
     _events.add(Pinged(_peer(r)));
+    return _json({'ok': true});
+  }
+
+  Future<Response> _text(Request r) async {
+    final text = (await _body(r))['text'];
+    if (text is! String || text.trim().isEmpty) return _error(400, 'No text');
+    if (text.length > maxTextMessage) return _error(413, 'Text too long');
+    _events.add(TextReceived(_peer(r), text));
     return _json({'ok': true});
   }
 

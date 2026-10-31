@@ -64,7 +64,11 @@ them with a 6-digit code or a QR code. Paired devices can then:
   here". Using the mouse and keyboard also needs the system's Accessibility
   permission on the Mac and Android, which you grant yourself;
 - ping your device: it rings until you tap Found It! on it (on Android at
-  alarm volume, so you hear it on silent).
+  alarm volume, so you hear it on silent);
+- send you a link or a note. It's shown to you with Copy and Open (for a
+  link), always, even from devices whose files you accept without asking.
+  Sidekick doesn't keep it: it goes on your clipboard only if you tap Copy,
+  and a link opens in your browser only if you tap Open.
 Two things a phone can pass on to your paired Macs and PCs by itself, both
 off until you turn them on:
 - its notifications (Android only, Settings → "Show notifications on

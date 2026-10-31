@@ -10,6 +10,7 @@ import 'package:sidekick/core/errors.dart';
 import 'package:sidekick/core/models.dart';
 import 'package:sidekick/core/pairing_qr.dart';
 import 'package:sidekick/core/server.dart';
+import 'package:sidekick/core/text_message.dart';
 import 'package:sidekick/core/trust.dart';
 import 'package:sidekick/platform/device_name.dart';
 import 'package:sidekick/platform/files.dart';
@@ -168,6 +169,39 @@ void main() {
 
     // Not paired: refused.
     await expectLater(pc.anonymous().ping(), throwsA(isA<SidekickException>()));
+  });
+
+  test('text and links: only from paired devices, never as a file', () async {
+    final client = await pair();
+    final got = pc.server.events.only<TextReceived>().first;
+    await client.sendText('https://example.com/recipe');
+    final message = await got;
+    expect(message.from.id, phone.id);
+    expect(message.text, 'https://example.com/recipe');
+
+    await expectLater(client.sendText('   '), throwsA(isA<SidekickException>().having((e) => e.status, 'status', 400)));
+    await expectLater(
+      client.sendText('x' * (maxTextMessage + 1)),
+      throwsA(isA<SidekickException>().having((e) => e.status, 'status', 413)),
+    );
+    await expectLater(pc.anonymous().sendText('hi'), throwsA(isA<SidekickException>()));
+  });
+
+  test('linkIn: web links only', () {
+    expect(linkIn('https://example.com/a?b=1'), Uri.parse('https://example.com/a?b=1'));
+    expect(linkIn('  www.example.com/x \n'), Uri.parse('https://www.example.com/x'));
+    expect(linkIn('Look at this: https://youtu.be/abc.'), Uri.parse('https://youtu.be/abc'));
+    expect(linkIn('(see https://example.com/page)'), Uri.parse('https://example.com/page'));
+    expect(linkIn('Our Wi-Fi password is hunter2'), isNull);
+    expect(linkIn('file:///etc/passwd'), isNull);
+    expect(linkIn('javascript:alert(1)'), isNull);
+    expect(linkIn('sidekick://pair?id=1'), isNull);
+    expect(linkIn('https://nodot'), isNull);
+    expect(isOnlyLink('https://example.com'), isTrue);
+    expect(isOnlyLink('www.example.com'), isTrue);
+    expect(isOnlyLink('Look: https://example.com'), isFalse);
+    expect(isOnlyLink('hello'), isFalse);
+    expect(textFileName('Text', DateTime(2026, 10, 31, 9, 5, 7)), 'Text 2026-10-31 09.05.07.txt');
   });
 
   test('phone notifications and screenshots reach a paired computer', () async {

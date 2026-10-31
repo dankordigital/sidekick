@@ -94,6 +94,14 @@ abstract final class OfferNotifications {
     _call('offerDone', {'id': 'ping', 'title': 'Ping from $from', 'body': 'Open Sidekick to stop the sound'});
   }
 
+  /// [from] sent text or a link while Sidekick isn't on screen; the card
+  /// asking Copy / Open waits in the app.
+  static void showText(String from, String text, {required bool link}) {
+    if (!supported || WidgetsBinding.instance.lifecycleState == AppLifecycleState.resumed) return;
+    final body = text.length > 200 ? '${text.substring(0, 200)}…' : text;
+    _call('offerDone', {'id': 'text', 'title': '${link ? 'Link' : 'Text'} from $from', 'body': body});
+  }
+
   static void _call(String method, Map<String, Object?> args) =>
       unawaited(_channel.invokeMethod(method, args).catchError((Object e) => debugPrint('Sidekick: $method: $e')));
 }

@@ -21,6 +21,7 @@ import 'nothing_screens.dart';
 import 'qr_pairing.dart';
 import 'remote_page.dart';
 import 'settings_page.dart';
+import 'text_messages.dart';
 import 'transfer_screens.dart';
 
 class Shell extends StatefulWidget {
@@ -58,6 +59,10 @@ class _ShellState extends State<Shell> {
       // Another device pinged this one: loud, and who.
       state.pings.listen((from) {
         if (mounted) unawaited(showPinged(context, state, from));
+      }),
+      // Text or a link: always asks Copy / Open (never saved as a file).
+      state.texts.listen((message) {
+        if (mounted) unawaited(showReceivedText(context, state, message));
       }),
       // iPhone: a network to join by hand for a direct link.
       state.manualJoins.listen((join) {

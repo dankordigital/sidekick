@@ -504,6 +504,21 @@ release. Keep this file for how things work now, not for history.
   already being pinged" (`showAlreadyPinged`). In the tray the window
   opens; a phone in the background gets a notification. Plays whatever
   Settings → Sound says.
+- **Links and notes** (3.0.2, `/v1/text`, every look): send a link or a
+  short note (up to `maxTextMessage`, 20,000 characters) to a paired
+  device. Default look: a device card's ⋮ → "Send text or a link"
+  (`askAndSendText`, with Paste); Nothing look: Send → Text / Paste
+  (`_pickedTexts`: they wait in the selection as .txt files but go as
+  messages). The receiver **always asks, Copy or Open** (Open only for a
+  link: `linkIn`, http/https only, "www." gets https; a note with a link
+  in it gets Open too), **even from favourites / Quick save** (the owner's
+  call): never saved as a file (`ui/text_messages.dart`
+  `showReceivedText`, `ReceivedTextDialog`; `AppState.texts`). The tray
+  opens the window (like Ping); a phone in the background gets a
+  notification (`OfferNotifications.showText`). Opening uses
+  `url_launcher`. Longer text, and devices before 3.0.2 (they answer 404),
+  get a .txt file the old way (`_sendTextAsFile`). Rendered by
+  `tool/transfer_shots_test.dart` (`text_link*.png`, `text_note*.png`).
 - **Steady connections:** Android's `SidekickService` holds a high-perf
   Wi-Fi lock (`WAKE_LOCK`) so Wi-Fi doesn't doze with the screen off; the
   Mac holds a `latencyCritical` activity (`MainFlutterWindow.awake`) so App

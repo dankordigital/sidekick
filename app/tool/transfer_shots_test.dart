@@ -17,7 +17,9 @@ import 'package:sidekick/app_state.dart';
 import 'package:sidekick/core/models.dart';
 import 'package:sidekick/core/server.dart';
 import 'package:sidekick/ui/corner_popup.dart';
+import 'package:sidekick/core/text_message.dart';
 import 'package:sidekick/ui/nothing.dart';
+import 'package:sidekick/ui/text_messages.dart';
 import 'package:sidekick/ui/transfer_screens.dart';
 
 Future<void> _loadFonts() async {
@@ -181,6 +183,52 @@ void main() {
   });
 
   // The small corner window on Windows and Mac, at its real size (2x).
+  testWidgets('received text', (tester) async {
+    tester.view.physicalSize = const Size(390, 844);
+    tester.view.devicePixelRatio = 1;
+    await tester.runAsync(_loadFonts);
+    final out = Directory('build/screenshots')..createSync(recursive: true);
+    final key = GlobalKey();
+    final from = TrustedPeer(
+      id: 'p',
+      name: 'Pixel 9',
+      platform: DevicePlatform.android,
+      token: 't',
+      fingerprint: 'f',
+      key: 'k',
+    );
+    final themes = [
+      (ThemeData(colorSchemeSeed: const Color(0xFF6750A4), fontFamily: 'Roboto'), ''),
+      (nothingTheme(ThemeData(colorScheme: nothingScheme(Brightness.light), fontFamily: 'Roboto')), '_nothing'),
+    ];
+    for (final (theme, suffix) in themes) {
+      for (final (text, name) in [
+        ('https://www.bbcgoodfood.com/recipes/easy-pancakes', 'text_link'),
+        ('Gate code is 4471#\nParking on level 2, spot 18. Look at https://maps.app.goo.gl/x1y2', 'text_note'),
+      ]) {
+        await tester.pumpWidget(
+          RepaintBoundary(
+            key: key,
+            child: MaterialApp(
+              theme: theme,
+              debugShowCheckedModeBanner: false,
+              home: Scaffold(body: ReceivedTextDialog(message: ReceivedText(from, text))),
+            ),
+          ),
+        );
+        // The theme fades in (AnimatedTheme): let it finish.
+        await tester.pump(const Duration(milliseconds: 600));
+        final boundary = key.currentContext!.findRenderObject()! as RenderRepaintBoundary;
+        await tester.runAsync(() async {
+          final image = await boundary.toImage(pixelRatio: 2);
+          final bytes = await image.toByteData(format: ui.ImageByteFormat.png);
+          File(p.join(out.path, '$name$suffix.png')).writeAsBytesSync(bytes!.buffer.asUint8List());
+        });
+      }
+    }
+    await tester.pumpWidget(const SizedBox());
+  });
+
   testWidgets('corner popup', (tester) async {
     tester.view.physicalSize = const Size(760, 344);
     tester.view.devicePixelRatio = 2;

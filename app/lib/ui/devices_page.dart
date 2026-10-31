@@ -10,6 +10,7 @@ import 'bluetooth_pairing.dart';
 import 'direct_wifi.dart';
 import 'ping.dart';
 import 'qr_pairing.dart';
+import 'text_messages.dart';
 import 'widgets.dart';
 import '../core/host.dart';
 
@@ -450,11 +451,13 @@ class _PairedCardState extends State<_PairedCard> {
                 'files' => _open(1),
                 'remote' => _open(2),
                 'ping' => _ping(),
+                'text' => askAndSendText(context, state, device),
                 _ => _confirmUnpair(),
               },
               itemBuilder: (_) => [
                 if (canBrowse) PopupMenuItem(value: 'files', enabled: online, child: const Text('Browse files')),
                 if (canControl) PopupMenuItem(value: 'remote', enabled: online, child: const Text('Remote control')),
+                PopupMenuItem(value: 'text', enabled: online, child: const Text('Send text or a link')),
                 PopupMenuItem(value: 'ping', enabled: online, child: const Text('Ping')),
                 const PopupMenuDivider(),
                 const PopupMenuItem(value: 'unpair', child: Text('Unpair')),

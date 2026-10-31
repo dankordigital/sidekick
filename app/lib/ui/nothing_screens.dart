@@ -10,6 +10,7 @@ import 'package:path_provider/path_provider.dart';
 import '../app_state.dart';
 import '../core/errors.dart';
 import '../core/models.dart';
+import '../core/text_message.dart';
 import '../core/server.dart';
 import '../platform/gallery.dart';
 import '../platform/sound.dart';
@@ -18,6 +19,7 @@ import 'direct_wifi.dart';
 import 'nothing.dart';
 import 'ping.dart';
 import 'transfer_screens.dart' show closeRoute;
+import 'text_messages.dart';
 import 'widgets.dart';
 
 /// The Nothing look's own screens (Settings → Theme → Nothing), built 1:1
@@ -61,6 +63,10 @@ EdgeInsets _pad(bool wide) =>
 /// What's picked on the Send tab. It stays picked until Clear, so the same
 /// files can go to several devices (like LocalSend).
 final sendSelection = ValueNotifier<List<File>>(const []);
+
+/// The selection's text (Text / Paste), by its .txt file's path: it goes as
+/// a message, not a file.
+final _pickedTexts = <String, String>{};
 
 void _addToSelection(List<File> files) {
   if (files.isEmpty) return;
@@ -386,7 +392,7 @@ class _NothingSendPageState extends State<NothingSendPage> {
       case _Kind.folder:
         await _pickFolder();
       case _Kind.text:
-        final text = await _askForText();
+        final text = await askForText(context);
         if (text != null && text.trim().isNotEmpty) await _addText(text, 'Text');
       case _Kind.paste:
         final text = (await Clipboard.getData(Clipboard.kTextPlain))?.text;
@@ -432,45 +438,19 @@ class _NothingSendPageState extends State<NothingSendPage> {
     }
   }
 
-  /// Text goes as a small .txt file.
+  /// Text waits in the selection as a small .txt file (so it counts and
+  /// can be removed like the rest), but goes as a message: the other device
+  /// asks to copy it or open its link ([AppState.sendText]).
   Future<void> _addText(String text, String name) async {
     try {
       final dir = await (await getTemporaryDirectory()).createTemp('sidekick_text');
-      final now = DateTime.now();
-      final stamp =
-          '${now.year}-${_two(now.month)}-${_two(now.day)} ${_two(now.hour)}.${_two(now.minute)}.${_two(now.second)}';
-      final file = File(p.join(dir.path, '$name $stamp.txt'));
+      final file = File(p.join(dir.path, textFileName(isOnlyLink(text) ? 'Link' : name)));
       await file.writeAsString(text);
+      _pickedTexts[file.path] = text;
       _addToSelection([file]);
     } catch (e) {
       if (mounted) showError(context, "Couldn't keep that text: ${describeError(e)}");
     }
-  }
-
-  static String _two(int n) => n.toString().padLeft(2, '0');
-
-  Future<String?> _askForText() {
-    final controller = TextEditingController();
-    return showDialog<String>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Send text'),
-        content: SizedBox(
-          width: 420,
-          child: TextField(
-            controller: controller,
-            autofocus: true,
-            minLines: 4,
-            maxLines: 10,
-            decoration: const InputDecoration(hintText: 'Type or paste here', border: OutlineInputBorder()),
-          ),
-        ),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
-          FilledButton(onPressed: () => Navigator.pop(context, controller.text), child: const Text('Add')),
-        ],
-      ),
-    ).whenComplete(controller.dispose);
   }
 
   Future<void> _sendTo(PairedDevice d) async {
@@ -479,7 +459,15 @@ class _NothingSendPageState extends State<NothingSendPage> {
       files = await pickFilesToSend(context, title: 'Send to ${d.name}');
       _addToSelection(files);
     }
-    if (files.isNotEmpty) await state.sendFiles(d, files);
+    final texts = [for (final f in files) ?_pickedTexts[f.path]];
+    final rest = [
+      for (final f in files)
+        if (!_pickedTexts.containsKey(f.path)) f,
+    ];
+    for (final t in texts) {
+      await state.sendText(d, t);
+    }
+    if (rest.isNotEmpty) await state.sendFiles(d, rest);
   }
 
   void _openBrowser() =>

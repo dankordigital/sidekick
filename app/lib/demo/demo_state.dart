@@ -264,6 +264,14 @@ class DemoAppState extends AppState {
     return true;
   }
 
+  // ---------------------------------------------------------------- text
+
+  @override
+  Future<void> sendText(PairedDevice d, String text) async {
+    link.send({'t': 'text', 'text': text});
+    _notices.add(Notice('Sent the ${isOnlyLink(text) ? 'link' : 'text'} to ${d.name}'));
+  }
+
   // ---------------------------------------------------------------- sending
 
   @override
@@ -404,6 +412,8 @@ class DemoAppState extends AppState {
           notifyListeners();
         }
         _reply(m, {'busy': busy});
+      case 'text':
+        _texts.add(ReceivedText(_peerAsTrusted, m['text']! as String));
       case 'offer':
         final offer = TransferOffer(
           id: m['id']! as String,
