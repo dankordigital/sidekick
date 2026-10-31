@@ -5,6 +5,25 @@ a new session. Newest first. For how things work, read `CLAUDE.md` (the
 detailed developer notes; every release is in `VERSIONS.md`) and
 `ARCHITECTURE.md` (the big picture).
 
+## 31 October 2026
+
+- **Watch preview, then decided against** (the owner asked what Sidekick
+  would look like on a watch): a design canvas, not in the repo:
+  https://claude.ai/artifact/VLxqyk6VLdSaowDEC3w7S8 (private). Apple Watch:
+  Devices, a device page (Ping, Slides, Last photo, Type), a slides remote
+  (Next / Back / Blank), an incoming request, receiving with a ring; Wear OS:
+  a round device list and a round request. Dark, Sidekick's lavender accent.
+  **The owner's call: no watch app for now.** Why: the phone's Accept /
+  Decline notifications should already reach a paired watch on their own
+  (not checked on a real watch), an Apple Watch app can't be made in
+  Flutter (Swift only, which can't be built in these sessions), and the
+  launch matters more. If people ask after launch: a small Wear OS app with
+  Ping and Accept / Decline first.
+- **Waiting on the owner:** try 3.0.1's new Windows installer by hand (CI
+  only ran it silently): the permission prompt after Install, and Open
+  Sidekick at the end. Try a resumed transfer between real devices (switch
+  Wi-Fi off and on mid-send). Upload `website/app/` (the 3.0 preview).
+
 ## 25 October 2026
 
 - **App 3.0.1: Sidekick's own Windows installer** (the owner: "make your
