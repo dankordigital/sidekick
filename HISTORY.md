@@ -14,6 +14,9 @@ detailed developer notes; every release is in `VERSIONS.md`) and
   see CLAUDE.md "Links and notes". Other ideas offered and not built: a
   "Recent" history in the default look, and "Share to Sidekick" from other
   apps (needs a Swift share extension, which can't be built here).
+  Released as v3.0.2 (CI green on all four). **Waiting on the owner:** try
+  it between real devices (a link from the phone to the Mac in the menu
+  bar: the window should open with Copy / Open), and upload `website/app/`.
 - **Watch preview, then decided against** (the owner asked what Sidekick
   would look like on a watch): a design canvas, not in the repo:
   https://claude.ai/artifact/VLxqyk6VLdSaowDEC3w7S8 (private). Apple Watch:
