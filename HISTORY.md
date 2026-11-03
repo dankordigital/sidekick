@@ -5,6 +5,21 @@ a new session. Newest first. For how things work, read `CLAUDE.md` (the
 detailed developer notes; every release is in `VERSIONS.md`) and
 `ARCHITECTURE.md` (the big picture).
 
+## 3 November 2026
+
+- **The website follows new releases by itself** (the owner: "edit
+  automatically its release version when released"). Released, the home
+  page offers the newest GitHub release once all seven files are up
+  (`offered_version`, `release_complete`); "Pin this version" in the
+  panel's Website tab keeps one. Checked against the real 3.0.3 release.
+- **The panel's Edit tab is visual** (the owner: "make the editor
+  visual"): the home page itself, click a text and type, Wishlist /
+  Released and Computer / Phone views, a list of changes with Undo, Save.
+  The old list is "All texts as a list". Tested in a headless browser
+  (log in, edit the headline, save, the live page shows it; links do
+  nothing; Released view gets 3.0.3).
+- **To upload to `www`:** `index.php`, `wishlist.php`, `np7dpanel.php`.
+
 ## 31 October 2026
 
 - **Sidekick Pro preview** (the owner asked for screenshots of Pro features

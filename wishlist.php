@@ -380,7 +380,7 @@ function by_token(array &$rows, string $token): ?string {
 // ------------------------------------------------------------------ the site's mode and visits
 // index.php (the home page) and np7dpanel.php share these. The mode lives
 // in sidekick-wishlist/site.json: a wishlist (the default) or released,
-// with downloads for one version. Visits are counted per day in
+// with downloads of the newest release (or one version, pinned). Visits are counted per day in
 // sidekick-wishlist/visits.json (a day's visitors only as short hashes of
 // IP + browser, salted with the day, so nobody can be traced back). The IP
 // addresses themselves (bots too) are kept 30 days in ips.json, for the
@@ -390,20 +390,57 @@ const REPO = 'dankordigital/sidekick';
 const VISIT_DAYS = 400;        // days of visits kept
 
 function site_state(): array {
-    $state = ['released' => false, 'version' => '', 'changed' => ''];
+    $state = ['released' => false, 'version' => '', 'changed' => '', 'auto' => true];
     try {
         $raw = @file_get_contents(data_dir() . '/site.json');
         $saved = $raw ? json_decode($raw, true) : null;
         if (is_array($saved)) $state = array_merge($state, array_intersect_key($saved, $state));
     } catch (Throwable $e) {
     }
+    $state['auto'] = (bool)$state['auto'];
     $state['released'] = (bool)$state['released'] && preg_match('/^\d+\.\d+\.\d+$/', (string)$state['version']);
     return $state;
 }
 
-function save_site_state(bool $released, string $version): bool {
-    $state = ['released' => $released, 'version' => $version, 'changed' => gmdate('Y-m-d H:i:s')];
+/** Saves the website's mode. [$auto]: released, it follows the newest
+ *  release on GitHub by itself (offered_version), [$version] being the
+ *  last one it offered; otherwise it stays on [$version]. */
+function save_site_state(bool $released, string $version, bool $auto = true): bool {
+    $state = ['released' => $released, 'version' => $version, 'changed' => gmdate('Y-m-d H:i:s'), 'auto' => $auto];
     return file_put_contents(data_dir() . '/site.json', json_encode($state), LOCK_EX) !== false;
+}
+
+/** The version the home page offers while released. Following the newest
+ *  (auto, the default): the newest release on GitHub, as soon as it has
+ *  every download file (a release still being built never gives a broken
+ *  link); until then, or when GitHub can't be reached, the last one it
+ *  offered. The newest is asked at most every 10 minutes (latest_release). */
+function offered_version(array $state, ?array $latest = null): string {
+    if (!$state['auto']) return $state['version'];
+    try {
+        $latest ??= latest_release(false, 4);
+    } catch (Throwable $e) {
+        return $state['version'];
+    }
+    $version = (string)($latest['version'] ?? '');
+    if ($version === '' || $version === $state['version'] || !release_complete($latest)) return $state['version'];
+    // Remember it, so it's what's offered if GitHub is ever out of reach.
+    $saved = json_decode((string)@file_get_contents(data_dir() . '/site.json'), true);
+    if (is_array($saved)) {
+        $saved['version'] = $version;
+        @file_put_contents(data_dir() . '/site.json', json_encode($saved), LOCK_EX);
+    }
+    return $version;
+}
+
+/** [$latest] (from latest_release) has every file release_files() links. */
+function release_complete(array $latest): bool {
+    $have = $latest['assets'] ?? null;
+    if (!is_array($have) || !isset($latest['version'])) return false;
+    foreach (release_files((string)$latest['version'])['files'] as $url) {
+        if (!in_array(basename($url), $have, true)) return false;
+    }
+    return true;
 }
 
 /** The download links for a release, as the Build workflow names them. */
@@ -444,18 +481,20 @@ function http_get(string $url, array $headers = [], int $timeout = 10): array {
 }
 
 /** The newest release on GitHub: ['version' => '2.17.2', 'published' => …,
- *  'url' => …], or ['error' => why]. Asked at most every 10 minutes
- *  (GitHub limits how often a server may ask), unless [$fresh]. */
-function latest_release(bool $fresh = false): array {
+ *  'url' => …, 'assets' => [file names]], or ['error' => why]. Asked at
+ *  most every 10 minutes (GitHub limits how often a server may ask),
+ *  unless [$fresh]; [$timeout] seconds at most (the home page waits less). */
+function latest_release(bool $fresh = false, int $timeout = 10): array {
     $cache = data_dir() . '/latest-release.json';
     $saved = json_decode((string)@file_get_contents($cache), true);
     if (!$fresh && is_array($saved) && time() - (int)($saved['checked'] ?? 0) < 600) return $saved;
-    [$code, $body] = http_get('https://api.github.com/repos/' . REPO . '/releases/latest', ['Accept: application/vnd.github+json']);
+    [$code, $body] = http_get('https://api.github.com/repos/' . REPO . '/releases/latest', ['Accept: application/vnd.github+json'], $timeout);
     $json = is_string($body) ? json_decode($body, true) : null;
     $version = ltrim((string)($json['tag_name'] ?? ''), 'vV');
     if ($code === 200 && preg_match('/^\d+\.\d+\.\d+$/', $version)) {
         $latest = ['version' => $version, 'published' => str_replace(['T', 'Z'], [' ', ''], (string)($json['published_at'] ?? '')),
-                   'url' => (string)($json['html_url'] ?? ''), 'checked' => time()];
+                   'url' => (string)($json['html_url'] ?? ''), 'checked' => time(),
+                   'assets' => array_values(array_map(fn($a) => (string)($a['name'] ?? ''), (array)($json['assets'] ?? [])))];
     } else {
         $why = $body === false ? 'couldn\'t reach GitHub' : ($code === 404 ? 'GitHub has no release yet' : "GitHub answered $code");
         // Keep showing the last good answer, saying it couldn't check again.
@@ -492,6 +531,43 @@ function apply_site_edits(string $html, ?array $edits = null): string {
         $edit = $edits[text_key($text)] ?? null;
         return $edit !== null && $edit['from'] === $text ? $edit['to'] : null;
     });
+}
+
+/** [$html] for np7dpanel.php's visual editor: every text the Edit tab can
+ *  change, with the edits put in, wrapped in
+ *  <span class="sk-text" data-sk="key" data-sk-orig="text on the page">.
+ *  Texts in <title>, <option> and <textarea> stay as they are (spans can't
+ *  go there); the list view still has them. */
+function page_editable(string $html, ?array $edits = null): string {
+    $edits ??= site_edits();
+    $parts = preg_split('/(<!--.*?-->|<script\b.*?<\/script>|<style\b.*?<\/style>)/is', $html, -1, PREG_SPLIT_DELIM_CAPTURE);
+    foreach ($parts as $i => $part) {
+        if ($i % 2) continue;
+        $parts[$i] = preg_replace_callback('/(<[^>]+>)([^<]*)/', function ($m) use ($edits) {
+            if (preg_match('/^<\s*(title|option|textarea)\b/i', $m[1])) return $m[0];
+            if (preg_match('/class="(?:[^"]*\s)?icon(?:\s[^"]*)?"/', $m[1])) return $m[0];
+            $text = preg_replace('/\s+/u', ' ', trim(html_entity_decode($m[2], ENT_QUOTES | ENT_HTML5, 'UTF-8')));
+            if (!preg_match('/\p{L}/u', $text)) return $m[0];
+            $key = text_key($text);
+            $edit = $edits[$key] ?? null;
+            $edited = $edit !== null && $edit['from'] === $text;
+            preg_match('/^(\s*).*?(\s*)$/s', $m[2], $ws);
+            $attr = fn(string $v) => htmlspecialchars($v, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+            return $m[1] . $ws[1] . '<span class="sk-text' . ($edited ? ' sk-saved' : '') . '" tabindex="0" data-sk="' . $key
+                . '" data-sk-orig="' . $attr($text) . '">' . htmlspecialchars($edited ? $edit['to'] : $text, ENT_NOQUOTES | ENT_HTML5, 'UTF-8')
+                . '</span>' . $ws[2];
+        }, $part);
+    }
+    return implode('', $parts);
+}
+
+/** The home page in released mode: <html class="released"> and the download
+ *  links of [$version] in SIDEKICK_RELEASE (index.php, and the editor's
+ *  Released view). */
+function mark_released(string $page, string $version): string {
+    $release = json_encode(release_files($version), JSON_UNESCAPED_SLASHES | JSON_HEX_TAG);
+    $page = preg_replace('/<html lang="en"/', '<html lang="en" class="released"', $page, 1);
+    return preg_replace('/<\/head>/', "<script>window.SIDEKICK_RELEASE = $release;</script>\n</head>", $page, 1);
 }
 
 /** Calls [$visit] with each text; where it returns a string, that replaces

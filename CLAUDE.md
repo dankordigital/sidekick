@@ -47,8 +47,14 @@ privacy policies describe exactly this; keep them true if it changes.
 **Released mode:** `.htaccess` sends `/` and `/index.html` to `index.php`,
 which counts the visit (`record_visit`) and serves index.html; when
 site.json says released it adds `class="released"` to `<html>` and
-`window.SIDEKICK_RELEASE` (`release_files`: the GitHub release's .exe,
-Apple-silicon and Intel .dmg/.pkg, .apk, .ipa). index.html marks the two
+`window.SIDEKICK_RELEASE` (`mark_released`, `release_files`: the GitHub
+release's .exe, Apple-silicon and Intel .dmg/.pkg, .apk, .ipa). **The
+version follows GitHub by itself** (site.json `auto`, the default;
+`offered_version`): the newest release (`latest_release`, cached 10 min,
+4 s timeout from the home page) once it has all seven files
+(`release_complete`), so a release still building never gives a broken
+link; otherwise, or when GitHub is out of reach, the last one offered.
+A version written in the panel is pinned (`auto` false). index.html marks the two
 looks with `only-wish` / `only-released` (Download buttons, `#download`
 tiles). Without PHP it's still the wishlist.
 **`np7dpanel.php`** (the owner's name for it; not linked anywhere): the
@@ -64,11 +70,17 @@ Quay", Alibaba, Censys…) count as bots, marked "cloud"; both
 privacy policies say so), Website (the newest GitHub release, `latest_release()`: the GitHub API,
 cached 10 minutes in `latest-release.json`, with **Release latest** and
 Check again; **Release Sidekick** with a version / **Make it a wishlist
-again**: `sidekick-wishlist/site.json`), **Edit** (every text on the home
-page in a box, with a search; saved to `sidekick-wishlist/edits.json` as
-{original → new} and put in by index.php (`apply_site_edits`), so
-index.html is never changed and new uploads keep them; an edit whose
-original text is gone does nothing and is listed to forget), People (search, add, remove, send the welcome email again, send it
+again**: `sidekick-wishlist/site.json`; "Release latest" follows new
+releases by itself, "Pin this version" stays on one), **Edit** (visual: the
+real home page in a frame, `?view=editor`, signed in only, `page_editable`
+wraps every text in `<span class="sk-text" data-sk=key>`; click a text and
+type, Enter keeps / Esc cancels, links and forms do nothing; Wishlist /
+Released and Computer / Phone switches; a list of changes with Undo / Put
+back the original; Save posts only the changed ones. `?tab=edit&list=1` is
+the old list of boxes, with search, the title and edits to forget. Saved to
+`sidekick-wishlist/edits.json` as {original → new} and put in by index.php
+(`apply_site_edits`), so index.html is never changed and new uploads keep
+them; an edit whose original text is gone does nothing), People (search, add, remove, send the welcome email again, send it
 to everyone who never got it, CSV export), Email everyone, Past sends
 (`sends/<id>.json`), Mail log (view, clear) and Health (PHP, openssl,
 folder, password, the mail server's ports). Its password is
@@ -699,7 +711,7 @@ one) without asking.
    `.pkg` (2.16.0, the owner's call: one app per kind of Mac; CI thins the
    universal build with `ditto --arch` and signs each again, ad hoc),
    `Sidekick-X.Y.Z.apk`, `Sidekick-X.Y.Z.ipa`, `altstore.json`.
-3. While the site is a wishlist there are no download links to bump. When
-   downloads come back: update `index.html` (every `X.Y.Z` link, `version:`
-   and "Version X.Y.Z"), including `RELEASE.files.macosPkg` (the `.pkg`).
+3. Nothing to bump on the website: released, it offers the newest release
+   by itself within 10 minutes of all its files being up (unless the panel
+   pinned a version).
 4. Add the version to the top of `VERSIONS.md`.

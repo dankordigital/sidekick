@@ -2,7 +2,8 @@
 // The home page. Serves index.html as it is, after counting the visit and
 // saying whether the site is a wishlist or released (np7dpanel.php →
 // Website switches it). Released: <html class="released"> shows the
-// downloads instead of the wishlist, and SIDEKICK_RELEASE has the links.
+// downloads instead of the wishlist, and SIDEKICK_RELEASE has the links,
+// for the newest release on GitHub unless a version is pinned.
 // Texts changed in np7dpanel.php → Edit are put in here (edits.json).
 // .htaccess sends "/" and "/index.html" here; without PHP, index.html is
 // still the wishlist.
@@ -23,9 +24,8 @@ try {
 }
 $state = site_state();
 if ($state['released']) {
-    $release = json_encode(release_files($state['version']), JSON_UNESCAPED_SLASHES | JSON_HEX_TAG);
-    $page = preg_replace('/<html lang="en"/', '<html lang="en" class="released"', $page, 1);
-    $page = preg_replace('/<\/head>/', "<script>window.SIDEKICK_RELEASE = $release;</script>\n</head>", $page, 1);
+    // The newest release on GitHub, once all its files are up (or the pinned one).
+    $page = mark_released($page, offered_version($state));
 }
 header('Content-Type: text/html; charset=utf-8');
 echo $page;

@@ -1,9 +1,10 @@
 <?php
 // Sidekick's admin panel: the wishlist at a glance, everyone on it, emailing
 // them all, past sends, the mail log, a health check, the website's visits,
-// switching the website between a wishlist and released (downloads, with the
-// newest version on GitHub one button away), and editing the home page's
-// texts without uploading index.html again.
+// switching the website between a wishlist and released (downloads of the
+// newest version on GitHub, kept up to date by itself, or one pinned), and
+// editing the home page's texts on the page itself (or as a list) without
+// uploading index.html again.
 //
 // Upload next to wishlist.php (in www). It uses wishlist.php's list and mail
 // settings, and asks for the password in wishlist-config.php
@@ -323,11 +324,12 @@ if ($action !== '' && $action !== 'login') {
                 flash('Write the version to offer, like 2.16.1.', true);
                 go('site');
             }
-            if (!save_site_state($release, $release ? $version : site_state()['version'])) {
+            // A version written here is pinned: the site stays on it.
+            if (!save_site_state($release, $release ? $version : site_state()['version'], !$release && site_state()['auto'])) {
                 flash('Couldn\'t save the website\'s mode (the private folder isn\'t writable).', true);
                 go('site');
             }
-            flash($release ? "Released: the website now offers Sidekick $version to download." : 'The website is a wishlist again.');
+            flash($release ? "Released: the website offers Sidekick $version, and stays on it." : 'The website is a wishlist again.');
             go('site');
 
         case 'release_latest':
@@ -336,11 +338,16 @@ if ($action !== '' && $action !== 'login') {
                 flash('Couldn\'t get the latest version from GitHub: ' . ($latest['error'] ?? 'no answer') . '.', true);
                 go('site');
             }
-            if (!save_site_state(true, $latest['version'])) {
+            if (!release_complete($latest)) {
+                flash("Sidekick {$latest['version']} on GitHub doesn't have all its download files yet (it may still be building). Try again in a few minutes.", true);
+                go('site');
+            }
+            // Released, following the newest: later releases show up by themselves.
+            if (!save_site_state(true, $latest['version'], true)) {
                 flash('Couldn\'t save the website\'s mode (the private folder isn\'t writable).', true);
                 go('site');
             }
-            flash("Released: the website now offers Sidekick {$latest['version']}, the latest on GitHub.");
+            flash("Released: the website offers Sidekick {$latest['version']}, and new releases from now on, by itself.");
             go('site');
 
         case 'check_latest':
@@ -375,7 +382,8 @@ if ($action !== '' && $action !== 'login') {
                 go('edit');
             }
             flash($changed ? "Saved $changed change" . ($changed === 1 ? '' : 's') . '. The website shows them now.' : 'Nothing was changed.');
-            go('edit', ['q' => $_POST['q'] ?? '']);
+            go('edit', array_filter(['q' => (string)($_POST['q'] ?? ''), 'look' => (string)($_POST['look'] ?? ''),
+                                     'list' => (string)($_POST['list'] ?? '')]));
 
         case 'clear_log':
             @file_put_contents(data_dir() . '/mail.log', '');
@@ -419,6 +427,85 @@ if (signed_in() && ($_GET['export'] ?? '') === 'csv') {
     $out = fopen('php://output', 'w');
     fputcsv($out, ['email', 'devices', 'joined (UTC)', 'welcome email sent (UTC)'], ',', '"', '');
     foreach (people() as $r) fputcsv($out, [$r['email'], $r['devices'], $r['joined'], $r['emailed']], ',', '"', '');
+    exit;
+}
+
+// The home page for the visual editor (Edit tab, in a frame): every text
+// can be clicked and changed (page_editable); links, buttons and forms do
+// nothing. The changes go to the Edit tab, which saves them. Signed in
+// only, framed only by this panel; no visit is counted.
+if (signed_in() && ($_GET['view'] ?? '') === 'editor') {
+    header('X-Frame-Options: SAMEORIGIN');
+    header("Content-Security-Policy: frame-ancestors 'self'");
+    header('Content-Type: text/html; charset=utf-8');
+    $page = page_editable((string)@file_get_contents(__DIR__ . '/index.html'));
+    if (($_GET['look'] ?? '') === 'released') {
+        $site = site_state();
+        $latest = latest_release();
+        $page = mark_released($page, $site['released'] ? offered_version($site, $latest)
+            : (string)($latest['version'] ?? ($site['version'] ?: '1.0.0')));
+    }
+    $editor = <<<'HTML'
+<style>
+.sk-text { cursor: text; border-radius: 4px; outline: 2px dashed transparent; outline-offset: 2px; transition: outline-color .12s; }
+.sk-text:hover, .sk-text:focus-visible { outline-color: rgba(106, 76, 255, .75); }
+.sk-text.sk-saved { box-shadow: inset 0 -.38em 0 rgba(255, 196, 0, .45); }
+.sk-text.sk-pending { box-shadow: inset 0 -.38em 0 rgba(106, 76, 255, .4); }
+.sk-text.sk-editing { outline: 2px solid #6a4cff; box-shadow: none; background: #fff; color: #111; -webkit-text-fill-color: #111; }
+a, button, label, summary, input[type=submit] { cursor: default; }
+</style>
+<script>
+(() => {
+  // Clicking a text edits it; Enter or clicking away keeps it, Esc cancels.
+  let editing = null, before = '';
+  const clean = (t) => t.replace(/\s+/g, ' ').trim();
+  function start(t) {
+    if (editing) finish(true);
+    editing = t;
+    before = t.textContent;
+    t.classList.add('sk-editing');
+    try { t.contentEditable = 'plaintext-only'; } catch (_) { t.contentEditable = 'true'; }
+    if (t.contentEditable !== 'plaintext-only') t.contentEditable = 'true';
+    t.focus();
+  }
+  function finish(keep) {
+    const t = editing;
+    if (!t) return;
+    editing = null;
+    t.removeAttribute('contenteditable');
+    t.classList.remove('sk-editing');
+    if (!keep) { t.textContent = before; return; }
+    const text = clean(t.textContent);
+    if (text === clean(before)) return;
+    parent.postMessage({ sk: 'change', key: t.dataset.sk, orig: t.dataset.skOrig, text }, location.origin);
+  }
+  document.addEventListener('click', (e) => {
+    const t = e.target.closest('.sk-text');
+    const control = e.target.closest('a, button, label, summary, input[type=submit]');
+    if (t || control) { e.preventDefault(); e.stopPropagation(); }
+    if (t && t !== editing) start(t);
+  }, true);
+  document.addEventListener('submit', (e) => { e.preventDefault(); e.stopPropagation(); }, true);
+  document.addEventListener('keydown', (e) => {
+    if (editing) {
+      if (e.key === 'Enter') { e.preventDefault(); finish(true); }
+      else if (e.key === 'Escape') { e.preventDefault(); finish(false); }
+      e.stopPropagation();
+    } else if (e.key === 'Enter' && e.target.classList && e.target.classList.contains('sk-text')) {
+      e.preventDefault();
+      start(e.target);
+    }
+  }, true);
+  document.addEventListener('focusout', (e) => { if (editing && e.target === editing) finish(true); }, true);
+  document.addEventListener('paste', (e) => {
+    if (!editing) return;
+    e.preventDefault();
+    document.execCommand('insertText', false, clean(e.clipboardData.getData('text/plain') || ''));
+  }, true);
+})();
+</script>
+HTML;
+    echo preg_replace('/<\/body>/i', $editor . "\n</body>", $page, 1);
     exit;
 }
 
@@ -814,24 +901,28 @@ $('send').onclick = async () => {
   </div>
   <p class="muted">Every time someone opens the home page counts as a visit; "visitors" are the different people in a day. The counts leave out search engines and other bots; "Who visited" can show them. IP addresses are kept 30 days, and where they are comes from ipwho.is. Visits from cloud and hosting networks (Tencent, Alibaba, Amazon, scanners like Censys…) are marked "cloud" and left out of the countries and the list: they're bots, even when they say they're an iPhone.</p>
 
-<?php elseif ($tab === 'site'): $site = site_state(); $latest = latest_release(); ?>
+<?php elseif ($tab === 'site'): $site = site_state(); $latest = latest_release();
+  $offered = $site['released'] ? offered_version($site, $latest) : '';
+  $following = $site['released'] && $site['auto'];
+  $complete = isset($latest['version']) && release_complete($latest); ?>
   <div class="card">
     <h2>Latest on GitHub</h2>
     <?php if (isset($latest['version'])): ?>
       <p><b>Sidekick <?= e($latest['version']) ?></b><?php if ($latest['published']): ?> <span class="muted">· published <?= e($latest['published']) ?> UTC</span><?php endif; ?>
         <?php if ($latest['url']): ?> · <a href="<?= e($latest['url']) ?>" target="_blank" rel="noopener">Release notes →</a><?php endif; ?></p>
       <?php if (isset($latest['error'])): ?><p class="bad">Couldn't check again just now (<?= e($latest['error']) ?>): this is the last version it saw.</p><?php endif; ?>
-      <?php if ($site['released'] && $site['version'] === $latest['version']): ?>
-        <p><span class="pill good">Up to date</span> The website already offers this version.</p>
-      <?php else: ?>
-        <p class="muted"><?= $site['released'] ? 'The website offers ' . e($site['version']) . '.' : 'The website is a wishlist.' ?> This puts Sidekick <?= e($latest['version']) ?> up to download.</p>
+      <?php if (!$complete): ?><p class="bad">Not all its download files are up yet (it may still be building). The website waits for them.</p><?php endif; ?>
+      <?php if ($site['released'] && $offered === $latest['version']): ?>
+        <p><span class="pill good">Up to date</span> The website offers this version.</p>
+      <?php elseif (!$site['released']): ?>
+        <p class="muted">The website is a wishlist. Release latest puts the newest Sidekick up to download, and every later release too, by itself.</p>
       <?php endif; ?>
     <?php else: ?>
       <p class="bad">Couldn't get the latest version from GitHub: <?= e($latest['error'] ?? 'no answer') ?>.</p>
     <?php endif; ?>
     <div class="row">
-      <?php if (isset($latest['version']) && !($site['released'] && $site['version'] === $latest['version'])): ?>
-        <?= form_start('release_latest', 'site') ?><button class="primary" type="submit" onclick="return confirm(<?= e(json_encode('Release Sidekick ' . $latest['version'] . ' on the website?' . ($site['released'] ? '' : ' The wishlist is replaced by downloads.'))) ?>)">Release latest</button></form>
+      <?php if ($complete && !$following): ?>
+        <?= form_start('release_latest', 'site') ?><button class="primary" type="submit" onclick="return confirm(<?= e(json_encode(($site['released'] ? 'Offer the newest release from now on, starting with ' : 'Release Sidekick ') . $latest['version'] . '?' . ($site['released'] ? '' : ' The wishlist is replaced by downloads, and new releases show up by themselves.'))) ?>)"><?= $site['released'] ? 'Follow the newest release' : 'Release latest' ?></button></form>
       <?php endif; ?>
       <?= form_start('check_latest', 'site') ?><button type="submit">Check again</button></form>
     </div>
@@ -839,12 +930,17 @@ $('send').onclick = async () => {
   <div class="card">
     <h2>Website</h2>
     <?php if ($site['released']): ?>
-      <p><span class="pill good">Released</span> The website offers <b>Sidekick <?= e($site['version']) ?></b> to download, for Windows, Mac (Apple silicon and Intel), Android and iPhone.</p>
-      <p class="muted">Since <?= e($site['changed']) ?> UTC. <a href="/" target="_blank" rel="noopener">Open the website →</a></p>
+      <p><span class="pill good">Released</span> The website offers <b>Sidekick <?= e($offered) ?></b> to download, for Windows, Mac (Apple silicon and Intel), Android and iPhone.</p>
+      <?php if ($following): ?>
+        <p><span class="pill good">Automatic</span> It follows the newest release on GitHub: a new one shows up within 10 minutes of having all its files. Nothing to change here when you release.</p>
+      <?php else: ?>
+        <p><span class="pill">Pinned</span> It stays on <?= e($site['version']) ?> until you change it, even when newer releases come out.</p>
+      <?php endif; ?>
+      <p class="muted">Released since <?= e($site['changed']) ?> UTC. <a href="/" target="_blank" rel="noopener">Open the website →</a></p>
       <?= form_start('site', 'site', ['released' => '1']) ?>
-        <label for="version">Offer another version</label>
+        <label for="version"><?= $following ? 'Pin one version instead' : 'Offer another version' ?></label>
         <input id="version" name="version" type="text" value="<?= e($site['version']) ?>" pattern="v?\d+\.\d+\.\d+" required style="max-width:200px">
-        <div class="row"><button class="primary" type="submit">Change version</button></div>
+        <div class="row"><button type="submit"><?= $following ? 'Pin this version' : 'Change version' ?></button></div>
       </form>
       <?= form_start('site', 'site', ['released' => '0']) ?>
         <div class="row"><button class="danger" type="submit" onclick="return confirm('Take the downloads down and make the website a wishlist again?')">Make it a wishlist again</button></div>
@@ -852,15 +948,173 @@ $('send').onclick = async () => {
     <?php else: ?>
       <p><span class="pill">Wishlist</span> The website collects emails: no downloads anywhere.</p>
       <?php if ($site['changed']): ?><p class="muted">Since <?= e($site['changed']) ?> UTC.</p><?php endif; ?>
+      <p class="muted">Release latest (above) is the usual way: the website then keeps itself up to date. To offer one version and stay on it:</p>
       <?= form_start('site', 'site', ['released' => '1']) ?>
-        <label for="version">Version to offer</label>
-        <input id="version" name="version" type="text" value="<?= e($site['version']) ?>" placeholder="2.16.1" pattern="v?\d+\.\d+\.\d+" required style="max-width:200px">
+        <label for="version">Version to pin</label>
+        <input id="version" name="version" type="text" value="<?= e($site['version']) ?>" placeholder="3.0.3" pattern="v?\d+\.\d+\.\d+" required style="max-width:200px">
         <p class="muted">The release on GitHub with this version must exist: its .exe, Mac .dmg and .pkg (Apple silicon and Intel), .apk and .ipa are linked.</p>
-        <div class="row"><button class="primary" type="submit" onclick="return confirm('Release Sidekick on the website? The wishlist is replaced by downloads.')">Release Sidekick</button></div>
+        <div class="row"><button type="submit" onclick="return confirm('Release this version on the website? The wishlist is replaced by downloads.')">Release this version</button></div>
       </form>
     <?php endif; ?>
   </div>
   <p class="muted">Releasing doesn't email the wishlist: do that on the Email everyone tab.</p>
+
+<?php elseif ($tab === 'edit' && empty($_GET['list'])):
+  $texts = page_texts((string)@file_get_contents(__DIR__ . '/index.html'));
+  $edits = array_intersect_key(site_edits(), $texts);
+  $gone = count(site_edits()) - count($edits);
+  $look = ($_GET['look'] ?? '') === 'released' ? 'released' : 'wishlist'; ?>
+  <div class="card">
+    <h2>Edit the home page</h2>
+    <p class="muted" style="margin-top:0">Click any text on the page and type. Enter or clicking away keeps it, Esc cancels. Press <b>Save</b> to put your changes on the website: no upload needed.
+      Text that appears in several places (like "Join the wishlist") changes everywhere. <span class="sk-key saved"></span> changed before · <span class="sk-key pending"></span> not saved yet.</p>
+    <?php if (!$texts): ?>
+      <p class="bad">index.html isn't next to this page, so there's nothing to edit.</p>
+    <?php else: ?>
+    <div class="editor-bar">
+      <div class="seg" role="group" aria-label="Show the page as">
+        <button type="button" data-look="wishlist" aria-pressed="<?= $look === 'wishlist' ? 'true' : 'false' ?>">Wishlist</button>
+        <button type="button" data-look="released" aria-pressed="<?= $look === 'released' ? 'true' : 'false' ?>">Released</button>
+      </div>
+      <div class="seg" role="group" aria-label="Screen size">
+        <button type="button" data-width="100%" aria-pressed="true">Computer</button>
+        <button type="button" data-width="390px" aria-pressed="false">Phone</button>
+      </div>
+      <span class="muted" id="dirty" aria-live="polite"></span>
+      <span style="flex:1"></span>
+      <button type="button" id="discard" hidden>Undo unsaved</button>
+      <button type="button" class="primary" id="save" disabled>Save</button>
+    </div>
+    <div class="frame-wrap"><iframe id="page" title="The home page: click a text to change it" src="?view=editor&amp;look=<?= e($look) ?>"></iframe></div>
+    <div id="changes-card" hidden>
+      <h2 style="margin:20px 0 4px">Changes</h2>
+      <ul id="changes"></ul>
+    </div>
+    <?= form_start('edits', 'edit', ['look' => $look]) ?><span id="save-fields"></span></form>
+    <p class="muted" style="margin-bottom:0"><a href="?tab=edit&amp;list=1">All texts as a list</a>: search, the page's title, and <?= $gone ? "$gone old edit" . ($gone === 1 ? '' : 's') . ' whose text is gone' : 'edits whose text is gone' ?>.</p>
+    <?php endif; ?>
+  </div>
+  <p class="muted">Only the words change: to move things around or add a section, index.html still needs an upload. Texts the page's scripts write (the demo's messages) can't be changed here.</p>
+  <style>
+    #discard[hidden], #changes-card[hidden] { display:none; }
+    .editor-bar { position:sticky; top:0; z-index:2; display:flex; flex-wrap:wrap; align-items:center; gap:10px; padding:10px 0; background:var(--card); }
+    .seg { display:inline-flex; border:1px solid var(--line); border-radius:999px; padding:3px; gap:2px; }
+    .seg button { border:0; background:transparent; border-radius:999px; padding:6px 14px; min-height:34px; cursor:pointer; color:var(--muted); font:inherit; }
+    .seg button[aria-pressed="true"] { background:var(--soft); color:var(--ink); font-weight:600; }
+    .frame-wrap { border:1px solid var(--line); border-radius:12px; overflow:hidden; background:var(--soft); display:flex; justify-content:center; }
+    #page { width:100%; height:72vh; min-height:480px; border:0; background:#fff; transition:width .2s; }
+    #changes { list-style:none; margin:0; padding:0; }
+    #changes li { display:flex; align-items:flex-start; gap:12px; padding:10px 0; border-bottom:1px solid var(--line); }
+    #changes li > div { flex:1; min-width:0; }
+    #changes .was { color:var(--muted); text-decoration:line-through; display:block; overflow-wrap:anywhere; }
+    #changes .now { display:block; overflow-wrap:anywhere; }
+    #changes .tag { font-size:12px; color:var(--muted); }
+    .sk-key { display:inline-block; width:22px; height:9px; border-radius:2px; vertical-align:middle; }
+    .sk-key.saved { background:rgba(255,196,0,.6); }
+    .sk-key.pending { background:rgba(106,76,255,.5); }
+  </style>
+  <script>
+  (() => {
+    const frame = document.getElementById('page');
+    if (!frame) return;
+    // Edits already on the website: key → {from, to}.
+    const saved = <?= json_encode((object)$edits, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_UNESCAPED_UNICODE) ?>;
+    const pending = new Map();   // key → new text, not saved yet
+    const originals = new Map(); // key → the text in index.html
+    for (const [k, v] of Object.entries(saved)) originals.set(k, v.from);
+    const $ = (id) => document.getElementById(id);
+    const shown = (key) => pending.has(key) ? pending.get(key) : (saved[key] ? saved[key].to : originals.get(key));
+
+    function paint(key) {
+      const doc = frame.contentDocument;
+      if (!doc) return;
+      doc.querySelectorAll('[data-sk="' + key + '"]').forEach((el) => {
+        el.textContent = shown(key);
+        el.classList.toggle('sk-pending', pending.has(key));
+        el.classList.toggle('sk-saved', !pending.has(key) && !!saved[key]);
+      });
+    }
+
+    function render() {
+      const n = pending.size;
+      $('dirty').textContent = n ? n + ' unsaved change' + (n === 1 ? '' : 's') : 'All changes saved';
+      $('save').disabled = !n;
+      $('discard').hidden = !n;
+      const list = $('changes');
+      list.replaceChildren();
+      const keys = [...new Set([...pending.keys(), ...Object.keys(saved)])];
+      $('changes-card').hidden = !keys.length;
+      for (const key of keys) {
+        const li = document.createElement('li');
+        const body = document.createElement('div');
+        const was = document.createElement('span'); was.className = 'was'; was.textContent = originals.get(key);
+        const now = document.createElement('span'); now.className = 'now'; now.textContent = shown(key);
+        const tag = document.createElement('span'); tag.className = 'tag';
+        const back = shown(key) === originals.get(key);
+        tag.textContent = pending.has(key) ? (back ? 'Back to the original, not saved yet' : 'Not saved yet') : 'On the website';
+        body.append(back ? now : was, back ? '' : now, tag);
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'small';
+        if (pending.has(key)) {
+          btn.textContent = 'Undo';
+          btn.onclick = () => { pending.delete(key); paint(key); render(); };
+        } else {
+          btn.textContent = 'Put back the original';
+          btn.onclick = () => { pending.set(key, originals.get(key)); paint(key); render(); };
+        }
+        li.append(body, btn);
+        list.append(li);
+      }
+    }
+
+    addEventListener('message', (e) => {
+      if (e.origin !== location.origin || e.source !== frame.contentWindow) return;
+      const m = e.data;
+      if (!m || m.sk !== 'change' || typeof m.key !== 'string') return;
+      originals.set(m.key, m.orig);
+      const live = saved[m.key] ? saved[m.key].to : m.orig;
+      const text = m.text === '' ? m.orig : m.text; // emptied: back to the original
+      if (text === live) pending.delete(m.key); else pending.set(m.key, text);
+      paint(m.key);
+      render();
+    });
+    // A new look (or a reload) shows the page again: put the unsaved changes back on it.
+    frame.addEventListener('load', () => { for (const key of pending.keys()) paint(key); });
+
+    document.querySelectorAll('[data-look]').forEach((b) => b.addEventListener('click', () => {
+      document.querySelectorAll('[data-look]').forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
+      document.querySelector('form input[name="look"]').value = b.dataset.look;
+      frame.src = '?view=editor&look=' + b.dataset.look;
+    }));
+    document.querySelectorAll('[data-width]').forEach((b) => b.addEventListener('click', () => {
+      document.querySelectorAll('[data-width]').forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
+      frame.style.width = b.dataset.width;
+    }));
+    $('discard').addEventListener('click', () => {
+      const keys = [...pending.keys()];
+      pending.clear();
+      keys.forEach(paint);
+      render();
+    });
+    let saving = false;
+    $('save').addEventListener('click', () => {
+      const fields = $('save-fields');
+      fields.replaceChildren();
+      for (const [key, text] of pending) {
+        const input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = 't[' + key + ']';
+        input.value = text;
+        fields.append(input);
+      }
+      saving = true;
+      fields.closest('form').submit();
+    });
+    addEventListener('beforeunload', (e) => { if (pending.size && !saving) e.preventDefault(); });
+    render();
+  })();
+  </script>
 
 <?php elseif ($tab === 'edit'):
   $texts = page_texts((string)@file_get_contents(__DIR__ . '/index.html'));
@@ -869,14 +1123,15 @@ $('send').onclick = async () => {
   $q = trim((string)($_GET['q'] ?? ''));
   $edited = count(array_intersect_key($edits, $texts)); ?>
   <div class="card">
-    <h2>Edit the home page</h2>
+    <h2>Edit the home page: all texts</h2>
+    <p class="muted" style="margin-top:0"><a href="?tab=edit">← Edit on the page itself</a></p>
     <p class="muted" style="margin-top:0">Change any text and press Save: the website shows it at once, no upload needed. Empty a box, or put the original back, to undo.
       Text that appears in several places (like "Join the wishlist") changes everywhere. <?= $edited ?> text<?= $edited === 1 ? '' : 's' ?> changed so far. <a href="/" target="_blank" rel="noopener">Open the website →</a></p>
     <?php if (!$texts): ?>
       <p class="bad">index.html isn't next to this page, so there's nothing to edit.</p>
     <?php else: ?>
     <input type="search" id="find" placeholder="Find a text…" value="<?= e($q) ?>" autocomplete="off">
-    <?= form_start('edits', 'edit') ?>
+    <?= form_start('edits', 'edit', ['list' => '1']) ?>
       <input type="hidden" name="q" id="q" value="<?= e($q) ?>">
       <div id="texts">
       <?php foreach ($texts as $key => $text): $now = $edits[$key]['to'] ?? $text; ?>
