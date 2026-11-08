@@ -715,9 +715,14 @@ void main() {
   });
 
   test('discovery restarts cleanly (Wi-Fi switch, waking from sleep)', () async {
+    // A port the system says is free: Windows runners reserve blocks of
+    // ports, and a fixed one (53399) was sometimes refused (errno 10013).
+    final probe = await RawDatagramSocket.bind(InternetAddress.anyIPv4, 0);
+    final port = probe.port;
+    probe.close();
     final d = Discovery(
       self: () => const DeviceInfo(id: 'me', name: 'Me', platform: DevicePlatform.macos, port: 1),
-      port: 53399,
+      port: port,
     );
     await d.start();
     await d.start(); // rejoin: must not fail with "address in use"
