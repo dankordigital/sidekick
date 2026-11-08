@@ -26,6 +26,9 @@ detailed developer notes; every release is in `VERSIONS.md`) and
   a raw /var/mobile/… path.
 - **To upload to `www`:** `index.html`, `preview.html`, and the whole
   `website/app/` folder.
+- **Released 3.0.4** (the two app fixes above). On the way, Windows CI
+  failed a test that opened a fixed port (53399, refused with errno 10013
+  on that runner); the test now asks for a free port.
 
 ## 3 November 2026
 
