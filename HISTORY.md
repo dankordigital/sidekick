@@ -5,6 +5,28 @@ a new session. Newest first. For how things work, read `CLAUDE.md` (the
 detailed developer notes; every release is in `VERSIONS.md`) and
 `ARCHITECTURE.md` (the big picture).
 
+## 8 November 2026
+
+- **The live demo is the real thing, on the home page** (the owner: "make
+  most of the app work … make users first connect the device and then they
+  can use the app's preview however they like"). The two demo devices start
+  unpaired and pair like real ones (6-digit code or QR code); then Files,
+  Settings, Send, links, Ping, Remote and Unpair all work. The home page's
+  "The app" section keeps its drawing with a new **Run the real Sidekick
+  here** bar that loads the demo in its place. Also on the home page: a
+  **Links and notes** card (NEW), notifications + screenshots merged into
+  "Your phone, on your computer", and an "On every device" strip under
+  Platforms. Clicked through in a headless browser.
+- Fixed on the way (real app too): notices with a button ("Received … ·
+  Show in folder") never went away (Flutter keeps such snackbars up; now
+  6 s); Copy on a received link no longer hangs if the clipboard refuses.
+  Demo only: Allow files / Allow control crashed, a link or ping arriving on
+  the "Mac" threw, Show in folder threw.
+- Noticed, not changed: a real iPhone's Settings shows the receive folder as
+  a raw /var/mobile/… path.
+- **To upload to `www`:** `index.html`, `preview.html`, and the whole
+  `website/app/` folder.
+
 ## 3 November 2026
 
 - **The website follows new releases by itself** (the owner: "edit

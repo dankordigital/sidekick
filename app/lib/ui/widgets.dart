@@ -806,6 +806,10 @@ class MaybeDropTarget extends StatelessWidget {
 /// picks sample files here instead: media (photos and videos) or any.
 Future<List<File>> Function({required bool media})? debugPickFiles;
 
+/// The website's preview picks a folder here (Settings → where received
+/// files go): a browser has no folder picker.
+Future<String?> Function(BuildContext context)? debugPickFolder;
+
 /// Lets the user pick files to send. Phones get a choice between the photo
 /// gallery and the file browser.
 Future<List<File>> pickFilesToSend(BuildContext context, {required String title}) async {

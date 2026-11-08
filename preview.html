@@ -12,6 +12,11 @@
 <meta name="robots" content="noindex, nofollow, noarchive, nosnippet, noimageindex">
 <link rel="icon" type="image/png" sizes="64x64" href="/website/favicon.png">
 <link rel="apple-touch-icon" href="/website/apple-touch-icon.png">
+<script>
+  // ?embed=1: inside the home page (index.html #app), just the two devices.
+  const EMBED = new URLSearchParams(location.search).has('embed');
+  if (EMBED) document.documentElement.classList.add('embed');
+</script>
 <style>
 :root {
   --h: 290;
@@ -153,6 +158,10 @@ header .wrap { display: flex; align-items: center; justify-content: space-betwee
 footer { margin-top: 48px; padding: 24px 0 32px; color: var(--on-surface-variant); font-size: 14px; }
 footer .wrap { display: flex; gap: 18px; justify-content: center; flex-wrap: wrap; }
 @media (prefers-reduced-motion: reduce) { .pointer i.go, .loading img { animation: none; } }
+.embed body { background: transparent; }
+.embed header, .embed .intro, .embed .fine, .embed .cta, .embed footer, .embed .again { display: none; }
+.embed main { padding-top: 0; padding-bottom: 8px; }
+.embed .steps { margin-top: 0; margin-bottom: 18px; }
 </style>
 </head>
 <body>
@@ -166,15 +175,17 @@ footer .wrap { display: flex; gap: 18px; justify-content: center; flex-wrap: wra
 <main class="wrap">
   <section class="intro">
     <h1>Try Sidekick, no download needed.</h1>
-    <p>This is the real app, running right here: once as a Mac and once as an iPhone, paired and on the same Wi-Fi.
-      Use it like you would on your own devices.</p>
+    <p>This is the real app, running right here: once as a Mac and once as an iPhone, on the same Wi-Fi.
+      They aren't paired yet. Pair them first, like your own devices, then use them however you like.</p>
   </section>
 
   <ol class="steps" aria-label="Things to try">
-    <li class="now">Tap Send on the iPhone, then Accept on the Mac</li>
+    <li class="now">First, pair: on the iPhone, tap MacBook Pro under Nearby and type the code the Mac shows</li>
+    <li>Send files either way</li>
     <li>Browse the Mac's files from the iPhone</li>
     <li>Use the iPhone's Remote tab as a touchpad</li>
     <li>Ping the iPhone from the Mac</li>
+    <li>Change anything in Settings</li>
   </ol>
 
   <div class="stage" id="stage">
@@ -191,7 +202,7 @@ footer .wrap { display: flex; gap: 18px; justify-content: center; flex-wrap: wra
           <div class="window">
             <div class="titlebar"><span class="lights"><i></i><i></i><i></i></span>Sidekick</div>
             <div class="content">
-              <iframe id="macFrame" title="Sidekick on the Mac" src="/website/app/index.html?device=mac" allow="autoplay"></iframe>
+              <iframe id="macFrame" title="Sidekick on the Mac" src="/website/app/index.html?device=mac" allow="autoplay; clipboard-read; clipboard-write"></iframe>
               <div class="loading" id="macLoading"><div><img src="/website/apple-touch-icon.png" alt="">Starting Sidekick…</div></div>
             </div>
           </div>
@@ -214,7 +225,7 @@ footer .wrap { display: flex; gap: 18px; justify-content: center; flex-wrap: wra
               <svg width="27" height="13" viewBox="0 0 27 13"><rect x=".5" y=".5" width="23" height="12" rx="3.8" fill="none" stroke="currentColor" opacity=".4"/><rect x="2" y="2" width="20" height="9" rx="2.5" fill="currentColor"/><path d="M25 4.5v4c.8-.3 1.3-1.1 1.3-2s-.5-1.7-1.3-2z" fill="currentColor" opacity=".45"/></svg>
             </span>
           </div>
-          <iframe id="phoneFrame" title="Sidekick on the iPhone" src="/website/app/index.html?device=iphone" allow="autoplay"></iframe>
+          <iframe id="phoneFrame" title="Sidekick on the iPhone" src="/website/app/index.html?device=iphone" allow="autoplay; clipboard-read; clipboard-write"></iframe>
           <div class="loading" id="phoneLoading"><div><img src="/website/apple-touch-icon.png" alt="">Starting Sidekick…</div></div>
           <div class="homebar"></div>
         </div>
@@ -241,6 +252,7 @@ footer .wrap { display: flex; gap: 18px; justify-content: center; flex-wrap: wra
 (() => {
   const $ = (id) => document.getElementById(id);
   const frames = { mac: $('macFrame'), iphone: $('phoneFrame') };
+  const ready = { mac: false, iphone: false };
   const loading = { mac: $('macLoading'), iphone: $('phoneLoading') };
 
   // ---- fitting both devices on the screen (each is drawn at its real size in points, then scaled)
@@ -251,12 +263,16 @@ footer .wrap { display: flex; gap: 18px; justify-content: center; flex-wrap: wra
       mac = width / 1720;
       phone = Math.min(1, (width * 0.82) / 421);
     } else {
-      mac = Math.min(0.62, (width - 72) / (1720 + 421 * 1.1), (innerHeight * 0.78) / 1076);
+      mac = Math.min(0.62, (width - 72) / (1720 + 421 * 1.1), EMBED ? 1 : (innerHeight * 0.78) / 1076);
       phone = mac * 1.1;
     }
     $('mac').style.setProperty('--s', mac);
     $('phone').style.setProperty('--s', phone);
+    tell({ t: 'sk-height', height: document.documentElement.scrollHeight });
   }
+  // Inside the home page: tell it how tall this is, and when the apps are up.
+  function tell(m) { if (EMBED && parent !== window) parent.postMessage(JSON.stringify(m), location.origin); }
+  if (EMBED) new ResizeObserver(() => tell({ t: 'sk-height', height: document.documentElement.scrollHeight })).observe(document.body);
   addEventListener('resize', fit);
   fit();
 
@@ -266,7 +282,13 @@ footer .wrap { display: flex; gap: 18px; justify-content: center; flex-wrap: wra
     let m;
     try { m = JSON.parse(e.data); } catch { return; }
     const from = e.source === frames.mac.contentWindow ? 'mac' : 'iphone';
-    if (m.t === 'ready') { loading[from].classList.add('done'); return; }
+    if (m.t === 'ready') {
+      loading[from].classList.add('done');
+      loading[from].querySelector('.why')?.remove(); // slow to start, but it did
+      ready[from] = true;
+      if (ready.mac && ready.iphone) tell({ t: 'sk-ready' });
+      return;
+    }
     if (m.t === 'input' && from === 'iphone') remote(JSON.parse(m.msg));
     if (m.t === 'remote') $('pointer').classList.toggle('on', m.active === true && from === 'iphone');
     // The app calls the two "macos" and "ios".
@@ -291,10 +313,6 @@ footer .wrap { display: flex; gap: 18px; justify-content: center; flex-wrap: wra
   }
 
   // ---- if an app doesn't start, say why instead of waiting forever
-  const ready = { mac: false, iphone: false };
-  addEventListener('message', (e) => {
-    try { const m = JSON.parse(e.data); if (m.t === 'ready') ready[e.source === frames.mac.contentWindow ? 'mac' : 'iphone'] = true; } catch {}
-  });
   function say(dev, html) {
     let why = loading[dev].querySelector('.why');
     if (!why) { why = document.createElement('p'); why.className = 'why'; loading[dev].firstElementChild.appendChild(why); }
@@ -328,6 +346,9 @@ footer .wrap { display: flex; gap: 18px; justify-content: center; flex-wrap: wra
       why ??= 'Sidekick didn\'t start in this browser. Try reloading the page, or another browser.';
     }
     for (const d of waiting) say(d, why);
+    const plain = document.createElement('div');
+    plain.innerHTML = why;
+    tell({ t: 'sk-failed', why: plain.textContent });
   }
   setTimeout(diagnose, 15000);
 

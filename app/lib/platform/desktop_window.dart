@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:screen_retriever/screen_retriever.dart';
@@ -18,7 +19,9 @@ class DesktopWindow with WindowListener, TrayListener {
   DesktopWindow._();
   static final instance = DesktopWindow._();
 
-  static bool get supported => Host.isWindows || Host.isMacOS;
+  // Not in a browser (the website's preview plays a Mac, but has no window
+  // or tray to manage: window_manager would throw).
+  static bool get supported => !kIsWeb && (Host.isWindows || Host.isMacOS);
 
   /// The size of the corner window.
   static const popupSize = Size(380, 172);

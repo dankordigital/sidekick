@@ -807,6 +807,37 @@ footer nav a:hover { color: var(--on-surface); }
 @media (max-width: 330px) {
   .topbar .btn { display: none; }
 }
+
+/* The real app under the drawing (#app): a bar that starts it, then the app itself. */
+.live { max-width: 980px; margin: 28px auto 0; }
+.live > div { display: none; align-items: center; gap: 16px; padding: 14px 14px 14px 16px; border-radius: 24px;
+  background: var(--surface-container); border: 1px solid color-mix(in oklab, var(--outline-variant) 60%, transparent); }
+.live[data-state=idle] .live-idle, .live[data-state=loading] .live-loading, .live[data-state=running] .live-running,
+.live[data-state=failed] .live-failed { display: flex; }
+.live .grow { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.live b { font-size: 17px; }
+.live small { color: var(--on-surface-variant); font-size: 14px; }
+.live-icon { flex: none; width: 44px; height: 44px; border-radius: 14px; display: grid; place-items: center;
+  background: var(--primary-container); color: var(--on-primary-container); }
+.live-icon.err { background: var(--error-container, #f9dedc); color: var(--on-error-container, #410e0b); }
+.live .short { display: none; }
+.live-bar { margin-top: 8px; width: 100%; max-width: 360px; height: 6px; border-radius: 3px; background: var(--surface-container-highest); overflow: hidden; }
+.live-bar i { display: block; width: 40%; height: 100%; border-radius: 3px; background: var(--primary); animation: livebar 1.2s ease-in-out infinite; }
+@keyframes livebar { from { transform: translateX(-100%); } to { transform: translateX(250%); } }
+.live-frame iframe { display: block; width: 100%; height: 0; border: 0; visibility: hidden; }
+.live-frame.on iframe { visibility: visible; }
+#app.running .showcase { display: none; }
+@media (max-width: 760px) { .live small { display: none; } .live .long { display: none; } .live .short { display: inline; } }
+@media (prefers-reduced-motion: reduce) { .live-bar i { animation: none; width: 100%; } }
+
+/* What works everywhere, above the platform cards. */
+.everywhere { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 22px; padding: 16px 22px; margin-bottom: 16px; border-radius: 22px;
+  background: var(--primary-container); color: var(--on-primary-container); font-weight: 600; }
+.everywhere > b { font-size: 13px; letter-spacing: .08em; text-transform: uppercase; opacity: .8; margin-right: 4px; }
+.everywhere span { display: inline-flex; align-items: center; gap: 6px; }
+.everywhere .icon { font-size: 20px; }
+.new-badge { display: inline-block; margin-left: 8px; padding: 2px 8px; border-radius: 99px; font-size: 12px; font-weight: 700; vertical-align: middle;
+  background: var(--tertiary-container); color: var(--on-tertiary-container); letter-spacing: .04em; }
 </style>
 </head>
 <body>
@@ -948,17 +979,15 @@ footer nav a:hover { color: var(--on-surface); }
           <h3>Ping your phone</h3>
           <p>Can't find your phone? Ping it from your computer and it rings, even on silent, until you tap Found it.</p>
         </article>
-
+        <article class="card span-4 reveal">
+          <div class="card-icon s"><span class="icon">link</span></div>
+          <h3>Links and notes<span class="new-badge">NEW</span></h3>
+          <p>Send a link or a short note to your other device. It asks first: Copy, or Open the link.</p>
+        </article>
         <article class="card span-4 reveal">
           <div class="card-icon"><span class="icon">mark_chat_unread</span></div>
-          <h3>Phone notifications on your computer</h3>
-          <p>See your Android phone's notifications on your Mac or PC. Turn it on in Settings when you want it.</p>
-        </article>
-
-        <article class="card span-4 reveal">
-          <div class="card-icon s"><span class="icon">screenshot_monitor</span></div>
-          <h3>Screenshots, straight over</h3>
-          <p>Take a screenshot on your phone and it appears on your computer a moment later. Also off until you turn it on.</p>
+          <h3>Your phone, on your computer</h3>
+          <p>Your Android phone's notifications and any phone's new screenshots show up on your Mac or PC. Both stay off until you turn them on.</p>
         </article>
 
         <article class="card span-4 reveal">
@@ -982,7 +1011,7 @@ footer nav a:hover { color: var(--on-surface); }
       <div class="section-head reveal">
         <div class="kicker">The app</div>
         <h2>This is what Sidekick looks like.</h2>
-        <p>Sidekick 2 on a computer, next to a phone. It follows your wallpaper's colors (try the swatches at the top). Press <b>Send files</b> to see what happens on both screens.</p>
+        <p>Press <b>Send files</b> to see what happens on both screens. Or run the real app below: a Mac and an iPhone, side by side, that you pair and then use however you like.</p>
       </div>
 
       <div class="showcase reveal">
@@ -1089,6 +1118,32 @@ footer nav a:hover { color: var(--on-surface); }
           </div>
         </div>
       </div>
+      <!-- The real app (preview.html, embedded): loads only when asked (~20 MB),
+           then takes the drawing's place. Phones open the full page instead. -->
+      <div class="live-frame" id="liveFrame"></div>
+      <div class="live reveal" id="live" data-state="idle">
+        <div class="live-idle">
+          <span class="live-icon"><span class="icon">play_arrow</span></span>
+          <div class="grow"><b>Run the real Sidekick here</b><small>Its own code, as a Mac and an iPhone. About 20 MB, nothing is installed.</small></div>
+          <button class="btn btn-filled" type="button" id="liveStart"><span class="icon">play_arrow</span><span class="long">Start the demo</span><span class="short">Open</span></button>
+        </div>
+        <div class="live-loading">
+          <span class="live-icon"><span class="icon">hourglass_top</span></span>
+          <div class="grow"><b>Starting Sidekick…</b><div class="live-bar"><i></i></div></div>
+          <button class="btn btn-tonal" type="button" id="liveCancel">Cancel</button>
+        </div>
+        <div class="live-running">
+          <span class="live-icon"><span class="icon">link</span></span>
+          <div class="grow"><b>Pair them first</b><small>On the iPhone, tap MacBook Pro under Nearby, then type the code the Mac shows. Then try anything.</small></div>
+          <button class="btn btn-tonal" type="button" id="liveAgain"><span class="icon">restart_alt</span><span class="long">Start over</span></button>
+          <a class="btn btn-tonal" href="/preview.html" aria-label="Open the demo on its own page"><span class="icon">open_in_full</span></a>
+        </div>
+        <div class="live-failed">
+          <span class="live-icon err"><span class="icon">error</span></span>
+          <div class="grow"><b>The demo didn't start</b><small id="liveWhy">Your browser couldn't run it.</small></div>
+          <a class="btn btn-tonal" href="/preview.html"><span class="icon">open_in_new</span><span class="long">Open the full page</span></a>
+        </div>
+      </div>
     </div>
   </section>
 
@@ -1098,7 +1153,13 @@ footer nav a:hover { color: var(--on-surface); }
       <div class="section-head reveal">
         <div class="kicker">Platforms</div>
         <h2>Android, iOS, Windows, and macOS.</h2>
-        <p>One codebase with the same Material 3 design on every device. Here's what each platform supports.</p>
+        <p>The same app everywhere, in the look you pick: Default, Liquid Glass (iPhone and Mac), Nothing, or one you make.</p>
+      </div>
+      <div class="everywhere reveal"><b>On every device</b>
+        <span><span class="icon">send</span>Send files</span>
+        <span><span class="icon">link</span>Links and notes</span>
+        <span><span class="icon">notifications_active</span>Ping</span>
+        <span><span class="icon">lock</span>Encrypted pairing</span>
       </div>
       <div class="platforms">
         <div class="platform reveal">
@@ -1604,6 +1665,49 @@ const OS_INFO = {
   $('#offerAccept').addEventListener('click', accept);
   $('#offerDecline').addEventListener('click', decline);
   cancel.addEventListener('click', () => { stop(); over.classList.remove('show'); phone.classList.remove('asking', 'receiving'); later(400, reset); });
+})();
+
+/* ---------- the real app, in the page: preview.html?embed=1 under the drawing */
+(() => {
+  const live = $('#live'), holder = $('#liveFrame'), section = $('#app');
+  let frame = null;
+  const set = (state) => { live.dataset.state = state; };
+  function stop() {
+    frame?.remove();
+    frame = null;
+    holder.classList.remove('on');
+    section.classList.remove('running');
+    set('idle');
+  }
+  function start() {
+    // A phone screen is too small for both devices side by side.
+    if (matchMedia('(max-width: 760px)').matches) { location.href = '/preview.html'; return; }
+    stop();
+    frame = document.createElement('iframe');
+    frame.title = 'Sidekick, running as a Mac and an iPhone';
+    frame.allow = 'autoplay; clipboard-read; clipboard-write';
+    frame.src = '/preview.html?embed=1';
+    holder.appendChild(frame);
+    set('loading');
+  }
+  addEventListener('message', (e) => {
+    if (!frame || e.source !== frame.contentWindow) return;
+    let m;
+    try { m = JSON.parse(e.data); } catch { return; }
+    if (m.t === 'sk-height') frame.style.height = m.height + 'px';
+    if (m.t === 'sk-ready') {
+      holder.classList.add('on');
+      section.classList.add('running');
+      set('running');
+    }
+    if (m.t === 'sk-failed' && live.dataset.state === 'loading') {
+      $('#liveWhy').textContent = m.why || "Your browser couldn't run it.";
+      set('failed');
+    }
+  });
+  $('#liveStart').addEventListener('click', start);
+  $('#liveCancel').addEventListener('click', stop);
+  $('#liveAgain').addEventListener('click', start);
 })();
 
 /* ---------- reveal on scroll */

@@ -18,6 +18,10 @@ bool get canScanQr => hostIsIOS || hostIsAndroid;
 /// Lets the screenshot tool show a picture where the camera would be.
 WidgetBuilder? debugScannerPreview;
 
+/// The website's preview "sees" a code here (the other device's, if it's
+/// showing one) instead of through a camera. Asked about once a second.
+Future<PairingQr?> Function()? debugScanQr;
+
 /// Whether a device on [platform] can scan a QR code shown here.
 bool scansQr(DevicePlatform platform) => const {DevicePlatform.ios, DevicePlatform.android}.contains(platform);
 
@@ -328,9 +332,24 @@ class _ScannerState extends State<_Scanner> {
   );
   bool _done = false;
   bool _wrongCode = false;
+  Timer? _looking;
+
+  @override
+  void initState() {
+    super.initState();
+    if (debugScanQr case final see?) {
+      _looking = Timer.periodic(const Duration(seconds: 1), (_) async {
+        final code = await see();
+        if (code == null || _done || !mounted) return;
+        _done = true;
+        Navigator.pop(context, code);
+      });
+    }
+  }
 
   @override
   void dispose() {
+    _looking?.cancel();
     if (_preview == null) unawaited(_controller.dispose());
     super.dispose();
   }

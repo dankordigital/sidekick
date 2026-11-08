@@ -97,8 +97,8 @@ class DemoAppState extends AppState {
       fingerprint: state._peer.fingerprint,
       key: state._peer.key,
     );
-    state._paired[state._peer.id] = state._peer;
-    state.trust.add(state._peerAsTrusted);
+    // Not paired yet: the two find each other under Nearby and pair first,
+    // with the 6-digit code or the QR code, like on real devices.
     state._plantFiles();
     return state;
   }
@@ -189,6 +189,22 @@ class DemoAppState extends AppState {
     notifyListeners();
   }
 
+  /// The other device, as it shows up under Nearby until the two pair.
+  DeviceInfo get _peerInfo => DeviceInfo(
+    id: _peer.id,
+    name: _peer.name,
+    platform: _peer.platform,
+    port: sidekickPort,
+    address: _peer.lastAddress,
+    fingerprint: _peer.fingerprint,
+    app: appVersion.isEmpty ? null : appVersion,
+    wifi: true,
+    capabilities: Capabilities(files: true, input: _peer.platform != DevicePlatform.ios),
+  );
+
+  @override
+  List<DeviceInfo> get nearby => _paired.containsKey(_peer.id) ? const [] : [_peerInfo];
+
   @override
   Future<DeviceInfo> addByAddress(String input) async {
     await Future<void>.delayed(const Duration(seconds: 2));
@@ -197,13 +213,163 @@ class DemoAppState extends AppState {
     );
   }
 
-  @override
-  Future<void> requestPairing(DeviceInfo target) async =>
-      throw SidekickException('This is a preview: ${_peer.name} is already paired.');
+  // ---------------------------------------------------------------- pairing
+  //
+  // Like on real devices: one asks, the other shows a 6-digit code (and a
+  // QR code for a phone), and the code is typed or scanned on the first.
+
+  /// The code this device is showing because the other one asked to pair.
+  PairingRequest? _request;
+
+  /// The QR code on screen (Connect device → QR code, or next to the code).
+  ({PairingInvite invite, String qr})? _shown;
 
   @override
-  Future<PairedDevice> pairWithInvite(InviteQr qr) async =>
-      throw SidekickException('This is a preview: ${_peer.name} is already paired.');
+  Future<void> requestPairing(DeviceInfo target) async {
+    final reply = await _ask({'t': 'pairRequest'});
+    if (reply['error'] case final String why) throw SidekickException(why);
+  }
+
+  @override
+  Future<PairedDevice> confirmPairing(DeviceInfo target, String pin) async {
+    final reply = await _ask({'t': 'pairPin', 'pin': pin});
+    if (reply['error'] case final String why) throw SidekickException(why);
+    _pairPeer();
+    return _peer;
+  }
+
+  @override
+  Future<PairedDevice> pairWithInvite(InviteQr qr) async {
+    if (qr.id == id) throw SidekickException("That's this device's own QR code. Scan it with the other device.");
+    final reply = await _ask({'t': 'pairInvite', 'secret': qr.secret});
+    if (reply['error'] case final String why) throw SidekickException(why);
+    _pairPeer();
+    return _peer;
+  }
+
+  @override
+  void cancelPairing(String deviceId) {
+    _request?.cancelled = true;
+    _request = null;
+  }
+
+  @override
+  ({PairingInvite invite, String qr}) createInvite() => _shown = super.createInvite();
+
+  @override
+  void cancelInvite(PairingInvite invite) {
+    if (identical(_shown?.invite, invite)) _shown = null;
+    super.cancelInvite(invite);
+  }
+
+  /// What the iPhone's camera sees: the QR code on the Mac's screen, if it's
+  /// showing one.
+  Future<PairingQr?> seeCode() async {
+    try {
+      final reply = await _ask({'t': 'qr'}, timeout: const Duration(seconds: 2));
+      return reply['qr'] is String ? PairingQr.parse(reply['qr']! as String) : null;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  void _pairPeer() {
+    if (_paired.containsKey(_peer.id)) return;
+    trust.add(_peerAsTrusted);
+    _addPaired(_peer);
+  }
+
+  /// The other device asked to pair: show a code, like a real one would.
+  void _pairRequested(Map<String, Object?> m) {
+    if (_paired.containsKey(_peer.id)) {
+      _reply(m, {});
+      return;
+    }
+    _request?.cancelled = true;
+    final request = _request = PairingRequest(_peerInfo, fingerprint: _peer.fingerprint);
+    _pairRequests.add(request);
+    _reply(m, {});
+  }
+
+  void _pinEntered(Map<String, Object?> m) {
+    final request = _request;
+    if (request == null || !request.isOpen) {
+      _reply(m, {'error': '$name stopped pairing. Start again.'});
+    } else if (m['pin'] != request.pin) {
+      request.attempts++;
+      _reply(m, {'error': "That's not the code on $name. Check it and type it again."});
+    } else {
+      _request = null;
+      _pairPeer();
+      _reply(m, {});
+    }
+  }
+
+  void _inviteScanned(Map<String, Object?> m) {
+    final shown = _shown?.invite;
+    if (shown == null || !shown.isOpen || m['secret'] != shown.secret) {
+      _reply(m, {'error': 'That QR code has expired. Show a new one on $name and scan again.'});
+      return;
+    }
+    shown.used = true;
+    _request = null;
+    _pairPeer();
+    _reply(m, {});
+  }
+
+  // The browser has no network to announce on: just remember the switches.
+  @override
+  void setPermissions(Permissions value) {
+    permissions = value;
+    _prefs
+      ..setBool('allowFiles', value.files)
+      ..setBool('allowInput', value.input);
+    notifyListeners();
+  }
+
+  /// "Show in folder" / "Show in Files": a browser can't open Finder or the
+  /// Files app, so say where it would have.
+  Future<void> reveal(String path) async {
+    final app = _isPhone ? 'the Files app' : 'Finder';
+    final folder = p.dirname(path);
+    final where = folder == _home
+        ? (_isPhone ? 'On My iPhone → Sidekick' : 'your home folder')
+        : folder.startsWith('$_home/')
+        ? folder.substring(_home.length + 1).replaceAll('/', ' → ')
+        : folder;
+    _notices.add(Notice('On a real ${_isPhone ? 'iPhone' : 'Mac'}, $app opens here: $where'));
+  }
+
+  /// Settings → where received files go: the browser has no folder picker,
+  /// so a list of this device's folders stands in for it.
+  Future<String?> pickFolder(BuildContext context) {
+    final folders = [
+      for (final MapEntry(key: path, value: entries) in _tree.entries)
+        if (path.startsWith(_home) && entries.isNotEmpty || path == p.join(_home, 'Downloads', 'Sidekick')) path,
+    ]..sort();
+    return showDialog<String>(
+      context: context,
+      builder: (context) => SimpleDialog(
+        title: const Text('Save received files to…'),
+        children: [
+          for (final f in folders)
+            SimpleDialogOption(
+              onPressed: () => Navigator.pop(context, f),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 4),
+                child: Row(
+                  children: [
+                    const Icon(Icons.folder_outlined),
+                    const SizedBox(width: 12),
+                    Expanded(child: Text(f == _home ? 'Home' : f.substring(_home.length + 1))),
+                  ],
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
 
   // Settings that would change the computer or phone itself: only the switch.
   @override
@@ -251,6 +417,7 @@ class DemoAppState extends AppState {
     if (deviceId == _peer.id) link.send({'t': 'unpaired'});
     _paired.remove(deviceId);
     trust.remove(deviceId);
+    activeRemoteSessions.remove(deviceId);
     notifyListeners();
   }
 
@@ -472,8 +639,18 @@ class DemoAppState extends AppState {
         _peer.name = m['name']! as String;
         _peerAsTrusted.name = _peer.name;
         notifyListeners();
+      case 'pairRequest':
+        _pairRequested(m);
+      case 'pairPin':
+        _pinEntered(m);
+      case 'pairInvite':
+        _inviteScanned(m);
+      case 'qr':
+        _reply(m, {'qr': _shown?.invite.isOpen == true ? _shown!.qr : null});
       case 'unpaired':
         final name = _paired.remove(_peer.id)?.name;
+        trust.remove(_peer.id);
+        activeRemoteSessions.remove(_peer.id);
         notifyListeners();
         if (name != null) _notices.add(Notice('$name unpaired from this device'));
     }

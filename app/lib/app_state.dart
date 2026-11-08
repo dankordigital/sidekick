@@ -2358,9 +2358,14 @@ bool get canRevealFiles => true;
 /// What the "open" button says.
 String get revealLabel => Host.isIOS || Host.isAndroid ? 'Show in Files' : 'Show in folder';
 
+/// The website's preview (a browser can't open Finder or Files) says where
+/// it would have opened instead.
+Future<void> Function(String path)? debugRevealInFolder;
+
 /// Opens Explorer (or Finder) with [path] selected; on a phone, the Files
 /// app at the folder it's in (iPhone: On My iPhone → Sidekick).
 Future<void> revealInFolder(String path) async {
+  if (debugRevealInFolder case final reveal?) return reveal(path);
   if (Host.isIOS || Host.isAndroid) {
     try {
       await MethodChannel(Host.isIOS ? 'sidekick/ios' : 'sidekick/android')

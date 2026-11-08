@@ -143,6 +143,10 @@ class _ShellState extends State<Shell> {
             : notice.revealPath == null || !canRevealFiles
             ? null
             : SnackBarAction(label: revealLabel, onPressed: () => revealInFolder(notice.revealPath!)),
+        // Flutter keeps a snackbar with a button up until it's tapped: every
+        // "Received …" stayed on screen for good. Notices go by themselves.
+        persist: false,
+        duration: const Duration(seconds: 6),
       ),
     );
   }

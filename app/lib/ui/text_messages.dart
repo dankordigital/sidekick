@@ -70,7 +70,13 @@ class _ReceivedTextDialogState extends State<ReceivedTextDialog> {
 
   Future<void> _copy() async {
     if (_copied) return;
-    await Clipboard.setData(ClipboardData(text: message.text.trim()));
+    try {
+      await Clipboard.setData(ClipboardData(text: message.text.trim()));
+    } catch (_) {
+      // A browser can refuse (the website's preview): say so, keep the card.
+      if (mounted) showError(context, "Couldn't copy it. Try Open instead.");
+      return;
+    }
     if (!mounted) return;
     setState(() => _copied = true);
     await Future<void>.delayed(const Duration(milliseconds: 750));

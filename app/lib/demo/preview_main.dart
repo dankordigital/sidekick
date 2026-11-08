@@ -14,6 +14,8 @@ import '../app_state.dart';
 import '../core/host.dart';
 import '../core/models.dart';
 import '../main.dart';
+import '../platform/macos.dart';
+import '../ui/qr_pairing.dart';
 import '../ui/widgets.dart';
 
 Future<void> main() async {
@@ -30,6 +32,13 @@ Future<void> main() async {
   await _loadFonts();
   final state = await DemoAppState.create(device, _PageLink(device));
   debugPickFiles = state.pickSamples;
+  debugPickFolder = state.pickFolder;
+  debugRevealInFolder = state.reveal;
+  // Remote control needs Accessibility on a real Mac: here it's granted.
+  MacBridge.accessibility = true;
+  // No camera here: the "camera" sees the code on the Mac's screen.
+  debugScanQr = state.seeCode;
+  debugScannerPreview = (context) => const _PretendCamera();
   await state.start();
   final app = SidekickApp(state: state, splash: params['splash'] == '1');
   // An iPhone's screen has the Dynamic Island and the home bar (the page
@@ -130,4 +139,27 @@ class _PageLink implements DemoLink {
   @override
   void send(Map<String, Object?> message) =>
       _window.parent.postMessage(jsonEncode({...message, 'from': device.name}).toJS, '*'.toJS);
+}
+
+/// Where the camera picture would be: the iPhone "sees" the other device's
+/// screen, and pairs as soon as it shows a QR code.
+class _PretendCamera extends StatelessWidget {
+  const _PretendCamera();
+
+  @override
+  Widget build(BuildContext context) => const ColoredBox(
+    color: Color(0xFF1C1B1F),
+    child: Align(
+      alignment: Alignment(0, -0.62),
+      child: Padding(
+        padding: EdgeInsets.symmetric(horizontal: 32),
+        child: Text(
+          'In this preview the camera looks at the Mac. Show the QR code there: '
+          'Connect device → QR code, or tap the Mac under Nearby.',
+          textAlign: TextAlign.center,
+          style: TextStyle(color: Colors.white70, fontSize: 15, height: 1.4),
+        ),
+      ),
+    ),
+  );
 }

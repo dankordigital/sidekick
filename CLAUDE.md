@@ -281,10 +281,25 @@ release. Keep this file for how things work now, not for history.
   like the network would, and moves the Mac's pointer for the iPhone's
   touchpad. `DemoAppState` (`app/lib/demo/demo_state.dart`, a `part` of
   app_state.dart so it can override private members) stands in for what a
-  browser lacks: the two are paired and on Wi-Fi; Send → the real Accept
-  card → progress on both; Ping; browsing each other's sample files;
-  Remote (the "is controlling this computer" banner); picked files are
-  samples (`debugPickFiles`). On the web there's no `dart:io` `Platform`:
+  browser lacks. **They start unpaired** (the owner's call: "first connect
+  the device, then use it however they like"): each lists the other under
+  Nearby; Pair → the other shows the real 6-digit code (and QR code for the
+  iPhone) → type it; or Connect device → QR code on the Mac and Scan a code
+  on the iPhone, whose pretend camera (`debugScanQr`, `_PretendCamera`)
+  "sees" whatever QR code the Mac is showing. Unpair works and they can
+  pair again. Then everything: Send → the real Accept card → progress on
+  both; links and notes; Ping; Files both ways (browse, download, Upload
+  here); Remote (the "is controlling this computer" banner); Settings
+  (every switch, theme, look, colors; the receive folder from a list of
+  the device's folders, `debugPickFolder`; Accessibility shows as
+  granted); "Show in folder" says where Finder / Files would open
+  (`debugRevealInFolder`). Picked files are samples (`debugPickFiles`).
+  `DesktopWindow.supported` is false on the web (window_manager would
+  throw when a link or ping arrives). **The home page runs it too**: under
+  the drawing in "The app", **Start the demo** loads
+  `preview.html?embed=1` (just the two devices; it posts `sk-height`,
+  `sk-ready`, `sk-failed` up) in place of the drawing; phones open
+  /preview.html instead. On the web there's no `dart:io` `Platform`:
   **use `Host.isIOS` etc. (`core/host.dart`), never `Platform.isX`** (same
   answers natively; in the preview, the device it plays). The theme's
   `platform` follows it (release builds can't override the target

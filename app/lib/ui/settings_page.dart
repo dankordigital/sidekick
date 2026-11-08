@@ -42,8 +42,12 @@ class _SettingsPageState extends State<SettingsPage> {
   Future<void> _pickReceiveDir() async {
     final String? dir;
     try {
-      await prepareFilePicker();
-      dir = await FilePicker.getDirectoryPath(dialogTitle: 'Save received files to…');
+      if (debugPickFolder case final pick?) {
+        dir = await pick(context);
+      } else {
+        await prepareFilePicker();
+        dir = await FilePicker.getDirectoryPath(dialogTitle: 'Save received files to…');
+      }
     } catch (e) {
       if (mounted) showError(context, "Couldn't open the folder picker: ${describeError(e)}");
       return;
