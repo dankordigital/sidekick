@@ -4,6 +4,16 @@ Every release, newest first, with its biggest features and fixes. Add an
 entry here with each release (see "Releasing" in `CLAUDE.md`). The history
 starts at 1.1.3.
 
+## 3.0.4
+- **Notices go away by themselves:** "Received …" with Show in folder (or
+  Open in Photos) used to stay on screen until tapped; now it closes after
+  6 seconds, on every platform.
+- **Copy on a received link or note never hangs:** if the clipboard refuses,
+  the card says so and stays open.
+- **The website's live demo is the real thing, on the home page:** the Mac
+  and iPhone start unpaired and pair with the 6-digit code or the QR code,
+  then Files, Settings, Send, links, Ping and Remote all work.
+
 ## 3.0.3
 - **A clearer card for links and notes:** the link or note icon next to who
   sent it, ✕ in the corner to close, and a link shows which site it goes
