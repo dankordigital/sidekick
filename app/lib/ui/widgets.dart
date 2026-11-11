@@ -8,6 +8,8 @@ import 'package:material_ui/material_ui.dart';
 import '../app_state.dart';
 import '../core/errors.dart';
 import '../core/models.dart';
+import '../platform/system_settings.dart';
+import 'devices_page.dart';
 import 'direct_wifi.dart';
 import 'nothing.dart';
 import '../core/host.dart';
@@ -849,7 +851,7 @@ Future<List<File>> pickFilesToSend(BuildContext context, {required String title}
     ];
   } catch (e) {
     // Never fail silently: say why no picker appeared.
-    if (context.mounted) showError(context, "Couldn't open the file picker: ${describeError(e)}");
+    if (context.mounted) showError(context, e, title: "Couldn't open the file picker");
     return const [];
   }
 }
@@ -869,16 +871,113 @@ Future<void> prepareFilePicker() async {
   _filePickerReady = true;
 }
 
-void showError(BuildContext context, Object error) {
-  ScaffoldMessenger.of(context).showSnackBar(
-    SnackBar(
-      content: Row(
-        children: [
-          Icon(Icons.error_outline_rounded, color: Theme.of(context).colorScheme.inversePrimary),
-          const SizedBox(width: 12),
-          Expanded(child: Text(error is String ? error : describeError(error))),
-        ],
-      ),
+/// The one way Sidekick shows a problem: a pop-up saying what went wrong
+/// ([title], or one that fits the error), why, one to three things to try,
+/// and Close (Enter and Esc close it too). A button that can fix it sits
+/// next to Close when this call can do it: Try again with [onRetry], Pair
+/// again with [state] and [pairDevice], Turn on Bluetooth with [state], and
+/// Open Settings where the system has settings for Sidekick. [device] names
+/// the other device in the words ("Can't reach Pixel 9").
+void showError(
+  BuildContext context,
+  Object error, {
+  String? title,
+  String? device,
+  VoidCallback? onRetry,
+  AppState? state,
+  PairedDevice? pairDevice,
+}) {
+  final problem = error is Problem
+      ? error.withTitle(title)
+      : explainError(error, device: device ?? pairDevice?.name, title: title);
+  // The same problem twice in a row (a retry loop, two taps): one pop-up.
+  // (Forgotten after a minute, even if that pop-up's screen went away
+  // without it closing.)
+  final key = '${problem.title}\n${problem.reason}';
+  final now = DateTime.now();
+  if (_openProblem case (final open, final since) when open == key && now.difference(since).inSeconds < 60) return;
+  _openProblem = (key, now);
+  final VoidCallback? fix = switch (problem.action) {
+    ProblemAction.tryAgain => onRetry,
+    ProblemAction.pairAgain when state != null && pairDevice != null => () => pairWith(
+      context,
+      state,
+      state.forgetForRepair(pairDevice),
     ),
+    ProblemAction.turnOnBluetooth when state != null => () => state.setBluetooth(true),
+    ProblemAction.openSettings when canOpenSystemSettings => openSystemSettings,
+    _ => null,
+  };
+  unawaited(
+    showDialog<void>(
+      context: context,
+      builder: (context) => ProblemDialog(problem: problem, onFix: fix),
+    ).whenComplete(() {
+      if (_openProblem?.$1 == key) _openProblem = null;
+    }),
   );
+}
+
+(String, DateTime)? _openProblem;
+
+/// The pop-up behind [showError].
+class ProblemDialog extends StatelessWidget {
+  const ProblemDialog({super.key, required this.problem, this.onFix});
+  final Problem problem;
+
+  /// Does what [Problem.action] says; no button without it.
+  final VoidCallback? onFix;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final text = Theme.of(context).textTheme;
+    final steps = problem.steps;
+    return AlertDialog(
+      icon: Icon(Icons.error_outline_rounded, color: scheme.error, size: 32),
+      title: Text(problem.title),
+      scrollable: true,
+      content: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 420),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(problem.reason, style: text.bodyLarge),
+            if (steps.isNotEmpty) ...[
+              const SizedBox(height: 16),
+              Text(steps.length == 1 ? 'What to do' : 'Things to try', style: text.titleSmall),
+              const SizedBox(height: 8),
+              for (final (i, step) in steps.indexed)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 6),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      if (steps.length > 1)
+                        SizedBox(
+                          width: 24,
+                          child: Text('${i + 1}.', style: text.bodyMedium?.copyWith(fontWeight: FontWeight.w700)),
+                        ),
+                      Expanded(child: Text(step, style: text.bodyMedium)),
+                    ],
+                  ),
+                ),
+            ],
+          ],
+        ),
+      ),
+      actions: [
+        if (onFix != null)
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+              onFix!();
+            },
+            child: Text(problem.action!.label),
+          ),
+        FilledButton(autofocus: true, onPressed: () => Navigator.of(context).pop(), child: const Text('Close')),
+      ],
+    );
+  }
 }

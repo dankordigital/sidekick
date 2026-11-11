@@ -397,7 +397,13 @@ class _NothingSendPageState extends State<NothingSendPage> {
         final text = await readClipboard(context);
         if (text == null) return;
         if (text.trim().isEmpty) {
-          if (mounted) showError(context, 'There is no text on the clipboard. Copy some text first, then tap Paste.');
+          if (mounted) {
+            showError(
+              context,
+              'There is no text on the clipboard. Copy some text first, then tap Paste.',
+              title: 'Nothing to paste',
+            );
+          }
         } else {
           await _addText(text, 'Clipboard');
         }
@@ -414,7 +420,7 @@ class _NothingSendPageState extends State<NothingSendPage> {
           if (f.path != null) File(f.path!),
       ];
     } catch (e) {
-      if (mounted) showError(context, "Couldn't open the file picker: ${describeError(e)}");
+      if (mounted) showError(context, e, title: "Couldn't open the file picker");
       return const [];
     }
   }
@@ -431,10 +437,12 @@ class _NothingSendPageState extends State<NothingSendPage> {
           .cast<File>()
           .take(1000)
           .toList();
-      if (files.isEmpty && mounted) showError(context, 'That folder has no files in it.');
+      if (files.isEmpty && mounted) {
+        showError(context, 'That folder has no files in it. Pick another one.', title: 'Nothing to send');
+      }
       _addToSelection(files);
     } catch (e) {
-      if (mounted) showError(context, "Couldn't read that folder: ${describeError(e)}");
+      if (mounted) showError(context, e, title: "Couldn't read that folder");
     }
   }
 
@@ -449,7 +457,7 @@ class _NothingSendPageState extends State<NothingSendPage> {
       _pickedTexts[file.path] = text;
       _addToSelection([file]);
     } catch (e) {
-      if (mounted) showError(context, "Couldn't keep that text: ${describeError(e)}");
+      if (mounted) showError(context, e, title: "Couldn't keep that text");
     }
   }
 
@@ -958,7 +966,7 @@ class _NothingBrowsePageState extends State<NothingBrowsePage> {
       await state.clientFor(device).makeFolder(here, name.trim());
       if (mounted) unawaited(_load());
     } catch (e) {
-      if (mounted) showError(context, "Couldn't make the folder: ${describeError(e)}");
+      if (mounted) showError(context, e, title: "Couldn't make the folder");
     }
   }
 

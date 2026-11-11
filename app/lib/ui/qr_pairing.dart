@@ -9,6 +9,7 @@ import '../core/errors.dart';
 import '../core/models.dart';
 import '../core/pairing_qr.dart';
 import '../core/trust.dart';
+import 'notices.dart';
 import 'widgets.dart';
 
 /// Only phones scan. Mac and Windows show their code (and type the 6-digit
@@ -237,7 +238,11 @@ Future<void> scanToPair(BuildContext context, AppState state) async {
   if (code == null || !context.mounted) return;
   switch (code) {
     case PinQr():
-      showError(context, 'That\'s a pairing code. On the other device, choose Connect device, then QR code.');
+      showError(
+        context,
+        "That's an older kind of pairing code. On the other device, choose Connect device, then QR code, and scan that.",
+        title: 'Scan the other code',
+      );
     case InviteQr():
       final paired = await showDialog<PairedDevice>(
         context: context,
@@ -249,19 +254,7 @@ Future<void> scanToPair(BuildContext context, AppState state) async {
 }
 
 /// "Paired with X" with a check mark.
-void showPaired(BuildContext context, PairedDevice device) {
-  ScaffoldMessenger.of(context).showSnackBar(
-    SnackBar(
-      content: Row(
-        children: [
-          Icon(Icons.check_circle_rounded, color: Theme.of(context).colorScheme.inversePrimary),
-          const SizedBox(width: 12),
-          Expanded(child: Text('Paired with ${device.name}')),
-        ],
-      ),
-    ),
-  );
-}
+void showPaired(BuildContext context, PairedDevice device) => showNotice('Paired with ${device.name}');
 
 class _PairingProgress extends StatefulWidget {
   const _PairingProgress({required this.state, required this.code});

@@ -18,11 +18,13 @@ import 'files_page.dart';
 import 'glass.dart';
 import 'nothing.dart';
 import 'nothing_screens.dart';
+import 'notices.dart';
 import 'qr_pairing.dart';
 import 'remote_page.dart';
 import 'settings_page.dart';
 import 'text_messages.dart';
 import 'transfer_screens.dart';
+import 'widgets.dart';
 
 class Shell extends StatefulWidget {
   const Shell({super.key, required this.state});
@@ -125,29 +127,36 @@ class _ShellState extends State<Shell> {
   }
 
   void _showNotice(Notice notice) {
-    final messenger = ScaffoldMessenger.of(context);
-    messenger.showSnackBar(
-      SnackBar(
-        content: Row(
-          children: [
-            Icon(
-              notice.revealPath != null ? Icons.download_done_rounded : Icons.info_outline_rounded,
-              color: Theme.of(context).colorScheme.inversePrimary,
-            ),
-            const SizedBox(width: 12),
-            Expanded(child: Text(notice.message)),
-          ],
-        ),
-        action: notice.inGallery
-            ? SnackBarAction(label: 'Open', onPressed: () => Gallery.open(notice.galleryUri))
-            : notice.revealPath == null || !canRevealFiles
-            ? null
-            : SnackBarAction(label: revealLabel, onPressed: () => revealInFolder(notice.revealPath!)),
-        // Flutter keeps a snackbar with a button up until it's tapped: every
-        // "Received …" stayed on screen for good. Notices go by themselves.
-        persist: false,
-        duration: const Duration(seconds: 6),
-      ),
+    if (notice.problem case final problem?) {
+      showError(
+        context,
+        problem,
+        title: notice.title,
+        device: notice.device?.name,
+        state: state,
+        pairDevice: notice.device,
+      );
+      return;
+    }
+    showNotice(
+      notice.message,
+      icon: notice.info
+          ? Icons.info_outline_rounded
+          : notice.revealPath != null || notice.inGallery
+          ? Icons.download_done_rounded
+          : Icons.check_circle_rounded,
+      actionLabel: notice.inGallery
+          ? 'Open'
+          : notice.revealPath != null && canRevealFiles
+          ? revealLabel
+          : null,
+      onAction: notice.inGallery
+          ? () => Gallery.open(notice.galleryUri)
+          : notice.revealPath != null && canRevealFiles
+          ? () => revealInFolder(notice.revealPath!)
+          : null,
+      // Long news gets longer to read (never more than 10 s).
+      duration: Duration(seconds: notice.message.length > 90 ? 10 : 5),
     );
   }
 

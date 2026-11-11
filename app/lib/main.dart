@@ -13,6 +13,7 @@ import 'platform/sound.dart';
 import 'ui/app_theme.dart';
 import 'ui/corner_popup.dart';
 import 'ui/glass.dart';
+import 'ui/notices.dart';
 import 'ui/nothing.dart';
 import 'ui/widgets.dart';
 import 'ui/shell.dart';
@@ -205,7 +206,9 @@ class SidekickApp extends StatelessWidget {
           builder: (context, child) {
             // Liquid Glass: the colored backdrop sits under every screen.
             if (_glass) child = GlassBackdrop(child: child ?? const SizedBox());
-            return DesktopWindow.supported ? _withCornerPopup(context, child) : child ?? const SizedBox();
+            // Short notices ("Sent …", "Paired with …") over every screen.
+            child = NoticeArea(child: child ?? const SizedBox());
+            return DesktopWindow.supported ? _withCornerPopup(context, child) : child;
           },
           home: _maybeSplash(
             AnimatedSwitcher(

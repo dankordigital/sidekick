@@ -3,6 +3,8 @@ import 'dart:async';
 import 'package:flutter/services.dart';
 import 'package:material_ui/material_ui.dart';
 
+import 'notices.dart';
+
 import '../app_state.dart';
 
 /// iPhone: the other device opened a network for a direct link, but this
@@ -92,8 +94,7 @@ class _CopyRow extends StatelessWidget {
             icon: const Icon(Icons.copy_rounded, size: 20),
             onPressed: () {
               unawaited(Clipboard.setData(ClipboardData(text: value)));
-              ScaffoldMessenger.maybeOf(context)
-                  ?.showSnackBar(SnackBar(content: Text('$label copied'), duration: const Duration(seconds: 1)));
+              showNotice('$label copied', icon: Icons.content_copy_rounded, duration: const Duration(seconds: 3));
             },
           ),
         ],

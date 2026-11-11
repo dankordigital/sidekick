@@ -16,7 +16,12 @@ import 'package:path/path.dart' as p;
 import 'package:sidekick/app_state.dart';
 import 'package:sidekick/core/models.dart';
 import 'package:sidekick/core/server.dart';
+import 'package:sidekick/core/client.dart';
+import 'package:sidekick/ui/app_theme.dart';
 import 'package:sidekick/ui/corner_popup.dart';
+import 'package:sidekick/ui/glass.dart';
+import 'package:sidekick/ui/notices.dart';
+import 'package:sidekick/ui/widgets.dart';
 import 'package:sidekick/core/text_message.dart';
 import 'package:sidekick/ui/nothing.dart';
 import 'package:sidekick/ui/text_messages.dart';
@@ -183,6 +188,97 @@ void main() {
   });
 
   // The small corner window on Windows and Mac, at its real size (2x).
+  testWidgets('notices and problems', (tester) async {
+    // notice*.png: two short notices over the tab bar, their bars part-way;
+    // problem*.png: the error pop-up. In every look, on a phone and a computer.
+    tester.view.devicePixelRatio = 1;
+    await tester.runAsync(_loadFonts);
+    final out = Directory('build/screenshots')..createSync(recursive: true);
+    final key = GlobalKey();
+    Future<void> save(String name) async {
+      final boundary = key.currentContext!.findRenderObject()! as RenderRepaintBoundary;
+      await tester.runAsync(() async {
+        final image = await boundary.toImage(pixelRatio: 2);
+        final bytes = await image.toByteData(format: ui.ImageByteFormat.png);
+        File(p.join(out.path, '$name.png')).writeAsBytesSync(bytes!.buffer.asUint8List());
+      });
+    }
+
+    ThemeData base(Brightness b) =>
+        sidekickTheme(ColorScheme.fromSeed(seedColor: const Color(0xFF6750A4), brightness: b)).copyWith(
+          textTheme: (b == Brightness.dark ? Typography.material2021().white : Typography.material2021().black).apply(
+            fontFamily: 'Roboto',
+          ),
+        );
+    final looks = [
+      (base(Brightness.light), ''),
+      (base(Brightness.dark), '_dark'),
+      (nothingTheme(ThemeData(colorScheme: nothingScheme(Brightness.light), fontFamily: 'Roboto')), '_nothing'),
+      (glassTheme(base(Brightness.light)), '_glass'),
+    ];
+    for (final (theme, look) in looks) {
+      for (final (size, where) in [(const Size(390, 844), ''), (const Size(1000, 640), '_mac')]) {
+        tester.view.physicalSize = size;
+        NoticeCenter.instance.clear();
+        await tester.pumpWidget(
+          RepaintBoundary(
+            key: key,
+            child: MaterialApp(
+              theme: theme,
+              debugShowCheckedModeBanner: false,
+              builder: (context, child) => NoticeArea(child: isGlass(context) ? GlassBackdrop(child: child!) : child!),
+              home: Builder(
+                builder: (context) => Scaffold(
+                  body: Center(
+                    child: TextButton(
+                      onPressed: () => showError(
+                        context,
+                        SidekickException('x', connectionLost: true),
+                        title: "Couldn't send to Pixel 9",
+                        device: 'Pixel 9',
+                        onRetry: () {},
+                      ),
+                      child: const Text('go'),
+                    ),
+                  ),
+                  bottomNavigationBar: size.width < 700
+                      ? NavigationBar(
+                          destinations: const [
+                            NavigationDestination(icon: Icon(Icons.devices_rounded), label: 'Devices'),
+                            NavigationDestination(icon: Icon(Icons.folder_rounded), label: 'Files'),
+                          ],
+                        )
+                      : null,
+                ),
+              ),
+            ),
+          ),
+        );
+        await tester.pump(const Duration(milliseconds: 600));
+        showNotice(
+          'Received IMG_2042.HEIC from Pixel 9',
+          icon: Icons.download_done_rounded,
+          actionLabel: 'Show in folder',
+          onAction: () {},
+        );
+        await tester.pump(const Duration(seconds: 1));
+        showNotice('Paired with Pixel 9');
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 1500));
+        await save('notice$look$where');
+        NoticeCenter.instance.clear();
+        await tester.pump();
+        await tester.tap(find.text('go'));
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 600));
+        await save('problem$look$where');
+        await tester.tap(find.text('Close'));
+        await tester.pump(const Duration(milliseconds: 400));
+        await tester.pumpWidget(const SizedBox());
+      }
+    }
+  });
+
   testWidgets('received text', (tester) async {
     // Copy writes to the clipboard: answer it like a device would.
     tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(SystemChannels.platform, (_) async => null);

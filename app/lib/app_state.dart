@@ -112,6 +112,10 @@ class OutgoingSend extends ChangeNotifier {
   bool cancelled = false;
   Future<void> Function()? _cancelOffer;
 
+  /// How many sending screens show this send. While one does, it says how
+  /// the send went, so no pop-up repeats it.
+  int watchers = 0;
+
   /// The connection dropped mid-way; waiting for the device to carry on.
   bool reconnecting = false;
 
@@ -178,8 +182,28 @@ class ManualJoin {
 }
 
 class Notice {
-  Notice(this.message, {this.revealPath, this.inGallery = false, this.galleryUri});
+  /// Something went well (a check mark), or news with [info] (an "i"): a
+  /// short notice at the bottom that goes by itself (ui/notices.dart).
+  Notice(this.message, {this.revealPath, this.inGallery = false, this.galleryUri, this.info = false})
+    : problem = null,
+      title = null,
+      device = null;
+
+  /// Something went wrong: a pop-up saying why and what to try, with Close
+  /// (showError). [title] says what didn't work ("Couldn't send to Pixel 9");
+  /// [device] names the other device and lets the pop-up offer Pair again.
+  Notice.problem(Object this.problem, {this.title, this.device})
+    : message = describeError(problem),
+      revealPath = null,
+      inGallery = false,
+      galleryUri = null,
+      info = false;
+
   final String message;
+  final Object? problem;
+  final String? title;
+  final PairedDevice? device;
+  final bool info;
 
   /// If set, the snackbar offers "Show in folder" for this file.
   final String? revealPath;
@@ -451,9 +475,9 @@ class AppState extends ChangeNotifier {
     } on SidekickException catch (e) {
       if (e.status == 404) return _sendTextAsFile(d, text);
       _noteFailure(d, e);
-      _notices.add(Notice("Couldn't send the $what to ${d.name}: ${_withUpdateHint(d, e)}"));
+      _notices.add(_failed("Couldn't send the $what to ${d.name}", d, e));
     } catch (e) {
-      _notices.add(Notice("Couldn't send the $what to ${d.name}: ${_withUpdateHint(d, e)}"));
+      _notices.add(_failed("Couldn't send the $what to ${d.name}", d, e));
     }
   }
 
@@ -469,13 +493,13 @@ class AppState extends ChangeNotifier {
   Future<bool> ping(PairedDevice d) async {
     try {
       await (await _clientForTransfer(d, 0)).ping();
-      _notices.add(Notice('Pinging ${d.name}'));
+      _notices.add(Notice('Pinging ${d.name}', info: true));
     } on SidekickException catch (e) {
       if (e.status == 409) return false;
       _noteFailure(d, e);
-      _notices.add(Notice("Couldn't ping ${d.name}: ${_withUpdateHint(d, e)}"));
+      _notices.add(_failed("Couldn't ping ${d.name}", d, e));
     } catch (e) {
-      _notices.add(Notice("Couldn't ping ${d.name}: ${_withUpdateHint(d, e)}"));
+      _notices.add(_failed("Couldn't ping ${d.name}", d, e));
     }
     return true;
   }
@@ -600,6 +624,7 @@ class AppState extends ChangeNotifier {
       _notices.add(
         Notice(
           'Sidekick closed unexpectedly with Liquid Glass on, so it\'s off for now. Turn it on again in Settings → Theme.',
+          info: true,
         ),
       );
     }
@@ -710,7 +735,7 @@ class AppState extends ChangeNotifier {
     }
 
     if (_droppedOldPairings) {
-      _notices.add(Notice('Sidekick now encrypts everything. Pair your devices again to keep using them.'));
+      _notices.add(Notice('Sidekick now encrypts everything. Pair your devices again to keep using them.', info: true));
     }
 
     addresses = await localAddresses();
@@ -939,6 +964,11 @@ class AppState extends ChangeNotifier {
   }
 
   /// Adds "update it" to an error when [d] runs an older Sidekick.
+  /// A pop-up for something [d] couldn't do; says to update it if it runs
+  /// an older Sidekick.
+  Notice _failed(String title, PairedDevice d, Object error) =>
+      Notice.problem(runsOlderApp(d) ? _withUpdateHint(d, error) : error, title: title, device: d);
+
   String _withUpdateHint(PairedDevice d, Object error) => runsOlderApp(d)
       ? '${describeError(error)}\n${d.name} runs an older Sidekick${appVersionOf(d) == null ? '' : ' (${appVersionOf(d)})'}: '
             'update it to $appVersion.'
@@ -1135,7 +1165,7 @@ class AppState extends ChangeNotifier {
       }
     } catch (e) {
       await _releaseDirect(d, ble);
-      _notices.add(Notice("Couldn't set up a direct Wi-Fi link: ${describeError(e)}"));
+      _notices.add(Notice.problem(e, title: "Couldn't set up a direct Wi-Fi link to ${d.name}", device: d));
       return false;
     }
     // Give both sides a moment to finish getting on the network.
@@ -1554,7 +1584,7 @@ class AppState extends ChangeNotifier {
         await _joinByHand(network);
       }
     } on DirectLinkException catch (e) {
-      _notices.add(Notice("Couldn't join ${qr.name}'s Wi-Fi: ${describeError(e)}"));
+      _notices.add(Notice.problem(e, title: "Couldn't join ${qr.name}'s Wi-Fi"));
       return null;
     }
     for (var attempt = 0; attempt < 8; attempt++) {
@@ -1840,7 +1870,7 @@ class AppState extends ChangeNotifier {
         final name = _paired.remove(peerId)?.name;
         _savePaired();
         notifyListeners();
-        if (name != null) _notices.add(Notice('$name unpaired from this device'));
+        if (name != null) _notices.add(Notice('$name unpaired from this device', info: true));
       case FileReceived(
         :final from,
         :final file,
@@ -1873,7 +1903,12 @@ class AppState extends ChangeNotifier {
         final where = Host.isMacOS
             ? 'Allow Sidekick in Settings → Accessibility (if it\'s already on there, remove it and add it again).'
             : 'Allow remote control in Settings.';
-        _notices.add(Notice('${peer.name} tried to control this device. $where'));
+        _notices.add(
+          Notice.problem(
+            "${peer.name} tried to control this device, but that isn't allowed here yet. $where",
+            title: 'Remote control is off',
+          ),
+        );
       case RemoteSessionChanged(:final peer, :final active):
         if (active) {
           activeRemoteSessions[peer.id] = peer;
@@ -1902,7 +1937,9 @@ class AppState extends ChangeNotifier {
       notifyListeners();
       _notices.add(Notice('$what. It\'s in ${Gallery.name}.', inGallery: true, galleryUri: uri));
     } else {
-      _notices.add(Notice('$what. It couldn\'t go to ${Gallery.name} ($why), so it\'s in the Sidekick folder.'));
+      _notices.add(
+        Notice('$what. It couldn\'t go to ${Gallery.name} ($why), so it\'s in the Sidekick folder.', info: true),
+      );
     }
   }
 
@@ -1963,7 +2000,7 @@ class AppState extends ChangeNotifier {
     final names = [for (final f in localFiles) p.basename(f.path)];
     final what = localFiles.length == 1 ? names.first : '${localFiles.length} files';
     if (remoteDir != null) {
-      _notices.add(Notice('Sending $what to ${d.name}…'));
+      _notices.add(Notice('Sending $what to ${d.name}…', info: true));
     }
     final send = OutgoingSend(device: d, names: names, total: total);
     if (remoteDir == null) _sends.add(send);
@@ -1990,7 +2027,15 @@ class AppState extends ChangeNotifier {
           final declined = reply.answer == 'declined';
           if (declined && sound) unawaited(playDeclineSound());
           send._set(declined ? SendPhase.declined : SendPhase.noAnswer);
-          _notices.add(Notice(declined ? '${d.name} declined $what' : 'No answer from ${d.name}. Nothing was sent.'));
+          if (send.watchers == 0) {
+            _notices.add(
+              Notice.problem(
+                declined ? '${d.name} declined $what.' : 'No answer from ${d.name}. Nothing was sent.',
+                title: declined ? '${d.name} declined' : 'No answer',
+                device: d,
+              ),
+            );
+          }
           return;
         }
         ticket = reply.ticket;
@@ -2000,7 +2045,7 @@ class AppState extends ChangeNotifier {
     } catch (e) {
       _noteFailure(d, e);
       send._set(SendPhase.failed, error: _withUpdateHint(d, e));
-      _notices.add(Notice("Couldn't send to ${d.name}: ${_withUpdateHint(d, e)}"));
+      if (send.watchers == 0) _notices.add(_failed("Couldn't send to ${d.name}", d, e));
       return;
     }
 
@@ -2072,6 +2117,7 @@ class AppState extends ChangeNotifier {
       _notices.add(
         Notice(
           sent == 0 ? 'Stopped sending to ${d.name}' : 'Stopped: sent $sent of ${localFiles.length} files to ${d.name}',
+          info: true,
         ),
       );
       return;
@@ -2083,15 +2129,17 @@ class AppState extends ChangeNotifier {
       send._set(SendPhase.failed, error: sent == 0 ? why : 'Sent $sent of ${localFiles.length}. $why');
     }
     // Say how it went where the user is, not only in the Files tab.
-    _notices.add(
-      Notice(
-        failure == null
-            ? 'Sent $what to ${d.name}'
-            : sent == 0
-            ? "Couldn't send to ${d.name}: ${describeError(failure)}"
-            : 'Sent $sent of ${localFiles.length} files to ${d.name}. ${describeError(failure)}',
-      ),
-    );
+    if (failure == null) {
+      _notices.add(Notice('Sent $what to ${d.name}'));
+    } else if (send.watchers == 0) {
+      _notices.add(
+        _failed(
+          sent == 0 ? "Couldn't send to ${d.name}" : 'Sent only $sent of ${localFiles.length} files to ${d.name}',
+          d,
+          failure,
+        ),
+      );
+    }
   }
 
   Future<File?> download(PairedDevice d, RemoteEntry entry) async {
@@ -2205,7 +2253,9 @@ class AppState extends ChangeNotifier {
   Future<void> setRelayNotifications(bool value) async {
     if (value && !await PhoneRelay.notificationAccess()) {
       await PhoneRelay.openNotificationAccess();
-      _notices.add(Notice('Allow Sidekick in Notification access, then come back.'));
+      _notices.add(
+        Notice.problem('Allow Sidekick in Notification access, then come back.', title: 'Sidekick needs permission'),
+      );
     }
     relayNotifications = value;
     await _prefs.setBool('relayNotifications', value);
@@ -2214,7 +2264,12 @@ class AppState extends ChangeNotifier {
 
   Future<void> setSendScreenshots(bool value) async {
     if (value && !await PhoneRelay.watchScreenshots(true)) {
-      _notices.add(Notice('Sidekick needs access to your photos to see new screenshots.'));
+      _notices.add(
+        Notice.problem(
+          'Sidekick needs access to your photos to see new screenshots.',
+          title: 'Sidekick needs permission',
+        ),
+      );
       return;
     }
     if (!value) unawaited(PhoneRelay.watchScreenshots(false));

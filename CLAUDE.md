@@ -589,9 +589,31 @@ release. Keep this file for how things work now, not for history.
   cancel`) tells the receiver (`/v1/transfer/cancel` on an accepted offer
   → `TransferOffer.stopped`, half-sent parts deleted). Older devices get
   the single-stream upload, without resuming.
-- **Plain-language errors** (3.0.0): `core/errors.dart` `describeError`
-  turns any exception into a sentence; `showError` and every screen use
-  it. Never show `'$e'` to people.
+- **Plain-language errors** (3.0.0; a pop-up since 3.0.5, the owner's
+  call): `core/errors.dart` `explainError` turns any error (an exception,
+  or a message from the other device: older devices send the same words,
+  so they're recognised there, never changed on the wire) into a
+  `Problem`: a title, why, one to three steps, and maybe a
+  `ProblemAction` (Try again, Pair again, Turn on Bluetooth, Open
+  Settings). `describeError` is just the why, for inline text. **Every
+  error is a pop-up with Close** (`showError` in widgets.dart,
+  `ProblemDialog`: Enter and Esc close it; the fix button shows only when
+  the call can do it: `onRetry`, `state` + `pairDevice`; the same problem
+  twice opens one pop-up). Errors from AppState go through
+  `Notice.problem` (the shell calls `showError`); a send's failure isn't
+  repeated while its sending screen shows it (`OutgoingSend.watchers`).
+  Never show `'$e'` to people. Tests: `test/errors_test.dart`.
+- **Successes are a short notice** (`ui/notices.dart`, 3.0.5, the owner's
+  call: no more snackbars): `showNotice` (or a plain `Notice` from
+  AppState) slides up at the bottom (above the phone's tab bar), a thin bar
+  along its bottom empties over 5 s (10 s for long news, never more), then
+  it fades. Hover or touch pauses it; swipe or ✕ closes it; up to 3 stack,
+  the rest wait (`NoticeCenter`). `NoticeArea` sits in MaterialApp's
+  `builder`, over every screen. Reduced motion: no slide. Screen readers
+  hear it (live region; ✕ is its own button). Flat (no shadow), colors
+  from the theme's snackBarTheme. Tests: `test/notices_test.dart`;
+  renders: `tool/transfer_shots_test.dart` (`notice*.png`,
+  `problem*.png`).
 - **Can't reach a device** (3.0.0): Files and Remote show one calm card
   (`UnreachableDevice`: "Looking for …" / "Can't reach …", last seen,
   what to check, Try again, Find nearby) and look for it as soon as they

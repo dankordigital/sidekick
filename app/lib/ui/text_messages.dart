@@ -34,7 +34,13 @@ Future<void> showReceivedText(BuildContext context, AppState state, ReceivedText
   try {
     opened = await launchUrl(link, mode: LaunchMode.externalApplication);
   } catch (_) {}
-  if (!opened && context.mounted) showError(context, "Couldn't open the link. Copy it instead.");
+  if (!opened && context.mounted) {
+    showError(
+      context,
+      'No app on this device opened it. Copy the link instead and paste it into your browser.',
+      title: "Couldn't open the link",
+    );
+  }
 }
 
 /// "bbcgoodfood.com" for https://www.bbcgoodfood.com/recipes: the site, which
@@ -75,7 +81,13 @@ class _ReceivedTextDialogState extends State<ReceivedTextDialog> {
       await Clipboard.setData(ClipboardData(text: message.text.trim()));
     } catch (_) {
       // A browser can refuse (the website's preview): say so, keep the card.
-      if (mounted) showError(context, "Couldn't copy it. Try Open instead.");
+      if (mounted) {
+        showError(
+          context,
+          "This device didn't let Sidekick use the clipboard. Try Open instead.",
+          title: "Couldn't copy it",
+        );
+      }
       return;
     }
     if (!mounted) return;
@@ -364,6 +376,7 @@ Future<String?> readClipboard(BuildContext context) async {
             ? "Sidekick isn't allowed to read the clipboard here. Tap and hold in the text box, then tap Paste."
             : "Sidekick isn't allowed to read the clipboard here. Click in the text box and press "
                   "${Host.isMacOS ? '⌘V' : 'Ctrl+V'} instead.",
+        title: "Can't read the clipboard",
       );
     }
     return null;

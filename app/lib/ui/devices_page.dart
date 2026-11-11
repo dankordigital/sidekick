@@ -145,7 +145,7 @@ Future<void> pairWith(BuildContext context, AppState state, DeviceInfo device) a
   try {
     await state.requestPairing(device);
   } catch (e) {
-    if (context.mounted) showError(context, e);
+    if (context.mounted) showError(context, e, title: "Couldn't pair with ${device.name}", device: device.name);
     return;
   }
   if (!context.mounted) return;
@@ -650,7 +650,7 @@ Future<void> _addByIp(BuildContext context, AppState state) async {
     final info = await state.addByAddress(address);
     if (context.mounted) await pairWith(context, state, info);
   } catch (e) {
-    if (context.mounted) showError(context, e);
+    if (context.mounted) showError(context, e, title: "Couldn't connect to ${address.trim()}", device: address.trim());
   }
 }
 

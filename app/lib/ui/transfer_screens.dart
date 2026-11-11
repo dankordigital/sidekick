@@ -61,11 +61,13 @@ class _SendingScreenState extends State<SendingScreen> {
   @override
   void initState() {
     super.initState();
+    send.watchers++;
     send.addListener(_changed);
   }
 
   @override
   void dispose() {
+    send.watchers--;
     send.removeListener(_changed);
     _close?.cancel();
     super.dispose();

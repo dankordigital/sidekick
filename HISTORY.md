@@ -28,6 +28,15 @@ detailed developer notes; every release is in `VERSIONS.md`) and
   from the other device ("Wrong code", "Not paired"…) stay as they are on
   the wire (older devices send them, and code matches some): Part 3 turns
   them into plain words where they're shown.
+- **Errors are a pop-up, successes a 5-second notice** (Part 3).
+  `explainError` knows ~20 kinds of problem (can't reach, different Wi-Fi,
+  not paired / reset, wrong or expired code, declined, no answer, already
+  ringing, no space, folder not allowed, file gone, each permission,
+  Bluetooth off, firewall, connection dropped, older Sidekick, too big,
+  damaged on the way, turned off on the other device, unknown), each with
+  a title, why, numbered steps and a fix button where one helps. Notices
+  replaced every snackbar. Found on the way: the notice's text was
+  invisible to screen readers while it faded in (fixed and tested).
 - The cloud environment is now **sidekick** (personal), which can download
   Playwright's Firefox and WebKit (cdn.playwright.dev).
 

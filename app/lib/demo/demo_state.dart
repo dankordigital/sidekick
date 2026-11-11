@@ -337,7 +337,7 @@ class DemoAppState extends AppState {
         : folder.startsWith('$_home/')
         ? folder.substring(_home.length + 1).replaceAll('/', ' → ')
         : folder;
-    _notices.add(Notice('On a real ${_isPhone ? 'iPhone' : 'Mac'}, $app opens here: $where'));
+    _notices.add(Notice('On a real ${_isPhone ? 'iPhone' : 'Mac'}, $app opens here: $where', info: true));
   }
 
   /// Settings → where received files go: the browser has no folder picker,
@@ -427,7 +427,7 @@ class DemoAppState extends AppState {
   Future<bool> ping(PairedDevice d) async {
     final reply = await _ask({'t': 'ping'});
     if (reply['busy'] == true) return false;
-    _notices.add(Notice('Pinging ${d.name}'));
+    _notices.add(Notice('Pinging ${d.name}', info: true));
     return true;
   }
 
@@ -448,7 +448,7 @@ class DemoAppState extends AppState {
     final total = sizes.fold(0, (a, b) => a + b);
     final names = [for (final f in localFiles) p.basename(f.path)];
     final what = localFiles.length == 1 ? names.first : '${localFiles.length} files';
-    if (remoteDir != null) _notices.add(Notice('Sending $what to ${d.name}…'));
+    if (remoteDir != null) _notices.add(Notice('Sending $what to ${d.name}…', info: true));
     final send = OutgoingSend(device: d, names: names, total: total);
     if (remoteDir == null) _sends.add(send);
     final offerId = 'o${_nextId++}';
@@ -467,7 +467,9 @@ class DemoAppState extends AppState {
         }, timeout: const Duration(minutes: 2));
       } catch (_) {
         send._set(SendPhase.noAnswer);
-        _notices.add(Notice('No answer from ${d.name}. Nothing was sent.'));
+        if (send.watchers == 0) {
+          _notices.add(Notice.problem('No answer from ${d.name}. Nothing was sent.', title: 'No answer', device: d));
+        }
         return;
       }
       final answer = reply['answer'];
@@ -479,7 +481,15 @@ class DemoAppState extends AppState {
         final declined = answer == 'declined';
         if (declined && sound) unawaited(playDeclineSound());
         send._set(declined ? SendPhase.declined : SendPhase.noAnswer);
-        _notices.add(Notice(declined ? '${d.name} declined $what' : 'No answer from ${d.name}. Nothing was sent.'));
+        if (send.watchers == 0) {
+          _notices.add(
+            Notice.problem(
+              declined ? '${d.name} declined $what.' : 'No answer from ${d.name}. Nothing was sent.',
+              title: declined ? '${d.name} declined' : 'No answer',
+              device: d,
+            ),
+          );
+        }
         return;
       }
       if (sound) unawaited(playAcceptSound());
