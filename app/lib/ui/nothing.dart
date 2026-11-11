@@ -1,6 +1,7 @@
 import 'package:material_ui/material_ui.dart';
 
 import '../core/host.dart';
+import 'widgets.dart' show isMobile;
 
 /// Settings → Theme → Nothing: ink on paper (or paper on ink), lines
 /// instead of cards, dot-matrix titles and tab icons, small uppercase mono
@@ -45,7 +46,8 @@ ColorScheme nothingScheme(Brightness brightness, {Color accent = nothingRed}) {
   final ink = dark ? const Color(0xFFF0F0EC) : const Color(0xFF0D0D0D);
   final paper = dark ? const Color(0xFF0A0A0A) : const Color(0xFFF2F2EF);
   final raised = dark ? const Color(0xFF161615) : const Color(0xFFE8E8E4);
-  final grey = dark ? const Color(0xFF8A8A85) : const Color(0xFF85857F);
+  // Secondary text: at least 4.5:1 on the paper and the cards (WCAG AA).
+  final grey = dark ? const Color(0xFF8A8A85) : const Color(0xFF666661);
   final faint = dark ? const Color(0xFF3E3E3A) : const Color(0xFFC4C4BE);
   final line = dark ? const Color(0xFF242422) : const Color(0xFFDCDCD6);
   return ColorScheme(
@@ -409,7 +411,8 @@ class NothingRound extends StatelessWidget {
         fixedSize: Size.square(size),
         minimumSize: Size.square(size),
         padding: EdgeInsets.zero,
-        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+        // Phones: a 48-point tap area around it, however small it looks.
+        tapTargetSize: isMobile ? MaterialTapTargetSize.padded : MaterialTapTargetSize.shrinkWrap,
         backgroundColor: outlined ? Colors.transparent : scheme.surfaceContainer,
         foregroundColor: scheme.onSurface,
         disabledForegroundColor: scheme.onSurfaceVariant.withValues(alpha: 0.5),
@@ -712,7 +715,7 @@ class NothingSendDot extends StatelessWidget {
       fixedSize: const Size.square(40),
       minimumSize: const Size.square(40),
       padding: EdgeInsets.zero,
-      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+      tapTargetSize: isMobile ? MaterialTapTargetSize.padded : MaterialTapTargetSize.shrinkWrap,
       backgroundColor: Theme.of(context).colorScheme.tertiary,
       foregroundColor: Theme.of(context).colorScheme.onTertiary,
       disabledBackgroundColor: Theme.of(context).colorScheme.outlineVariant,

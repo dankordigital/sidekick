@@ -195,9 +195,23 @@ class SidekickApp extends StatelessWidget {
     // On Windows, DynamicColorBuilder builds the palette from the user's
     // accent color (Settings → Personalization → Colors).
     return DynamicColorBuilder(
-      builder: (lightDynamic, darkDynamic) => ListenableBuilder(
-        listenable: state,
-        builder: (context, _) => MaterialApp(
+      builder: (lightDynamic, darkDynamic) => _RebuildOn(
+        state: state,
+        // What the app itself is made of. Not every change: during a
+        // transfer the state changes ten times a second, and each screen
+        // listens to it itself.
+        look: () => (
+          state.themeMode,
+          state.themeColor,
+          state.pureBlack,
+          state.customLook,
+          state.customTheme,
+          state.liquidGlass,
+          state.nothingLook,
+          state.welcomed,
+          state.sound,
+        ),
+        builder: (context) => MaterialApp(
           title: 'Sidekick',
           debugShowCheckedModeBanner: false,
           themeMode: state.themeMode,
@@ -258,4 +272,50 @@ class SidekickApp extends StatelessWidget {
       );
     },
   );
+}
+
+/// Builds [builder] again only when [look] changes (compared with ==), not
+/// on every change of [state].
+class _RebuildOn extends StatefulWidget {
+  const _RebuildOn({required this.state, required this.look, required this.builder});
+  final AppState state;
+  final Object Function() look;
+  final WidgetBuilder builder;
+
+  @override
+  State<_RebuildOn> createState() => _RebuildOnState();
+}
+
+class _RebuildOnState extends State<_RebuildOn> {
+  late Object _look = widget.look();
+
+  @override
+  void initState() {
+    super.initState();
+    widget.state.addListener(_changed);
+  }
+
+  @override
+  void didUpdateWidget(_RebuildOn old) {
+    super.didUpdateWidget(old);
+    if (old.state != widget.state) {
+      old.state.removeListener(_changed);
+      widget.state.addListener(_changed);
+    }
+    _look = widget.look();
+  }
+
+  @override
+  void dispose() {
+    widget.state.removeListener(_changed);
+    super.dispose();
+  }
+
+  void _changed() {
+    final look = widget.look();
+    if (look != _look) setState(() => _look = look);
+  }
+
+  @override
+  Widget build(BuildContext context) => widget.builder(context);
 }

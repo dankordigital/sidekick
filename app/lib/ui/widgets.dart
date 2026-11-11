@@ -54,6 +54,11 @@ bool debugForceMobile = false;
 /// Running on a phone or tablet (touch-first, soft keyboard).
 bool get isMobile => debugForceMobile || Host.isAndroid || Host.isIOS;
 
+/// A phone-sized screen: sheets from the bottom instead of dialogs, stacked
+/// buttons. Tablets (and phones turned sideways on a big screen) are 700
+/// points or wider and get the computer's layout, like the shell.
+bool usePhoneLayout(BuildContext context) => isMobile && MediaQuery.sizeOf(context).width < 700;
+
 /// Lets the screenshot tool render the UI as another platform would.
 DevicePlatform? debugHostPlatform;
 

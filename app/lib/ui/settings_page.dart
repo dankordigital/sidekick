@@ -110,28 +110,39 @@ class _SettingsPageState extends State<SettingsPage> {
                         ),
                       // Like LocalSend's Quick save: which devices' files come
                       // in without Accept ("Always accept from …" makes a favourite).
-                      ListTile(
-                        leading: const IconTile(Icons.front_hand_outlined, tone: TileTone.tertiary),
-                        title: const Text('Quick save'),
-                        subtitle: Text(switch (state.quickSave) {
-                          QuickSave.off => 'Accept or decline each time',
-                          QuickSave.favourites =>
-                            state.alwaysAccept.isEmpty
-                                ? 'Devices you always accept from skip the question'
-                                : '${state.paired.where((d) => state.alwaysAccept.contains(d.id)).map((d) => d.name).join(', ')} skip the question',
-                          QuickSave.on => 'Files from paired devices come in without asking',
-                        }),
-                        trailing: DropdownButton<QuickSave>(
-                          value: state.quickSave,
-                          underline: const SizedBox.shrink(),
-                          borderRadius: BorderRadius.circular(16),
-                          onChanged: (v) => state.setQuickSave(v!),
-                          items: const [
-                            DropdownMenuItem(value: QuickSave.off, child: Text('Off')),
-                            DropdownMenuItem(value: QuickSave.favourites, child: Text('Favourites')),
-                            DropdownMenuItem(value: QuickSave.on, child: Text('On')),
-                          ],
-                        ),
+                      LayoutBuilder(
+                        builder: (context, constraints) {
+                          final why = Text(switch (state.quickSave) {
+                            QuickSave.off => 'Accept or decline each time',
+                            QuickSave.favourites =>
+                              state.alwaysAccept.isEmpty
+                                  ? 'Devices you always accept from skip the question'
+                                  : '${state.paired.where((d) => state.alwaysAccept.contains(d.id)).map((d) => d.name).join(', ')} skip the question',
+                            QuickSave.on => 'Files from paired devices come in without asking',
+                          });
+                          final choice = DropdownButton<QuickSave>(
+                            value: state.quickSave,
+                            underline: const SizedBox.shrink(),
+                            borderRadius: BorderRadius.circular(16),
+                            onChanged: (v) => state.setQuickSave(v!),
+                            items: const [
+                              DropdownMenuItem(value: QuickSave.off, child: Text('Off')),
+                              DropdownMenuItem(value: QuickSave.favourites, child: Text('Favourites')),
+                              DropdownMenuItem(value: QuickSave.on, child: Text('On')),
+                            ],
+                          );
+                          // Big text on a phone: the choice under the words,
+                          // not squeezing them into a column one word wide.
+                          final narrow = constraints.maxWidth < 360 * MediaQuery.textScalerOf(context).scale(16) / 16;
+                          return ListTile(
+                            leading: const IconTile(Icons.front_hand_outlined, tone: TileTone.tertiary),
+                            title: const Text('Quick save'),
+                            subtitle: narrow
+                                ? Column(crossAxisAlignment: CrossAxisAlignment.start, children: [why, choice])
+                                : why,
+                            trailing: narrow ? null : choice,
+                          );
+                        },
                       ),
                       // One switch for every sound Sidekick makes.
                       SwitchListTile(

@@ -31,7 +31,7 @@ Future<void> showBluetoothPairing(BuildContext context, AppState state) async {
     if (!context.mounted) return;
   }
   final page = _BluetoothPairing(state: state);
-  if (isMobile) {
+  if (usePhoneLayout(context)) {
     return showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,

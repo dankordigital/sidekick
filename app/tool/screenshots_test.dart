@@ -3,6 +3,7 @@ import 'dart:async';
 // machine. Not part of the normal test run:
 //
 //   flutter test tool/screenshots_test.dart
+//   (every size and text scale: tool/sizes_test.dart)
 //
 // Screenshots land in build/screenshots/.
 

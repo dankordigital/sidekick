@@ -158,6 +158,16 @@ release. Keep this file for how things work now, not for history.
     platform (`CupertinoPageTransitionsBuilder`, from `cupertino_ui`), tabs
     switch at once with a quick fade-in, and `Entrance` fades in rising a
     few pixels with a long ease-out (`easeOutQuint`, 320 ms).
+  - **Every size** (3.0.5): `usePhoneLayout(context)` (a phone OS under
+    700 points wide) picks sheets over dialogs; tablets get the computer's
+    layout, like the shell. Rows that put a button beside text stack it
+    underneath when big text leaves no room (device cards, Quick save).
+    Tap areas on phones are at least 48 points. Text is at least 4.5:1 in
+    every built-in theme (`test/contrast_test.dart`; the Nothing look's
+    light grey is #666661 for this). main.dart rebuilds the app only when
+    its look changes (`_RebuildOn`), not on every state change (ten a
+    second during a transfer): screens listen to the state themselves, so
+    a new screen must too (`ListenableBuilder`).
   - `widgets.dart` has the shared pieces: `PageFrame`, `SectionLabel` (with
     an icon), `IconTile` (tinted icon square for rows), `StatusPill`,
     `Entrance` (fade/slide-in cascade), `Radar` (searching), `GradientBadge`.
@@ -412,6 +422,14 @@ release. Keep this file for how things work now, not for history.
     or the iPhone shows up in the Mac's Nearby list), saves stills of a
     paired iPhone's Remote tab and the Mac's Devices tab, paired with a
     real loopback stand-in.
+  - `flutter test tool/sizes_test.dart` (then with
+    `--dart-define=SIDEKICK_LOOK=nothing`) opens every tab at phone
+    (360×740, 430×932), tablet (820×1180 both ways) and computer
+    (1280×800, 1920×1080) sizes, at 100 % and 150 % text, and fails on any
+    "overflowed" (pictures in `build/screenshots/sizes/`). ~40 s each, so it
+    fits the very_good_cli MCP test tool's 60 s limit; the full
+    `screenshots_test.dart` doesn't (in a session where a plugin blocks
+    `flutter test` in the shell, it can't run here: CI or a computer).
   - Output goes to `build/screenshots/`.
 - Swift can't be compiled here. CI (`ios` and `macos` jobs) is the check.
 - Bluetooth:

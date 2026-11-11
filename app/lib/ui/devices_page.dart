@@ -404,49 +404,29 @@ class _PairedCardState extends State<_PairedCard> {
           borderRadius: BorderRadius.circular(20),
           border: Border.all(color: _dragging ? scheme.primary : Colors.transparent, width: 2),
         ),
-        child: Row(
-          children: [
-            Icon(platformIcon(device.platform), color: scheme.onSurfaceVariant),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    device.name,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: Theme.of(context).textTheme.titleMedium,
-                  ),
-                  const SizedBox(height: 2),
-                  StatusPill(
-                    icon: _dragging ? statusIcon : null,
-                    label: state.runsOlderApp(device) ? '$status · needs a Sidekick update' : status,
-                    color: reset ? scheme.error : (online ? Colors.green : scheme.outline),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(width: 8),
-            if (reset)
-              FilledButton(
-                onPressed: () => pairWith(context, state, state.forgetForRepair(device)),
-                child: const Text('Pair again'),
-              )
-            else if (findNearby)
-              FilledButton.tonal(
-                onPressed: () => askToTurnOnBluetooth(context, state, device.name),
-                child: const Text('Find nearby'),
-              )
-            else if (!online)
-              // Not a dead, greyed-out Send: look for it.
-              FilledButton.tonal(
-                onPressed: state.isFinding(device.id) ? null : () => state.findDevice(device),
-                child: const Text('Try again'),
-              )
-            else
-              FilledButton(onPressed: _pickAndSend, child: const Text('Send')),
-            PopupMenuButton<String>(
+        // Room for the name next to the button? With big text on a phone,
+        // the button goes on its own line under it, so the name isn't cut.
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final stack = constraints.maxWidth < 280 * MediaQuery.textScalerOf(context).scale(16) / 16;
+            final Widget action = reset
+                ? FilledButton(
+                    onPressed: () => pairWith(context, state, state.forgetForRepair(device)),
+                    child: const Text('Pair again'),
+                  )
+                : findNearby
+                ? FilledButton.tonal(
+                    onPressed: () => askToTurnOnBluetooth(context, state, device.name),
+                    child: const Text('Find nearby'),
+                  )
+                // Not reachable: not a dead, greyed-out Send, but look for it.
+                : !online
+                ? FilledButton.tonal(
+                    onPressed: state.isFinding(device.id) ? null : () => state.findDevice(device),
+                    child: const Text('Try again'),
+                  )
+                : FilledButton(onPressed: _pickAndSend, child: const Text('Send'));
+            final Widget menu = PopupMenuButton<String>(
               tooltip: 'More options',
               icon: const Icon(Icons.more_vert_rounded),
               onSelected: (v) => switch (v) {
@@ -464,8 +444,38 @@ class _PairedCardState extends State<_PairedCard> {
                 const PopupMenuDivider(),
                 const PopupMenuItem(value: 'unpair', child: Text('Unpair')),
               ],
-            ),
-          ],
+            );
+            final icon = Icon(platformIcon(device.platform), color: scheme.onSurfaceVariant);
+            final info = Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    device.name,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: Theme.of(context).textTheme.titleMedium,
+                  ),
+                  const SizedBox(height: 2),
+                  StatusPill(
+                    icon: _dragging ? statusIcon : null,
+                    label: state.runsOlderApp(device) ? '$status · needs a Sidekick update' : status,
+                    color: reset ? scheme.error : (online ? Colors.green : scheme.outline),
+                  ),
+                ],
+              ),
+            );
+            if (!stack) {
+              return Row(children: [icon, const SizedBox(width: 16), info, const SizedBox(width: 8), action, menu]);
+            }
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(children: [icon, const SizedBox(width: 16), info, menu]),
+                Padding(padding: const EdgeInsets.only(left: 40, top: 8, right: 12), child: action),
+              ],
+            );
+          },
         ),
       ),
     );
@@ -578,7 +588,7 @@ Future<void> showConnectOptions(BuildContext context, AppState state) {
     ],
   );
 
-  if (!isMobile) {
+  if (!usePhoneLayout(context)) {
     return showDialog<void>(
       context: context,
       builder: (dialog) => AlertDialog(

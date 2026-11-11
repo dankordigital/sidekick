@@ -435,6 +435,7 @@ class _RemoteState extends State<_Remote> {
       decoration: InputDecoration(
         hintText: 'Or write text here and press Enter to send it all at once',
         suffixIcon: IconButton(
+          tooltip: 'Send text',
           icon: const Icon(Icons.send),
           onPressed: () {
             _s?.text(_textController.text);

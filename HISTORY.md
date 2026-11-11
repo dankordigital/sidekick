@@ -37,6 +37,18 @@ detailed developer notes; every release is in `VERSIONS.md`) and
   a title, why, numbered steps and a fix button where one helps. Notices
   replaced every snackbar. Found on the way: the notice's text was
   invisible to screen readers while it faded in (fixed and tested).
+- **Every screen size** (Part 4). New `tool/sizes_test.dart`: every tab at
+  6 sizes × 2 text scales × 2 looks, failing on overflow (none found).
+  Looked at the pictures and fixed: a paired device's name was cut to
+  "Pixel…" with big text on a phone (the button now goes under it); Quick
+  save's choice squeezed its description to one word per line; the
+  Nothing look's light grey text was 3.3:1 (now 5:1, #666661; a contrast
+  test covers every built-in theme); tablets get dialogs like computers;
+  phone tap areas ≥ 48 points; the Remote "send text" button had no name.
+  Speed: the whole app rebuilt up to ten times a second during transfers;
+  now only when its look changes. Not done: one spacing scale across the
+  app (hundreds of hand-tuned values, some from the owner's approved
+  Nothing mock-ups; too risky blind).
 - The cloud environment is now **sidekick** (personal), which can download
   Playwright's Firefox and WebKit (cdn.playwright.dev).
 
