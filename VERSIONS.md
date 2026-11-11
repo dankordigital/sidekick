@@ -4,6 +4,29 @@ Every release, newest first, with its biggest features and fixes. Add an
 entry here with each release (see "Releasing" in `CLAUDE.md`). The history
 starts at 1.1.3.
 
+## 3.0.5
+- **When something goes wrong, Sidekick says what and how to fix it:**
+  every error is now a pop-up with a clear title ("Couldn't send to
+  Pixel 9"), why, numbered things to try, a Close button, and a button that
+  fixes it where one can (Try again, Pair again, Turn on Bluetooth, Open
+  Settings). It knows about 20 kinds of problem: not on the same Wi-Fi,
+  not paired anymore, a wrong or expired code, no space, a missing
+  permission, Windows Firewall, an older Sidekick, and more.
+- **Successes are a short notice at the bottom** ("Sent 3 photos to
+  Pixel 9", "Paired with MacBook Pro") with a bar showing when it goes
+  (5 seconds). Hover or touch to keep it, swipe or ✕ to close it.
+- **Plainer words everywhere:** no more TLS, AES-256-GCM, certificate or
+  Bluetooth LE; buttons say what they do; empty screens say what to do
+  next.
+- **Fits every screen:** nothing is cut off with big text on a phone,
+  tablets get the computer layout, tap areas are bigger on phones, text is
+  easier to read in the Nothing look, and the app does less work during
+  transfers.
+- **The website demo works in Chrome, Edge, Firefox, Safari, Opera and
+  Samsung Internet**, on computers and phones (it crashed in Chrome on some
+  Linux computers and drew garbled text on iPhones); a browser that can't
+  run it shows a picture and what to do.
+
 ## 3.0.4
 - **Notices go away by themselves:** "Received …" with Show in folder (or
   Open in Photos) used to stay on screen until tapped; now it closes after
