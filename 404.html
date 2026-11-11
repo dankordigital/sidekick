@@ -11,52 +11,36 @@
 <link rel="apple-touch-icon" href="/website/apple-touch-icon.png">
 <style>
 :root {
+  /* The site's look (index.html): dark unless the visitor picked light. */
   --h: 290;
-  --primary: oklch(0.50 0.16 var(--h));
-  --on-primary: oklch(0.99 0.01 var(--h));
-  --primary-container: oklch(0.91 0.06 var(--h));
-  --on-primary-container: oklch(0.30 0.10 var(--h));
-  --tertiary: oklch(0.55 0.15 calc(var(--h) + 60));
-  --surface: oklch(0.985 0.006 var(--h));
-  --surface-container: oklch(0.950 0.012 var(--h));
-  --surface-container-high: oklch(0.925 0.016 var(--h));
-  --on-surface: oklch(0.22 0.012 var(--h));
-  --on-surface-variant: oklch(0.43 0.020 var(--h));
-  --outline-variant: oklch(0.85 0.015 var(--h));
-  --error: oklch(0.55 0.19 25);
-  color-scheme: light;
-}
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
-    --primary: oklch(0.80 0.10 var(--h));
-    --on-primary: oklch(0.25 0.09 var(--h));
-    --primary-container: oklch(0.38 0.12 var(--h));
-    --on-primary-container: oklch(0.92 0.05 var(--h));
-    --tertiary: oklch(0.80 0.10 calc(var(--h) + 60));
-    --surface: oklch(0.17 0.010 var(--h));
-    --surface-container: oklch(0.22 0.014 var(--h));
-    --surface-container-high: oklch(0.26 0.016 var(--h));
-    --on-surface: oklch(0.92 0.010 var(--h));
-    --on-surface-variant: oklch(0.78 0.020 var(--h));
-    --outline-variant: oklch(0.36 0.020 var(--h));
-    --error: oklch(0.75 0.14 25);
-    color-scheme: dark;
-  }
-}
-:root[data-theme="dark"] {
-  --primary: oklch(0.80 0.10 var(--h));
-  --on-primary: oklch(0.25 0.09 var(--h));
-  --primary-container: oklch(0.38 0.12 var(--h));
-  --on-primary-container: oklch(0.92 0.05 var(--h));
-  --tertiary: oklch(0.80 0.10 calc(var(--h) + 60));
-  --surface: oklch(0.17 0.010 var(--h));
-  --surface-container: oklch(0.22 0.014 var(--h));
-  --surface-container-high: oklch(0.26 0.016 var(--h));
-  --on-surface: oklch(0.92 0.010 var(--h));
-  --on-surface-variant: oklch(0.78 0.020 var(--h));
-  --outline-variant: oklch(0.36 0.020 var(--h));
-  --error: oklch(0.75 0.14 25);
+  --primary: #d6adf2;
+  --on-primary: #141414;
+  --primary-container: #2a2a2a;
+  --on-primary-container: #ffffff;
+  --tertiary: #74b9ff;
+  --surface: #1a1a1a;
+  --surface-container: #212121;
+  --surface-container-high: #262626;
+  --on-surface: #ffffff;
+  --on-surface-variant: #a1a1a6;
+  --outline-variant: #ffffff1f;
+  --error: #ff6b6b;
   color-scheme: dark;
+}
+:root[data-theme="light"] {
+  --primary: #7a3fb0;
+  --on-primary: #ffffff;
+  --primary-container: #ededeb;
+  --on-primary-container: #141414;
+  --tertiary: #2f7fd6;
+  --surface: #f4f4f2;
+  --surface-container: #ffffff;
+  --surface-container-high: #ffffff;
+  --on-surface: #141414;
+  --on-surface-variant: #5c5c60;
+  --outline-variant: #1414141f;
+  --error: #c62828;
+  color-scheme: light;
 }
 * { box-sizing: border-box; }
 html { -webkit-text-size-adjust: 100%; }

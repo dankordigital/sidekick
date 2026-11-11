@@ -55,8 +55,22 @@ version follows GitHub by itself** (site.json `auto`, the default;
 (`release_complete`), so a release still building never gives a broken
 link; otherwise, or when GitHub is out of reach, the last one offered.
 A version written in the panel is pinned (`auto` false). index.html marks the two
-looks with `only-wish` / `only-released` (Download buttons, `#download`
-tiles). Without PHP it's still the wishlist.
+looks with `only-wish` / `only-released` (Download buttons, the wishlist form,
+headings); the platform tiles in `#download` show either way: "Coming soon",
+linking to `#wishlist`, or "Available", linking to their file. Without PHP
+it's still the wishlist. index.php needs `<html lang="en"` and `</head>`
+exactly as they are; the panel's editor skips anything with class `icon`.
+**The site's look** (2026-11, the owner's call: "like openbot.run", its
+style, never its brand or words): dark (#1a1a1a page, #212121 cards, faint
+lines) unless the moon button picks light (`sidekick-theme`, shared with
+preview.html, privacy.html and 404.html, which use the same tokens); Inter
+and JetBrains Mono (labels) from Google Fonts; huge tight headings; pill
+buttons (light filled, outlined second); cards with real bits of the app
+drawn in HTML; five pastel tiles (lavender #d6adf2, green #61c985, mustard
+#e3b866, blue #74b9ff, salmon #ee9a7d) with dark ink, a faint grid and mono
+chips. Sections: hero (the app window), together, What Sidekick does,
+Free, Make it yours (looks), platforms (`#download`), Questions,
+the wishlist over a field of tiles (`#wishlist`), footer.
 **`np7dpanel.php`** (the owner's name for it; not linked anywhere): the
 wishlist admin panel. Tabs: Overview (counts, sign-ups per day for 30 days,
 devices), Visits (home-page visits and different visitors per day, 30-day
@@ -280,7 +294,8 @@ release. Keep this file for how things work now, not for history.
   devices; every permission and why.
 - Website hero (`website/hero.webp`, `hero.png` fallback): a MacBook
   receiving and an iPhone sending, made from the ad render frames
-  (`tool/ad_frames_test.dart`), transparent so the page's colors show.
+  (`tool/ad_frames_test.dart`), transparent so the page's colors show; it
+  sits in the hero's app window (`#stage`) until the demo starts.
   There is no Media anywhere on the site (removed with the feature).
 - **`preview.html`** (top of the repo; the hero's "Try it in your browser"):
   **the real app, running in the page**, twice: Sidekick compiled for a
@@ -305,10 +320,10 @@ release. Keep this file for how things work now, not for history.
   granted); "Show in folder" says where Finder / Files would open
   (`debugRevealInFolder`). Picked files are samples (`debugPickFiles`).
   `DesktopWindow.supported` is false on the web (window_manager would
-  throw when a link or ping arrives). **The home page runs it too**: under
-  the drawing in "The app", **Start the demo** loads
+  throw when a link or ping arrives). **The home page runs it too**: in
+  the hero's app window (`#app`, `#stage`), **Start the demo** loads
   `preview.html?embed=1` (just the two devices; it posts `sk-height`,
-  `sk-ready`, `sk-failed` up) in place of the drawing; phones open
+  `sk-ready`, `sk-failed` up) in place of the picture; phones open
   /preview.html instead. On the web there's no `dart:io` `Platform`:
   **use `Host.isIOS` etc. (`core/host.dart`), never `Platform.isX`** (same
   answers natively; in the preview, the device it plays). The theme's
@@ -346,9 +361,9 @@ release. Keep this file for how things work now, not for history.
   Google, Bing, DuckDuckGo, Apple and Yandex read the pages (they must, to
   see the noindex) and keeps every other bot out. Remove all three to be
   found.
-- Website sounds (`website/sounds/`, copies of the owner's MP3s): the
-  request sound when the demo phone asks, accept / decline on its buttons,
-  accept on a download; only after a click; the speaker button in the top
+- Website sounds (`website/sounds/`, copies of the owner's MP3s): accept
+  on a download and on joining the wishlist, the startup chime when sounds
+  are turned back on; only after a click; the speaker button in the top
   bar turns them off (`localStorage` `sidekick-sound`).
 - Logos (`website/`): `2.png` is the wide wordmark, used **only on the
   website**; `3.png` is the "sk" monogram, used for every app icon and the

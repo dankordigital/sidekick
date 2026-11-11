@@ -13,52 +13,44 @@
 <link rel="icon" type="image/png" sizes="64x64" href="/website/favicon.png">
 <link rel="apple-touch-icon" href="/website/apple-touch-icon.png">
 <script>
+  // The light/dark choice from the main page, if any (dark otherwise).
+  try { if (localStorage.getItem('sidekick-theme') === 'light') document.documentElement.dataset.theme = 'light'; } catch (e) {}
   // ?embed=1: inside the home page (index.html #app), just the two devices.
   const EMBED = new URLSearchParams(location.search).has('embed');
   if (EMBED) document.documentElement.classList.add('embed');
 </script>
 <style>
 :root {
+  /* The site's look (index.html): dark unless the visitor picked light. */
   --h: 290;
-  --primary: oklch(0.50 0.16 var(--h));
-  --on-primary: oklch(0.99 0.01 var(--h));
-  --primary-container: oklch(0.91 0.06 var(--h));
-  --on-primary-container: oklch(0.30 0.10 var(--h));
-  --surface: oklch(0.985 0.006 var(--h));
-  --surface-container: oklch(0.950 0.012 var(--h));
-  --surface-container-high: oklch(0.925 0.016 var(--h));
-  --on-surface: oklch(0.22 0.012 var(--h));
-  --on-surface-variant: oklch(0.43 0.020 var(--h));
-  --outline-variant: oklch(0.85 0.015 var(--h));
-  color-scheme: light;
-}
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
-    --primary: oklch(0.80 0.10 var(--h));
-    --on-primary: oklch(0.25 0.09 var(--h));
-    --primary-container: oklch(0.38 0.12 var(--h));
-    --on-primary-container: oklch(0.92 0.05 var(--h));
-    --surface: oklch(0.17 0.010 var(--h));
-    --surface-container: oklch(0.22 0.014 var(--h));
-    --surface-container-high: oklch(0.26 0.016 var(--h));
-    --on-surface: oklch(0.92 0.010 var(--h));
-    --on-surface-variant: oklch(0.78 0.020 var(--h));
-    --outline-variant: oklch(0.36 0.020 var(--h));
-    color-scheme: dark;
-  }
-}
-:root[data-theme="dark"] {
-  --primary: oklch(0.80 0.10 var(--h));
-  --on-primary: oklch(0.25 0.09 var(--h));
-  --primary-container: oklch(0.38 0.12 var(--h));
-  --on-primary-container: oklch(0.92 0.05 var(--h));
-  --surface: oklch(0.17 0.010 var(--h));
-  --surface-container: oklch(0.22 0.014 var(--h));
-  --surface-container-high: oklch(0.26 0.016 var(--h));
-  --on-surface: oklch(0.92 0.010 var(--h));
-  --on-surface-variant: oklch(0.78 0.020 var(--h));
-  --outline-variant: oklch(0.36 0.020 var(--h));
+  --primary: #d6adf2;
+  --on-primary: #141414;
+  --primary-container: #2a2a2a;
+  --on-primary-container: #ffffff;
+  --tertiary: #74b9ff;
+  --surface: #1a1a1a;
+  --surface-container: #212121;
+  --surface-container-high: #262626;
+  --on-surface: #ffffff;
+  --on-surface-variant: #a1a1a6;
+  --outline-variant: #ffffff1f;
+  --error: #ff6b6b;
   color-scheme: dark;
+}
+:root[data-theme="light"] {
+  --primary: #7a3fb0;
+  --on-primary: #ffffff;
+  --primary-container: #ededeb;
+  --on-primary-container: #141414;
+  --tertiary: #2f7fd6;
+  --surface: #f4f4f2;
+  --surface-container: #ffffff;
+  --surface-container-high: #ffffff;
+  --on-surface: #141414;
+  --on-surface-variant: #5c5c60;
+  --outline-variant: #1414141f;
+  --error: #c62828;
+  color-scheme: light;
 }
 * { box-sizing: border-box; }
 [hidden] { display: none !important; }
@@ -80,7 +72,7 @@ header .wrap { display: flex; align-items: center; justify-content: space-betwee
 }
 .btn.tonal { background: var(--primary-container); color: var(--on-primary-container); }
 .intro { text-align: center; padding: 20px 0 8px; }
-.intro h1 { margin: 0; font-size: clamp(30px, 5vw, 48px); line-height: 1.1; letter-spacing: -.02em; text-wrap: balance; }
+.intro h1 { margin: 0; font-size: clamp(34px, 6vw, 64px); line-height: 1; letter-spacing: -.05em; font-weight: 600; text-wrap: balance; }
 .intro p { margin: 12px auto 0; max-width: 680px; color: var(--on-surface-variant); text-wrap: pretty; }
 
 /* The two devices. Each is drawn at its real size in points and scaled to fit

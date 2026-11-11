@@ -5,864 +5,488 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <!-- Not in search results yet (the owner's call): see robots.txt and .htaccess. -->
 <meta name="robots" content="noindex, nofollow, noarchive, nosnippet, noimageindex">
-<title>Sidekick</title>
+<title>Sidekick: your phone and computer, as one</title>
 <!-- The page lives at the top of the repo; its images stay in website/. -->
 <link rel="icon" type="image/png" sizes="64x64" href="/website/favicon.png">
 <link rel="apple-touch-icon" href="/website/apple-touch-icon.png">
 <meta name="description" content="Sidekick links your phone and computer over Wi-Fi. Send files both ways, browse and control one device from the other, ping your phone, and see its notifications on your computer.">
-<meta name="theme-color" content="#f7f5fb">
+<meta name="theme-color" content="#1a1a1a">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Roboto+Flex:opsz,wdth,wght@8..144,25..151,100..1000&display=swap" rel="stylesheet">
-<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=block" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400..700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,300..600,0..1,0&display=block" rel="stylesheet">
 <style>
 /* ------------------------------------------------------------------
-   Material You tokens. Every color comes from one seed hue (--h), so
-   switching the seed recolors the whole page, like dynamic color.
+   Sidekick's site (2026-11 redesign): dark by default, Inter, huge tight
+   headings, pill buttons, cards with real bits of the app inside, and
+   five pastel colors for the big tiles. Light mode with the moon button.
    ------------------------------------------------------------------ */
 :root {
-  --h: 290;
-  --h3: calc(var(--h) + 70);
-
-  --primary: oklch(0.50 0.16 var(--h));
-  --on-primary: oklch(1 0 0);
-  --primary-container: oklch(0.91 0.06 var(--h));
-  --on-primary-container: oklch(0.30 0.10 var(--h));
-  --secondary-container: oklch(0.92 0.03 var(--h));
-  --on-secondary-container: oklch(0.30 0.04 var(--h));
-  --tertiary: oklch(0.52 0.12 var(--h3));
-  --tertiary-container: oklch(0.91 0.06 var(--h3));
-  --on-tertiary-container: oklch(0.30 0.08 var(--h3));
-  --surface: oklch(0.985 0.006 var(--h));
-  --surface-container-low: oklch(0.965 0.010 var(--h));
-  --surface-container: oklch(0.950 0.012 var(--h));
-  --surface-container-high: oklch(0.930 0.014 var(--h));
-  --surface-container-highest: oklch(0.910 0.016 var(--h));
-  --on-surface: oklch(0.22 0.012 var(--h));
-  --on-surface-variant: oklch(0.43 0.020 var(--h));
-  --outline: oklch(0.60 0.020 var(--h));
-  --outline-variant: oklch(0.85 0.015 var(--h));
-  --inverse-surface: oklch(0.30 0.010 var(--h));
-  --inverse-on-surface: oklch(0.95 0.010 var(--h));
-  --bezel: oklch(0.22 0.01 var(--h));
-  --shadow: 0 1px 2px oklch(0 0 0 / .08), 0 8px 24px oklch(0.3 0.05 var(--h) / .10);
-  --shadow-lg: 0 2px 6px oklch(0 0 0 / .08), 0 24px 60px oklch(0.3 0.08 var(--h) / .18);
-
-  --ease: cubic-bezier(.2, 0, 0, 1);
-  --ease-spring: cubic-bezier(.34, 1.4, .64, 1);
-  color-scheme: light;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
-    --primary: oklch(0.80 0.10 var(--h));
-    --on-primary: oklch(0.28 0.10 var(--h));
-    --primary-container: oklch(0.38 0.12 var(--h));
-    --on-primary-container: oklch(0.92 0.05 var(--h));
-    --secondary-container: oklch(0.35 0.03 var(--h));
-    --on-secondary-container: oklch(0.90 0.03 var(--h));
-    --tertiary: oklch(0.82 0.09 var(--h3));
-    --tertiary-container: oklch(0.38 0.08 var(--h3));
-    --on-tertiary-container: oklch(0.92 0.05 var(--h3));
-    --surface: oklch(0.17 0.010 var(--h));
-    --surface-container-low: oklch(0.20 0.012 var(--h));
-    --surface-container: oklch(0.22 0.014 var(--h));
-    --surface-container-high: oklch(0.25 0.016 var(--h));
-    --surface-container-highest: oklch(0.28 0.018 var(--h));
-    --on-surface: oklch(0.92 0.010 var(--h));
-    --on-surface-variant: oklch(0.78 0.020 var(--h));
-    --outline: oklch(0.60 0.020 var(--h));
-    --outline-variant: oklch(0.36 0.020 var(--h));
-    --inverse-surface: oklch(0.92 0.010 var(--h));
-    --inverse-on-surface: oklch(0.25 0.010 var(--h));
-    --bezel: oklch(0.08 0.005 var(--h));
-    --shadow: 0 1px 2px oklch(0 0 0 / .4), 0 8px 24px oklch(0 0 0 / .3);
-    --shadow-lg: 0 2px 6px oklch(0 0 0 / .4), 0 24px 60px oklch(0 0 0 / .5);
-    color-scheme: dark;
-  }
-}
-:root[data-theme="dark"] {
-  --primary: oklch(0.80 0.10 var(--h));
-  --on-primary: oklch(0.28 0.10 var(--h));
-  --primary-container: oklch(0.38 0.12 var(--h));
-  --on-primary-container: oklch(0.92 0.05 var(--h));
-  --secondary-container: oklch(0.35 0.03 var(--h));
-  --on-secondary-container: oklch(0.90 0.03 var(--h));
-  --tertiary: oklch(0.82 0.09 var(--h3));
-  --tertiary-container: oklch(0.38 0.08 var(--h3));
-  --on-tertiary-container: oklch(0.92 0.05 var(--h3));
-  --surface: oklch(0.17 0.010 var(--h));
-  --surface-container-low: oklch(0.20 0.012 var(--h));
-  --surface-container: oklch(0.22 0.014 var(--h));
-  --surface-container-high: oklch(0.25 0.016 var(--h));
-  --surface-container-highest: oklch(0.28 0.018 var(--h));
-  --on-surface: oklch(0.92 0.010 var(--h));
-  --on-surface-variant: oklch(0.78 0.020 var(--h));
-  --outline: oklch(0.60 0.020 var(--h));
-  --outline-variant: oklch(0.36 0.020 var(--h));
-  --inverse-surface: oklch(0.92 0.010 var(--h));
-  --inverse-on-surface: oklch(0.25 0.010 var(--h));
-  --bezel: oklch(0.08 0.005 var(--h));
-  --shadow: 0 1px 2px oklch(0 0 0 / .4), 0 8px 24px oklch(0 0 0 / .3);
-  --shadow-lg: 0 2px 6px oklch(0 0 0 / .4), 0 24px 60px oklch(0 0 0 / .5);
+  --canvas: #1a1a1a;
+  --frame: #0d0d0d;
+  --surface: #212121;
+  --raised: #262626;
+  --control: #2a2a2a;
+  --text: #ffffff;
+  --muted: #a1a1a6;
+  --dim: #707075;
+  --line: #ffffff12;
+  --line-strong: #ffffff22;
+  --action: #f0f0f0;
+  --on-action: #141414;
+  --grid-line: #d6adf217;
+  /* The five tile colors, with dark ink on them. */
+  --lavender: #d6adf2;
+  --green: #61c985;
+  --mustard: #e3b866;
+  --blue: #74b9ff;
+  --salmon: #ee9a7d;
+  --ink: #141414;
+  --ink-muted: #141414a8;
+  --ok: #45d07e;
+  --danger: #ff6b6b;
+  --sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  --wrap: 1180px;
   color-scheme: dark;
 }
-
-/* ------------------------------------------------------------------ base */
-*, *::before, *::after { box-sizing: border-box; }
-html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; }
+:root[data-theme="light"] {
+  --canvas: #f4f4f2;
+  --frame: #e6e6e3;
+  --surface: #ffffff;
+  --raised: #fafaf8;
+  --control: #ededeb;
+  --text: #141414;
+  --muted: #5c5c60;
+  --dim: #85858a;
+  --line: #1414141a;
+  --line-strong: #1414142b;
+  --action: #141414;
+  --on-action: #f4f4f2;
+  --grid-line: #7a3fb012;
+  --ok: #1d9a52;
+  color-scheme: light;
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html { -webkit-text-size-adjust: 100%; scroll-behavior: smooth; scroll-padding-top: 88px; }
 body {
-  margin: 0;
-  background: var(--surface);
-  color: var(--on-surface);
-  font-family: "Roboto Flex", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-  font-size: 16px;
-  line-height: 1.55;
-  overflow-x: hidden;
-  transition: background-color .4s var(--ease), color .4s var(--ease);
+  margin: 0; background: var(--canvas); color: var(--text);
+  font: 16px/1.55 var(--sans); font-feature-settings: "cv11", "ss01";
+  -webkit-font-smoothing: antialiased; overflow-x: hidden;
 }
-h1, h2, h3, p { margin: 0; }
 a { color: inherit; }
-button, input { font: inherit; color: inherit; }
 img, svg { display: block; }
-
+.wrap { width: 100%; max-width: var(--wrap); margin: 0 auto; padding: 0 24px; }
 .icon {
-  font-family: "Material Symbols Rounded";
-  font-weight: normal; font-style: normal;
-  font-size: 24px; line-height: 1;
-  letter-spacing: normal; text-transform: none;
-  display: inline-block; white-space: nowrap; direction: ltr;
-  -webkit-font-smoothing: antialiased;
-  font-variation-settings: "FILL" 0, "wght" 400, "GRAD" 0, "opsz" 24;
-  user-select: none;
-  flex: none;
+  font-family: "Material Symbols Rounded"; font-weight: 400; font-style: normal; font-size: 20px; line-height: 1;
+  letter-spacing: normal; text-transform: none; white-space: nowrap; direction: ltr; -webkit-font-smoothing: antialiased;
+  font-variation-settings: "FILL" 0, "wght" 450, "GRAD" 0, "opsz" 24; flex: none;
 }
-.icon.fill { font-variation-settings: "FILL" 1, "wght" 400, "GRAD" 0, "opsz" 24; }
-
-.wrap { width: 100%; max-width: 1200px; margin: 0 auto; padding: 0 24px; }
-@media (max-width: 600px) { .wrap { padding: 0 16px; } }
-
-.sr-only {
-  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
-  overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
-}
-
-:focus-visible { outline: 3px solid var(--primary); outline-offset: 2px; }
+.mono { font-family: var(--mono); font-size: 11px; letter-spacing: .08em; text-transform: uppercase; font-weight: 600; }
+h1, h2, h3, h4 { margin: 0; font-weight: 500; }
+h1 { font-size: clamp(52px, 9.4vw, 112px); line-height: .94; letter-spacing: -.062em; }
+h2 { font-size: clamp(40px, 6.2vw, 76px); line-height: .98; letter-spacing: -.055em; }
+h3 { font-size: 20px; line-height: 1.25; letter-spacing: -.02em; font-weight: 600; }
+p { margin: 0; }
+.lede { color: var(--muted); font-size: clamp(17px, 1.6vw, 20px); line-height: 1.55; }
 
 /* ------------------------------------------------------------------ buttons */
 .btn {
-  position: relative; isolation: isolate; overflow: hidden;
-  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
-  height: 48px; padding: 0 24px;
-  border: 0; border-radius: 999px;
-  font-size: 15px; font-weight: 560; letter-spacing: .01em;
-  text-decoration: none; cursor: pointer; white-space: nowrap;
-  transition: border-radius .3s var(--ease), box-shadow .2s var(--ease), background-color .3s var(--ease);
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 48px; padding: 0 22px;
+  border-radius: 999px; border: 1px solid transparent; font: 600 15px/1 var(--sans); letter-spacing: -.01em;
+  text-decoration: none; cursor: pointer; white-space: nowrap; transition: background .15s, border-color .15s, transform .15s;
 }
-.btn::after {
-  content: ""; position: absolute; inset: 0; z-index: -1;
-  background: currentColor; opacity: 0; transition: opacity .15s linear;
-}
-.btn:hover::after { opacity: .08; }
-.btn:active::after { opacity: .12; }
-.btn:active { border-radius: 14px; }  /* M3 expressive shape morph on press */
-.btn .icon { font-size: 20px; }
-.btn-filled { background: var(--primary); color: var(--on-primary); }
-.btn-filled:hover { box-shadow: var(--shadow); }
-.btn-tonal { background: var(--secondary-container); color: var(--on-secondary-container); }
-.btn-text { background: transparent; color: var(--primary); padding: 0 16px; }
-.btn-sm { height: 40px; padding: 0 20px; font-size: 14px; }
-.btn:disabled { opacity: .38; cursor: default; box-shadow: none; }
-.btn:disabled::after { display: none; }
-
-.icon-btn {
-  position: relative; isolation: isolate; overflow: hidden;
-  width: 40px; height: 40px; display: grid; place-items: center;
-  border: 0; border-radius: 999px; background: transparent; color: var(--on-surface-variant);
-  cursor: pointer; transition: border-radius .3s var(--ease), background-color .3s var(--ease), color .3s var(--ease);
-}
-.icon-btn::after {
-  content: ""; position: absolute; inset: 0; z-index: -1;
-  background: currentColor; opacity: 0; transition: opacity .15s linear;
-}
-.icon-btn:hover::after { opacity: .08; }
-.icon-btn:active::after { opacity: .12; }
-.icon-btn:active { border-radius: 12px; }
+.btn:active { transform: scale(.98); }
+.btn-light { background: var(--action); color: var(--on-action); }
+.btn-light:hover { background: color-mix(in srgb, var(--action) 88%, var(--text)); }
+.btn-ghost { background: transparent; color: var(--text); border-color: var(--line-strong); }
+.btn-ghost:hover { background: var(--surface); }
+.btn-sm { min-height: 40px; padding: 0 16px; font-size: 14px; }
+.btn .icon { font-size: 18px; }
+.link-arrow { display: inline-flex; align-items: center; gap: 6px; font-weight: 600; font-size: 15px; text-decoration: none; }
+.link-arrow .icon { font-size: 18px; transition: transform .15s; }
+.link-arrow:hover .icon { transform: translate(2px, -2px); }
+:focus-visible { outline: 2px solid var(--lavender); outline-offset: 3px; }
 
 /* ------------------------------------------------------------------ top bar */
-.topbar {
-  position: sticky; top: 0; z-index: 50;
-  background: color-mix(in oklab, var(--surface) 82%, transparent);
-  backdrop-filter: blur(16px) saturate(1.4);
-  -webkit-backdrop-filter: blur(16px) saturate(1.4);
-  border-bottom: 1px solid transparent;
-  transition: border-color .3s var(--ease), background-color .4s var(--ease);
-}
-.topbar.scrolled { border-bottom-color: var(--outline-variant); }
-.topbar .wrap { display: flex; align-items: center; gap: 16px; height: 68px; }
-.brand { display: flex; align-items: center; text-decoration: none; }
-/* The logo artwork (1.png, 2.png, 3.png) is embedded below as cropped,
-   transparent masks, so it takes the theme's text colour and stays readable
-   in dark mode. They're inline because browsers won't load mask images from
-   disk (file://). To switch designs, change logo-1 / logo-2 / logo-3 on the
-   two <span class="logo …"> elements. */
-.logo {
-  display: block; height: var(--logo-h); aspect-ratio: var(--logo-ratio);
-  background: var(--on-surface);
-  -webkit-mask: var(--logo-url) center / contain no-repeat;
-          mask: var(--logo-url) center / contain no-repeat;
-  transition: background-color .3s var(--ease), transform .4s var(--ease-spring);
-}
-.brand:hover .logo { background: var(--primary); transform: scale(1.04); }
-.logo-1 { --logo-url: url("data:image/png;base64,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"); --logo-ratio: 490 / 160; --logo-h: 30px; }
-.logo-2 { --logo-url: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAA/oAAABwCAQAAAAELMMJAAAxXUlEQVR42u2deZxlVXXvv2ufU2NXz80gYwOKwmOMGAYDYgAFJYLMKohTXpyNmuT5eclHE82kxuQlmqCiqIAoRAEZVAQVRWVGQCQySUMzNN10Nz3VeM9e749769aZ7lDdXWfvqnP2/Xz6U1Vdw7lrr7V+67f22mtBtapVrWpVq1rVqla1qlWtalWrWtWaO0u27cdVtv13eCsam3inxpsHU9HMl8wsFbJC9t1s9z9iKkNvrT2FS0c777jDHUs8nd9Wv42ee675bpuUUPF7l0SMNlJ3jGeyDSojGGoz77KrlXWJqYBEZvMuaAgoOlMBwOyWThnlUe1YN1a/DX5bQGqVRCum373iBCBR87NFLKR/rtkXIRvk6UTU+BJPnsywUrZkvvwiFhHNqrhdEcZ5gU1x96MGg9125zbrpTNTMg9YJevjoKoBexFiC5KOEvCMbOj4bcvYwcGOKSHPTslHDftgPLH6p2XTtoUMGKLEvi9hPkMMzQG7UIRR7pNaQrN3Zgm1AvV6izzZKZTVkL0dyDv1dDJNxZE63OsA+3M4h7IHu7GMwTnmHC193MkJMqoiqoFE+ia+jPXCAQiPcL7c33RModT0LD7LklkYcI6yhnWs5HesYgUPsEbGpjQN3Q7MJpBIT+RLLKXijqD08DtO5/F6TkVDqekb+RpSmGZbevlP+QsNpmhDxscoe3Edywtz2FMrop8vyYeaVv9mvogPKXDF8Bjny71bw/bVIJOpbx1iV17OISznRbyIxSyeQ6Hwv/FRAFEVUV3MDRzEWEGarYSs4mDZ1DpLpUasfok3O8ARJeRZXiVP1fUnnC7gq3Acr+X17DfHHeTuLGAUaYDF3gyhXhiIcgjv4M8xRI3P4ST2ICKYdTKex9LYZzV+qz/jXu7mN3XXpgGZk7ppLkPE4bNUOjOzDmF/+b0GRA04242FBUpHOwcYovph9sMy4CDYN02tEWAf5nti9ZaDOJd7p/ssMZp2GEdwBK9kj5T8ozmh1RE9nMk/yFo1KIIynz3po6/AZ5jPeOsDSg2wejjvdOaH+miGi12BvgpGItAXcwZv5oCG6lksc68cZNL4exOHFqOoJ8ARpdymAiHWkzzE9EFA0UZ9SMjBHAxs4lm9lWu5W1YkHddW/X54GG18VDF9QRlNSGcELVB3IgKebAdSYnVPzsc62bEIw4MxfzbmjdXbxlNNQyYqiFjQF3Mi53JQM4hSbMPmBOZIMCwIET0JCjFaoGZbDE8z3u47RPXDBNQcSDwi4FFWaYPCdgH6GkhEpC/lL3ljI4lcwzRec3MZhD56U0olXgQ3BsO6KcMWCwxhPGEk0zfWpOlYhPnMZ1/OZ43eyfV8R1YnU5TTBv3nsASzVD7bX96a4XZFarYgrO2gDx9ivhOoVXoY5/4GxBYvm052/0L39KpB01QP4H2czeKG1xYMgszRrJekQqIifbYgrG3tnzSQSA/lNJTAkT49KFbDev1UR9jWQCJdoH/HnbyTJURYlJC5fwkqTJiG9erZNqY+75kzwVZIgGKJiNiB1/GfPKxf1qPFSiSqgU7XYBRYzXCF9rGov5aRULFrTWuej9U9ON9RgKbASn4du9zkV3ao60I+FZBI99AL+TXvZnHTawclCny10N1T4PnGFfZW//9hehyVEwcIP57S5w7grUYiPYqb+TjziVACTEkUJ0iAvt/mP7dCMMEQEGCpYVnIn/JjvUFP1V6JRKd5+7bO9LdUWB8LXyd8BX1ElHeyxNFRlQI3ymhMw/wK9Td0x/Q1EAX9U27nXYQl89rx3Sx699a12h81YnVfzkCd5FgUYR0/mdLntsaloVh9Oz/mUGoOExOunKP1lulvyMDkXFyGEINSo4fXcBW/1LPUiJ0O3xdVYS1bqM70k3qtjjTbAGP5u6GC1aW8C3UYxF6bsCb1yrY2d8PxNZBId+dqvszO1Bosr4yreKa/vg2NgQ8zUNjF2LTFw43xi7qmrfrU9INcRD8RYelUJwn6ftW4biwRiAlhI+F/GJfzQz1yunxfLM9VWB9zT1HGXUlhf1vYEiskTAUEoryVXZy5xoDHuT0RBvlj9QYY6Qz5IJG+gVt4AxG2+7tZFejPXCZGDVb35CynVUU3ECvZbO08jUR6Hv+OxZbyutNE4uzTL6Y/UrK9qCf8IywncLN+WheI1aDrn4VnK6YfA7JahgcUuYYZawFYVvt5lzPXaFFukbX15HgsIPIDwADG2z9RPf+l/8T32JOIgHI3ny4+vb+pRfgsorzJ4aFVwDpuiIewLR5DA4n0BL6MLbBxh08KA2OJCxh+gf54Kc04wBDRy1/xCz1KIg27TvO/UGF9TJPdgb4Cwy2014hyMvs7S+4HCJenYNUfpi9A28a5akQJuJiPoSWladkgrljN3pQfikmk83gPOAxmb5Zn1EwFs6aFAkX6Ui6jH0p70Wk0wUisV+Y/VlpTDlBqHMgP9K1SQ7qE/Y0V1rcF/SJtfKQFY1UNeI+DpOykFIRHuTn1ZOqR1WuqADMNLVb7uZxzqUFJOf4UzCtgCw3ZWh+/BMDp7OGwj4pwcXLQj8lTIFT7uJRlRCVOEY0wGjP7iun74/5CIhbwDf242C5hvwL9uGtMOsOiB6+M5YGXBigv52hngKXAd2U4kdz3y+qj1julAtrLtziNWgmrrybXJkZiHjsqFPRbUDEVIg14h8NgNuD33CKJv59nYkaUj3FYiVuX1juVjXlq/rSL+UvD9y1/p5+XzkVfQva2AyXW6zTTjwrktAqM5zpjFeUdzu4xKwETXJmRg0/lu7VWVq+CEeUrnEqttKV7CmxJHcjaAv+6kF9zIaL8IUfjqvOhAj+UdRrEZzZkQF+NRHogf0Gt5IUgo0zEWKRfp3sRZV/1tpvv1892dYWvTLcdOsf+tYQ0JnvwF8dYoyxsidUdOd2Za7Qod8odjf6WU+6yaNlsHdM3Eun/5TwnDV59Wslwsp7R0kJ3KN9bvxPjjDQGwMVpOeSl9w2fY8ib9pPOQF/idcQ+waxWAEa9on+Cv9APS+dDqM2VuFKgnwS2YhmrzXVNp7PM4fhj4es53lD9t3o1Eulx/B210t7In1wTCV0utno/l4qpkUh342RnoWME/Iq7E8FsVs01EMvpnFDyqWT19H49OTPpKn17vmoJIZbP6vESdbi3X2VG0gwIZ0w/QyYa555vcigRw7Ncp5KxK79C/ZwhRCqgO/IVwhL23MuAvmgiN1v07knuV05iJ6e1cZdIJgOUfhirPfwlVMNJGEtIxy/zr9aUUQVcqDuIbZvin6hE1RL0a+53UZT9eSXuzj2Fa+RZsrPqrfe7acTySZaXuuR60ifW2uq5G1uDs535a0vAKq7IopdJpSOUY3iF00aY3pgT7pqVVqDf/S5FLOdzgGkD+xXTj7uCdCFfsfqUbRpjgDMxznbJABfl2pVfVp95PjVYPYy3lR7y86y8WNCvDzgnjaa6L0c663SjwFWyLn5DP4/pC/COWRHhFiOy5Jm+ePVs1ZoEkRrn6hvanuxXoN/aGRZZ5SxAX9I5qhDpIG9wCBXCLdydk9z33w+qKB+ljyozO7lbzQNZKVavFehN7YMBTmPQ2Y0UQ8QlmlObZxKRSaTLOQmquLGxhT524a4gP2tywmd0Ma078leg3w70i9Wn/tQgaAMcwUGOusjVi3UvloggZxq6T6F+humrEdWXclqVl82GaCoFh2wW6MsEs72cg7tOfPAr7kKycjCpOPwNLHZYQ+vT6sPX9H5VspPm+hEv5T1t7uxXYVLcGSTT+7WCdXsBgwlHqKK8H3G2R4bnuLJFYOhTsJhlbAZ4I72OBhR5mPdwuHsKzE/ujiiv52BnnfgE4WKZiBWj54K+Bc5wOgvIHwODITWx8jCfzL8C/axElI/qLhK1ONevmFCK6Ys6YfoCLGEwwVatvp5TnblGC3w379zTO6sPCOLBkgqRhry2UuhumH8hmr3zVOChguo8PuXserViWMNV+VIwMfNTfTEHl/5+/uQWzmfAS/PXCsRy9suyhPfTqv67Gj8Sc4Wxi031e/q20H0aYNkkeKmADvEvCDg69xTGubSlRfmV30tqsYiyK0eglXZn1KxOXIsG/T1ifzMQy0f5X85GH0XAFamZkTkcyAB/zIIqud9Y85kXc0V+lfRUO5SViPJ23Ulquef6PZWAWoavxU8je0mTDQVi+Tgvc1Z9bhFu53ZtdXPAr/R+VkZ/RH+l0C29Yk5fgxldL5vMoGkgNX05/8eZXishE3yj1X2m5E30Y6jOP6eY/pCnMX/FXPP02LIzZ7cIiMJKQC3doy1ct49qsqGanslHHF44E4SLxOade3rI9E3Gc7+a6qbV1OoDJrNYRTN9AxykC1RUNJRId+BSBp1lzRX4hdwJErUBfRVR7eMVFaA010KGYu7Rr/rvao/yuf55LUy9Av2pNZFhs1roLsGx2ttgQydyEcZZjYpieJZr28CDbbpQH0A/ZvWN2vCDK3WO6dWCVDK72Cl7yhKOEaVXarqEKxzmr+oa+w1aHgPHv7wr+1CljutbaOlJVGPWvHq+CsTyzf4A/UNRzYZEVXp/ao05Bn1lX94skUT6bq5KBNZFrwi4Sta2KOJTfD7Tr5/o71H56za5kGJ3zyL8uQYypodwPcc6bGRvCXiaH7YOV8OmwCL+gMCj2n1l8m6q5jr4uLqnP98egjMscqZA7eUiyRuh1Wrsfo1+TuaOnP+rTj5bM30tHPQN/6XHsAuvbdiZKzsKsXyzrd+IPPKHJhHqC7ArO1R3rdpQgKI7TSrHcZM+yjkMOSvgm0TO6+U5DSRqD/oCHNiIElwCmm08i2xVRW97B6Yt1SMbOAjKUi9Bv2Kurd0inKmfkmyn/QHvGFE2nJWOmrrtga1Fnc8hEGCAt+P6HooCd3KrikRt5SWe6ItkQH93hFqV9dtOtrF9AtpjOdZpKDvpBy/SNp0vwkTk6PL8SrGNu6j19TwRW1jNGsYSnF6BHoaYR9D4eJBBBhhgYJsLJ5Rao/1ujX52S8T8Pq3eysJbKPu+HMTdmh6dMuAR1GujT7c4klCPF3KwzjqSTz2D4SJRDdsc3fl0UTcJ+grsTZXcT4Kue9i3aOaYodgVEfBL7hHtDPoRsJNjpQ4Y4z4e51buZjWbsYyzRcZyv93Q29hiQy8hPfTQQ8ggQwzFQoc+Bhho/NvfCA0GGGSAnsbP9TZ+doBBepryCKlxv7egXzH9VszMcAJ3Y2KZGfUG9KPYxHNlHevYwCaeZy1b2MKWxmVZQx999NLXePXSRz8hMMDgNruTcf7dC/cceKApz3CdStscnvWkiE+aA13iHRb2qgzeK6Y/GVa7X5fKROvkfgP0VcRqHzs6FJygfJ5L5c4cgM95JrGMNj/ZstWRhtBLL3300ssg8xliPj2NEGSl3Ba78lCl92cL6B+hQqTJS1juQV8bTVQe4+f8mqdZzWpWywvT/CV92+RUlIBhUZDqmpdiuFKeaecaPQL9OsgHqc93qZh+AvB7CBkvvQcMWMXl7RFrKmU0yAJc9cWCzbxJrgeVxEhbbQPX3UV50vKrihVljDE2tfobMeDwq3tBNVcrfwXAy9lBVqtJ7Nigc5ctCD/iAr4v4wktDrrQrGaDqPys1zQfxVSQDxjGubCjXfvVhzN9ev+iahtTVKjqVGoxXCLr21t52OTZgbOUW0TI5+V6DVGJttLQtgqUNVvEFx8EEsV+t1+gX1Wjt4JHy268hNWpkMgt6CvCZt7LpaKgBkEmz/altlX6ui0iqiC/ftByE79JhYa+M/1YJY+oCkuqjUyBftmLGpWAsQ43UhLRY+AsaazAvWpa9Q+aQYzomFGImb9P3Lp3e4Q8c1Tt4TB+mfrqPMfPpLxLLlejRqJtAV2p9nn77IcBvi6qQYegK/LKsnqngj9R5mXmt1egX/amZRbDT/lNh0OrWEIkdFYTLsCOswBM/GX645XFx9Yxma8MOTbEX8jlGhQf1FarhS0Lj3NtF3kWf0BfMqH+vOqyXiYoCkoeBk22le6wpkC/5gw6BDhGLKrGY0fhKdNXqUA/pUv7aW9syK5CaoJ70aAP96h4m1gv31RNC1wsoxp09Z3+rL4E+RiomnG30eQyziK1GB7hh531NmyKaJgNjhhtgHKqnizXNUBMch1RPBXfTfMSaXZlUkC3MTVab9PhS6uOZkc+UTUo41Qp/qm1jN34PfHmFC7T+wqMxsbZ+raCkoG+JWAD3+pqP6xXVtUX821KX8X0uya05VgKfFM2dUrux8/0h9nslLtepRdwIQ/ItrUFbV3vH9aLp7YS/NVxr8JW5l9fFdOPB31LGqCPF6AfAEerQVW8PJM3JXOOinCjPNTZNeJbd46k1Ve16p1woGx6HbCFS7qhfw3QV5FINzp01UrIB3gnT+mDPMJK1jCSUvgdGEQJWcwCFrIwpyJ7jM1sYhxBGOZZnuIFRhnmBdbKc5Pnd2owRNN2v/6AvqbMX8gOUSkz6NcIMzeYXd7TN1heyTlymYYKdvsn+VWmSvzyP1Zp2JjkBL1lgw6D8JUueL56x/RnU3cOzW00LU1vPxPzUsrN9C0B18vvu7mSGwKIag8TPIO7JLGgWAbZl323++/ewDpdw+Pcx894VFZjQQN0Wu5XvTrf60mB/gTVijvrWENpUQ2cJ0KVC3RUrozDdF3ntwf3j/+O/I+leciV6j5RPqYfEXAvP6O78/rIu/S+em999QbL7StFpIP95h3iatuftTlVV+U6thIsX+/uXYcxkd7vNDqqNyrRjrfi20WImvnYYFjIQvbiDzkbeFZ/zI1cK+tBA2zXTlf9vLzTzHFUZ/rx+H73SXmoiNLvOEdjUBbwXb2En3Mnv5WaaEZbc3l782s50btOTaEfZD7PNT5ewsZGL/mAHVnT+HiQZQQohi3yTMqWTOkK+b4hoxp21SHBn0A/W71v8a8wNGp2e1nDE6xmI5sazaWVfhazkPmNJulKyDyG6M+EB1uXAQiAGqOTgW0zvV8W3Y4w3MvNarrRijCm3g84T4nMRCXx1IheQXgR53IuT+kXuUieVen6nFW9Ot/rTxnJzJ/p2xZxdzfOihalmTO3dk48Yb/zg5m6EzqP8xhhtT7MKmoIygC7pqbr9bMEoysTnfoG2EHXsin2NWGIRU0tCOhpNqXupdYwe6GP8cbHAX1IfRf1E/LviSCiTKCvBKzlm3R7Wh95HOr7F+RbAsa5hp9wM6sYzvaP1ICwOWpKCAkb49IGmxba3xifVv9qf+Nd9jS+NjmNIk9jR/iyvJDS7DLxfOEiGdFApgH6CjzA2Byc1J7qs0dEwG78PX+mfysXQVcFPb7F1enTvZlP728PA9LEyJmZ3O9lCbbcnxhV4k4LaxgG2JM9O353dpTKHh1+YmHXT/KW1MidMlXvWwIulTVdtyL2GfT9umpZZ9aX8Rm5L/bFxCU6qfdb3R6tpFPvXHRyRxP7Wh7QVwzP8G26zE2FTbEJz/MLjiOa0/c/6wMqlYjd+aq+jvfJc12l+qxXTD8vvS8zplAC/JL1MaY5ygsMd/WzC1lGwM4sZ4j62XoRs6aXNt26oA3Qd7/CRN4pngnJywu0/8rW7Xee7Mtzpq8YRrhYu4fLyLtCPvVUsorlo/IfoMGUhidvYmnrOSj5X5EcK7Co5FTCiFWDTNE3KVf1fkTIf8vzXRLYeBteqemPOK4UZ8NCiEU5nf31nXJrV8Lyien3pmLsmUzvWwL+hn+eRv1D1if0M8AOHMbx/AnLCoD9eYnhuj5dbpKu4Fq2C8Tn/V7JZInKk963GO6Qe9R03RnRr1Pz3hnQiO3nI94tF7bvOtnCf0zTq6i0CB6yhdll0WslJOLS7n/AJIR/C+OEJSkJMwRE7MdN+jaJ1HS4xONfel8KYvoCXCdR8verqOnqJQAyKuvlYblM3sERXIOZUQ0ToA8TYxZh1bsstoLSgr4gfHVallJd2esW8r8lF2og0cw3mhZt9UrHACXKYMEv5K7u23w3BSORCnfziGd16jPtAC2DfE3/Vqy0bwLs95n++AzHtT0qcWsDUbFdvTRmlYGG8hincikyw9KclzD4sGpjkrJ4LSHoWwxPcN20+LtfzXl6vJXrBv5axTPcMKUJ9RX4Cmg4HRfQ/FjG+RZSqstfBovlE3qJDohtA/t+Ve8XXcinorSMqbuOzCOpaSjKJ9g8w2w/TIV21SyyZCYkzX/L4hqvkvUaTEN/I4+Zvk9P9hN5HPFstoSUJpgNeJIbphPMxmFOVbiENTPOw3yDfSHiXC7TXlp3SK835/HF0PpSxj/CLDnBkhqwgudnWJaacpYV009YfAL2gvK8b341bYfq2ZQ9aV8C6iqYul/9g9iyFKgq8KCs6e6yXgb0xWLkSS6aYRbmI/cJqHEqF2NodbbvV3pfUsA2CjOaodmuBi0zfxMi6Rorpp+w+JSGh1CS4t3pBzh+kR+/B+z4pkNl6jQp0xUNKa7/LzyTaA1SjhUywdn8TbpgzWOllgToz5L9UqNGd2FZoUzFVKCf0JswcX2qLLKpAfsz3YtcPtmVv/nX/TwcJSUlAv09dDA2THx6oC8WI8/zQa8VbOZgP+Lj+mqxuXO2/WL66WcZmeGn22aTVlGjoYYglveykGhGwUYq0O+KAW0N+53N60gNqE1jyLFS8+jpIy/DEYNyrO6Gql+aVBbQNyh7c+B0wtnUN0qkgXyXzxB4pe7FKIlg+IIOYXPcgl+FfFHK+Edn+OmkvaPM3J4xajRovowaUbFSkxrou/grtFCoqUA/vtLjh0xp3jccxZ6i09IGn7yg9TJDIyg78gVRiTRUfyzNlKT3vhDRx6umJ5qMamnAX3M1Yelg3xCxP28TTR964NuUvVqG6c/sXi0GejT/FWqQuT1rxUrUfFmxulAP1dP1I/ycC+kp2BQr0E86iSzol+NM3zLI66YFBP5YvXoWgCQ1yHKKXqBDUhPVQMUL6JdSlaierdJ9j4QwS+rUAm/j+xxFzfPikZmIWj+kX5fNmUE8kVfja9PbO9NM/61yY3c9szWgjx76mc8QC1jGLuzEPryMpSxhqOG+pHCjqEA/Lo0gJ+wvg4QUOEf/q7sQpzGOeMxbq1evdMrybv5IP8mVdehRIaw3552J037NzuWTTEe+MjWdgoM5nNum34Y3DvtGNugbuZojqZWqCtJgeTGncikmZWITzTlmPiybMv6ZBH0DnKuLWNNiGJNhgP7m5Kte+uljkMUsynnqiMCBNlWgn5SGyQH9sjCiw/gDuatb54hlxEmY2l2o75dsIw7gCn6pV3Atq2XLFEnS7lpPdw7YkgFZ5v9SRE1KBPoRAWdy21YzfaiPL5DVejIXcQr16WDlaXUgvJlLM3F0zauZ9RMFM304eZucVN3siwsfNRMJV6sVzJfpYlONPs7irmno0YhHz19LPZtfhzIBFnglr+RzrNSbuYd1PMHvWdXImWxP8x5gXvOGWR9L6MWwXh5O6XVQKos+Sz8lL3Q3Kr5F+l6sGlmnp/NePsLyBhzaEoC/QXi57i4rU+M3I69O1CZSZjQy46DfvjdZXrrNZV14jTK2n+lWw7Pp/bJc0A2At+gnc47vWnnBcc+s3nfoiRBC9mIv3g6Ms55NWgMmWNn0oMImVlNLDDwPGGKIwRx06WUeCxPDhgJ66W32JQkZIEAZ08/IPze8tqAlYvr1epXdeD3fzGSopwP6IFZFIj6vV3A253AgQw1OoExGbkK3U8Nmk0uM2JGXszL1rvwarRszf9FCQH92Aedw4gCkYvpZ0J9q5VSmkEiw7MKZfK075wi+Wj2+HloFDYyIAEMvO7FT438OnNG/qwxyin5GbDOcC0rVh1NR3qmXod2Es20EI6qigTwn/yFHcRjv52J+zUgjTRsQYBqKZ6lRo0ZERISNvbSLV/r7fRDgSWn2I9Zj80dqpbtp0W73YDM2dvJXMf0k8JU1vT+pHedpT9dV+b7l92SW6FhIiEl596iJENE0XrbDq44iEcpw6hnKZPcGOJLD0G7suW11viiRGkQieYiH+E8dZCk7sZzl7M8+7MhCFjGwjW0QJGNmbksHBeF4DaXmccw/nsNt/Sk4cr/Wir9FT5NuqjNTm+z8LilrkdRH04W9LOiXaa6m8ioOlTtSx3ezBfTj/sj/XSsuxS6Z+n0plTcUIvo5X+7UrT/TT3BcQA0GK8MMs3KyEEYXsJjFDDFAP0vYjZ1ZxHzmY1AMgyxgiJCelhHXOGMII6xiAkFYyg4sppf6uEZ34oNl7M3DU25BRdRnpt8A/WpNcrnViVpef2BtercXZsYG5pe0Oc9UKBXwXu7oEhL8BH0Fxr2u5ndjXUm9LpdmG+Ac/XtZ1TnB3+U9fLGNflBT5/hWNrKRJzp44EEW0N8CXNfJhtR3D3Egx3EGBztmrUO8mIdTT+A30x+rbD62VhE/tfbF+Ot9CH/L73iW9axhc66OGyIEpY8l9AMhCxlqfucCFhEgLGAxy1pYVnvH8H2eSsw+LxvoC/AGXc4TXXH9yKM8yHjK4ivQT4dzyX02JdPriKW8mX/t3E13Ws13JHHmrtJMoUijuE8T3wvIcGcOOtlqQVQ2cyu36r/yQf7BWf2lUCPkJZAD+r6Yf62Dwpfb9AOeIp4E9+NsTxG+xX/wgGzepl8TNsas9jGwVa2zno4dXE1Kp0zjtQwRizlbPq1mqyzNlfakacdYZfPZAC3WtseUMpx9u17AaCeuvw0d96SLsrv2DRkbgYEmwggjw/yzLuEviRy6632ngFRUjWdteG1SxqKVA0io/tOJkK0Oay5dQP2uywfkCw0tN12Nr5bmbje/V2wDsifYst1AsIwa8mf6eUbaO0fv7Cqa1AlRYCPjVHU8cQtLd+Qrm2YbLAdwolylQfss0AwLRrTdK+e7rdQ0VMNX2YxxZHICLK9fWkyZnE/m3+krZTX+kIinEuzVvVu0CF+SL2igRgUkkgmpdXxNNF6R2MlXZqzR9F+ScpXlu9tgsOzFOdLN2CdvrV7GWVOZe1Y+sUqe8oWzivIBDToRCh8FY8XyPM84c9YCLNaenFjSF54Stef+JY/41/FkYr+M82cyjHKBGhCbF+xuZRBtt+qlpWf6def4vzWk8wxyT0frqgBPVeaeWOOJAF/mXA+ZbsJZOIYjW4yH99vk1SD0OH2ExYkeUOIZrFag3w70n0uBfuj8mYTHeaJeDOvdCpxIxDp+z8rhHNfFmF1fD/UEWEm5qjE6rWQfAzdM3zrdEcES8L5OepsQTCxlmJONn3FP0EhaEorlIHZzdnFPgCUJ0PfN/CvQb7cekpoGkmT6Lk2x0b1S/WQdxduYRTCO75kr8P5pAq1voP9ABfptQL/46n1tNKqPHFvzqbqfaLsyVRMH3VjKMOfkXY2GqUnq2VcwjdfUT8WnslsZ1735fw6ZvgCLMn/f20K+aqXWHTn76RZWlb3Yu6sz5LkP+hZDjecIEId6bFCO1QPQ9olQryt5HnRcnlox/bSfMazCEjgMxepNes5r7/VighHVIX2ZLteddWddovN0QAe0N3aOaGPFRRMtSpGiabziJUs1iUS1T3fQg/Uf+BUHOlboICM0n4A2qMKANgHbLztKq+hnsvTxcZCazvhRQyo/N1XANxlqi1PQtxj+m8M4gnNY2dUdhpnbkyHO63gDyScmHaaeawVrnBU7+7jGMxBcLA17llM4gpfzbcfhLLxJF0ibepVwiuXrzvyAQxjlBYTNbKSGMK6b2UKEAKMMs6VhBhHDDDOcMopxRhhmtAtTCRliiH4ihEEWMZ+FLGIZu7F70zn4BSW+mL9Ci8n21VIMz/BIKghyr0kByin6ZT4kIzp5L15ztaybr7WXQLJQsDOkBQXmQiyGx3ibDAMr9D5+ys7OLp0Z4Fz9x3SDMI+D6Rjoi1XDUzzGjlWCv7nGUvtbtN1/RK4BnuBNOsF5zi6cC5blnMrFrYdKhc1vVQ7mEJR+dobmbCQXjtt60E1JZ4v5Vyu2IkLultUq2wScM2OKEX/KIfox+clMs0rtbRxNCb0MMIABhAGGCAn4jaxO3E8PC7aqr8mw9lIjlN/pB7jc2Q7VJ+6dwVdz5mxM+USfrD5ZZWSkpj/jyMroE6CvTpi+xfAgV2uIIlg+xGG8zBlxVZR36GXYVn0owkRsZJsJN42ZaT5zkNyOed130dPY39Bm/z3jyXSkbBWmTxF1T2XhLdnbz4Eg4cb96DkXYHkFN+kPuJK7WMuGBKAEhPQQMhBrrSsMMZ95DYvqY5B5zGOQQebR13hHPQwyGGvT20MPvU2r7qGPPgyK0McAgnCbHs9wajJBUc4oIOJ7KtTEMq6BfEev5jRnnEiBN+nXiNo06fHN6jVBQq7hY9WpfjNsnEh8ZgrVbPihjGogEWgg6/VjfM+pFzyKQ+SuVk16woTgDPH2pduPJedvk693KBXxvMllld7P3zdDjeuJlzwJ/lxLrQfVr+N1wFqeSmhYHe77cgpItzcHOIS95TdqcAH6whM8JPFBYF/gNGf7E6Acw4Fyn7auLfDFC0gmJ6PA/TzMvp4dhfpDAEyhu/PTJvJZFa7n1xzqKJwVavRwFne10uowFSFsLxHMbvAQnsy0Oa3S+/7vG9zPQx5LyzQOr2ApS7cKZnQr7U+amj2esvOg0P25l1qza5pV4TaHzhGUHs7jvjYeyyemn0jvi2ogW/Rq/qo61c/VeykU9Cd4OLYzodT0Mg51tjMGOFs/JZvyc1gmJjChuvc5aej/I+nO3FV6fzYEa1eKTdzRnwR9f/opBo3O+zbnpSim7Svo4pX3c9J8BSmALTYJ+jtpXpITJZARrnBME07VRdiWlc7egn7j2S5mxOEdCJ9B3xRYnio8wdqYtkTAd9hI6GhnDJbdOblVSF8lhloxRp+7kg/MuezK9jA9wxa+l+OofZSNtITmmV5BrF5fC82DKPD7xH5EwLcZceaFDJZ9OHqW+MG+pG6LVZHfcqPTC2I++ewgA/pa2N9eyfpEFsbICm5yWAhqEU6D/HDWxB48qsCj4RYt93qd9egjm8yqzF64WR5ITUnXHIZUdj7U44TLKiGwKvVFkRXciLsmOAqcPUumVGYreYwKF1SQ3/Tb6Z2VwnTo2VSGUVT4psO6tQA4UXcT24npV8ozGSM9z6+8lkdVyEduruOCXEOvKiCyTN9FqCiMsjoeZjR6FF7jUBoGOEl3ElX/w+ZM8CoRwo3cQFBN2WzYuatdfC6FpSrKL3jK4aRYyxCnkZvDqkA/G7cpt8paNamTYZ+cQn/bfSzjihBu4ybNM7KQKhMSB/3eVJBbHKfewvpUbsECP2AtgTPnGLGEU/B9xLDUrT5TliUS8TeMF5bK9nmZjL4VtzerSR+9BLKam1Bn+2KBN2pATjhrEo6zWvVNvFKziRmfYKOnAv2cXfsnGSNdrVrsqfXskFPoBPTJA32xauQZbsDdYZoCJ2mrMSk+WX1efs9qIPdwUdWOl+yVRluYRcGaHMWqJ/hdXkh9BS8Vi1RMv5MLMKzl56JeR869md0qN5ONCLhWrlEjUUdnUHb9ToeMRYb6I2Sb3ooKlznU4AA4nl1nQYJ/IAdvFFXhEzzuLFfij16ng9mi5GEgk8ECK8qv+J2zMkvBMo/X5FlWxRCzSZGfyQoNMiUQXsX8KpKsyzSl3jPhuTaDUqsLjll5SOGgr8CY1DLHZlaU21nh+PTzpBY25JNdDeWFJWIxspr3Ni58lnVlm3AVBfr1nrUb0qAvqoEMc51DMi3AWXl/vwL9tDyEi1vGc/4w/d5qH5tGZzF8RJ7MCdTyrvKUeUkOIyqS6W/K46oayvPc7PB6kwKnkH/A4JPuzMu3cok0kB/ymdKX802121YoVJ8iNrb4n+upORu1K8AheoComgos2vP8+/iR5qVkfGH6AvTFS/mk3MAWEXKhXKahtHJ5VXo/CXA9GZ0vam1u+UxXOJy5IcCRupdYzZaC+WT181r7LTX8LT8lLDXsB06Yft0Hbc4LxoBbeMRZkaVQY4ATsyhfgX7SzIXPyQgmpxzMJ0nVQV88ZSRFQ/6t/HnLQiyo0vutgyABahRXRLepZaj9cx535hwNEUs4VvNuVXtn9bkpfkVljHO4t9RsPzlYyxYoiYgteVakgUR8B7cJ/pPVECW1xlTOMaYmAXdwheaXXvgEq72ZS3vlBP2IgAc5W4ZpNSetqt7vJI8iHdJIHncWVSNbuBaX94eU03OLd33SnaA11xdVI6s5jRUlhv109X5xIaRltOX/XZeZdlFsGHQUe6d9Y7z3/iBl7r2vKBN8UMYyPN8vWK2n9wc8ZiRFrRoBKzhFVuae5scZUnVPPxkypsOAIkG/lU5/H+vs9NMgHKUvkmzTUp9AP2SojVuwGsjjnMKq0sJ+csaGD6BvVbiPBzDOdsTSwxvS+BD/pL/UrjAi4NNye+61L9/44gADKSALS7hfIY9ysjxan2KdG8fV+X/VvzCpye7O9MdaAFakws086vD007KI43NCe79Af3678FUiDeR+XsPjJYX9wBnTjxjP3RElkDGucUg6FDhBJdmiJw76gyV2hjVCruWTmsM1VLwD/f7MXpWL6VsiAm7mePlta8hPMP1qTS13x3jjrbm2jHEFOB1Q8sc5f9+nuQ110G8Xu0QayG84id8RMFG6rG0AMXArEvTH24QDcLnDBL8BDmdPsfEnMAn+WNb0fo2QX3A+NaxoG1fpR5JYkUx6v0xDZSIMAV/kBHmiM+SrqQbutA2CirT4ibb/ez0TTk8/X6ML4wl+mRzW5MvRUNCe6Tdh/yFO5A56SuXNxSktq7WWtAqP8itc1asIEYs5Mr+QT6BTHDmHWWPIDZws61uVg4niT5ljvU49nd4vC7BFWAKe4Tx5j9RadOBLu8rqTD/pHHsTcFAr1Dm2tEIV7uW3zk4/BWUXDs9U8Pd5s28K7c70E7D/BCfwXwhCVCLgDxKzCYqt3m8hZVECqXGjY5J4arJINR5ZLyod09cGa/w3TpUNqaGsyW8MPap4ULJ3duf+UBltJPUN3+UouVSNinSTDDZVej+1ehMhQJGg39INixLIKDc5DSeVs0RTVjTgldXP78bKJVIjG+V9nMGTBJSnvXq66VRUGJ7V2pJKuI4xp0Wqr9ad4jmsOOgvLBnoRwgBj3GmfERG20E+eZfk3LK1xF5pz5w/048AQ8D9nCNnyBMaSOuDmLTSV+n95HKXs9IOzvEK1OHpp3Ci7ijRVIseNW0a4riQ3YIuHYRV0UC+y9FcjGIKZb0OQV+Tk2SiAvdG2+2F3M9dzpokCxE78CfECh3Lmd5XIiBgnC9wpHynC9bYk0mou12Lmm+lfoUvmMM7Vd8r4TbezivlchUV6d6gK6afx/TdOCDbAdTu49fOBpQYInbluEkrVwEChvCnkqce6nf1NKISaSBPyvkcyw0YApjzqf4gETAWOd9OO2gW/Lczva6vM2GqRY+JmePcv7JXTxHXGb5yNcfLB2RNR9ZYh9Uhb96FkD6K6Z9zoK+NvRICApTvc4ocKV+XzRqIynScl/GqGMsX0J9yVp5ojqgGMs71uExHK29N/P2AhV4x/Wk9jUQqGsgtciKn86NG4Bxh5yz0hwmYDwg8svub2EzoSLMD4NX6sqmjq3J05FMiakQIhoCANXyNw+WNcouaLlljf3fnaYWtpPkPzCHQt0TUkMZeKbfwKQ6T18s1KhpMi+NXTD8/YEwyfb+kcz0ThA5PP4/WfWMDSoY8OhraivZpdb6vIldyIkfwZVYTYBAianMQ/MOEFwy9wTOrhge52+EUxIge3jKF9iFAo/FsD5HDWVfbM72iDTOpv2gO89jMU9zGj/mlPA4qdFcKVofVBVjUC9i3CaYvKPMws3Cwpqb+FUwsKbeap7ie78ndjW8OJNqqU7qAHm92zg/d6UnsQD+2EKu3nRKcEqlwJw9wkLOT/RqDnMDDGCyCsgTjkdVHLJh+HkSihu3czu36TxzNWziMpTENmHp/s9lCtEHpplZvQXavSHu/JKpGrF7Jq5yhq0U4Tj/FRL1dWdiMI5XBRkpkrq0JVnI/D/IY98i9kxCCSrexrgBLPWrOYzJZmZD5yKwzWsndq8e4h/v4LffLysZehVhUoq3+K0uqsVIJ3VmUAP1lBZU6GmBxp++RSL/NoU6lc4Z+sXn6uZtHhXy9bPXFXIlUEIysYAWX6HJeywEcwAEsdTjbcPvv3JLme6lnRYrbu2UdPIwFruGzzvJGBjiSA+QeDYgaoN9IaH2RRR5dUen+DY2xJhV7DbORF1jHKp7mKZ5mg2xp/qdBpgkhCkzwkDcFPQGr+RyTd3dVhd/zE44kmlWwP8YYo4wyyhhbWM96VnI/97JGGh3atZ6nsbJtl8o2cgEnVDy/uUa4rKk7AjzIo0wU4PotIY/QPj2tKlzOyexCzcmOKQH/E/t8lIcwnmTQDGv4t62OrxXFNnzfCr4EaljAnuzHvuzDrgzQR/+sPuAd5itsatzBUmAt9zJUgE9UQh7pxOBVZIV+mrOdZY2ETWyetL7EI+gQA7MuvS9MyIYu9iZAsLLV706XeGT+6+NAqCKq/SzHziJoUyYYZ4JxxhlPwrrWyyytbDdpe7R37nVnRBKzv9WwtCCbN7Kmq93qYZG7YaTyfHNmA6CLvckSGV6Qie1iDQaT9oQa0kPvLJ7gYRieInaN9zSfvkKs3rBRxrqS/FKH8tksI8QSIU1lkDnSxkFNw1SVxh1KmWMuf+7sVRPm6/tlt/9ezS1ZzXV5qEgVnhWwc1qvdaofCkZzQeZdTOEotWZP/X1JKcJsTINmRDkTwvVKNplLa7N055p7N7PmMGulU4DuFCmb7iDL8W4l5OO31W/XACCDBrNbrwvduy53Rs1c1J5qVata1apWtapVrWpVq1rVqla1quV2/X8iubXS3CiHLwAAAABJRU5ErkJggg=="); --logo-ratio: 1454 / 160; --logo-h: 18px; }
-.logo-3 { --logo-url: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKAAAABwCAQAAAAz+LOJAAANtklEQVR42u2df7BV1XXHP2ufwwMRUASLjrbSUQkGiVVrbDB0RiM2/kitJqm1aa2/kmkwiQ6JbZKZ2NjGxKEoJhhrNdapTduoY21rzEzEVpPaGJTGoSJqYazNMGKEwgNEhHv2/vaPc+5999533+Ped/Z978be/f6B++7b+5zvWWuvtdd3rXWgx4ZSOfpjjNBdrCMAZEpkfUQ6h3Cztut2ndaXxbECuE75eFy/q2kAcn1Z7ATA9QraV4D4iv5M82qy2AexTQAlLylTJknaq4d0nhIAJX2Fbh9ASfKqFP9ap+v6xqVzACUpKCv+v1V/off2jUunADbL4hP6fU3vG5dOAcxlsQriq/qq5veNS6cA5qNqXPbpH3S+0sK4JH3k2gWwUaGf1+d0dN+4dApgo3HZoXv0/r5x6RTAZll8Slfq0Kpx6QPYyQjKFCRJm7VCC/sS2CmAVVnMjUtF39VFmvL/dj8cM4CNjs7pMH6K/M7Zdo0UUSGM7z29s+yWkYz3HfVPlX0A+wD2AewD2B99APsA/pyONMoJwgAb9qH6AI4OmuEAEUxAC7jkGr7RB7AAzmEEC4hQfJYynWlMYYBJGBX28Ra7bLeF2jeMZOKBjBlkqN5JRwDK4SzDA2gG8ziReRzLL3I4M5nKANUjvGcfu7WVzWxiA+t5ybaSQXHInzAYu7Fu2wAqIVggaBKncBa/zq9wRKuvFSfSqUxlDicWnw7qRf6Nx/mx7S4k1o83iDKM6bEmA9tVPX63BZ7lUncyH+N85temCQVgVsxjdTCCEAKS2ueb+T7386RVQAmy0LTOehaUjKYEHIvs6eoV19+B/pwrySKYTc8AV9jDzWuMqLZyINNH9HgRqwuq1OLA7ceNK7VI3wZ9viCDmtI1SsUDq6FV6X3N8UCZTLM0qFhjnSbJtbWjFnkpF2hN8aeVUjcYan+/Xd/Q8bk6D11I1wBMQddK2q9Q+qci6Zy2QrYyJaB36eEGTrb8qJJBb+oOHTP0mLoqgak2lJ47R0Fa3S58BrpKg5J8hKVbB+C36wuaCjmv2x0AlYDOjQKf5BX03jYAlAMl+mYN9W6MKojrdU6x23YHQAd6NMp9VCTd3y58U/U9qUNjMXYQv6GpEEHNhgEoBzpBlQj3EeT1tubJ6k2fa+2vazL/xLlU6lyQLvm2pAQCn+ZpncbeLoVLPkGKj+C+OO6x/8LVu18t4FFqmR7iYipMGjc/NyPlbfYzo+Q8TX6gDDiEjcxq1+cdxXkWbzKf17F6AF0LpznTV8YZPkgJTCkN3/CRmLiU2fjSmuRxrLQtjfI37KkoMa+z+BeyrivvSMfA2BLo+AnvKc0WB4yfMZ/dzWE617T7SVO5C3CMf3qExV5TiYkzI8AHwrjJduKaz/CNEzsLXMuxZBMSqe5OeOFTQIgg1xu5W264KXIN8hc0k2VoguCzPOQVbUJnXsdxLiKJcG032D5seAzJNW24lzEbPwEAeozv8FwEaWl2YAZKGxBPwloekGsVfamHystxOZqA3U8YgywjYk6VDK8ZXEYc4uyLFlrj4uoEXizkPUAyAfLn+IJtYVpkB+ajzCmtT56E1bZ6pOifa/jXElwEj73zS0z5d/5SLuoe6OVYGsU3CHxx9H1iyAYuiuCJjcX2Vlhq1fh1JPkDFnMKoaQ+eRwP2tqRo8+uumOYV8IJkQEUoQj7j64it9h/Ko3KksjENaVNkjD28SXZyPdQvz/M5IiIAAqP4QqXPMO3vIhAwib+VEnkrSPTXD5U2oHxOL5lG5uPb41n0Kqmi5nRWKt8xoTtDJIyg0OLdfwwEyUc19jeyPKHSVczpSSFJBJ2ctNo8tdIa04hiSSBAnbxRzzMIAnTOZpf5SzOZE6hVK5Off/WHlNiWdRHh6ZzeWkHxpOy0rYobePq5EALooVJvTKdN2yNWbpMPywiu6EIUG7TnJz3g2gh/cUyXV46Au0V9JoOaZd9c6B58lKEyK2X9CJospxMJpNTWiOOLi46I+S1HVc1RI/jALgI9GxpADNJS3NGr10Aj9aeKAAGBQ1qIcg1kJZFSaCm6E+0X1LQk03sRRwAF2phhHmCXs5FoN2DDzpYW6IAmM/xuq7IVbORPi+Y5jP0qqQTcuo0IoBB0gm6syCAysnfJR0V7MhAayORf9XHsFYf12G5hA8VpMo0CXSs/iCX/KgASl4f1daSgpBJemZob24PwBR0X+kn15jOIUmvaaVOrK5RA9HVGIvYAL6lx0rrUSbp7A4LxpSCPhkRwMYiwEd1kQYKhbaqTA67hhgAhijwfb9ZO9ozI/Oj8KcjFQFu0HWa3SiJXQAwxmP3OnUMBYsy0Jqa6sUFsVph/ppu1JwhY9KDAGaS/q59+FxTBONerAvcRF4EGPAcyQ2s0/U6yHxP9jnIwwc3qG0UGiPSxt/zOknEsHrjWgkiYw7LeVYXmDf1XIG+x3GXbRotfDAigCac7eRmrEsA5rKYIjIW8Iju1kzzSntK/hyDfFUdaGGjpQly3MFPomSSjA5iIHA1a3SGZT0EYcCx0l4nsTAmAE2YVbiajG6xtEPrOjKO5191pWU90oEokLCF29QRrdHk65hXYs+xjCQuRztCKC0wiXv0WctIekKB4QbbNTz7oAMAwbxSW8UtTKLS9Ut2gGeFPtUzinx4BN2TKQXdVYvbdXfkfueFkTJUy0aR9urYxgTKjiUQTHgl9glWkkIXLXLVpBiB+3SchQlWZCMwhVuso9QC15pRIMjZMj5JBdf13dAhZnCvrOsP68BkqOdCfdB8+/6pG4mUQUrsTs5kAynqMt2ekPF+ruB/J3wPNMRKTUZR/AKloIN1i3xXSh2a95/N+p9IAd2yZ+E/bv8sfACcc0Zep3MjvwGECKlivT6E2MMCNjfmQneownVOjSmxNfZBLuSp4jTru+Rki14oyzbEdJa3a0psZNkbquuVAwug87mWJcWh23q030KgfLKwJ+FMe7Kdekw3suyZqv6QBQtKZPaoncMZ3MeOWniq90r59/OdKCG525SOscZdJlOqL2tGMytaC8cfpc/p+bpNt3dGkHSmXlQoafIySZ8ZYxs9paClktbq3dV64brfFlyGUp2nBwt+t3eGl/Qu/WFpbifIa3t91kT78DmZjtKgKpIGdVUBlht+2APQQn27jsbsDQBP00HaphCBWvqrsTAjCejBuvrg7+qkQn0bQvCyagdn/Y7eku8RCL2kxaCbIshgpjC89rgd+C6o7Wz5Qf9tfVMLquqtpD7dQU4DoH+MTIeWA/AMmY7UYBQZXNNR03mZnKbpvxu24Grv8Pt1jibX74RKlWoSKNELPUFH1pW7gm6N8FAzSR/vQAaVglYMW3iI6NyoVbpIcxvyWWbo3p6Bb6he2HSM9pSWQS+vn2nWaKbEGo9tOplnsBaVciLUXOe9bOanvM4bZMziLOaOd+PXA7Aai+xpDdh+3c3VpduceBLusGtGdqnrks9wiB9xOn7E824gYMN+G3roTFIFcBIZ83ietHSVcABOs+cOXCeSmGfpqPCBI817YOHJip/Qk0e6gLOXeah0/Z0BCV8/4FFODq+juaktOAxHQlr89GwHQhnLIzzeBM9i/d5IQdbq9GbiNmZMSKVcd4IqHrPn+F6EiLohbtYhrYOsrmY+fpMPj6q+P4cYAl+jfLGhI3AUX7KW0uyKOvVpfP2dI321WKazH/FEhPo/h+fTWkAYrsaOvE79RuZOSJ1wo8XrhgzeHGmeAW5rRbg7JeZ1Ktf2gPpaN2SQ1TxD+UKyBM/Z+vBwU+KQJnN7tBqlMnHkZ1lPbB7amaLIYG5KVujgZlPiLPBb/Br7J1j+BFzP7ugymMnxz6yPtA/O5fPN9L+T4zEeYoBsAsPzGQl/bT/gsC7M7cyzPIp2JQQ+q+Pxjb2zZDvsI9wxLmkcI503U17lOrmurO9lPMAmys9uiIOaUz+cSSZn13A9YRzSOFqfXvdxiQ0OtVWOqsQisX3cGoVoSvB8SOfVmxJXS+NYwRJeIcWPqxzmvTAutWeUdK2vr5fxN2wmhoTnqR9ThkyJy5+SeaX2BKfzbRLcuO2HHkfGJfawUuta9o2JxN5kVZTcb0dgHstaZpIVDMdva1NdTW+3Wy9u09lD5GlXu/jO1Bulyc4qX7dbx1SzCF2D22lK7AFO5SvsIsW6KIkeI+UpFtnjbVWEl5fBHdwZRQYNMW2U1I9CDn9Zt+vNQhJ9ZMnLq5be1peVdKVeuAWTJifTEdpZOsg/xJV8YESupMr66jjdqm01dYvTA7fKtjyik3ISq2HlrgFY8I0rI7GHmaTn82bcIziYcph50JFcysc4pebw2pg6CwoRyF+OEXiUVbY6bzXa9LV1vDtCK/jF9uPhAXg5xC+xgYEIUScjYzKfsVWjpsYPFaTqfVquFxq2/4qyA5LpQV6ZKnXZM69opU4p5m7V/vanUTaJxSOUMiagb0XdjuYdOMHSKFqSKOFklrCEkxoOXGrp/lpT8pvnJX7II/zA3hqS7harnc8hJeVDGI/ZNrXo9CcDfoEPRIp7ioS19lIbU+WvYKmqm2axgJM5ifkcw2FMGeUP97CFjbzAOv6Dl/NsT6UEm+hU8omJwRWvAKq7fU3lMA5nNrM5lEOZzACwnz1sZyc72MYbbB3a5ZQe+I02itP4dpR3lciiRp28dZ5AqKoZaeuVKgUk4Z37iqr/A1OepcwbLaCZAAAAAElFTkSuQmCC"); --logo-ratio: 228 / 160; --logo-h: 34px; }
-.nav { display: flex; gap: 4px; margin-left: 24px; }
-.nav a {
-  padding: 8px 14px; border-radius: 999px;
-  text-decoration: none; font-size: 15px; font-weight: 500; color: var(--on-surface-variant);
-  transition: background-color .2s var(--ease), color .2s var(--ease);
-}
-.nav a:hover { background: var(--surface-container-high); color: var(--on-surface); }
-.topbar .spacer { flex: 1; }
-@media (max-width: 860px) { .nav { display: none; } }
+.topbar { position: sticky; top: 0; z-index: 50; transition: background .2s, border-color .2s;
+  border-bottom: 1px solid transparent; }
+.topbar.scrolled { background: color-mix(in srgb, var(--canvas) 86%, transparent); border-color: var(--line);
+  backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); }
+.topbar .wrap { display: flex; align-items: center; gap: 16px; height: 72px; }
+.brand { display: inline-flex; align-items: center; gap: 10px; text-decoration: none; font-weight: 650; font-size: 18px; letter-spacing: -.02em; }
+.brand img { width: 32px; height: 32px; border-radius: 9px; }
+.nav { margin: 0 auto; display: flex; gap: 2px; padding: 4px; border: 1px solid var(--line); border-radius: 999px; background: color-mix(in srgb, var(--surface) 70%, transparent); }
+.nav a { padding: 8px 14px; border-radius: 999px; color: var(--muted); font-size: 14px; font-weight: 500; text-decoration: none; transition: color .15s, background .15s; }
+.nav a:hover { color: var(--text); background: var(--control); }
+.top-actions { display: flex; align-items: center; gap: 8px; }
+.icon-btn { width: 40px; height: 40px; border-radius: 999px; border: 1px solid var(--line-strong); background: transparent; color: var(--text);
+  display: grid; place-items: center; cursor: pointer; }
+.icon-btn:hover { background: var(--surface); }
+.icon-btn .icon { font-size: 19px; }
+.only-small { display: none; }
 
 /* ------------------------------------------------------------------ hero */
-.hero { padding: 56px 0 72px; }
-.hero .wrap {
-  display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr);
-  gap: 48px; align-items: center;
-}
-@media (max-width: 1000px) {
-  .hero { padding-top: 32px; }
-  .hero .wrap { grid-template-columns: minmax(0, 1fr); gap: 40px; }
-}
-.eyebrow {
-  display: inline-flex; align-items: center; gap: 8px;
-  height: 32px; padding: 0 14px 0 10px; border-radius: 8px;
-  background: var(--tertiary-container); color: var(--on-tertiary-container);
-  font-size: 13px; font-weight: 600; letter-spacing: .02em;
-}
-.eyebrow .icon { font-size: 18px; }
-.hero h1 {
-  margin-top: 20px;
-  font-size: clamp(40px, 6.4vw, 76px);
-  line-height: 1.02; letter-spacing: -.035em;
-  font-weight: 760; font-stretch: 112%;
-  text-wrap: balance;
-}
-.hero h1 em {
-  font-style: normal; color: var(--primary);
-  font-variation-settings: "wdth" 125;
-}
-.lede {
-  margin-top: 20px; max-width: 34em;
-  font-size: clamp(17px, 1.6vw, 19px); color: var(--on-surface-variant);
-  text-wrap: pretty;
-}
-.cta-row { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 32px; }
-.chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 32px; }
-.chip {
-  display: inline-flex; align-items: center; gap: 6px;
-  height: 32px; padding: 0 14px 0 10px; border-radius: 8px;
-  border: 1px solid var(--outline-variant); color: var(--on-surface-variant);
-  font-size: 14px; font-weight: 500;
-}
-.chip .icon { font-size: 18px; color: var(--primary); }
+.hero { padding: 72px 0 0; text-align: center; }
+.badge { display: inline-flex; align-items: center; gap: 10px; padding: 5px 14px 5px 5px; border: 1px solid var(--line-strong);
+  border-radius: 999px; color: var(--muted); font-size: 13px; background: color-mix(in srgb, var(--surface) 60%, transparent); }
+.badge .tag { background: var(--action); color: var(--on-action); padding: 3px 9px; border-radius: 999px; }
+.badge .os { display: inline-flex; align-items: center; gap: 4px; color: var(--text); font-weight: 500; }
+.badge .os .icon { font-size: 15px; }
+.hero h1 { margin: 26px auto 0; max-width: 11.5em; }
+.hero h1 .tile { display: inline-block; width: .84em; height: .84em; border-radius: .2em; vertical-align: -.1em; margin: 0 .02em;
+  background: url(/website/apple-touch-icon.png) center / cover; }
+.hero .lede { max-width: 640px; margin: 26px auto 0; }
+.cta-row { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; margin-top: 34px; }
+.cta-meta { margin-top: 16px; color: var(--dim); font-size: 13px; }
+.cta-meta a { color: var(--muted); }
 
-.seed { display: flex; align-items: center; flex-wrap: wrap; gap: 12px; margin-top: 28px; font-size: 14px; color: var(--on-surface-variant); }
-.swatches { display: flex; gap: 8px; }
-.swatch {
-  --sh: 290;
-  width: 32px; height: 32px; padding: 0; border-radius: 50%;
-  border: 0; cursor: pointer;
-  background:
-    conic-gradient(from 180deg,
-      oklch(0.55 0.16 var(--sh)) 0 50%,
-      oklch(0.85 0.08 var(--sh)) 50% 75%,
-      oklch(0.70 0.10 calc(var(--sh) + 70)) 75% 100%);
-  box-shadow: 0 0 0 0 var(--surface), 0 0 0 0 var(--on-surface);
-  transition: border-radius .3s var(--ease-spring), box-shadow .2s var(--ease), transform .3s var(--ease-spring);
-}
-.swatch:hover { transform: scale(1.08); }
-.swatch[aria-pressed="true"] {
-  border-radius: 10px;
-  box-shadow: 0 0 0 3px var(--surface), 0 0 0 5px var(--on-surface);
-}
-
-/* ------------------------------------------------------------------ hero picture (Mac + iPhone) */
-.hero-shot { position: relative; margin: 0; }
-/* A soft glow in the theme color behind the devices. */
-.hero-shot::before {
-  content: ""; position: absolute; inset: 10% 8% 6% 4%; border-radius: 50%;
-  background: radial-gradient(closest-side, color-mix(in oklab, var(--primary) 28%, transparent), transparent);
-  filter: blur(34px); z-index: 0;
-}
-.hero-shot img { position: relative; z-index: 1; width: 100%; height: auto; }
-
-/* phone */
-.phone {
-  position: absolute; right: 8px; top: 0; z-index: 2;
-  width: 300px; height: 612px; padding: 10px;
-  border-radius: 48px; background: var(--bezel);
-  box-shadow: var(--shadow-lg);
-}
-.screen {
-  position: relative; height: 100%; border-radius: 38px; overflow: hidden;
-  background: var(--surface); display: flex; flex-direction: column;
-  transition: background-color .4s var(--ease);
-  --slider-bg: var(--surface-container-high);
-}
-.statusbar {
-  display: flex; align-items: center; justify-content: space-between;
-  height: 36px; padding: 0 22px 0 26px; font-size: 13px; font-weight: 600;
-}
-.statusbar .icons { display: flex; gap: 3px; }
-.statusbar .icon { font-size: 16px; }
-.punch { position: absolute; left: 50%; top: 12px; width: 12px; height: 12px; margin-left: -6px; border-radius: 50%; background: var(--bezel); }
-.appbar { display: flex; align-items: center; justify-content: space-between; padding: 6px 12px 6px 20px; }
-.appbar h3 { font-size: 22px; font-weight: 600; letter-spacing: -.01em; }
-.appbar .avatar {
-  width: 32px; height: 32px; border-radius: 50%; display: grid; place-items: center;
-  background: var(--tertiary-container); color: var(--on-tertiary-container); font-size: 14px; font-weight: 700;
-}
-.screen-body { flex: 1; padding: 4px 12px 0; display: flex; flex-direction: column; gap: 10px; }
-.device-card {
-  display: flex; align-items: center; gap: 12px; padding: 12px 14px;
-  border-radius: 20px; background: var(--primary-container); color: var(--on-primary-container);
-}
-.device-card .dev-icon {
-  width: 40px; height: 40px; border-radius: 12px; display: grid; place-items: center;
-  background: var(--primary); color: var(--on-primary);
-}
-.device-card b { display: block; font-size: 15px; font-weight: 600; line-height: 1.25; }
-.device-card small { font-size: 12px; opacity: .8; }
-.device-card .grow { flex: 1; min-width: 0; }
-.device-card .icon.end { font-size: 20px; }
-
-.quick { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-.quick div {
-  display: flex; align-items: center; gap: 8px; padding: 10px; min-width: 0;
-  border-radius: 18px; background: var(--surface-container); font-size: 12px; font-weight: 600;
-}
-.quick .icon { width: 32px; height: 32px; display: grid; place-items: center; border-radius: 10px; background: var(--secondary-container); color: var(--on-secondary-container); font-size: 18px; }
-
-.navbar {
-  display: flex; justify-content: space-around; padding: 10px 6px 18px;
-  background: var(--surface-container); margin-top: 10px;
-}
-.navbar div { display: flex; flex-direction: column; align-items: center; gap: 4px; font-size: 11px; font-weight: 600; color: var(--on-surface-variant); }
-.navbar .pill { width: 44px; height: 30px; border-radius: 15px; display: grid; place-items: center; }
-.navbar .icon { font-size: 22px; }
-.navbar .on { color: var(--on-surface); }
-.navbar .on .pill { background: var(--secondary-container); color: var(--on-secondary-container); }
-
-/* The app's page header (PageFrame): bold title, subtitle, device chip. */
-.page-head { position: relative; padding: 8px 16px 10px; }
-.page-head h3 { font-size: 28px; font-weight: 750; letter-spacing: -.02em; line-height: 1.15; }
-.page-head small { display: block; font-size: 13px; color: var(--on-surface-variant); }
-.dev-chip {
-  display: inline-flex; align-items: center; gap: 6px; margin-top: 8px; padding: 5px 12px 5px 8px;
-  border-radius: 12px; border: 1px solid var(--outline-variant); font-size: 12px; font-weight: 600;
-}
-.dev-chip .icon { font-size: 16px; }
-.dev-chip i { width: 7px; height: 7px; border-radius: 50%; background: oklch(0.72 0.17 150); }
-
-/* ------------------------------------------------------------------ the app, as it looks today */
-.showcase { display: grid; grid-template-columns: minmax(0, 1fr) 280px; gap: 28px; align-items: center; }
-@media (max-width: 1000px) { .showcase { grid-template-columns: minmax(0, 1fr); justify-items: center; } }
-.win {
-  position: relative; width: 100%; border-radius: 22px; overflow: hidden;
-  background: var(--surface-container); box-shadow: var(--shadow-lg); border: 1px solid var(--outline-variant);
-}
-.win-bar { display: flex; align-items: center; gap: 7px; height: 34px; padding: 0 14px; font-size: 12px; color: var(--on-surface-variant); }
-.win-bar i { width: 11px; height: 11px; border-radius: 50%; background: var(--outline-variant); }
-.win-bar span { margin-left: 8px; font-weight: 600; }
-.win-body { display: flex; min-height: 440px; }
-.rail { width: 86px; flex: none; display: flex; flex-direction: column; align-items: center; gap: 14px; padding: 10px 0 18px; }
-.rail .logo { --logo-h: 26px; background: var(--on-surface); margin-bottom: 10px; }
-.rail div { display: flex; flex-direction: column; align-items: center; gap: 4px; font-size: 11px; font-weight: 600; color: var(--on-surface-variant); }
-.rail .pill { width: 52px; height: 30px; border-radius: 15px; display: grid; place-items: center; }
-.rail .icon { font-size: 22px; }
-.rail .on { color: var(--on-surface); font-weight: 750; }
-.rail .on .pill { background: var(--secondary-container); color: var(--on-secondary-container); }
-.win-main { position: relative; flex: 1; min-width: 0; margin: 0 8px 8px 0; padding: 22px 26px; border-radius: 26px; background: var(--surface); overflow: hidden; }
-.win-head { display: flex; align-items: flex-start; gap: 12px; flex-wrap: wrap; }
-.win-head h3 { font-size: 32px; font-weight: 750; letter-spacing: -.02em; line-height: 1.1; }
-.win-head small { display: block; color: var(--on-surface-variant); font-size: 14px; margin-top: 2px; }
-.win-head .grow { flex: 1; }
-.win-actions { display: flex; gap: 14px; font-size: 13px; font-weight: 650; color: var(--primary); padding-top: 8px; }
-.win-actions span { display: inline-flex; align-items: center; gap: 4px; }
-.win-actions .icon { font-size: 18px; }
-.this-device {
-  display: flex; align-items: center; gap: 16px; margin-top: 18px; padding: 18px 20px; border-radius: 28px;
-  background: linear-gradient(120deg, var(--primary-container), var(--tertiary-container));
-  color: var(--on-primary-container);
-}
-.gbadge {
-  flex: none; display: grid; place-items: center; width: 52px; height: 52px; border-radius: 17px;
-  background: linear-gradient(135deg, var(--primary), var(--tertiary)); color: var(--on-primary);
-  box-shadow: 0 6px 16px color-mix(in oklch, var(--primary) 30%, transparent);
-}
-.gbadge .icon { font-size: 26px; }
-.this-device small { display: block; font-size: 12px; font-weight: 600; opacity: .75; }
-.this-device b { display: block; font-size: 20px; font-weight: 750; line-height: 1.2; }
-.pills { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
-.spill {
-  display: inline-flex; align-items: center; gap: 6px; padding: 3px 10px; border-radius: 999px;
-  font-size: 11px; font-weight: 600; color: var(--on-surface-variant);
-  background: color-mix(in oklch, var(--surface) 70%, transparent);
-}
-.spill i { width: 7px; height: 7px; border-radius: 50%; background: oklch(0.72 0.17 150); }
-.spill.bt i { background: var(--primary); }
-.win-section { margin: 20px 0 10px 4px; font-size: 13px; font-weight: 750; color: var(--primary); }
-.paired { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 12px; }
-.pcard { padding: 16px 12px 16px 16px; border-radius: 26px; background: var(--surface-container-low); border: 1px solid var(--outline-variant); }
-.pcard-top { display: flex; align-items: center; gap: 12px; }
-.pcard-top .av { width: 44px; height: 44px; flex: none; display: grid; place-items: center; border-radius: 15px; background: var(--secondary-container); color: var(--on-secondary-container); }
-.pcard-top b { display: block; font-size: 15px; font-weight: 650; }
-.pcard-top .grow { flex: 1; min-width: 0; }
-.pcard-top .more { color: var(--on-surface-variant); }
-.pcard-actions { display: flex; align-items: center; gap: 6px; margin-top: 14px; }
-.pcard-actions .btn { flex: 1; justify-content: center; min-height: 40px; padding: 0 12px; font-size: 13px; }
-.ibtn { width: 38px; height: 38px; flex: none; display: grid; place-items: center; border-radius: 50%; background: var(--secondary-container); color: var(--on-secondary-container); }
-.ibtn .icon { font-size: 19px; }
-@media (max-width: 600px) {
-  /* Like the app on a phone: no side rail, actions tucked away. */
-  .rail, .win-actions { display: none; }
-  .win-main { margin: 0 8px 8px; padding: 18px 14px; }
-  .win-body { min-height: 0; }
-}
-.frow { display: flex; align-items: center; gap: 12px; padding: 8px 4px; font-size: 13px; }
-.frow .fi { width: 36px; height: 36px; flex: none; display: grid; place-items: center; border-radius: 12px; background: var(--secondary-container); color: var(--on-secondary-container); }
-.frow .fi .icon { font-size: 19px; }
-.frow b { display: block; font-weight: 600; }
-.frow small { display: block; font-size: 11px; color: var(--on-surface-variant); }
-
-/* Sender's full screen ("Waiting for permission…"), over the window */
-.sendover {
-  position: absolute; inset: 0; z-index: 3; display: flex; flex-direction: column; align-items: center; justify-content: center;
-  gap: 10px; padding: 24px; text-align: center;
-  background: linear-gradient(180deg, color-mix(in oklch, var(--primary-container) 70%, var(--surface)), var(--surface));
-  opacity: 0; pointer-events: none; transform: scale(.96);
-  transition: opacity .35s var(--ease), transform .45s var(--ease-spring);
-}
-.sendover.show { opacity: 1; pointer-events: auto; transform: none; }
-.sendover h4 { font-size: 24px; font-weight: 750; letter-spacing: -.01em; margin: 8px 0 0; }
-.sendover p { margin: 0; color: var(--on-surface-variant); font-size: 14px; }
-.ring-wrap { position: relative; width: 150px; height: 150px; display: grid; place-items: center; }
-/* The rings sit behind the badge, both centred on the same point. */
-.ring-wrap .rings { position: absolute; inset: 0; }
-.ring-wrap .rings i {
-  position: absolute; inset: 0; border-radius: 50%; border: 3px solid var(--primary); opacity: 0;
-  animation: ping 2s var(--ease) infinite;
-}
-.ring-wrap .rings i:nth-child(2) { animation-delay: .66s; }
-.ring-wrap .rings i:nth-child(3) { animation-delay: 1.33s; }
-@keyframes ping { 0% { transform: scale(.55); opacity: .55; } 100% { transform: scale(1); opacity: 0; } }
-.sendover.busy .rings, .sendover.done .rings { display: none; }
-.ring-wrap .gbadge { width: 84px; height: 84px; border-radius: 50%; transition: background .3s var(--ease), transform .45s var(--ease-spring); }
-.ring-wrap .gbadge .icon { font-size: 40px; }
-.sendover.done .gbadge { background: oklch(0.62 0.16 150); transform: scale(1.12); }
-.sendover.no .gbadge { background: oklch(0.6 0.19 25); }
-.sbar { width: min(320px, 80%); height: 10px; border-radius: 6px; background: var(--surface-container-highest); overflow: hidden; opacity: 0; transition: opacity .3s; }
-.sbar i { display: block; height: 100%; width: 0; border-radius: 6px; background: var(--primary); transition: width .2s linear; }
-.sendover.busy .sbar { opacity: 1; }
-.sendover .btn { margin-top: 10px; }
-
-/* The phone that receives: Accept / Decline card */
-.phone.mini { position: relative; right: auto; top: auto; width: 280px; height: 560px; }
-.recv-home { flex: 1; padding: 10px 16px; display: flex; flex-direction: column; gap: 10px; }
-.recv-hint { margin-top: auto; margin-bottom: 26px; text-align: center; font-size: 12px; color: var(--on-surface-variant); }
-.scrim { position: absolute; inset: 0; z-index: 2; background: oklch(0 0 0 / .45); opacity: 0; transition: opacity .3s var(--ease); pointer-events: none; }
-.offer {
-  position: absolute; left: 12px; right: 12px; top: 50%; z-index: 3; padding: 22px 16px 16px; text-align: center;
-  border-radius: 28px; background: var(--surface-container-high); box-shadow: var(--shadow-lg);
-  opacity: 0; transform: translateY(-50%) scale(.7); pointer-events: none;
-  transition: opacity .3s var(--ease), transform .55s var(--ease-spring);
-}
-.phone.asking .scrim, .phone.receiving .scrim { opacity: 1; }
-.phone.asking .offer, .phone.receiving .offer { opacity: 1; transform: translateY(-50%); pointer-events: auto; }
-.offer .gbadge { margin: 0 auto; width: 64px; height: 64px; border-radius: 50%; }
-.offer b { display: block; margin-top: 12px; font-size: 16px; font-weight: 750; }
-.offer small { display: block; font-size: 12px; color: var(--on-surface-variant); }
-.countdown { height: 4px; margin: 14px 0 12px; border-radius: 2px; background: var(--surface-container-highest); overflow: hidden; }
-.countdown i { display: block; height: 100%; width: 100%; background: var(--primary); transform-origin: left; }
-.phone.asking .countdown i { animation: countdown 20s linear forwards; }
-@keyframes countdown { to { transform: scaleX(0); } }
-.offer-actions { display: flex; gap: 8px; }
-.offer-actions .btn { flex: 1; justify-content: center; min-height: 40px; font-size: 13px; padding: 0 10px; }
-.phone.receiving .offer-actions, .phone.receiving .countdown { display: none; }
-.offer .sbar { width: 100%; margin-top: 14px; }
-.phone.receiving .offer .sbar { opacity: 1; }
-
-/* ------------------------------------------------------------------ M3 expressive slider */
-input[type="range"] {
-  -webkit-appearance: none; appearance: none;
-  width: 100%; height: 28px; margin: 0; background: transparent; cursor: pointer;
-  --p: 0%;
-}
-input[type="range"]:focus { outline: none; }
-input[type="range"]::-webkit-slider-runnable-track {
-  height: 12px; border-radius: 6px;
-  background: linear-gradient(90deg, var(--primary) var(--p), var(--secondary-container) var(--p));
-}
-input[type="range"]::-webkit-slider-thumb {
-  -webkit-appearance: none; appearance: none;
-  width: 4px; height: 28px; margin-top: -8px; border-radius: 2px;
-  background: var(--primary);
-  box-shadow: 0 0 0 4px var(--slider-bg, var(--surface));
-  transition: width .15s var(--ease);
-}
-input[type="range"]:active::-webkit-slider-thumb { width: 2px; }
-input[type="range"]:focus-visible::-webkit-slider-thumb { outline: 2px solid var(--primary); outline-offset: 5px; }
-input[type="range"]::-moz-range-track { height: 12px; border-radius: 6px; background: var(--secondary-container); }
-input[type="range"]::-moz-range-progress { height: 12px; border-radius: 6px; background: var(--primary); }
-input[type="range"]::-moz-range-thumb {
-  width: 4px; height: 28px; border: 0; border-radius: 2px;
-  background: var(--primary); box-shadow: 0 0 0 4px var(--slider-bg, var(--surface));
-}
-input[type="range"]:focus-visible::-moz-range-thumb { outline: 2px solid var(--primary); outline-offset: 5px; }
-
-/* ------------------------------------------------------------------ sections */
-section { scroll-margin-top: 80px; }
-.section { padding: 88px 0; }
-@media (max-width: 600px) { .section { padding: 64px 0; } }
-.section-head { max-width: 680px; margin-bottom: 40px; }
-.kicker { font-size: 14px; font-weight: 650; letter-spacing: .08em; text-transform: uppercase; color: var(--primary); }
-.section-head h2 {
-  margin-top: 10px;
-  font-size: clamp(32px, 4.4vw, 52px); line-height: 1.06; letter-spacing: -.03em;
-  font-weight: 720; font-stretch: 108%; text-wrap: balance;
-}
-.section-head p { margin-top: 14px; font-size: 18px; color: var(--on-surface-variant); text-wrap: pretty; }
-
-/* bento */
-.bento { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 16px; }
-.card {
-  position: relative; overflow: hidden;
-  padding: 28px; border-radius: 28px;
-  background: var(--surface-container-low);
-  border: 1px solid color-mix(in oklab, var(--outline-variant) 60%, transparent);
-  transition: border-radius .4s var(--ease), background-color .4s var(--ease), transform .4s var(--ease);
-}
-.card:hover { border-radius: 36px; }
-.card h3 { font-size: 22px; font-weight: 650; letter-spacing: -.01em; margin-top: 18px; }
-.card p { margin-top: 8px; color: var(--on-surface-variant); text-wrap: pretty; }
-.card-icon {
-  width: 52px; height: 52px; display: grid; place-items: center;
-  border-radius: 16px; background: var(--primary-container); color: var(--on-primary-container);
-  transition: border-radius .5s var(--ease-spring), transform .5s var(--ease-spring);
-}
-.card:hover .card-icon { border-radius: 50%; transform: rotate(-6deg) scale(1.04); }
-.card-icon.t { background: var(--tertiary-container); color: var(--on-tertiary-container); }
-.card-icon.s { background: var(--secondary-container); color: var(--on-secondary-container); }
-.span-7 { grid-column: span 7; }
-.span-5 { grid-column: span 5; }
-.span-4 { grid-column: span 4; }
-.span-6 { grid-column: span 6; }
-.card.accent { background: var(--primary-container); color: var(--on-primary-container); border-color: transparent; }
-.card.accent p { color: inherit; opacity: .85; }
-.card.accent .card-icon { background: var(--primary); color: var(--on-primary); }
-@media (max-width: 900px) {
-  .span-7, .span-5 { grid-column: span 12; }
-  .span-4 { grid-column: span 6; }
-}
-@media (max-width: 600px) {
-  .span-4, .span-6 { grid-column: span 12; }
-  .card { padding: 22px; border-radius: 24px; }
-}
-
-/* trackpad demo */
-.pad-demo { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 12px; margin-top: 24px; }
-.trackpad {
-  position: relative; height: 180px; border-radius: 20px; overflow: hidden;
-  background: var(--surface-container-high); touch-action: none; cursor: crosshair;
-}
-.trackpad .hint { position: absolute; inset: auto 0 14px; text-align: center; font-size: 13px; color: var(--on-surface-variant); pointer-events: none; transition: opacity .3s; }
-.trackpad .cursor {
-  position: absolute; left: 50%; top: 45%; width: 18px; height: 18px; margin: -9px 0 0 -9px;
-  border-radius: 50%; background: var(--primary);
-  box-shadow: 0 0 0 6px color-mix(in oklab, var(--primary) 20%, transparent);
-  transition: left .08s linear, top .08s linear;
-  pointer-events: none;
-}
-.trackpad .ripple {
-  position: absolute; width: 18px; height: 18px; margin: -9px 0 0 -9px; border-radius: 50%;
-  border: 2px solid var(--primary); pointer-events: none;
-  animation: ripple .6s var(--ease) forwards;
-}
-@keyframes ripple { to { transform: scale(4); opacity: 0; } }
-.keys { display: grid; grid-template-columns: repeat(2, 56px); gap: 8px; align-content: start; }
-.key {
-  height: 40px; border: 0; border-radius: 12px; cursor: pointer;
-  background: var(--surface-container-high); color: var(--on-surface);
-  font-size: 12px; font-weight: 650;
-  transition: border-radius .25s var(--ease), background-color .2s var(--ease), transform .15s var(--ease);
-}
-.key:hover { background: var(--surface-container-highest); }
-.key:active { border-radius: 20px; transform: scale(.96); }
-.key.wide { grid-column: span 2; display: flex; align-items: center; justify-content: center; gap: 6px; }
-.key .icon { font-size: 18px; }
-@media (max-width: 480px) { .pad-demo { grid-template-columns: minmax(0, 1fr); } .keys { grid-template-columns: repeat(4, 1fr); } .key.wide { grid-column: span 4; } }
-
-/* file list demo */
-.files { margin-top: 24px; border-radius: 20px; background: var(--surface-container); padding: 6px; }
-.crumbs { display: flex; align-items: center; gap: 4px; padding: 8px 10px 10px; font-size: 13px; color: var(--on-surface-variant); flex-wrap: wrap; }
-.crumbs .icon { font-size: 16px; }
-.crumbs b { color: var(--on-surface); font-weight: 600; }
-.file {
-  display: flex; align-items: center; gap: 12px; width: 100%;
-  padding: 10px; border: 0; border-radius: 14px; background: transparent; text-align: left; cursor: pointer;
-  transition: background-color .2s var(--ease);
-}
-.file:hover { background: var(--surface-container-high); }
-.file .fi { width: 36px; height: 36px; border-radius: 10px; display: grid; place-items: center; background: var(--secondary-container); color: var(--on-secondary-container); }
-.file .fi .icon { font-size: 20px; }
-.file .grow { flex: 1; min-width: 0; }
-.file b { display: block; font-size: 14px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.file small { font-size: 12px; color: var(--on-surface-variant); }
-.file .check { color: var(--primary); opacity: 0; transform: scale(.5); transition: opacity .2s, transform .3s var(--ease-spring); }
-.file[aria-pressed="true"] { background: var(--primary-container); color: var(--on-primary-container); }
-.file[aria-pressed="true"] .fi { background: var(--primary); color: var(--on-primary); }
-.file[aria-pressed="true"] small { color: inherit; opacity: .8; }
-.file[aria-pressed="true"] .check { opacity: 1; transform: none; }
-.send-bar {
-  display: flex; align-items: center; justify-content: space-between; gap: 8px;
-  padding: 8px 8px 4px 12px; font-size: 13px; color: var(--on-surface-variant);
-}
-
-/* platforms */
-.platforms { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; }
-@media (max-width: 1000px) { .platforms { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-@media (max-width: 520px) { .platforms { grid-template-columns: minmax(0, 1fr); } }
-.platform { padding: 24px; border-radius: 28px; background: var(--surface-container-low); border: 1px solid color-mix(in oklab, var(--outline-variant) 60%, transparent); }
-.platform-head { display: flex; align-items: center; gap: 12px; }
-.platform-head .card-icon { width: 44px; height: 44px; border-radius: 14px; }
-.platform h3 { font-size: 20px; font-weight: 650; }
-.caps { list-style: none; padding: 0; margin: 20px 0 0; display: grid; gap: 10px; }
-.caps li { display: flex; align-items: flex-start; gap: 10px; font-size: 14px; }
-.caps .icon { font-size: 20px; color: var(--primary); }
-
-/* steps */
-.steps { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; counter-reset: step; }
-@media (max-width: 800px) { .steps { grid-template-columns: minmax(0, 1fr); } }
-.step { padding: 28px; border-radius: 28px; background: var(--surface-container); }
-.step-num {
-  width: 56px; height: 56px; display: grid; place-items: center;
-  font-size: 24px; font-weight: 800; font-stretch: 120%;
-  background: var(--tertiary-container); color: var(--on-tertiary-container);
-}
-.step:nth-child(1) .step-num { border-radius: 50%; }
-.step:nth-child(2) .step-num { border-radius: 18px; }
-.step:nth-child(3) .step-num { border-radius: 30% 70% 70% 30% / 30% 30% 70% 70%; }
-.step h3 { margin-top: 20px; font-size: 20px; font-weight: 650; }
-.step p { margin-top: 6px; color: var(--on-surface-variant); }
-
-/* released (index.php puts class="released" on <html>): downloads
-   instead of the wishlist */
-html:not(.released) .only-released { display: none !important; }
-html.released .only-wish { display: none !important; }
-.downloads {
-  position: relative; margin-top: 32px;
-  display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px;
-}
-@media (max-width: 1000px) { .downloads { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-@media (max-width: 520px) { .downloads { grid-template-columns: minmax(0, 1fr); } }
-.dl {
-  position: relative; display: flex; flex-direction: column; gap: 4px;
-  padding: 20px; border-radius: 24px; text-decoration: none;
-  background: var(--surface); color: var(--on-surface);
-  border: 2px solid transparent;
-  transition: border-radius .35s var(--ease), transform .35s var(--ease-spring), box-shadow .2s var(--ease);
-}
-.dl:hover { border-radius: 32px; transform: translateY(-2px); box-shadow: var(--shadow); }
-.dl .icon { font-size: 28px; color: var(--primary); margin-bottom: 8px; }
-.dl b { font-size: 18px; font-weight: 650; }
-.dl small { font-size: 13px; color: var(--on-surface-variant); line-height: 1.4; }
-.dl .dl-go { margin-top: 12px; display: inline-flex; align-items: center; gap: 6px; font-size: 14px; font-weight: 600; color: var(--primary); }
-.dl .dl-go .icon { font-size: 18px; margin: 0; }
-.dl.mine { border-color: var(--primary); }
-.dl .badge {
-  position: absolute; top: 16px; right: 16px; display: none;
-  padding: 3px 10px; border-radius: 999px; font-size: 12px; font-weight: 600;
-  background: var(--primary); color: var(--on-primary);
-}
-.dl.mine .badge { display: inline-block; }
-
-/* wishlist */
-.cta-card {
-  position: relative; overflow: hidden;
-  padding: clamp(28px, 5vw, 64px); border-radius: 40px;
-  background: var(--primary-container); color: var(--on-primary-container);
-}
-@media (max-width: 860px) { .cta-card { border-radius: 32px; } }
-.cta-card h2 { position: relative; font-size: clamp(32px, 4.4vw, 52px); line-height: 1.05; letter-spacing: -.03em; font-weight: 740; font-stretch: 110%; text-wrap: balance; }
-.cta-card > p { position: relative; margin-top: 12px; font-size: 18px; opacity: .85; max-width: 40em; }
-.cta-card::before {
-  content: ""; position: absolute; right: -80px; top: -80px; width: 280px; height: 280px;
-  background: color-mix(in oklab, var(--primary) 18%, transparent);
-  border-radius: 38% 62% 55% 45% / 45% 40% 60% 55%;
-  animation: blob 14s var(--ease) infinite alternate;
-}
-@keyframes blob { to { transform: rotate(40deg) scale(1.15); border-radius: 60% 40% 45% 55% / 55% 60% 40% 45%; } }
-.wish { position: relative; margin-top: 28px; max-width: 640px; }
-.wish-os { display: flex; flex-wrap: wrap; gap: 8px; }
-.wish-chip {
-  display: inline-flex; align-items: center; gap: 6px; height: 36px; padding: 0 16px 0 12px;
-  border-radius: 10px; border: 1px solid color-mix(in oklab, var(--on-primary-container) 30%, transparent);
-  background: transparent; font-size: 14px; font-weight: 500; cursor: pointer;
-  transition: background .2s var(--ease), border-radius .3s var(--ease);
-}
-.wish-chip .icon { font-size: 18px; }
-.wish-chip[aria-pressed="true"] { background: var(--primary); color: var(--on-primary); border-color: transparent; border-radius: 18px; }
-.wish-row { display: flex; gap: 10px; margin-top: 16px; }
-@media (max-width: 560px) { .wish-row { flex-direction: column; } .wish-row .btn { justify-content: center; } }
-.wish-field {
-  flex: 1; display: flex; align-items: center; gap: 10px; height: 56px; padding: 0 18px;
-  border-radius: 18px; background: var(--surface); color: var(--on-surface);
-  border: 2px solid transparent; transition: border-color .2s var(--ease);
-}
-.wish-field:focus-within { border-color: var(--primary); }
-.wish-field .icon { color: var(--primary); }
-.wish-field input { flex: 1; min-width: 0; border: 0; outline: 0; background: transparent; font-size: 16px; }
-.wish-row .btn { height: 56px; }
-.wish-trap { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
-.wish-error { margin-top: 10px; font-size: 14px; font-weight: 600; color: var(--error, #b3261e); }
-.wish-done {
-  position: relative; display: flex; align-items: center; gap: 16px; margin-top: 28px; max-width: 640px;
-  padding: 20px; border-radius: 24px; background: var(--surface); color: var(--on-surface);
-  animation: wishIn .5s var(--ease-spring);
-}
-.wish-done b { font-size: 18px; font-weight: 650; }
-.wish-done p { margin-top: 2px; color: var(--on-surface-variant); }
-.wish-check { flex: none; display: grid; place-items: center; width: 48px; height: 48px; border-radius: 16px; background: var(--primary); color: var(--on-primary); }
-@keyframes wishIn { from { opacity: 0; transform: translateY(8px) scale(.98); } }
-.wish[hidden], .wish-done[hidden] { display: none; }
-.dl-meta { margin-top: 12px; font-size: 14px; color: var(--on-surface-variant); }
-.dl-meta a { color: var(--primary); font-weight: 600; }
-.fine { position: relative; margin-top: 20px; font-size: 13px; opacity: .8; }
-.fine .icon { font-size: 16px; vertical-align: -3px; }
-
-/* footer */
-footer { padding: 40px 0 56px; color: var(--on-surface-variant); font-size: 14px; }
-footer .wrap { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; border-top: 1px solid var(--outline-variant); padding-top: 32px; }
-footer .logo { height: calc(var(--logo-h) * .8); }
-footer nav { display: flex; gap: 20px; flex-wrap: wrap; }
-footer nav a { text-decoration: none; }
-footer nav a:hover { color: var(--on-surface); }
-
-/* snackbar */
-.snackbar {
-  position: fixed; left: 50%; bottom: 24px; z-index: 100;
-  max-width: calc(100% - 32px);
-  display: flex; align-items: center; gap: 12px;
-  padding: 14px 20px; border-radius: 12px;
-  background: var(--inverse-surface); color: var(--inverse-on-surface);
-  font-size: 14px; box-shadow: var(--shadow-lg);
-  transform: translate(-50%, 140%); opacity: 0;
-  transition: transform .45s var(--ease-spring), opacity .2s var(--ease);
-}
-.snackbar.show { transform: translate(-50%, 0); opacity: 1; }
-
-/* reveal on scroll (only when JS is running) */
-.js .reveal { opacity: 0; transform: translateY(24px); transition: opacity .7s var(--ease), transform .8s var(--ease); }
-.js .reveal.in { opacity: 1; transform: none; }
-
-@media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after { animation: none !important; transition-duration: .01ms !important; }
-  html { scroll-behavior: auto; }
-  .js .reveal { opacity: 1; transform: none; }
-}
-
-/* ------------------------------------------------------------------ phones and small tablets */
-#navWishlist .short { display: none; }
-@media (max-width: 1000px) {
-  .hero { padding-bottom: 16px; }
-  .hero-shot { max-width: 720px; width: 100%; justify-self: center; }
-}
-@media (max-width: 600px) {
-  .topbar .wrap { gap: 6px; height: 60px; }
-  .topbar .logo { height: 18px; }
-  .topbar .icon-btn { width: 36px; height: 36px; }
-  .topbar .btn { padding: 0 16px; }
-  #navWishlist .long { display: none; }
-  #navWishlist .short { display: inline; }
-  .hero { padding: 24px 0 40px; }
-  .hero .wrap { gap: 24px; }
-  .hero h1 { font-size: clamp(34px, 10.5vw, 44px); }
-  .lede { font-size: 16px; }
-  .cta-row { flex-direction: column; margin-top: 24px; }
-  .cta-row .btn { width: 100%; height: 52px; }
-  .chips { margin-top: 20px; }
-  .seed { margin-top: 20px; }
-  .swatch { width: 40px; height: 40px; }
-  .wish-field { flex: none; }
-  .wish-row .btn { width: 100%; }
-  .cta-card h2 { font-size: 30px; }
-  .cta-card > p { font-size: 16px; }
-  .section { padding: 48px 0; }
-  .hero { padding-bottom: 8px; }
-}
-@media (max-width: 330px) {
-  .topbar .btn { display: none; }
-}
-
-/* The real app under the drawing (#app): a bar that starts it, then the app itself. */
-.live { max-width: 980px; margin: 28px auto 0; }
-.live > div { display: none; align-items: center; gap: 16px; padding: 14px 14px 14px 16px; border-radius: 24px;
-  background: var(--surface-container); border: 1px solid color-mix(in oklab, var(--outline-variant) 60%, transparent); }
+/* The app window: the hero picture, or the real app once the demo starts. */
+.stage { margin: 64px auto 0; max-width: 1080px; border-radius: 22px; background: var(--frame); border: 1px solid var(--line-strong);
+  overflow: hidden; box-shadow: 0 40px 120px #00000059; text-align: left; }
+.stage-bar { height: 44px; display: flex; align-items: center; gap: 14px; padding: 0 16px; border-bottom: 1px solid var(--line);
+  background: var(--surface); }
+.lights { display: flex; gap: 8px; }
+.lights i { width: 12px; height: 12px; border-radius: 50%; background: #ff5f57; }
+.lights i:nth-child(2) { background: #febc2e; }
+.lights i:nth-child(3) { background: #28c840; }
+.stage-title { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 600; }
+.stage-title img { width: 18px; height: 18px; border-radius: 5px; }
+.stage-bar .right { margin-left: auto; display: flex; align-items: center; gap: 8px; color: var(--muted); font-size: 12px; }
+.dot { width: 7px; height: 7px; border-radius: 50%; background: var(--ok); display: inline-block; }
+.stage-body { position: relative; min-height: 300px;
+  background-image: linear-gradient(var(--grid-line) 1px, transparent 1px), linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+  background-size: 44px 44px; }
+.stage-shot { padding: 40px 6% 96px; }
+.stage-shot img { width: 100%; height: auto; }
+.live-frame { display: none; }
+.live-frame.on { display: block; padding: 16px 8px 8px; }
+.live-frame iframe { display: block; width: 100%; height: 640px; border: 0; background: transparent; }
+.stage.running .stage-shot { display: none; }
+.live { position: absolute; left: 50%; bottom: 24px; transform: translateX(-50%); width: min(560px, calc(100% - 32px)); }
+.stage.running .live { position: static; transform: none; width: auto; margin: 0 16px 16px; }
+.live > div { display: none; align-items: center; gap: 14px; padding: 10px 10px 10px 14px; border-radius: 999px;
+  background: color-mix(in srgb, var(--surface) 88%, transparent); border: 1px solid var(--line-strong);
+  backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }
 .live[data-state=idle] .live-idle, .live[data-state=loading] .live-loading, .live[data-state=running] .live-running,
 .live[data-state=failed] .live-failed { display: flex; }
-.live .grow { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
-.live b { font-size: 17px; }
-.live small { color: var(--on-surface-variant); font-size: 14px; }
-.live-icon { flex: none; width: 44px; height: 44px; border-radius: 14px; display: grid; place-items: center;
-  background: var(--primary-container); color: var(--on-primary-container); }
-.live-icon.err { background: var(--error-container, #f9dedc); color: var(--on-error-container, #410e0b); }
+.live .grow { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+.live b { font-size: 15px; font-weight: 600; }
+.live small { color: var(--muted); font-size: 13px; line-height: 1.35; }
+.live-icon { flex: none; width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center; background: var(--lavender); color: var(--ink); }
+.live-icon.err { background: var(--salmon); }
+.live-bar { height: 4px; border-radius: 4px; background: var(--control); overflow: hidden; margin-top: 6px; }
+.live-bar i { display: block; height: 100%; width: 40%; border-radius: 4px; background: var(--lavender); animation: slide 1.2s ease-in-out infinite; }
+@keyframes slide { from { transform: translateX(-100%); } to { transform: translateX(260%); } }
 .live .short { display: none; }
-.live-bar { margin-top: 8px; width: 100%; max-width: 360px; height: 6px; border-radius: 3px; background: var(--surface-container-highest); overflow: hidden; }
-.live-bar i { display: block; width: 40%; height: 100%; border-radius: 3px; background: var(--primary); animation: livebar 1.2s ease-in-out infinite; }
-@keyframes livebar { from { transform: translateX(-100%); } to { transform: translateX(250%); } }
-.live-frame iframe { display: block; width: 100%; height: 0; border: 0; visibility: hidden; }
-.live-frame.on iframe { visibility: visible; }
-#app.running .showcase { display: none; }
-@media (max-width: 760px) { .live small { display: none; } .live .long { display: none; } .live .short { display: inline; } }
-@media (prefers-reduced-motion: reduce) { .live-bar i { animation: none; width: 100%; } }
 
-/* What works everywhere, above the platform cards. */
-.everywhere { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 22px; padding: 16px 22px; margin-bottom: 16px; border-radius: 22px;
-  background: var(--primary-container); color: var(--on-primary-container); font-weight: 600; }
-.everywhere > b { font-size: 13px; letter-spacing: .08em; text-transform: uppercase; opacity: .8; margin-right: 4px; }
-.everywhere span { display: inline-flex; align-items: center; gap: 6px; }
-.everywhere .icon { font-size: 20px; }
-.new-badge { display: inline-block; margin-left: 8px; padding: 2px 8px; border-radius: 99px; font-size: 12px; font-weight: 700; vertical-align: middle;
-  background: var(--tertiary-container); color: var(--on-tertiary-container); letter-spacing: .04em; }
+/* ------------------------------------------------------------------ sections */
+.section { padding: 140px 0 0; }
+.center { text-align: center; }
+.section-head { max-width: 760px; }
+.section-head.center { margin: 0 auto; }
+.section-head .lede { margin-top: 20px; }
+
+/* Two devices, one link: a file travels between them. */
+.duo { position: relative; margin: 72px auto 0; max-width: 620px; height: 190px; }
+.duo .dev { position: absolute; top: 62px; display: flex; flex-direction: column; align-items: center; gap: 10px; font-size: 13px; color: var(--muted); }
+.duo .dev .face { width: 72px; height: 72px; border-radius: 20px; display: grid; place-items: center; color: var(--ink); }
+.duo .dev .face .icon { font-size: 36px; }
+.duo .phone { left: 40px; }
+.duo .phone .face { background: var(--blue); }
+.duo .computer { right: 40px; }
+.duo .computer .face { background: var(--lavender); }
+.duo .path { position: absolute; top: 97px; left: 140px; right: 140px; height: 2px;
+  background: radial-gradient(circle, var(--dim) 1.5px, transparent 2px) 0 0 / 14px 2px repeat-x; }
+.duo .packet { position: absolute; top: 86px; left: 140px; width: 24px; height: 24px; border-radius: 8px; background: var(--action); color: var(--on-action);
+  display: grid; place-items: center; animation: travel 3.2s cubic-bezier(.65, 0, .35, 1) infinite; }
+.duo .packet .icon { font-size: 15px; }
+@keyframes travel { 0%, 12% { left: 140px; opacity: 0; } 20% { opacity: 1; } 78% { opacity: 1; } 88%, 100% { left: calc(100% - 164px); opacity: 0; } }
+.duo .bubble { position: absolute; top: 0; left: 0; max-width: 240px; padding: 10px 14px; border-radius: 14px; border: 1px solid var(--line);
+  background: var(--surface); color: var(--muted); font-size: 13px; line-height: 1.4; }
+.duo .bubble b { color: var(--text); font-weight: 600; }
+
+/* Feature cards, each with a real piece of the app in it. */
+.bento { display: grid; grid-template-columns: repeat(12, 1fr); gap: 14px; margin-top: 56px; }
+.card { position: relative; grid-column: span 6; border: 1px solid var(--line); border-radius: 26px; background: var(--surface);
+  padding: 26px; display: flex; flex-direction: column; overflow: hidden; min-height: 300px; }
+.card.s7 { grid-column: span 7; }
+.card.s5 { grid-column: span 5; }
+.card.s4 { grid-column: span 4; }
+.card .ui { flex: 1; display: flex; align-items: center; justify-content: center; margin-bottom: 24px; min-height: 150px; }
+.card h3 { margin-top: auto; }
+.card p { margin-top: 8px; color: var(--muted); font-size: 15px; line-height: 1.55; max-width: 34em; }
+.card.lav { background: var(--lavender); border-color: transparent; color: var(--ink); }
+.card.lav p { color: var(--ink-muted); }
+
+/* Bits of app UI inside the cards. */
+.panel { width: 100%; max-width: 440px; border: 1px solid var(--line); border-radius: 18px; background: var(--raised); padding: 16px; }
+.panel-row { display: flex; align-items: center; gap: 12px; }
+.av { flex: none; width: 36px; height: 36px; border-radius: 11px; display: grid; place-items: center; color: var(--ink); background: var(--blue); }
+.av .icon { font-size: 20px; }
+.av.lav { background: var(--lavender); }
+.av.green { background: var(--green); }
+.av.mustard { background: var(--mustard); }
+.av.salmon { background: var(--salmon); }
+.who { min-width: 0; flex: 1; }
+.who b { display: block; font-size: 14px; font-weight: 600; }
+.who small { display: block; color: var(--muted); font-size: 12.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.files-mini { margin: 14px 0; border-top: 1px solid var(--line); }
+.files-mini div { display: flex; align-items: center; gap: 10px; padding: 9px 2px; border-bottom: 1px solid var(--line); font-size: 13.5px; }
+.files-mini .icon { color: var(--muted); font-size: 18px; }
+.files-mini span.n { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.files-mini span.s { color: var(--dim); font-size: 12.5px; }
+.pills { display: flex; gap: 8px; }
+.pill { flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 6px; height: 36px; border-radius: 999px;
+  font-size: 13px; font-weight: 600; border: 1px solid var(--line-strong); background: transparent; color: var(--text); }
+.pill.solid { background: var(--action); color: var(--on-action); border-color: transparent; }
+.pill .icon { font-size: 16px; }
+.check { display: flex; align-items: center; gap: 8px; margin-top: 12px; color: var(--muted); font-size: 12.5px; }
+.check i { width: 16px; height: 16px; border-radius: 5px; background: var(--action); color: var(--on-action); display: grid; place-items: center;
+  font-style: normal; font-size: 11px; font-weight: 700; }
+
+.pad { position: relative; width: 100%; max-width: 360px; aspect-ratio: 16 / 10; border-radius: 18px; border: 1px solid var(--line-strong);
+  background: var(--raised); cursor: none; touch-action: none; overflow: hidden; }
+.pad .hint { position: absolute; inset: auto 0 14px; text-align: center; color: var(--dim); font-size: 12.5px; pointer-events: none; }
+.pad .cur { position: absolute; left: 50%; top: 45%; width: 22px; height: 22px; margin: -11px 0 0 -11px; border-radius: 50%;
+  background: var(--lavender); box-shadow: 0 0 0 6px color-mix(in srgb, var(--lavender) 22%, transparent); transition: transform .1s; pointer-events: none; }
+.pad .cur.tap { transform: scale(.7); }
+.pad-keys { display: flex; gap: 8px; margin-top: 10px; }
+.pad-keys span { flex: 1; text-align: center; padding: 8px 0; border-radius: 10px; border: 1px solid var(--line); color: var(--muted); font-size: 12px; }
+
+.vault { width: 100%; max-width: 280px; border-radius: 16px; background: #ffffff8c; padding: 6px; box-shadow: 0 10px 30px #6a3a8a24; }
+.vault .head { display: flex; justify-content: space-between; align-items: center; padding: 8px 10px; font-size: 12.5px; font-weight: 600; }
+.vault .row { display: flex; align-items: center; gap: 10px; padding: 9px 10px; border-top: 1px solid #14141414; font-size: 13.5px; }
+.vault .icon { font-size: 18px; }
+
+.ring { position: relative; width: 112px; height: 112px; border-radius: 50%; display: grid; place-items: center; background: var(--raised); border: 1px solid var(--line-strong); }
+.ring .icon { font-size: 44px; color: var(--mustard); animation: wiggle 1.4s ease-in-out infinite; }
+.ring::before, .ring::after { content: ""; position: absolute; inset: -1px; border-radius: 50%; border: 1px solid var(--mustard); animation: ripple 2.4s ease-out infinite; }
+.ring::after { animation-delay: 1.2s; }
+@keyframes ripple { from { transform: scale(1); opacity: .7; } to { transform: scale(1.7); opacity: 0; } }
+@keyframes wiggle { 0%, 60%, 100% { transform: rotate(0); } 10%, 30%, 50% { transform: rotate(-12deg); } 20%, 40% { transform: rotate(12deg); } }
+.found { margin-top: 18px; }
+
+.link-card .site { font-size: 22px; font-weight: 600; letter-spacing: -.02em; margin: 12px 0 2px; }
+.link-card .url { color: var(--dim); font-size: 12.5px; margin-bottom: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+.ways { display: flex; flex-direction: column; gap: 8px; width: 100%; max-width: 260px; }
+.way { display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-radius: 14px; border: 1px solid var(--line); background: var(--raised); font-size: 13.5px; }
+.way .icon { font-size: 18px; color: var(--muted); }
+.way em { margin-left: auto; font-style: normal; color: var(--dim); font-size: 12px; }
+.way.on { border-color: var(--line-strong); }
+.way.on em { color: var(--ok); }
+
+.toast { width: 100%; max-width: 380px; display: flex; gap: 12px; padding: 14px; border-radius: 16px; background: var(--raised); border: 1px solid var(--line-strong);
+  box-shadow: 0 18px 40px #00000040; }
+.toast .who small { white-space: normal; }
+.island { display: flex; align-items: center; gap: 12px; padding: 10px 12px 10px 10px; border-radius: 999px; background: #000; color: #fff; width: 100%; max-width: 330px; }
+.island .av { width: 34px; height: 34px; border-radius: 50%; }
+.island .who small { color: #ffffff99; }
+.island .prog { width: 38px; height: 38px; border-radius: 50%; background: conic-gradient(var(--green) 0 72%, #ffffff26 0); display: grid; place-items: center; }
+.island .prog span { width: 30px; height: 30px; border-radius: 50%; background: #000; display: grid; place-items: center; font-size: 10px; font-weight: 700; }
+
+/* Free. */
+.free { text-align: center; }
+.free .label { color: var(--muted); font-size: 17px; }
+.metal { font-size: clamp(130px, 26vw, 330px); line-height: .9; font-weight: 700; letter-spacing: -.07em; margin: 10px 0 18px;
+  background: linear-gradient(180deg, #4c4c4c 0%, #1f1f1f 34%, #f0f4fa 48%, #96c4ff 52%, #ffb884 58%, #343434 66%, #2a2a2a 100%);
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+  filter: drop-shadow(0 0 60px #b4c8ff2e); }
+:root[data-theme="light"] .metal { background-image: linear-gradient(180deg, #8a8a8a 0%, #2b2b2b 34%, #f0f4fa 48%, #6ea8ff 52%, #ff9c5c 58%, #3a3a3a 66%, #1a1a1a 100%); }
+.ticks { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px 28px; color: var(--text); font-size: 16px; }
+.ticks span { display: inline-flex; align-items: center; gap: 8px; }
+.ticks .icon { font-size: 18px; color: var(--muted); }
+
+/* Looks: a sticky list on the left, a tile per look on the right. */
+.looks { display: grid; grid-template-columns: 5fr 7fr; gap: 56px; align-items: start; }
+.looks-side { position: sticky; top: 120px; }
+.looks-side .lede { margin-top: 20px; }
+.looks-list { list-style: none; margin: 36px 0 0; padding: 0; border-left: 1px solid var(--line-strong); }
+.looks-list li { display: flex; gap: 14px; padding: 8px 0 8px 18px; color: var(--dim); font-size: 15px; margin-left: -1px; border-left: 2px solid transparent; transition: color .2s, border-color .2s; }
+.looks-list li.now { color: var(--text); border-color: var(--lavender); }
+.looks-list .mono { font-size: 10px; padding-top: 4px; }
+.tiles { display: flex; flex-direction: column; gap: 18px; }
+.tile-card { position: relative; min-height: 360px; border-radius: 28px; padding: 30px; color: var(--ink); display: flex; flex-direction: column;
+  background-image: linear-gradient(#14141410 1px, transparent 1px), linear-gradient(90deg, #14141410 1px, transparent 1px);
+  background-size: 28px 28px; overflow: hidden; }
+.tile-card .top { display: flex; justify-content: space-between; align-items: center; }
+.chip { display: inline-block; padding: 5px 10px; border-radius: 999px; border: 1px solid #14141433; background: #ffffff38; font-family: var(--mono);
+  font-size: 10px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: var(--ink); }
+.tile-card .count { font-family: var(--mono); font-size: 11px; letter-spacing: .1em; color: var(--ink-muted); }
+.tile-card h3 { margin-top: auto; font-size: clamp(40px, 5vw, 60px); line-height: .98; letter-spacing: -.05em; font-weight: 650; max-width: 7em; }
+.tile-card p { margin-top: 14px; max-width: 24em; color: var(--ink-muted); font-size: 15.5px; }
+.tile-card svg.art { position: absolute; right: 30px; top: 70px; width: 128px; height: 128px; }
+.lav-bg { background-color: var(--lavender); }
+.green-bg { background-color: var(--green); }
+.mustard-bg { background-color: var(--mustard); }
+.blue-bg { background-color: var(--blue); }
+.salmon-bg { background-color: var(--salmon); }
+
+/* Questions. */
+.faq { display: grid; grid-template-columns: 5fr 7fr; gap: 56px; align-items: start; }
+.faq-side .lede { margin-top: 20px; }
+.qa { border-top: 1px solid var(--line); }
+.qa details { border-bottom: 1px solid var(--line); }
+.qa summary { list-style: none; display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 22px 4px; cursor: pointer;
+  font-size: 18px; font-weight: 500; letter-spacing: -.01em; }
+.qa summary::-webkit-details-marker { display: none; }
+.qa summary .icon { color: var(--muted); transition: transform .2s; }
+.qa details[open] summary .icon { transform: rotate(180deg); }
+.qa details p { padding: 0 4px 22px; color: var(--muted); max-width: 40em; }
+
+/* Platforms: one tile each; links once released. */
+.platforms { display: grid; grid-template-columns: repeat(6, 1fr); gap: 14px; margin-top: 56px; }
+.dl { grid-column: span 2; position: relative; display: flex; flex-direction: column; min-height: 300px; padding: 26px; border-radius: 26px;
+  color: var(--ink); text-decoration: none; transition: transform .2s; }
+.dl:nth-child(4), .dl:nth-child(5) { grid-column: span 3; }
+.dl:hover { transform: translateY(-3px); }
+.dl .logo { width: 56px; height: 56px; }
+.dl .chip { position: absolute; top: 24px; right: 24px; }
+.dl b { margin-top: auto; font-size: clamp(34px, 3.6vw, 44px); font-weight: 650; letter-spacing: -.045em; line-height: 1; }
+.dl small { margin-top: 10px; color: var(--ink-muted); font-size: 13.5px; }
+.dl .go { margin-top: 18px; display: inline-flex; align-items: center; gap: 6px; font-weight: 600; font-size: 14.5px; }
+.dl .go .icon { font-size: 17px; }
+.dl.mine { outline: 3px solid var(--text); outline-offset: 3px; }
+.fine { margin-top: 18px; color: var(--dim); font-size: 13.5px; }
+.fine a { color: var(--muted); }
+.fine .icon { font-size: 16px; vertical-align: -3px; }
+
+/* The last word: join (or download) over a field of tiles. */
+.finale { position: relative; margin-top: 140px; padding: 150px 0; overflow: hidden; text-align: center; }
+.mosaic { position: absolute; inset: 0; display: grid; grid-template-columns: repeat(auto-fill, 76px); grid-auto-rows: 76px; gap: 10px;
+  justify-content: center; align-content: center; pointer-events: none; filter: saturate(.9); }
+/* A calm middle for the words, and soft top and bottom edges. */
+.finale::before, .finale::after { content: ""; position: absolute; inset: 0; pointer-events: none; z-index: 1; }
+.finale::before { background: radial-gradient(ellipse 46% 52% at 50% 50%, var(--canvas) 55%, color-mix(in srgb, var(--canvas) 75%, transparent) 72%, transparent 100%); }
+.finale::after { background: linear-gradient(var(--canvas), transparent 22%, transparent 78%, var(--canvas)); }
+@media (max-width: 640px) {
+  .finale::before { background: radial-gradient(ellipse 70% 46% at 50% 50%, var(--canvas) 62%, color-mix(in srgb, var(--canvas) 80%, transparent) 80%, transparent 100%); }
+}
+.mosaic span { border-radius: 22px; display: grid; place-items: center; color: #14141466; font-weight: 800; font-size: 22px; letter-spacing: -.06em;
+  animation: bob 6s ease-in-out infinite; }
+@keyframes bob { 50% { transform: translateY(-6px); } }
+.finale .wrap { position: relative; z-index: 2; }
+.finale h2 { max-width: 12em; margin: 0 auto; }
+.finale .lede { max-width: 560px; margin: 22px auto 0; }
+
+.wish { max-width: 520px; margin: 34px auto 0; }
+.wish-os { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin-bottom: 14px; }
+.wish-chip { display: inline-flex; align-items: center; gap: 6px; height: 36px; padding: 0 14px; border-radius: 999px; border: 1px solid var(--line-strong);
+  background: color-mix(in srgb, var(--canvas) 70%, transparent); color: var(--muted); font: 500 13.5px var(--sans); cursor: pointer; }
+.wish-chip .icon { font-size: 17px; }
+.wish-chip[aria-pressed="true"] { background: var(--action); color: var(--on-action); border-color: transparent; }
+.wish-row { display: flex; gap: 8px; padding: 6px; border-radius: 999px; border: 1px solid var(--line-strong); background: color-mix(in srgb, var(--surface) 92%, transparent); }
+.wish-field { flex: 1; min-width: 0; display: flex; align-items: center; gap: 8px; padding-left: 14px; color: var(--muted); }
+.wish-field input { flex: 1; min-width: 0; height: 44px; border: 0; background: transparent; color: var(--text); font: 16px var(--sans); outline: none; }
+.wish-field input::placeholder { color: var(--dim); }
+.wish-trap { position: absolute; left: -9999px; }
+.wish-error { margin-top: 12px; color: var(--danger); font-size: 14px; }
+.wish-done { display: flex; align-items: center; gap: 14px; max-width: 520px; margin: 34px auto 0; padding: 16px 18px; border-radius: 22px;
+  background: var(--surface); border: 1px solid var(--line-strong); text-align: left; }
+.wish-check { flex: none; width: 44px; height: 44px; border-radius: 50%; display: grid; place-items: center; background: var(--green); color: var(--ink); }
+.wish-done p { color: var(--muted); font-size: 14px; margin-top: 2px; }
+.finale .fine { margin-top: 18px; }
+
+/* ------------------------------------------------------------------ footer */
+footer { padding: 80px 0 40px; border-top: 1px solid var(--line); }
+.foot { display: grid; grid-template-columns: 5fr 7fr; gap: 56px; }
+.foot .say { margin-top: 20px; font-size: clamp(24px, 2.6vw, 32px); line-height: 1.18; letter-spacing: -.035em; font-weight: 500; max-width: 13em; }
+.foot .say + .link-arrow { margin-top: 22px; }
+.cols { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+.cols h4 { font-family: var(--mono); font-size: 11px; letter-spacing: .1em; color: var(--dim); font-weight: 600; margin-bottom: 14px; }
+.cols a { display: block; padding: 5px 0; color: var(--muted); text-decoration: none; font-size: 14.5px; }
+.cols a:hover { color: var(--text); }
+.bottom { display: flex; flex-wrap: wrap; align-items: center; gap: 16px; margin-top: 64px; padding-top: 22px; border-top: 1px solid var(--line);
+  color: var(--dim); font-size: 13px; }
+.bottom .right { margin-left: auto; display: flex; align-items: center; gap: 18px; }
+.bottom .avail { display: inline-flex; align-items: center; gap: 8px; color: var(--muted); }
+
+/* Released or not: index.php marks the page (np7dpanel.php → Website). */
+html:not(.released) .only-released { display: none !important; }
+html.released .only-wish { display: none !important; }
+
+/* Shown as they scroll in: rising a little, unblurring. */
+.js .reveal { opacity: 0; transform: translateY(14px); filter: blur(3px); transition: opacity .6s cubic-bezier(.22, 1, .36, 1), transform .6s cubic-bezier(.22, 1, .36, 1), filter .6s; }
+.js .reveal.in { opacity: 1; transform: none; filter: none; }
+
+/* ------------------------------------------------------------------ tablets and phones */
+@media (max-width: 980px) {
+  .nav { display: none; }
+  .top-actions { margin-left: auto; }
+  .card, .card.s7, .card.s5 { grid-column: span 12; }
+  .card.s4 { grid-column: span 6; }
+  .looks, .faq, .foot { grid-template-columns: 1fr; gap: 36px; }
+  .looks-side { position: static; }
+  .looks-list { display: none; }
+  .platforms { grid-template-columns: repeat(2, 1fr); }
+  .dl, .dl:nth-child(4), .dl:nth-child(5) { grid-column: span 1; }
+  .dl:nth-child(5) { grid-column: span 2; }
+}
+@media (max-width: 640px) {
+  .wrap { padding: 0 16px; }
+  .topbar .wrap { height: 64px; gap: 10px; }
+  .brand span { display: none; }
+  .only-big { display: none; }
+  .only-small { display: inline; }
+  .hero { padding-top: 44px; }
+  .badge { font-size: 12px; flex-wrap: wrap; justify-content: center; border-radius: 18px; padding: 6px 12px; }
+  .badge .tag { display: none; }
+  .section { padding-top: 100px; }
+  .stage { border-radius: 16px; margin-top: 44px; }
+  .stage-bar .right { display: none; }
+  .stage-shot { padding: 20px 4% 92px; }
+  .live { bottom: 14px; }
+  .live small { display: none; }
+  .live .long { display: none; }
+  .live .short { display: inline; }
+  .card.s4 { grid-column: span 12; }
+  .card { padding: 22px; min-height: 0; }
+  .duo .phone { left: 0; }
+  .duo .computer { right: 0; }
+  .duo .path { left: 92px; right: 92px; }
+  @keyframes travel { 0%, 12% { left: 92px; opacity: 0; } 20% { opacity: 1; } 78% { opacity: 1; } 88%, 100% { left: calc(100% - 116px); opacity: 0; } }
+  .duo .bubble { left: 50%; transform: translateX(-50%); width: max-content; }
+  .tile-card { min-height: 300px; padding: 24px; }
+  .tile-card svg.art { width: 84px; height: 84px; right: 22px; top: 64px; }
+  .platforms { grid-template-columns: 1fr; }
+  .dl, .dl:nth-child(4), .dl:nth-child(5) { grid-column: span 1; min-height: 240px; }
+  .wish-row { flex-direction: column; border-radius: 24px; }
+  .wish-row .btn { width: 100%; }
+  .finale { padding: 110px 0; }
+  .cols { grid-template-columns: repeat(2, 1fr); }
+  .bottom .right { margin-left: 0; flex-wrap: wrap; }
+}
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+  .js .reveal { opacity: 1; transform: none; filter: none; }
+}
 </style>
 </head>
 <body>
 
 <header class="topbar" id="topbar">
   <div class="wrap">
-    <a class="brand" href="#top" aria-label="Sidekick home">
-      <span class="logo logo-2" aria-hidden="true"></span>
-    </a>
-    <nav class="nav" aria-label="Main">
+    <a class="brand" href="#top" aria-label="Sidekick, back to the top"><img src="/website/favicon.png" alt=""><span>Sidekick</span></a>
+    <nav class="nav" aria-label="Sections">
       <a href="#features">Features</a>
-      <a href="#app">The app</a>
-      <a href="#platforms">Platforms</a>
-      <a href="#how">How it works</a>
-      <a href="/preview.html">Try it</a>
+      <a href="#app">Try it</a>
+      <a href="#looks">Looks</a>
+      <a href="#download">Platforms</a>
+      <a href="#questions">Questions</a>
     </nav>
-    <div class="spacer"></div>
-    <button class="icon-btn" id="soundBtn" type="button" aria-label="Turn sounds off" aria-pressed="true">
-      <span class="icon" id="soundIcon">volume_up</span>
-    </button>
-    <button class="icon-btn" id="themeBtn" type="button" aria-label="Toggle dark mode">
-      <span class="icon" id="themeIcon">dark_mode</span>
-    </button>
-    <a class="btn btn-filled btn-sm only-released" id="navDownload" href="#download">Download</a>
-    <a class="btn btn-filled btn-sm only-wish" id="navWishlist" href="#wishlist"><span class="long">Join the wishlist</span><span class="short">Join</span></a>
+    <div class="top-actions">
+      <button class="icon-btn" id="soundBtn" type="button" aria-label="Turn sounds off" aria-pressed="true">
+        <span class="icon" id="soundIcon">volume_up</span>
+      </button>
+      <button class="icon-btn" id="themeBtn" type="button" aria-label="Switch to light mode">
+        <span class="icon" id="themeIcon">light_mode</span>
+      </button>
+      <a class="btn btn-light btn-sm only-released" id="navDownload" href="#download"><span class="icon">download</span>Download</a>
+      <a class="btn btn-light btn-sm only-wish" id="navWishlist" href="#wishlist"><span class="only-big">Join the wishlist</span><span class="only-small">Join</span></a>
+    </div>
   </div>
 </header>
 
@@ -870,47 +494,90 @@ footer nav a:hover { color: var(--on-surface); }
   <!-- ============================================================ HERO -->
   <section class="hero">
     <div class="wrap">
-      <div>
-        <span class="eyebrow"><span class="icon">bolt</span> Local-first · No account · No cloud</span>
-        <h1>Your phone and PC, <em>finally</em> working together.</h1>
-        <p class="lede">
-          Sidekick links your devices over your own Wi-Fi, or a direct Wi-Fi link when there's no router. Send files both ways,
-          use your phone as a remote for your computer, open one device's files from the other, and see your phone's
-          notifications on your desktop.
-        </p>
-        <div class="cta-row">
-          <a class="btn btn-filled only-released" id="heroDownload" href="#download"><span class="icon" id="heroDownloadIcon">download</span><span id="heroDownloadLabel">Download Sidekick</span></a>
-          <a class="btn btn-filled only-wish" id="heroWishlist" href="#wishlist"><span class="icon">favorite</span><span>Join the wishlist</span></a>
-          <a class="btn btn-tonal" href="/preview.html"><span class="icon">play_circle</span><span>Try it in your browser</span></a>
+      <span class="badge">
+        <span class="tag mono">New</span>
+        <span class="only-wish">Coming soon to</span><span class="only-released">Available on</span>
+        <span class="os"><span class="icon">desktop_windows</span>Windows</span>
+        <span class="os"><span class="icon">laptop_mac</span>macOS</span>
+        <span class="os"><span class="icon">android</span>Android</span>
+        <span class="os"><span class="icon">phone_iphone</span>iPhone</span>
+      </span>
+      <h1>Your phone <span class="tile" role="img" aria-label="Sidekick"></span> and PC, working as one.</h1>
+      <p class="lede">
+        Sidekick links your devices over your own Wi-Fi, or a direct Wi-Fi link when there's no router. Send files both ways,
+        use your phone as a remote for your computer, open one device's files from the other, and see your phone's
+        notifications on your desktop.
+      </p>
+      <div class="cta-row">
+        <a class="btn btn-light only-released" id="heroDownload" href="#download"><span class="icon" id="heroDownloadIcon">download</span><span id="heroDownloadLabel">Download Sidekick</span></a>
+        <a class="btn btn-light only-wish" id="heroWishlist" href="#wishlist"><span class="icon">favorite</span><span>Join the wishlist</span></a>
+        <a class="btn btn-ghost" href="#app"><span class="icon">play_arrow</span><span>Try it in your browser</span></a>
+      </div>
+      <p class="cta-meta only-released" id="heroDownloadMeta">Free · Windows, macOS, Android and iPhone · <a href="#download">All downloads</a></p>
+      <p class="cta-meta only-wish">Free · No account · Coming soon</p>
+    </div>
+
+    <!-- The app window: a Mac and an iPhone mid-transfer (the app's own
+         screens), until "Start the demo" puts the real app in its place
+         (preview.html?embed=1, ~20 MB; phones open /preview.html). -->
+    <div class="wrap" id="app">
+      <div class="stage reveal" id="stage">
+        <div class="stage-bar">
+          <span class="lights" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="stage-title"><img src="/website/favicon.png" alt="">Sidekick</span>
+          <span class="right"><span class="dot"></span>Encrypted · Same Wi-Fi</span>
         </div>
-        <p class="dl-meta only-released" id="heroDownloadMeta">Free · Windows, macOS, Android and iPhone · <a href="#download">All downloads</a></p>
-        <p class="dl-meta only-wish">Coming soon · Free · Windows, macOS, Android and iPhone</p>
-        <div class="chips" aria-label="Supported platforms">
-          <span class="chip"><span class="icon">android</span>Android</span>
-          <span class="chip"><span class="icon">phone_iphone</span>iOS</span>
-          <span class="chip"><span class="icon">desktop_windows</span>Windows</span>
-          <span class="chip"><span class="icon">laptop_mac</span>macOS</span>
-        </div>
-        <div class="seed">
-          <span>Choose a color. The whole app follows it, like Material You.</span>
-          <div class="swatches" role="group" aria-label="Theme color">
-            <button class="swatch" type="button" style="--sh:290" data-h="290" aria-label="Violet" aria-pressed="true"></button>
-            <button class="swatch" type="button" style="--sh:250" data-h="250" aria-label="Blue" aria-pressed="false"></button>
-            <button class="swatch" type="button" style="--sh:165" data-h="165" aria-label="Green" aria-pressed="false"></button>
-            <button class="swatch" type="button" style="--sh:55" data-h="55" aria-label="Orange" aria-pressed="false"></button>
-            <button class="swatch" type="button" style="--sh:355" data-h="355" aria-label="Rose" aria-pressed="false"></button>
+        <div class="stage-body">
+          <figure class="stage-shot" style="margin:0">
+            <picture>
+              <source srcset="/website/hero.webp" type="image/webp">
+              <img src="/website/hero.png" width="1600" height="1206" fetchpriority="high"
+                   alt="An iPhone sending three files to a MacBook with Sidekick: the iPhone shows Sending to MacBook Pro, 72%, and the Mac shows the files arriving.">
+            </picture>
+          </figure>
+          <div class="live-frame" id="liveFrame"></div>
+          <div class="live" id="live" data-state="idle">
+            <div class="live-idle">
+              <span class="live-icon"><span class="icon">play_arrow</span></span>
+              <div class="grow"><b>Run the real Sidekick here</b><small>Its own code, as a Mac and an iPhone. About 20 MB.</small></div>
+              <button class="btn btn-light btn-sm" type="button" id="liveStart"><span class="long">Start the demo</span><span class="short">Open</span></button>
+            </div>
+            <div class="live-loading">
+              <span class="live-icon"><span class="icon">hourglass_top</span></span>
+              <div class="grow"><b>Starting Sidekick…</b><div class="live-bar"><i></i></div></div>
+              <button class="btn btn-ghost btn-sm" type="button" id="liveCancel">Cancel</button>
+            </div>
+            <div class="live-running">
+              <span class="live-icon"><span class="icon">link</span></span>
+              <div class="grow"><b>Pair them first</b><small>On the iPhone, tap MacBook Pro under Nearby, then type the code the Mac shows.</small></div>
+              <button class="btn btn-ghost btn-sm" type="button" id="liveAgain"><span class="icon">restart_alt</span><span class="long">Start over</span></button>
+              <a class="icon-btn" href="/preview.html" aria-label="Open the demo on its own page"><span class="icon">open_in_full</span></a>
+            </div>
+            <div class="live-failed">
+              <span class="live-icon err"><span class="icon">error</span></span>
+              <div class="grow"><b>The demo didn't start</b><small id="liveWhy">Your browser couldn't run it.</small></div>
+              <a class="btn btn-ghost btn-sm" href="/preview.html"><span class="long">Open the full page</span><span class="short">Open</span></a>
+            </div>
           </div>
         </div>
       </div>
+    </div>
+  </section>
 
-      <!-- Sidekick on a Mac and an iPhone: photos on their way (the app's own screens). -->
-      <figure class="hero-shot">
-        <picture>
-          <source srcset="/website/hero.webp" type="image/webp">
-          <img src="/website/hero.png" width="1600" height="1206" fetchpriority="high"
-               alt="An iPhone sending three files to a MacBook with Sidekick: the iPhone shows Sending to MacBook Pro, 72%, and the Mac shows the files arriving.">
-        </picture>
-      </figure>
+  <!-- ============================================================ TOGETHER -->
+  <section class="section center">
+    <div class="wrap">
+      <div class="section-head center reveal">
+        <h2>Your devices work together.</h2>
+        <p class="lede">Pair them once with a 6-digit code. From then on they find each other on their own, at home, at work, or with no Wi-Fi at all.</p>
+      </div>
+      <div class="duo reveal" aria-hidden="true">
+        <div class="bubble"><b>Boarding pass.pdf</b><br>Pixel 9 to MacBook Pro</div>
+        <div class="dev phone"><span class="face"><span class="icon">smartphone</span></span>Pixel 9</div>
+        <div class="path"></div>
+        <div class="packet"><span class="icon">description</span></div>
+        <div class="dev computer"><span class="face"><span class="icon">laptop_mac</span></span>MacBook Pro</div>
+      </div>
     </div>
   </section>
 
@@ -918,382 +585,296 @@ footer nav a:hover { color: var(--on-surface); }
   <section class="section" id="features">
     <div class="wrap">
       <div class="section-head reveal">
-        <div class="kicker">Features</div>
-        <h2>One app for all of it.</h2>
-        <p>Send files, browse the other device, control your computer, ring a lost phone and more. It works the same way on every device.</p>
+        <h2>What Sidekick does</h2>
+        <p class="lede">One app on your phone and your computer. It works the same on every device, and nothing goes through anyone else's server.</p>
       </div>
 
       <div class="bento">
-        <article class="card span-7 reveal">
-          <div class="card-icon"><span class="icon">touch_app</span></div>
-          <h3>Remote control, both ways</h3>
-          <p>Your phone becomes a touchpad and keyboard for your computer, with left and right click, drag, adjustable pointer speed and one-tap shortcuts. From a computer you can also control an Android phone.</p>
-          <div class="pad-demo">
-            <div class="trackpad" id="trackpad" aria-label="Touchpad demo, move your pointer or finger here">
-              <div class="cursor" id="cursor"></div>
+        <article class="card s7 reveal">
+          <div class="ui">
+            <div class="panel">
+              <div class="panel-row">
+                <span class="av green"><span class="icon">smartphone</span></span>
+                <div class="who"><b>Pixel 9 wants to send you</b><small>3 files · 47 MB</small></div>
+              </div>
+              <div class="files-mini">
+                <div><span class="icon">image</span><span class="n">IMG_2042.HEIC</span><span class="s">3.2 MB</span></div>
+                <div><span class="icon">movie</span><span class="n">Trip.mov</span><span class="s">41 MB</span></div>
+                <div><span class="icon">description</span><span class="n">Boarding pass.pdf</span><span class="s">240 KB</span></div>
+              </div>
+              <div class="pills"><span class="pill">Decline</span><span class="pill solid"><span class="icon">download</span>Accept</span></div>
+              <div class="check"><i>✓</i>Always accept from Pixel 9</div>
+            </div>
+          </div>
+          <h3>Send files both ways</h3>
+          <p>Photos, videos and documents, any size, straight from one device to the other. The other side taps Accept, or skips it for devices you trust.</p>
+        </article>
+
+        <article class="card s5 reveal">
+          <div class="ui" style="flex-direction:column">
+            <div class="pad" id="trackpad" aria-label="Touchpad demo, move your pointer or finger here">
+              <div class="cur" id="cursor"></div>
               <div class="hint" id="padHint">Move over me · tap to click</div>
             </div>
-            <div class="keys">
-              <button class="key" type="button">Copy</button>
-              <button class="key" type="button">Paste</button>
-              <button class="key" type="button">Undo</button>
-              <button class="key" type="button">Enter</button>
-              <button class="key wide" type="button"><span class="icon">keyboard</span>Type</button>
+            <div class="pad-keys" style="width:100%;max-width:360px" aria-hidden="true"><span>Left click</span><span>Right click</span><span>Keyboard</span></div>
+          </div>
+          <h3>Your phone is a touchpad</h3>
+          <p>Move the pointer, click, scroll and type on your computer from the couch, with one-tap shortcuts. A computer can control an Android phone too.</p>
+        </article>
+
+        <article class="card s5 lav reveal">
+          <div class="ui">
+            <div class="vault">
+              <div class="head">On this device <span class="icon">lock</span></div>
+              <div class="row"><span class="icon">devices</span>Paired devices</div>
+              <div class="row"><span class="icon">key</span>Pairing keys</div>
+              <div class="row"><span class="icon">folder</span>Received files</div>
+              <div class="row"><span class="icon">tune</span>Settings</div>
             </div>
           </div>
+          <h3>Stays between your devices</h3>
+          <p>No account, no cloud, no ads. Everything is encrypted, and only your paired devices can read it.</p>
         </article>
 
-        <article class="card span-5 reveal">
-          <div class="card-icon t"><span class="icon">folder_open</span></div>
-          <h3>Browse the other device</h3>
-          <p>Open your phone's storage from your desktop, or your PC's drives from your phone. Select files and pull them over.</p>
-          <div class="files" id="files">
-            <div class="crumbs"><span class="icon">smartphone</span>Pixel <span class="icon">chevron_right</span>Internal <span class="icon">chevron_right</span><b>DCIM</b></div>
-            <button class="file" type="button" aria-pressed="false" data-size="48"><span class="fi"><span class="icon">photo_library</span></span><span class="grow"><b>Camera</b><small>1,284 items</small></span><span class="icon check fill">check_circle</span></button>
-            <button class="file" type="button" aria-pressed="true" data-size="212"><span class="fi"><span class="icon">movie</span></span><span class="grow"><b>Holiday_2026.mp4</b><small>212 MB</small></span><span class="icon check fill">check_circle</span></button>
-            <button class="file" type="button" aria-pressed="false" data-size="3"><span class="fi"><span class="icon">image</span></span><span class="grow"><b>Screenshot_0412.png</b><small>3 MB</small></span><span class="icon check fill">check_circle</span></button>
-            <div class="send-bar"><span id="selInfo">1 selected · 212 MB</span><button class="btn btn-filled btn-sm" type="button" id="sendBtn"><span class="icon">download</span>Save to PC</button></div>
+        <article class="card s7 reveal">
+          <div class="ui">
+            <div class="panel">
+              <div class="panel-row" style="margin-bottom:6px">
+                <span class="av lav"><span class="icon">laptop_mac</span></span>
+                <div class="who"><b>MacBook Pro</b><small>Home › Documents</small></div>
+                <span class="pill" style="flex:none;padding:0 12px"><span class="icon">upload</span>Upload here</span>
+              </div>
+              <div class="files-mini" style="margin-bottom:0">
+                <div><span class="icon">folder</span><span class="n">Projects</span><span class="s">12 items</span></div>
+                <div><span class="icon">folder</span><span class="n">Invoices</span><span class="s">48 items</span></div>
+                <div><span class="icon">movie</span><span class="n">Holiday_2026.mp4</span><span class="s">2.1 GB</span></div>
+                <div><span class="icon">description</span><span class="n">Recipe for pancakes.pdf</span><span class="s">88 KB</span></div>
+              </div>
+            </div>
           </div>
+          <h3>Open one device's files from the other</h3>
+          <p>Browse your computer from your phone, or your phone from your computer. Download what you need, upload into any folder.</p>
         </article>
 
-        <article class="card span-6 reveal">
-          <div class="card-icon s"><span class="icon">send</span></div>
-          <h3>Send anything, with a yes first</h3>
-          <p>Drag and drop or pick photos and files. The other device asks before accepting, then both show the progress. Photos and videos land straight in your phone's Photos or gallery. Nothing goes through the internet.</p>
+        <article class="card s4 reveal">
+          <div class="ui" style="flex-direction:column">
+            <div class="ring"><span class="icon">notifications_active</span></div>
+            <span class="pill solid found" style="flex:none;padding:0 18px">Found It!</span>
+          </div>
+          <h3>Find your phone</h3>
+          <p>Ping it from your computer. It rings until you tap Found It!, even on silent.</p>
         </article>
 
-        <article class="card span-6 accent reveal">
-          <div class="card-icon"><span class="icon">lock</span></div>
-          <h3>Private by design</h3>
-          <p>Pair once by scanning a QR code or typing a 6-digit code. Everything between your devices is encrypted. No accounts, no servers, no analytics.</p>
+        <article class="card s4 reveal link-card">
+          <div class="ui">
+            <div class="panel">
+              <div class="panel-row"><span class="av mustard"><span class="icon">link</span></span><div class="who"><b>Pixel 9 sent a link</b><small>Just now</small></div></div>
+              <div class="site">bbcgoodfood.com</div>
+              <div class="url">/recipes/easy-pancakes</div>
+              <div class="pills"><span class="pill">Copy link</span><span class="pill solid">Open link</span></div>
+            </div>
+          </div>
+          <h3>Links and notes</h3>
+          <p>Send a link or a short note. The other device opens it or copies it.</p>
         </article>
 
-        <article class="card span-4 reveal">
-          <div class="card-icon s"><span class="icon">wifi_tethering</span></div>
-          <h3>No router? No problem</h3>
-          <p>On the same Wi-Fi, devices find each other by themselves. Without one, Sidekick sets up a direct Wi-Fi link between them. Bluetooth is only a last resort.</p>
+        <article class="card s4 reveal">
+          <div class="ui">
+            <div class="ways">
+              <div class="way on"><span class="icon">wifi</span>Same Wi-Fi<em>● Connected</em></div>
+              <div class="way"><span class="icon">wifi_tethering</span>Direct Wi-Fi<em>No router</em></div>
+              <div class="way"><span class="icon">bluetooth</span>Bluetooth<em>To find it</em></div>
+            </div>
+          </div>
+          <h3>No Wi-Fi? No problem</h3>
+          <p>Sidekick links two devices directly, on a train or anywhere without a router.</p>
         </article>
 
-        <article class="card span-4 reveal">
-          <div class="card-icon t"><span class="icon">notifications_active</span></div>
-          <h3>Ping your phone</h3>
-          <p>Can't find your phone? Ping it from your computer and it rings, even on silent, until you tap Found it.</p>
-        </article>
-        <article class="card span-4 reveal">
-          <div class="card-icon s"><span class="icon">link</span></div>
-          <h3>Links and notes<span class="new-badge">NEW</span></h3>
-          <p>Send a link or a short note to your other device. It asks first: Copy, or Open the link.</p>
-        </article>
-        <article class="card span-4 reveal">
-          <div class="card-icon"><span class="icon">mark_chat_unread</span></div>
-          <h3>Your phone, on your computer</h3>
-          <p>Your Android phone's notifications and any phone's new screenshots show up on your Mac or PC. Both stay off until you turn them on.</p>
+        <article class="card reveal">
+          <div class="ui">
+            <div class="toast">
+              <span class="av salmon"><span class="icon">chat</span></span>
+              <div class="who"><b>Messages · Mum</b><small>Dinner at 7? Bring the pancake recipe 🥞</small></div>
+            </div>
+          </div>
+          <h3>Your phone's notifications, on your computer</h3>
+          <p>With an Android phone, new notifications show up on your Mac or PC. Screenshots you take arrive there too.</p>
         </article>
 
-        <article class="card span-4 reveal">
-          <div class="card-icon t"><span class="icon">dock_to_bottom</span></div>
-          <h3>Always one click away</h3>
-          <p>On a computer Sidekick lives in the tray or menu bar: a quick panel to send or ping, and a small pop-up in the corner to accept files.</p>
-        </article>
-
-        <article class="card span-4 reveal">
-          <div class="card-icon"><span class="icon">dynamic_feed</span></div>
-          <h3>Live Activities on iPhone</h3>
-          <p>Follow a transfer on the Lock Screen and in the Dynamic Island while you use other apps.</p>
+        <article class="card reveal">
+          <div class="ui">
+            <div class="island">
+              <span class="av green"><span class="icon">smartphone</span></span>
+              <div class="who"><b>Receiving from Pixel 9</b><small>Trip.mov · 30 MB of 41 MB</small></div>
+              <span class="prog"><span>72%</span></span>
+            </div>
+          </div>
+          <h3>Made for each device</h3>
+          <p>Live Activities on iPhone, the tray on Windows, the menu bar on a Mac, and a quiet notification on Android.</p>
         </article>
       </div>
     </div>
   </section>
 
-  <!-- ============================================================ THE APP -->
-  <section class="section" id="app" style="padding-top:0">
-    <div class="wrap">
-      <div class="section-head reveal">
-        <div class="kicker">The app</div>
-        <h2>This is what Sidekick looks like.</h2>
-        <p>Press <b>Send files</b> to see what happens on both screens. Or run the real app below: a Mac and an iPhone, side by side, that you pair and then use however you like.</p>
+  <!-- ============================================================ FREE -->
+  <section class="section free">
+    <div class="wrap reveal">
+      <p class="label">Free for everyone</p>
+      <div class="metal" aria-hidden="true">Free</div>
+      <div class="ticks">
+        <span><span class="icon">check</span>Every feature</span>
+        <span><span class="icon">check</span>No account</span>
+        <span><span class="icon">check</span>No ads, no tracking</span>
       </div>
-
-      <div class="showcase reveal">
-        <div class="win" id="win">
-          <div class="win-bar" aria-hidden="true"><i></i><i></i><i></i><span>Sidekick</span></div>
-          <div class="win-body">
-            <nav class="rail" aria-hidden="true">
-              <span class="logo logo-3"></span>
-              <div class="on"><span class="pill"><span class="icon fill">devices</span></span>Devices</div>
-              <div><span class="pill"><span class="icon">folder</span></span>Files</div>
-              <div><span class="pill"><span class="icon">mouse</span></span>Remote</div>
-              <div><span class="pill"><span class="icon">settings</span></span>Settings</div>
-            </nav>
-            <div class="win-main">
-              <div class="win-head">
-                <div><h3>Devices</h3><small>2 paired · 2 connected</small></div>
-                <span class="grow"></span>
-                <div class="win-actions" aria-hidden="true">
-                  <span><span class="icon">add_link</span>Connect device</span>
-                </div>
-              </div>
-              <div class="this-device">
-                <span class="gbadge"><span class="icon">desktop_windows</span></span>
-                <div>
-                  <small>This device</small>
-                  <b>Gaming PC</b>
-                  <div class="pills"><span class="spill"><i></i>Wi-Fi · 192.168.1.20</span><span class="spill bt"><i></i>Encrypted</span></div>
-                </div>
-              </div>
-              <div class="win-section">Paired</div>
-              <div class="paired">
-                <div class="pcard">
-                  <div class="pcard-top">
-                    <span class="av"><span class="icon">phone_android</span></span>
-                    <div class="grow"><b>Pixel 9</b><span class="spill"><i></i>Connected</span></div>
-                    <span class="icon more">more_vert</span>
-                  </div>
-                  <div class="pcard-actions">
-                    <button class="btn btn-filled" type="button" id="demoSend"><span class="icon">send</span>Send files</button>
-                    <span class="ibtn" title="Browse files"><span class="icon">folder_open</span></span>
-                    <span class="ibtn" title="Remote control"><span class="icon">mouse</span></span>
-                  </div>
-                </div>
-                <div class="pcard">
-                  <div class="pcard-top">
-                    <span class="av"><span class="icon">phone_iphone</span></span>
-                    <div class="grow"><b>iPhone 12</b><span class="spill bt"><i></i>Connected via direct Wi-Fi</span></div>
-                    <span class="icon more">more_vert</span>
-                  </div>
-                  <div class="pcard-actions">
-                    <button class="btn btn-filled" type="button" disabled><span class="icon">send</span>Send files</button>
-                    <span class="ibtn" title="Browse files"><span class="icon">folder_open</span></span>
-                  </div>
-                </div>
-              </div>
-
-              <div class="sendover" id="sendover" aria-live="polite">
-                <div class="ring-wrap">
-                  <div class="rings"><i></i><i></i><i></i></div>
-                  <span class="gbadge"><span class="icon" id="sendIcon">phone_android</span></span>
-                </div>
-                <h4 id="sendTitle">Waiting for permission…</h4>
-                <p id="sendSub">Ask Pixel 9 to tap Accept</p>
-                <div class="sbar"><i id="sendFill"></i></div>
-                <button class="btn btn-tonal btn-sm" type="button" id="sendCancel">Cancel</button>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div class="phone mini" id="recvPhone">
-          <div class="screen">
-            <div class="punch"></div>
-            <div class="statusbar" aria-hidden="true">
-              <span>9:41</span>
-              <span class="icons"><span class="icon fill">bluetooth</span><span class="icon fill">signal_cellular_alt</span><span class="icon fill">battery_5_bar</span></span>
-            </div>
-            <div class="page-head" aria-hidden="true"><h3>Files</h3><small>On Gaming PC</small></div>
-            <div class="recv-home" aria-hidden="true">
-              <div class="frow"><span class="fi"><span class="icon">desktop_windows</span></span><span><b>Desktop</b><small>24 items</small></span></div>
-              <div class="frow"><span class="fi"><span class="icon">description</span></span><span><b>Documents</b><small>112 items</small></span></div>
-              <div class="frow"><span class="fi"><span class="icon">download</span></span><span><b>Downloads</b><small>58 items</small></span></div>
-              <div class="frow"><span class="fi"><span class="icon">photo_library</span></span><span><b>Pictures</b><small>1,204 items</small></span></div>
-              <p class="recv-hint" id="recvHint">This is the Pixel 9, browsing the PC</p>
-            </div>
-            <div class="navbar" aria-hidden="true">
-              <div><span class="pill"><span class="icon">devices</span></span>Devices</div>
-              <div class="on"><span class="pill"><span class="icon fill">folder</span></span>Files</div>
-              <div><span class="pill"><span class="icon">mouse</span></span>Remote</div>
-              <div><span class="pill"><span class="icon">settings</span></span>Settings</div>
-            </div>
-            <div class="scrim"></div>
-            <div class="offer" role="dialog" aria-label="Incoming files">
-              <span class="gbadge"><span class="icon">desktop_windows</span></span>
-              <b id="offerTitle">Gaming PC wants to send you</b>
-              <small>3 files · 48 MB</small>
-              <div class="countdown"><i></i></div>
-              <div class="offer-actions">
-                <button class="btn btn-tonal" type="button" id="offerDecline">Decline</button>
-                <button class="btn btn-filled" type="button" id="offerAccept"><span class="icon">download</span>Accept</button>
-              </div>
-              <div class="sbar"><i id="recvFill"></i></div>
-            </div>
-          </div>
-        </div>
-      </div>
-      <!-- The real app (preview.html, embedded): loads only when asked (~20 MB),
-           then takes the drawing's place. Phones open the full page instead. -->
-      <div class="live-frame" id="liveFrame"></div>
-      <div class="live reveal" id="live" data-state="idle">
-        <div class="live-idle">
-          <span class="live-icon"><span class="icon">play_arrow</span></span>
-          <div class="grow"><b>Run the real Sidekick here</b><small>Its own code, as a Mac and an iPhone. About 20 MB, nothing is installed.</small></div>
-          <button class="btn btn-filled" type="button" id="liveStart"><span class="icon">play_arrow</span><span class="long">Start the demo</span><span class="short">Open</span></button>
-        </div>
-        <div class="live-loading">
-          <span class="live-icon"><span class="icon">hourglass_top</span></span>
-          <div class="grow"><b>Starting Sidekick…</b><div class="live-bar"><i></i></div></div>
-          <button class="btn btn-tonal" type="button" id="liveCancel">Cancel</button>
-        </div>
-        <div class="live-running">
-          <span class="live-icon"><span class="icon">link</span></span>
-          <div class="grow"><b>Pair them first</b><small>On the iPhone, tap MacBook Pro under Nearby, then type the code the Mac shows. Then try anything.</small></div>
-          <button class="btn btn-tonal" type="button" id="liveAgain"><span class="icon">restart_alt</span><span class="long">Start over</span></button>
-          <a class="btn btn-tonal" href="/preview.html" aria-label="Open the demo on its own page"><span class="icon">open_in_full</span></a>
-        </div>
-        <div class="live-failed">
-          <span class="live-icon err"><span class="icon">error</span></span>
-          <div class="grow"><b>The demo didn't start</b><small id="liveWhy">Your browser couldn't run it.</small></div>
-          <a class="btn btn-tonal" href="/preview.html"><span class="icon">open_in_new</span><span class="long">Open the full page</span></a>
-        </div>
+      <div class="cta-row">
+        <a class="btn btn-light only-wish" href="#wishlist"><span class="icon">favorite</span>Join the wishlist</a>
+        <a class="btn btn-light only-released" href="#download"><span class="icon">download</span>Download</a>
+        <a class="btn btn-ghost" href="/privacy.html">How we treat your data <span class="icon">arrow_forward</span></a>
       </div>
     </div>
   </section>
 
-  <!-- ============================================================ PLATFORMS -->
-  <section class="section" id="platforms" style="padding-top:0">
+  <!-- ============================================================ LOOKS -->
+  <section class="section" id="looks">
+    <div class="wrap looks">
+      <div class="looks-side reveal">
+        <h2>Make it yours.</h2>
+        <p class="lede">Four looks on every device. Pick one in Settings → Theme, and change it whenever you like.</p>
+        <ol class="looks-list" id="looksList">
+          <li class="now"><span class="mono">01</span>Default</li>
+          <li><span class="mono">02</span>Liquid Glass</li>
+          <li><span class="mono">03</span>Nothing</li>
+          <li><span class="mono">04</span>Make your own</li>
+        </ol>
+      </div>
+      <div class="tiles">
+        <article class="tile-card lav-bg reveal" data-look="0">
+          <div class="top"><span class="chip">Default</span><span class="count">01 / 04</span></div>
+          <svg class="art" viewBox="0 0 64 64" fill="none" stroke="#141414" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="32" cy="32" r="24"/><circle cx="22" cy="26" r="4"/><circle cx="34" cy="20" r="4"/><circle cx="43" cy="30" r="4"/><path d="M30 56c-4 0-6-3-6-6s3-5 6-5 5-3 5-6"/></svg>
+          <h3>Your colors</h3>
+          <p>Clean and calm, in the color you choose, or your wallpaper's on Android.</p>
+        </article>
+        <article class="tile-card blue-bg reveal" data-look="1">
+          <div class="top"><span class="chip">Liquid Glass</span><span class="count">02 / 04</span></div>
+          <svg class="art" viewBox="0 0 64 64" fill="none" stroke="#141414" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M32 6c10 13 18 22 18 32a18 18 0 0 1-36 0c0-10 8-19 18-32z"/><path d="M24 40a8 8 0 0 0 8 8"/></svg>
+          <h3>Glass on Apple</h3>
+          <p>On iPhone and Mac with the newest system, Sidekick can wear Apple's Liquid Glass.</p>
+        </article>
+        <article class="tile-card salmon-bg reveal" data-look="2">
+          <div class="top"><span class="chip">Nothing</span><span class="count">03 / 04</span></div>
+          <svg class="art" viewBox="0 0 64 64" fill="#141414" aria-hidden="true"><circle cx="14" cy="14" r="5"/><circle cx="32" cy="14" r="5"/><circle cx="50" cy="14" r="5"/><circle cx="14" cy="32" r="5"/><circle cx="50" cy="32" r="5"/><circle cx="14" cy="50" r="5"/><circle cx="32" cy="50" r="5"/><circle cx="50" cy="50" r="5"/></svg>
+          <h3>Ink on paper</h3>
+          <p>Dotted titles, thin lines and one red button. Its own app icon comes with it.</p>
+        </article>
+        <article class="tile-card green-bg reveal" data-look="3">
+          <div class="top"><span class="chip">Make theme</span><span class="count">04 / 04</span></div>
+          <svg class="art" viewBox="0 0 64 64" fill="none" stroke="#141414" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M44 8l12 12-26 26-14 2 2-14z"/><path d="M38 14l12 12"/><path d="M8 56h22"/></svg>
+          <h3>Or make one</h3>
+          <p>Pick an accent, a background, cards and text, and watch the app change as you go.</p>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================ PLATFORMS / DOWNLOAD -->
+  <!-- One tile per platform. Released (np7dpanel.php → Website): each links
+       to its file from SIDEKICK_RELEASE, set by the script below. -->
+  <section class="section" id="download">
     <div class="wrap">
       <div class="section-head reveal">
-        <div class="kicker">Platforms</div>
-        <h2>Android, iOS, Windows, and macOS.</h2>
-        <p>The same app everywhere, in the look you pick: Default, Liquid Glass (iPhone and Mac), Nothing, or one you make.</p>
-      </div>
-      <div class="everywhere reveal"><b>On every device</b>
-        <span><span class="icon">send</span>Send files</span>
-        <span><span class="icon">link</span>Links and notes</span>
-        <span><span class="icon">notifications_active</span>Ping</span>
-        <span><span class="icon">lock</span>Encrypted pairing</span>
+        <h2 class="only-wish">On every device you use</h2>
+        <h2 class="only-released">Download Sidekick</h2>
+        <p class="lede">Windows, macOS, Android and iPhone, the same app on each. Install it on your computer and your phone, then pair them with a 6-digit code.</p>
       </div>
       <div class="platforms">
-        <div class="platform reveal">
-          <div class="platform-head"><div class="card-icon"><span class="icon">android</span></div><h3>Android</h3></div>
-          <ul class="caps">
-            <li><span class="icon">check_circle</span>Control your computer</li>
-            <li><span class="icon">check_circle</span>Be controlled from your computer</li>
-            <li><span class="icon">check_circle</span>Browse and share files</li>
-            <li><span class="icon">check_circle</span>Notifications and screenshots on your computer</li>
-            <li><span class="icon">check_circle</span>Scan QR codes to pair</li>
-          </ul>
-        </div>
-        <div class="platform reveal">
-          <div class="platform-head"><div class="card-icon"><span class="icon">phone_iphone</span></div><h3>iOS &amp; iPadOS</h3></div>
-          <ul class="caps">
-            <li><span class="icon">check_circle</span>Control your computer</li>
-            <li><span class="icon">check_circle</span>Browse and share files</li>
-            <li><span class="icon">check_circle</span>Screenshots on your computer</li>
-            <li><span class="icon">check_circle</span>Live Activities</li>
-            <li><span class="icon">check_circle</span>Scan QR codes to pair</li>
-          </ul>
-        </div>
-        <div class="platform reveal">
-          <div class="platform-head"><div class="card-icon"><span class="icon">desktop_windows</span></div><h3>Windows</h3></div>
-          <ul class="caps">
-            <li><span class="icon">check_circle</span>Control an Android phone</li>
-            <li><span class="icon">check_circle</span>Be controlled from your phone</li>
-            <li><span class="icon">check_circle</span>Browse and share files</li>
-            <li><span class="icon">check_circle</span>Your phone's notifications</li>
-            <li><span class="icon">check_circle</span>Lives in the tray</li>
-          </ul>
-        </div>
-        <div class="platform reveal">
-          <div class="platform-head"><div class="card-icon"><span class="icon">laptop_mac</span></div><h3>macOS</h3></div>
-          <ul class="caps">
-            <li><span class="icon">check_circle</span>Control an Android phone</li>
-            <li><span class="icon">check_circle</span>Be controlled from your phone</li>
-            <li><span class="icon">check_circle</span>Browse and share files</li>
-            <li><span class="icon">check_circle</span>Your phone's notifications</li>
-            <li><span class="icon">check_circle</span>Lives in the menu bar</li>
-          </ul>
-        </div>
+        <a class="dl lav-bg reveal" data-os="macos" href="#wishlist">
+          <svg class="logo" viewBox="0 0 170 200" fill="#141414" aria-hidden="true"><path d="M150 170c-8 12-17 24-30 24s-17-8-32-8-20 8-32 8-22-13-30-25C9 145-3 101 14 72c8-15 24-24 41-24 13 0 25 9 33 9s23-11 39-9c7 0 25 3 37 20-1 1-22 13-22 38 0 30 26 40 27 40-1 2-5 14-19 24zM113 21c7-8 11-19 10-30-10 0-21 7-28 15-6 7-12 18-10 29 11 1 21-6 28-14z"/></svg>
+          <span class="chip only-wish">Coming soon</span><span class="chip only-released">Available</span>
+          <b>macOS</b>
+          <small>macOS 12 or newer · Apple silicon and Intel</small>
+          <span class="go"><span class="only-wish">Join the wishlist</span><span class="only-released dl-file">Download .dmg</span><span class="icon">arrow_outward</span></span>
+        </a>
+        <a class="dl green-bg reveal" data-os="windows" href="#wishlist">
+          <svg class="logo" viewBox="0 0 88 88" fill="#141414" aria-hidden="true"><path d="M0 12l36-5v35H0zM40 6l48-6v42H40zM0 46h36v35L0 76zM40 46h48v42l-48-7z"/></svg>
+          <span class="chip only-wish">Coming soon</span><span class="chip only-released">Available</span>
+          <b>Windows</b>
+          <small>Windows 10 and 11 · lives in the tray</small>
+          <span class="go"><span class="only-wish">Join the wishlist</span><span class="only-released dl-file">Download .exe</span><span class="icon">arrow_outward</span></span>
+        </a>
+        <a class="dl mustard-bg reveal" data-os="android" href="#wishlist">
+          <svg class="logo" viewBox="0 0 96 64" fill="#141414" aria-hidden="true"><path d="M20 6l7 12M76 6l-7 12" stroke="#141414" stroke-width="4" stroke-linecap="round"/><path d="M4 60a44 44 0 0 1 88 0z"/><circle cx="30" cy="42" r="5" fill="#e3b866"/><circle cx="66" cy="42" r="5" fill="#e3b866"/></svg>
+          <span class="chip only-wish">Coming soon</span><span class="chip only-released">Available</span>
+          <b>Android</b>
+          <small>Android 8.0 or newer</small>
+          <span class="go"><span class="only-wish">Join the wishlist</span><span class="only-released dl-file">Download .apk</span><span class="icon">arrow_outward</span></span>
+        </a>
+        <a class="dl blue-bg reveal" data-os="ios" href="#wishlist">
+          <svg class="logo" viewBox="0 0 170 200" fill="#141414" aria-hidden="true"><path d="M150 170c-8 12-17 24-30 24s-17-8-32-8-20 8-32 8-22-13-30-25C9 145-3 101 14 72c8-15 24-24 41-24 13 0 25 9 33 9s23-11 39-9c7 0 25 3 37 20-1 1-22 13-22 38 0 30 26 40 27 40-1 2-5 14-19 24zM113 21c7-8 11-19 10-30-10 0-21 7-28 15-6 7-12 18-10 29 11 1 21-6 28-14z"/></svg>
+          <span class="chip only-wish">Coming soon</span><span class="chip only-released">Available</span>
+          <b>iPhone &amp; iPad</b>
+          <small>iOS 15 or newer · installs with AltStore or Sideloadly</small>
+          <span class="go"><span class="only-wish">Join the wishlist</span><span class="only-released dl-file">Download .ipa</span><span class="icon">arrow_outward</span></span>
+        </a>
+        <a class="dl salmon-bg reveal" data-os="web" href="/preview.html">
+          <svg class="logo" viewBox="0 0 64 64" fill="none" stroke="#141414" stroke-width="4" stroke-linecap="round" aria-hidden="true"><circle cx="32" cy="32" r="26"/><path d="M6 32h52M32 6c8 8 12 17 12 26s-4 18-12 26M32 6c-8 8-12 17-12 26s4 18 12 26"/></svg>
+          <span class="chip">Try it now</span>
+          <b>In your browser</b>
+          <small>The real app, as a Mac and an iPhone side by side</small>
+          <span class="go">Open the demo<span class="icon">arrow_outward</span></span>
+        </a>
+      </div>
+      <!-- Macs get a choice: the .dmg (drag to Applications) or the .pkg
+           installer, each for Apple silicon or Intel. -->
+      <p class="fine only-released" id="macPkg"><span class="icon" aria-hidden="true">laptop_mac</span> On a Mac you can also use the
+        <a id="macPkgLink" href="https://github.com/dankordigital/sidekick/releases/latest">.pkg installer</a>
+        (open it, Continue, Install). Older Mac with an Intel chip?
+        <a id="macIntelLink" href="https://github.com/dankordigital/sidekick/releases/latest">Intel .dmg</a> ·
+        <a id="macIntelPkgLink" href="https://github.com/dankordigital/sidekick/releases/latest">Intel .pkg</a></p>
+      <p class="fine only-released" id="releaseNote"><a href="https://github.com/dankordigital/sidekick/releases/latest">Release notes and older versions</a> · <a href="/privacy.html">Privacy</a></p>
+    </div>
+  </section>
+
+  <!-- ============================================================ QUESTIONS -->
+  <section class="section" id="questions">
+    <div class="wrap faq">
+      <div class="faq-side reveal">
+        <h2>Questions</h2>
+        <p class="lede">Short answers about price, setup and your data.</p>
+      </div>
+      <div class="qa reveal">
+        <details><summary>Is Sidekick free?<span class="icon">expand_more</span></summary>
+          <p>Yes, with every feature, on every device. There's no account and no subscription.</p></details>
+        <details><summary>Do I need an account or the internet?<span class="icon">expand_more</span></summary>
+          <p>No. Your devices talk to each other directly, on your own Wi-Fi or a direct Wi-Fi link between the two. Nothing goes through our servers, because there aren't any.</p></details>
+        <details><summary>How do I connect my phone and computer?<span class="icon">expand_more</span></summary>
+          <p>Open Sidekick on both. Tap Pair next to the other device and type the 6-digit code it shows, or scan its QR code with your phone. They remember each other from then on.</p></details>
+        <details><summary>What if we're not on the same Wi-Fi?<span class="icon">expand_more</span></summary>
+          <p>Sidekick links the two devices directly: one opens a small Wi-Fi network and the other joins it. iPhones and Macs use Apple's own direct link, like AirDrop.</p></details>
+        <details><summary>Is it safe?<span class="icon">expand_more</span></summary>
+          <p>Everything is encrypted, and only devices you paired with the code can connect. A paired device can only do what you allow in Settings.</p></details>
+        <details><summary>Can my computer control my iPhone?<span class="icon">expand_more</span></summary>
+          <p>No: Apple doesn't let any app do that. Your iPhone can control your computer, and everything else works on iPhone too.</p></details>
+        <details><summary>Where do the files go?<span class="icon">expand_more</span></summary>
+          <p>Into a Sidekick folder you can change in Settings. On phones, photos and videos go straight to Photos or the gallery.</p></details>
+        <details class="only-wish"><summary>When can I get it?<span class="icon">expand_more</span></summary>
+          <p>Soon. Join the wishlist and we'll email you once, the day it's out.</p></details>
       </div>
     </div>
   </section>
 
-  <!-- ============================================================ HOW -->
-  <section class="section" id="how" style="padding-top:0">
-    <div class="wrap">
-      <div class="section-head reveal">
-        <div class="kicker">How it works</div>
-        <h2>Set up in about 30 seconds.</h2>
-      </div>
-      <div class="steps">
-        <div class="step reveal">
-          <div class="step-num">1</div>
-          <h3>Install on both devices</h3>
-          <p>Install Sidekick on your phone and your computer. You don't need an account.</p>
-        </div>
-        <div class="step reveal">
-          <div class="step-num">2</div>
-          <h3>Scan the QR code</h3>
-          <p>Point your phone at the code on your computer's screen. The devices remember each other.</p>
-        </div>
-        <div class="step reveal">
-          <div class="step-num">3</div>
-          <h3>Start using it</h3>
-          <p>On the same Wi-Fi they connect on their own. Without one, Sidekick links them directly.</p>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- ============================================================ DOWNLOAD -->
-  <!-- Shown instead of the wishlist once the site is released
-       (np7dpanel.php → Website); the links come from SIDEKICK_RELEASE. -->
-  <section class="section only-released" id="download" style="padding-top:0">
-    <div class="wrap">
-      <div class="cta-card reveal">
-        <h2>Get Sidekick</h2>
-        <p>Free, with no account. Install it on your computer and your phone, then pair them with a 6-digit code.</p>
-        <!-- Links are filled in from RELEASE in the script below; these
-             fallbacks point at the release page for visitors without JS. -->
-        <div class="downloads">
-          <a class="dl" data-os="windows" href="https://github.com/dankordigital/sidekick/releases/latest">
-            <span class="badge">Your device</span>
-            <span class="icon">desktop_windows</span>
-            <b>Windows</b>
-            <small>Windows 10 &amp; 11 · installer</small>
-            <span class="dl-go"><span class="icon">download</span><span class="dl-file">Download .exe</span></span>
-          </a>
-          <a class="dl" data-os="macos" href="https://github.com/dankordigital/sidekick/releases/latest">
-            <span class="badge">Your device</span>
-            <span class="icon">laptop_mac</span>
-            <b>macOS</b>
-            <small>Apple silicon · macOS 12+ · first launch: right-click → Open</small>
-            <span class="dl-go"><span class="icon">download</span><span class="dl-file">Download .dmg</span></span>
-          </a>
-          <a class="dl" data-os="android" href="https://github.com/dankordigital/sidekick/releases/latest">
-            <span class="badge">Your device</span>
-            <span class="icon">android</span>
-            <b>Android</b>
-            <small>Android 8.0+ · allow installing from your browser</small>
-            <span class="dl-go"><span class="icon">download</span><span class="dl-file">Download .apk</span></span>
-          </a>
-          <a class="dl" data-os="ios" href="https://github.com/dankordigital/sidekick/releases/latest">
-            <span class="badge">Your device</span>
-            <span class="icon">phone_iphone</span>
-            <b>iPhone &amp; iPad</b>
-            <small>iOS 15+ · install with AltStore or Sideloadly</small>
-            <span class="dl-go"><span class="icon">download</span><span class="dl-file">Download .ipa</span></span>
-          </a>
-        </div>
-        <!-- Macs get a choice: the .dmg (drag to Applications) or the .pkg
-             installer, each for Apple silicon or Intel. -->
-        <p class="fine" id="macPkg"><span class="icon" aria-hidden="true">laptop_mac</span> On a Mac you can also use the
-          <a id="macPkgLink" href="https://github.com/dankordigital/sidekick/releases/latest">.pkg installer</a>
-          (open it, Continue, Install). Older Mac with an Intel chip?
-          <a id="macIntelLink" href="https://github.com/dankordigital/sidekick/releases/latest">Intel .dmg</a> ·
-          <a id="macIntelPkgLink" href="https://github.com/dankordigital/sidekick/releases/latest">Intel .pkg</a></p>
-        <p class="fine" id="releaseNote"><a href="https://github.com/dankordigital/sidekick/releases/latest">Release notes and older versions</a> · <a href="/privacy.html">Privacy</a></p>
-      </div>
-    </div>
-  </section>
-
-  <!-- ============================================================ WISHLIST -->
+  <!-- ============================================================ WISHLIST / GET IT -->
   <!-- Sidekick isn't out yet: the page collects interest instead of offering
        downloads. The form posts to wishlist.php, which emails "Got your
        email!" and once more at launch (privacy.html says so). -->
-  <section class="section only-wish" id="wishlist" style="padding-top:0">
-    <div class="wrap">
-      <div class="cta-card reveal">
-        <h2>Join the wishlist</h2>
-        <p>Sidekick is almost here: free, with no account, on Windows, macOS, Android and iPhone.</p>
+  <section class="finale" id="wishlist">
+    <div class="mosaic" id="mosaic" aria-hidden="true"></div>
+    <div class="wrap reveal">
+      <h2 class="only-wish">Be the first to try it.</h2>
+      <h2 class="only-released">Get your Sidekick.</h2>
+      <p class="lede only-wish">Sidekick is almost here: free, with no account, on Windows, macOS, Android and iPhone.</p>
+      <p class="lede only-released">Free, with no account. Install it on your computer and your phone, then pair them with a 6-digit code.</p>
+      <div class="cta-row only-released"><a class="btn btn-light" href="#download"><span class="icon">download</span>Download Sidekick</a></div>
+      <div class="only-wish">
         <form class="wish" id="wishForm" novalidate>
           <div class="wish-os" role="group" aria-label="Which devices do you use?">
             <button class="wish-chip" type="button" aria-pressed="false"><span class="icon">desktop_windows</span>Windows</button>
@@ -1307,7 +888,7 @@ footer nav a:hover { color: var(--on-surface); }
               <input id="wishEmail" type="email" name="email" placeholder="Your email" autocomplete="email" required
                      aria-label="Your email">
             </label>
-            <button class="btn btn-filled" type="submit"><span class="icon">favorite</span>Join the wishlist</button>
+            <button class="btn btn-light" type="submit">Join the wishlist</button>
           </div>
           <!-- Left empty by people; bots fill it in. -->
           <label class="wish-trap" aria-hidden="true">Website <input name="website" tabindex="-1" autocomplete="off"></label>
@@ -1328,20 +909,46 @@ footer nav a:hover { color: var(--on-surface); }
 
 <footer>
   <div class="wrap">
-    <a class="brand" href="#top" aria-label="Sidekick"><span class="logo logo-2" aria-hidden="true"></span></a>
-    <nav aria-label="Footer">
-      <a href="#features">Features</a>
-      <a href="#app">The app</a>
-      <a href="#platforms">Platforms</a>
-      <a href="#how">How it works</a>
-      <a href="https://github.com/dankordigital/sidekick">GitHub</a>
-      <a href="/privacy.html">Privacy</a>
-    </nav>
-    <span>© 2026 Sidekick</span>
+    <div class="foot">
+      <div>
+        <a class="brand" href="#top"><img src="/website/favicon.png" alt=""><span>Sidekick</span></a>
+        <p class="say">Your phone and computer, working as one. Over your own Wi-Fi, with no account and no cloud.</p>
+        <a class="link-arrow only-wish" href="#wishlist">Join the wishlist<span class="icon">arrow_outward</span></a>
+        <a class="link-arrow only-released" href="#download">Download Sidekick<span class="icon">arrow_outward</span></a>
+      </div>
+      <div class="cols">
+        <div>
+          <h4>PRODUCT</h4>
+          <a href="#features">Features</a>
+          <a href="#app">Try it</a>
+          <a href="#looks">Looks</a>
+          <a href="#questions">Questions</a>
+        </div>
+        <div>
+          <h4>PLATFORMS</h4>
+          <a href="#download">Windows</a>
+          <a href="#download">macOS</a>
+          <a href="#download">Android</a>
+          <a href="#download">iPhone &amp; iPad</a>
+        </div>
+        <div>
+          <h4>MORE</h4>
+          <a href="/preview.html">Demo in your browser</a>
+          <a href="https://github.com/dankordigital/sidekick">GitHub</a>
+          <a href="https://github.com/dankordigital/sidekick/releases">Releases</a>
+          <a href="/privacy.html">Privacy</a>
+        </div>
+      </div>
+    </div>
+    <div class="bottom">
+      <span>© 2026 Sidekick</span>
+      <span class="right">
+        <span class="avail"><span class="dot"></span><span class="only-wish">Coming to Windows, macOS, Android and iPhone</span><span class="only-released">Available for Windows, macOS, Android and iPhone</span></span>
+        <span class="mono">No account · No cloud</span>
+      </span>
+    </div>
   </div>
 </footer>
-
-<div class="snackbar" id="snackbar" role="status" aria-live="polite"></div>
 
 <script>
 document.documentElement.classList.add('js');
@@ -1382,91 +989,67 @@ const sounds = (() => {
   return { play };
 })();
 
-/* ---------- theme (light / dark) */
-const themeIcon = $('#themeIcon');
-const systemDark = matchMedia('(prefers-color-scheme: dark)');
-const isDark = () => root.dataset.theme ? root.dataset.theme === 'dark' : systemDark.matches;
+/* ---------- theme: dark unless the visitor picks light (remembered, and
+   shared with privacy.html and 404.html). */
 function syncThemeUI() {
-  themeIcon.textContent = isDark() ? 'light_mode' : 'dark_mode';
-  const meta = document.querySelector('meta[name="theme-color"]');
-  meta.content = getComputedStyle(document.body).backgroundColor;
+  const light = root.dataset.theme === 'light';
+  $('#themeIcon').textContent = light ? 'dark_mode' : 'light_mode';
+  $('#themeBtn').setAttribute('aria-label', light ? 'Switch to dark mode' : 'Switch to light mode');
+  document.querySelector('meta[name="theme-color"]').content = getComputedStyle(document.body).backgroundColor;
 }
-const savedTheme = store.get('sidekick-theme');
-if (savedTheme === 'light' || savedTheme === 'dark') root.dataset.theme = savedTheme;
+if (store.get('sidekick-theme') === 'light') root.dataset.theme = 'light';
 $('#themeBtn').addEventListener('click', () => {
-  root.dataset.theme = isDark() ? 'light' : 'dark';
-  store.set('sidekick-theme', root.dataset.theme);
+  if (root.dataset.theme === 'light') delete root.dataset.theme;
+  else root.dataset.theme = 'light';
+  store.set('sidekick-theme', root.dataset.theme === 'light' ? 'light' : 'dark');
   syncThemeUI();
 });
-systemDark.addEventListener('change', syncThemeUI);
-
-/* ---------- seed color */
-const swatches = document.querySelectorAll('.swatch');
-function setHue(h) {
-  root.style.setProperty('--h', h);
-  swatches.forEach(s => s.setAttribute('aria-pressed', String(s.dataset.h === String(h))));
-  requestAnimationFrame(syncThemeUI);
-}
-const savedHue = store.get('sidekick-hue');
-if (savedHue && [...swatches].some(s => s.dataset.h === savedHue)) setHue(savedHue);
-swatches.forEach(s => s.addEventListener('click', () => { setHue(s.dataset.h); store.set('sidekick-hue', s.dataset.h); }));
 syncThemeUI();
 
-/* ---------- top bar border on scroll */
+/* ---------- top bar: a line under it once the page scrolls */
 const topbar = $('#topbar');
 addEventListener('scroll', () => topbar.classList.toggle('scrolled', scrollY > 8), { passive: true });
 
-/* ---------- trackpad demo */
-const pad = $('#trackpad'), cursor = $('#cursor'), hint = $('#padHint');
-function padPos(e) {
-  const r = pad.getBoundingClientRect();
-  return { x: Math.max(0, Math.min(r.width, e.clientX - r.left)), y: Math.max(0, Math.min(r.height, e.clientY - r.top)) };
-}
-pad.addEventListener('pointermove', e => {
-  const { x, y } = padPos(e);
-  cursor.style.left = x + 'px';
-  cursor.style.top = y + 'px';
-  hint.style.opacity = 0;
-});
-pad.addEventListener('pointerdown', e => {
-  const { x, y } = padPos(e);
-  cursor.style.left = x + 'px';
-  cursor.style.top = y + 'px';
-  const rp = document.createElement('span');
-  rp.className = 'ripple';
-  rp.style.left = x + 'px';
-  rp.style.top = y + 'px';
-  pad.appendChild(rp);
-  rp.addEventListener('animationend', () => rp.remove());
-  setTimeout(() => rp.remove(), 800);
-});
-pad.addEventListener('pointerleave', () => { hint.style.opacity = 1; });
+/* ---------- the touchpad card: the dot follows the pointer or finger */
+(() => {
+  const pad = $('#trackpad'), cur = $('#cursor'), hint = $('#padHint');
+  function move(e) {
+    const r = pad.getBoundingClientRect();
+    cur.style.left = Math.max(0, Math.min(r.width, e.clientX - r.left)) + 'px';
+    cur.style.top = Math.max(0, Math.min(r.height, e.clientY - r.top)) + 'px';
+    hint.style.opacity = '0';
+  }
+  pad.addEventListener('pointermove', move);
+  pad.addEventListener('pointerdown', e => { move(e); cur.classList.add('tap'); });
+  addEventListener('pointerup', () => cur.classList.remove('tap'));
+  pad.addEventListener('pointerleave', () => { hint.style.opacity = '1'; });
+})();
 
-/* ---------- file browser demo */
-const files = document.querySelectorAll('.file');
-function updateSelection() {
-  const sel = [...files].filter(f => f.getAttribute('aria-pressed') === 'true');
-  const mb = sel.reduce((a, f) => a + +f.dataset.size, 0);
-  $('#selInfo').textContent = sel.length ? `${sel.length} selected · ${mb >= 1000 ? (mb / 1000).toFixed(1) + ' GB' : mb + ' MB'}` : 'Nothing selected';
-  $('#sendBtn').disabled = !sel.length;
-  $('#sendBtn').style.opacity = sel.length ? 1 : .5;
-}
-files.forEach(f => f.addEventListener('click', () => {
-  f.setAttribute('aria-pressed', String(f.getAttribute('aria-pressed') !== 'true'));
-  updateSelection();
-}));
-$('#sendBtn').addEventListener('click', () => snack('Demo only. In the app, the files would save to your PC.'));
-updateSelection();
+/* ---------- looks: the list on the left follows the tile in view */
+(() => {
+  const items = [...document.querySelectorAll('#looksList li')];
+  const io = new IntersectionObserver(entries => entries.forEach(en => {
+    if (!en.isIntersecting) return;
+    items.forEach((li, i) => li.classList.toggle('now', String(i) === en.target.dataset.look));
+  }), { rootMargin: '-45% 0px -45% 0px' });
+  document.querySelectorAll('.tile-card').forEach(t => io.observe(t));
+})();
 
-/* ---------- snackbar */
-const snackbar = $('#snackbar');
-let snackTimer;
-function snack(msg) {
-  snackbar.textContent = msg;
-  snackbar.classList.add('show');
-  clearTimeout(snackTimer);
-  snackTimer = setTimeout(() => snackbar.classList.remove('show'), 3200);
-}
+/* ---------- the field of tiles behind the last section */
+(() => {
+  const colors = ['#d6adf2', '#61c985', '#e3b866', '#74b9ff', '#ee9a7d'];
+  const mosaic = $('#mosaic');
+  let seed = 7;
+  const rand = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+  for (let i = 0; i < 160; i++) {
+    const s = document.createElement('span');
+    s.style.background = colors[Math.floor(rand() * colors.length)];
+    s.style.opacity = (0.45 + rand() * 0.45).toFixed(2);
+    s.style.animationDelay = (-rand() * 6).toFixed(2) + 's';
+    if (rand() < 0.22) s.textContent = 'sk';
+    mosaic.appendChild(s);
+  }
+})();
 
 /* ---------- downloads, once the site is released: index.php puts the
    release's links in SIDEKICK_RELEASE (np7dpanel.php → Website). */
@@ -1501,18 +1084,18 @@ const OS_INFO = {
   const os = detectOS();
   const info = OS_INFO[os];
   const href = info.href || RELEASE.files[os];
-  const hero = $('#heroDownload');
-  hero.href = href;
+  $('#heroDownload').href = href;
   $('#heroDownloadLabel').textContent = info.label;
   $('#heroDownloadIcon').textContent = info.icon;
   $('#navDownload').href = href;
   $('#heroDownloadMeta').innerHTML = `${info.meta} · v${RELEASE.version} · <a href="#download">All downloads</a>`;
-  document.querySelectorAll('.dl').forEach(tile => {
-    tile.href = RELEASE.files[tile.dataset.os];
+  document.querySelectorAll('.dl[data-os]').forEach(tile => {
+    const file = RELEASE.files[tile.dataset.os];
+    if (!file) return;
+    tile.href = file;
     tile.classList.toggle('mine', tile.dataset.os === os);
   });
-  const note = $('#releaseNote');
-  note.innerHTML = `Version ${RELEASE.version} · <a href="${RELEASE.page}">Release notes and older versions</a> · <a href="/privacy.html">Privacy</a>`;
+  $('#releaseNote').innerHTML = `Version ${RELEASE.version} · <a href="${RELEASE.page}">Release notes and older versions</a> · <a href="/privacy.html">Privacy</a>`;
   $('#macPkgLink').href = RELEASE.files.macosPkg;
   $('#macIntelLink').href = RELEASE.files.macosIntel;
   $('#macIntelPkgLink').href = RELEASE.files.macosIntelPkg;
@@ -1591,92 +1174,16 @@ const OS_INFO = {
   }
 })();
 
-/* ---------- the app: Send files → ask → accept → progress, on both screens */
+/* ---------- the real app, in the page: preview.html?embed=1 in the app window */
 (() => {
-  const over = $('#sendover'), phone = $('#recvPhone');
-  const title = $('#sendTitle'), sub = $('#sendSub'), icon = $('#sendIcon');
-  const sendFill = $('#sendFill'), recvFill = $('#recvFill');
-  const hint = $('#recvHint'), offerTitle = $('#offerTitle'), cancel = $('#sendCancel');
-  let timers = [];
-  const later = (ms, fn) => timers.push(setTimeout(fn, ms));
-  const stop = () => { timers.forEach(clearTimeout); timers = []; };
-
-  function reset() {
-    stop();
-    over.className = 'sendover';
-    phone.classList.remove('asking', 'receiving');
-    sendFill.style.width = recvFill.style.width = '0%';
-    icon.textContent = 'phone_android';
-    title.textContent = 'Waiting for permission…';
-    sub.textContent = 'Ask Pixel 9 to tap Accept';
-    offerTitle.textContent = 'Gaming PC wants to send you';
-    cancel.textContent = 'Cancel';
-  }
-
-  function start() {
-    reset();
-    over.classList.add('show');
-    later(700, () => { phone.classList.add('asking'); sounds.play('request'); });
-    // Nobody tapping? Accept on the phone's behalf so the demo plays on.
-    later(7000, accept);
-  }
-
-  function accept() {
-    if (!phone.classList.contains('asking')) return;
-    stop();
-    sounds.play('accept');
-    phone.classList.replace('asking', 'receiving');
-    offerTitle.textContent = 'Receiving from Gaming PC…';
-    over.classList.add('busy');
-    title.textContent = 'Sending to Pixel 9';
-    cancel.textContent = 'Hide';
-    let p = 0;
-    const tick = () => {
-      p = Math.min(100, p + 4 + Math.random() * 6);
-      sendFill.style.width = recvFill.style.width = p + '%';
-      sub.textContent = `${Math.round(48 * p / 100)} MB of 48 MB`;
-      if (p < 100) return later(120, tick);
-      over.classList.replace('busy', 'done');
-      icon.textContent = 'check';
-      title.textContent = 'Sent!';
-      sub.textContent = '3 files are on Pixel 9';
-      offerTitle.textContent = 'All here!';
-      hint.textContent = 'Saved 3 files to Downloads';
-      later(1600, () => { over.classList.remove('show'); phone.classList.remove('receiving'); });
-      later(2200, reset);
-    };
-    tick();
-  }
-
-  function decline() {
-    if (!phone.classList.contains('asking')) return;
-    stop();
-    sounds.play('decline');
-    phone.classList.remove('asking');
-    icon.textContent = 'close';
-    title.textContent = 'Pixel 9 declined';
-    sub.textContent = 'Nothing was sent';
-    over.classList.add('done', 'no');
-    later(1800, () => over.classList.remove('show'));
-    later(2300, reset);
-  }
-
-  $('#demoSend').addEventListener('click', start);
-  $('#offerAccept').addEventListener('click', accept);
-  $('#offerDecline').addEventListener('click', decline);
-  cancel.addEventListener('click', () => { stop(); over.classList.remove('show'); phone.classList.remove('asking', 'receiving'); later(400, reset); });
-})();
-
-/* ---------- the real app, in the page: preview.html?embed=1 under the drawing */
-(() => {
-  const live = $('#live'), holder = $('#liveFrame'), section = $('#app');
+  const live = $('#live'), holder = $('#liveFrame'), stage = $('#stage');
   let frame = null;
   const set = (state) => { live.dataset.state = state; };
   function stop() {
     frame?.remove();
     frame = null;
     holder.classList.remove('on');
-    section.classList.remove('running');
+    stage.classList.remove('running');
     set('idle');
   }
   function start() {
@@ -1697,7 +1204,7 @@ const OS_INFO = {
     if (m.t === 'sk-height') frame.style.height = m.height + 'px';
     if (m.t === 'sk-ready') {
       holder.classList.add('on');
-      section.classList.add('running');
+      stage.classList.add('running');
       set('running');
     }
     if (m.t === 'sk-failed' && live.dataset.state === 'loading') {
@@ -1710,7 +1217,7 @@ const OS_INFO = {
   $('#liveAgain').addEventListener('click', start);
 })();
 
-/* ---------- reveal on scroll */
+/* ---------- shown as they scroll in */
 const io = new IntersectionObserver(entries => {
   entries.forEach(en => { if (en.isIntersecting) { en.target.classList.add('in'); io.unobserve(en.target); } });
 }, { rootMargin: '0px 0px -8% 0px' });

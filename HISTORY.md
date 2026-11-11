@@ -7,6 +7,24 @@ detailed developer notes; every release is in `VERSIONS.md`) and
 
 ## 11 November 2026
 
+- **New website look, after openbot.run** (the owner: "remake my site as
+  openbot.run made"; its style only, Sidekick's own words and pictures):
+  dark Inter pages with huge tight headings, pill buttons, a big app window
+  in the hero (the live demo runs in it), cards holding real bits of the app
+  (Accept card, touchpad, file list, link card, Ping, Live Activity),
+  a giant "Free", pastel tiles for the four looks and for each platform,
+  Questions, and the wishlist over a field of tiles. Light mode with the
+  moon. preview.html, privacy.html and 404.html share the colors. Kept
+  working: the wishlist form, released mode (tiles link to the files),
+  sounds, the panel's Edit (old edits to texts that changed do nothing).
+  The old drawn demo (Send files animation, file browser) is gone: the
+  real app does it. Checked: wishlist sign-up, released mode, every
+  browser's demo check. **Released 3.0.5.**
+- **A concept of the app in the same look** (not built): a Design canvas,
+  https://claude.ai/artifact/N5YczZk3EXsqbULx56Qfxf (computer window with
+  devices as a list and each device's files and links as a conversation;
+  phone Devices, files coming in, Remote).
+
 - **The demo works in every browser** (Part 1 of the owner's four-part
   brief: every browser; plain wording; errors in a pop-up with Close and
   successes in a 5-second notice; better look on every screen).
