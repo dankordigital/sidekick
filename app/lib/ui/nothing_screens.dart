@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:file_picker/file_picker.dart';
-import 'package:flutter/services.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
@@ -395,9 +394,10 @@ class _NothingSendPageState extends State<NothingSendPage> {
         final text = await askForText(context);
         if (text != null && text.trim().isNotEmpty) await _addText(text, 'Text');
       case _Kind.paste:
-        final text = (await Clipboard.getData(Clipboard.kTextPlain))?.text;
-        if (text == null || text.trim().isEmpty) {
-          if (mounted) showError(context, 'There is no text on the clipboard.');
+        final text = await readClipboard(context);
+        if (text == null) return;
+        if (text.trim().isEmpty) {
+          if (mounted) showError(context, 'There is no text on the clipboard. Copy some text first, then tap Paste.');
         } else {
           await _addText(text, 'Clipboard');
         }

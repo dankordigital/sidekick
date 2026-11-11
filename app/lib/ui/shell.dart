@@ -356,13 +356,18 @@ class _PinDialogState extends State<_PinDialog> {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
             decoration: BoxDecoration(color: scheme.primaryContainer, borderRadius: BorderRadius.circular(20)),
-            child: SelectableText(
-              '${pin.substring(0, 3)} ${pin.substring(3)}',
-              style: Theme.of(context).textTheme.displaySmall?.copyWith(
-                color: scheme.onPrimaryContainer,
-                fontWeight: FontWeight.w700,
-                letterSpacing: 6,
-                fontFeatures: const [FontFeature.tabularFigures()],
+            // Read out digit by digit (a screen reader would say "123 thousand…").
+            child: Semantics(
+              label: 'Pairing code: ${pin.split('').join(' ')}',
+              excludeSemantics: true,
+              child: SelectableText(
+                '${pin.substring(0, 3)} ${pin.substring(3)}',
+                style: Theme.of(context).textTheme.displaySmall?.copyWith(
+                  color: scheme.onPrimaryContainer,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 6,
+                  fontFeatures: const [FontFeature.tabularFigures()],
+                ),
               ),
             ),
           ),

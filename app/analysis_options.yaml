@@ -9,6 +9,10 @@
 # packages, and plugins designed to encourage good coding practices.
 include: package:flutter_lints/flutter.yaml
 
+# Lines up to 120 characters (CLAUDE.md), whoever runs dart format.
+formatter:
+  page_width: 120
+
 analyzer:
   exclude:
     - build/**

@@ -61,6 +61,7 @@
   color-scheme: dark;
 }
 * { box-sizing: border-box; }
+[hidden] { display: none !important; }
 html { -webkit-text-size-adjust: 100%; }
 body {
   margin: 0; min-height: 100vh; min-height: 100dvh; display: flex; flex-direction: column;
@@ -158,6 +159,12 @@ header .wrap { display: flex; align-items: center; justify-content: space-betwee
 footer { margin-top: 48px; padding: 24px 0 32px; color: var(--on-surface-variant); font-size: 14px; }
 footer .wrap { display: flex; gap: 18px; justify-content: center; flex-wrap: wrap; }
 @media (prefers-reduced-motion: reduce) { .pointer i.go, .loading img { animation: none; } }
+.note { max-width: 760px; margin: 18px auto 0; padding: 12px 18px; border-radius: 16px; text-align: center; font-size: 15px;
+  background: var(--surface-container); color: var(--on-surface-variant); text-wrap: pretty; }
+.fallback { text-align: center; padding: 28px 0 8px; }
+.fallback img { width: 100%; max-width: 900px; height: auto; display: block; margin: 0 auto; }
+.fallback h2 { margin: 18px 0 0; font-size: 22px; }
+.fallback p { margin: 8px auto 0; max-width: 620px; color: var(--on-surface-variant); text-wrap: pretty; }
 .embed body { background: transparent; }
 .embed header, .embed .intro, .embed .fine, .embed .cta, .embed footer, .embed .again { display: none; }
 .embed main { padding-top: 0; padding-bottom: 8px; }
@@ -188,6 +195,18 @@ footer .wrap { display: flex; gap: 18px; justify-content: center; flex-wrap: wra
     <li>Change anything in Settings</li>
   </ol>
 
+  <p class="note" id="slowNote" hidden></p>
+
+  <!-- When this browser can't run the app: what it looks like instead. -->
+  <div class="fallback" id="fallback" hidden>
+    <picture>
+      <source srcset="/website/hero.webp" type="image/webp">
+      <img src="/website/hero.png" width="1600" height="1206" alt="Sidekick on a MacBook receiving files that an iPhone is sending">
+    </picture>
+    <h2 id="fallbackTitle">The demo can't run in this browser</h2>
+    <p id="fallbackWhy"></p>
+  </div>
+
   <div class="stage" id="stage">
     <div class="device mac" id="mac" role="group" aria-label="Sidekick on a MacBook">
       <div class="box">
@@ -202,7 +221,7 @@ footer .wrap { display: flex; gap: 18px; justify-content: center; flex-wrap: wra
           <div class="window">
             <div class="titlebar"><span class="lights"><i></i><i></i><i></i></span>Sidekick</div>
             <div class="content">
-              <iframe id="macFrame" title="Sidekick on the Mac" src="/website/app/index.html?device=mac" allow="autoplay; clipboard-read; clipboard-write"></iframe>
+              <iframe id="macFrame" title="Sidekick on the Mac" data-device="mac" allow="autoplay; clipboard-read; clipboard-write"></iframe>
               <div class="loading" id="macLoading"><div><img src="/website/apple-touch-icon.png" alt="">Starting Sidekick…</div></div>
             </div>
           </div>
@@ -225,7 +244,7 @@ footer .wrap { display: flex; gap: 18px; justify-content: center; flex-wrap: wra
               <svg width="27" height="13" viewBox="0 0 27 13"><rect x=".5" y=".5" width="23" height="12" rx="3.8" fill="none" stroke="currentColor" opacity=".4"/><rect x="2" y="2" width="20" height="9" rx="2.5" fill="currentColor"/><path d="M25 4.5v4c.8-.3 1.3-1.1 1.3-2s-.5-1.7-1.3-2z" fill="currentColor" opacity=".45"/></svg>
             </span>
           </div>
-          <iframe id="phoneFrame" title="Sidekick on the iPhone" src="/website/app/index.html?device=iphone" allow="autoplay; clipboard-read; clipboard-write"></iframe>
+          <iframe id="phoneFrame" title="Sidekick on the iPhone" data-device="iphone" allow="autoplay; clipboard-read; clipboard-write"></iframe>
           <div class="loading" id="phoneLoading"><div><img src="/website/apple-touch-icon.png" alt="">Starting Sidekick…</div></div>
           <div class="homebar"></div>
         </div>
@@ -254,6 +273,17 @@ footer .wrap { display: flex; gap: 18px; justify-content: center; flex-wrap: wra
   const frames = { mac: $('macFrame'), iphone: $('phoneFrame') };
   const ready = { mac: false, iphone: false };
   const loading = { mac: $('macLoading'), iphone: $('phoneLoading') };
+  const query = new URLSearchParams(location.search);
+
+  // The browser's name, to say what to try in words people know.
+  const ua = navigator.userAgent;
+  const browser = /SamsungBrowser/.test(ua) ? 'Samsung Internet'
+    : /OPR\/|Opera/.test(ua) ? 'Opera'
+    : /Edg(A|iOS)?\//.test(ua) ? 'Edge'
+    : /Firefox\/|FxiOS/.test(ua) ? 'Firefox'
+    : /CriOS|Chrome\//.test(ua) ? 'Chrome'
+    : /Safari\//.test(ua) ? 'Safari' : 'this browser';
+  const others = ['Chrome', 'Edge', 'Firefox', 'Safari'].filter((b) => b !== browser).join(', ').replace(/, ([^,]*)$/, ' or $1');
 
   // ---- fitting both devices on the screen (each is drawn at its real size in points, then scaled)
   function fit() {
@@ -276,6 +306,45 @@ footer .wrap { display: flex; gap: 18px; justify-content: center; flex-wrap: wra
   addEventListener('resize', fit);
   fit();
 
+  // ---- can this browser run it at all? (WebAssembly, and Intl.Locale: Flutter needs both)
+  const missing = typeof WebAssembly !== 'object' ? 'WebAssembly'
+    : typeof Intl !== 'object' || typeof Intl.Locale !== 'function' ? 'Intl.Locale' : null;
+  function cantRun(title, why) {
+    $('fallbackTitle').textContent = title;
+    $('fallbackWhy').textContent = why;
+    $('fallback').hidden = false;
+    for (const id of ['stage', 'again']) $(id).hidden = true;
+    document.querySelector('.steps').hidden = true;
+    document.querySelector('.intro p').textContent = 'Sidekick runs in most browsers, but not this one. Here is what it looks like.';
+    document.querySelector('.fine').hidden = true;
+    tell({ t: 'sk-failed', why });
+  }
+
+  // ---- start the two apps, each drawing only the pixels it shows (see ?dpr in the app's index.html)
+  function start() {
+    for (const d of ['mac', 'iphone']) {
+      const scale = parseFloat(getComputedStyle($(d === 'mac' ? 'mac' : 'phone')).getPropertyValue('--s')) || 1;
+      const real = window.devicePixelRatio || 1;
+      const dpr = Math.round(Math.min(real, Math.max(0.75, real * scale * 1.1)) * 100) / 100;
+      const src = '/website/app/index.html?device=' + d + '&dpr=' + dpr + (query.has('semantics') ? '&semantics=1' : '');
+      frames[d].src = src;
+    }
+  }
+  if (missing) {
+    cantRun('The demo can\'t run in this browser',
+      'This version of ' + browser + ' is too old for it (it has no ' + missing + '). Update ' + browser +
+      ', or open this page in ' + others + '. The picture above shows what Sidekick looks like.');
+  } else {
+    start();
+    // Without graphics acceleration it still works, only slowly: say so.
+    const c = document.createElement('canvas');
+    if (!(c.getContext('webgl2') || c.getContext('webgl'))) {
+      $('slowNote').textContent = browser + ' has graphics acceleration turned off, so the demo may be slow. ' +
+        'Turning on "Use hardware acceleration" in its settings makes it smooth.';
+      $('slowNote').hidden = false;
+    }
+  }
+
   // ---- the network between the two: each copy posts its messages here, and they go to the other
   addEventListener('message', (e) => {
     if (e.source !== frames.mac.contentWindow && e.source !== frames.iphone.contentWindow) return;
@@ -293,7 +362,7 @@ footer .wrap { display: flex; gap: 18px; justify-content: center; flex-wrap: wra
     if (m.t === 'remote') $('pointer').classList.toggle('on', m.active === true && from === 'iphone');
     // The app calls the two "macos" and "ios".
     const to = from === 'mac' ? 'iphone' : 'mac';
-    frames[to].contentWindow.postMessage(JSON.stringify({ ...m, to: to === 'mac' ? 'macos' : 'ios' }), '*');
+    frames[to].contentWindow.postMessage(JSON.stringify({ ...m, to: to === 'mac' ? 'macos' : 'ios' }), location.origin);
   });
 
   // ---- the iPhone's touchpad moves the Mac's pointer (macOS draws it, not the app)
@@ -343,22 +412,23 @@ footer .wrap { display: flex; gap: 18px; justify-content: center; flex-wrap: wra
           break;
         }
       }
-      why ??= 'Sidekick didn\'t start in this browser. Try reloading the page, or another browser.';
+      why ??= 'Sidekick didn\'t start in ' + browser + '. Reload the page. If that doesn\'t help, update ' + browser +
+        ' or try ' + others + '.';
     }
     for (const d of waiting) say(d, why);
     const plain = document.createElement('div');
     plain.innerHTML = why;
     tell({ t: 'sk-failed', why: plain.textContent });
   }
-  setTimeout(diagnose, 15000);
+  if (!missing) setTimeout(diagnose, 15000);
 
   $('again').addEventListener('click', () => {
     for (const d of ['mac', 'iphone']) {
       ready[d] = false;
       loading[d].querySelector('.why')?.remove();
       loading[d].classList.remove('done');
-      frames[d].src = frames[d].src;
     }
+    start();
     $('pointer').classList.remove('on');
     setTimeout(diagnose, 15000);
   });

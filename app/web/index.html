@@ -11,6 +11,32 @@
   <style>html, body { margin: 0; height: 100%; background: #fdf7ff; overflow: hidden; }</style>
 </head>
 <body>
+  <script>
+    // Flutter turns each of navigator.languages into an Intl.Locale and
+    // stops if one isn't a valid tag. Chrome on Linux with a "C" locale says
+    // "en-US@posix", which isn't: tidy the list up before Flutter reads it.
+    (() => {
+      try {
+        const ok = (t) => { try { new Intl.Locale(t); return true; } catch (_) { return false; } };
+        const list = Array.from(navigator.languages || [navigator.language || 'en-US']);
+        if (list.length && list.every(ok)) return;
+        const tidy = list.map((t) => String(t).split('@')[0].replace(/_/g, '-')).filter(ok);
+        const fixed = tidy.length ? tidy : ['en-US'];
+        Object.defineProperty(navigator, 'languages', { get: () => fixed, configurable: true });
+        Object.defineProperty(navigator, 'language', { get: () => fixed[0], configurable: true });
+      } catch (_) { /* nothing to fix */ }
+    })();
+    // ?dpr=: the page draws this device smaller than its real size (a whole
+    // Mac in a phone's width), so draw only the pixels that show. At the
+    // screen's own density a phone would paint a Mac at 3840×2400, and
+    // iPhones run out of graphics memory with two apps on one page.
+    (() => {
+      const dpr = parseFloat(new URLSearchParams(location.search).get('dpr'));
+      if (dpr >= 0.5 && dpr <= 4) {
+        try { Object.defineProperty(window, 'devicePixelRatio', { get: () => dpr, configurable: true }); } catch (_) {}
+      }
+    })();
+  </script>
   <script src="flutter_bootstrap.js" async></script>
 </body>
 </html>

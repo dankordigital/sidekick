@@ -5,6 +5,7 @@ import 'package:material_ui/material_ui.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../app_state.dart';
+import '../core/host.dart';
 import '../core/models.dart';
 import '../core/text_message.dart';
 import '../platform/desktop_window.dart';
@@ -349,6 +350,26 @@ Future<void> askAndSendText(BuildContext context, AppState state, PairedDevice d
 }
 
 /// A box to type or paste text into; null when cancelled.
+/// The text on the clipboard ('' when there is none). Browsers, and some
+/// phones, can refuse to let an app read it: then this says how to paste by
+/// hand and gives null.
+Future<String?> readClipboard(BuildContext context) async {
+  try {
+    return (await Clipboard.getData(Clipboard.kTextPlain))?.text ?? '';
+  } catch (_) {
+    if (context.mounted) {
+      showError(
+        context,
+        Host.isIOS || Host.isAndroid
+            ? "Sidekick isn't allowed to read the clipboard here. Tap and hold in the text box, then tap Paste."
+            : "Sidekick isn't allowed to read the clipboard here. Click in the text box and press "
+                  "${Host.isMacOS ? '⌘V' : 'Ctrl+V'} instead.",
+      );
+    }
+    return null;
+  }
+}
+
 Future<String?> askForText(BuildContext context, {String title = 'Send text or a link', String action = 'Add'}) {
   final controller = TextEditingController();
   return showDialog<String>(
@@ -368,7 +389,7 @@ Future<String?> askForText(BuildContext context, {String title = 'Send text or a
       actions: [
         TextButton.icon(
           onPressed: () async {
-            final pasted = (await Clipboard.getData(Clipboard.kTextPlain))?.text;
+            final pasted = await readClipboard(context);
             if (pasted == null || pasted.isEmpty) return;
             final sel = controller.selection;
             final value = controller.text;

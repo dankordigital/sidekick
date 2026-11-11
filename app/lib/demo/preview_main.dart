@@ -7,6 +7,7 @@ import 'dart:convert';
 import 'dart:js_interop';
 
 import 'package:flutter/foundation.dart';
+import 'package:flutter/semantics.dart';
 import 'package:flutter/services.dart';
 import 'package:material_ui/material_ui.dart';
 
@@ -29,6 +30,9 @@ Future<void> main() async {
     debugPrint('Sidekick preview: $error\n$stack');
     return true;
   };
+  // ?semantics=1 (tool/check_preview.js): the accessibility tree from the
+  // start. On touch screens Flutter only builds it after a real tap.
+  if (params['semantics'] == '1') SemanticsBinding.instance.ensureSemantics();
   await _loadFonts();
   final state = await DemoAppState.create(device, _PageLink(device));
   debugPickFiles = state.pickSamples;
@@ -59,7 +63,7 @@ Future<void> main() async {
           )
         : app,
   );
-  _window.parent.postMessage(jsonEncode({'from': device.name, 't': 'ready'}).toJS, '*'.toJS);
+  _window.parent.postMessage(jsonEncode({'from': device.name, 't': 'ready'}).toJS, _origin.toJS);
 }
 
 /// Apple's system font can't be shipped, so Inter (very close to it) stands
@@ -103,12 +107,21 @@ external _Window get _window;
 
 extension type _Window(JSObject _) implements JSObject {
   external _Window get parent;
+  external _Location get location;
   external void postMessage(JSAny? message, JSString targetOrigin);
   external void addEventListener(JSString type, JSFunction listener);
 }
 
+extension type _Location(JSObject _) implements JSObject {
+  external String get origin;
+}
+
+/// Messages go only to, and come only from, the page on this site.
+String get _origin => _window.location.origin;
+
 extension type _MessageEvent(JSObject _) implements JSObject {
   external JSAny? get data;
+  external String get origin;
 }
 
 /// The page between the two copies: messages go up to it with this
@@ -119,7 +132,7 @@ class _PageLink implements DemoLink {
       'message'.toJS,
       ((_MessageEvent e) {
         final data = e.data;
-        if (!data.isA<JSString>()) return;
+        if (e.origin != _origin || !data.isA<JSString>()) return;
         try {
           final message = (jsonDecode((data as JSString).toDart) as Map).cast<String, Object?>();
           if (message['to'] == device.name) _messages.add(message);
@@ -138,7 +151,7 @@ class _PageLink implements DemoLink {
 
   @override
   void send(Map<String, Object?> message) =>
-      _window.parent.postMessage(jsonEncode({...message, 'from': device.name}).toJS, '*'.toJS);
+      _window.parent.postMessage(jsonEncode({...message, 'from': device.name}).toJS, _origin.toJS);
 }
 
 /// Where the camera picture would be: the iPhone "sees" the other device's

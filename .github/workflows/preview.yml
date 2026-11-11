@@ -1,0 +1,37 @@
+# Checks the website's live demo (preview.html, and the home page's "Start
+# the demo") in Chromium (Chrome, Edge, Opera, Samsung Internet), Firefox
+# and WebKit (Safari), on a computer and on a phone-sized screen: both apps
+# start, pair with the 6-digit code, and send files. About 2 minutes.
+# Locally: app/tool/check_preview.sh.
+name: Preview
+
+on:
+  push:
+    paths: [preview.html, index.html, .htaccess, website/app/**, app/tool/check_preview.*, .github/workflows/preview.yml]
+  pull_request:
+    paths: [preview.html, index.html, .htaccess, website/app/**, app/tool/check_preview.*, .github/workflows/preview.yml]
+  workflow_dispatch:
+
+jobs:
+  browsers:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Playwright and its browsers
+        run: |
+          npm install --no-save --no-package-lock playwright@1.56.1
+          npx playwright install --with-deps chromium firefox webkit
+      - name: Check the demo in every browser
+        run: app/tool/check_preview.sh
+        env:
+          SIDEKICK_SHOTS: shots
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: preview-browsers
+          path: shots/
+          if-no-files-found: ignore

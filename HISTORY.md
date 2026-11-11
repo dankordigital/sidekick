@@ -5,6 +5,24 @@ a new session. Newest first. For how things work, read `CLAUDE.md` (the
 detailed developer notes; every release is in `VERSIONS.md`) and
 `ARCHITECTURE.md` (the big picture).
 
+## 11 November 2026
+
+- **The demo works in every browser** (Part 1 of the owner's four-part
+  brief: every browser; plain wording; errors in a pop-up with Close and
+  successes in a 5-second notice; better look on every screen).
+  `app/tool/check_preview.sh` + `preview.yml` check Chromium (Chrome, Edge,
+  Opera, Samsung Internet), Firefox and WebKit (Safari) end to end. Found
+  and fixed: Chrome crashed on start where the system language is "C"
+  (Linux); on iPhones both apps drew at 3× and text turned into blocks
+  (now each draws at the size it's shown); the Mac's pairing code was
+  invisible to screen readers; Paste did nothing when the browser refused
+  the clipboard (now it says how to paste by hand). Old browsers get a
+  picture and what to do; no graphics acceleration gets a "may be slow"
+  note. `dart format` now reads the 120-column width from
+  `analysis_options.yaml`.
+- The cloud environment is now **sidekick** (personal), which can download
+  Playwright's Firefox and WebKit (cdn.playwright.dev).
+
 ## 8 November 2026
 
 - **The live demo is the real thing, on the home page** (the owner: "make

@@ -309,8 +309,22 @@ release. Keep this file for how things work now, not for history.
   (subset) stands in for San Francisco. **Rebuild with
   `app/tool/build_preview.sh` after UI changes** and upload `website/app/`.
   Test it: `php -S localhost:8000` at the top, open /preview.html. If an
-  app doesn't start in 15 s the page says why (file:// page, a missing
-  `website/app/` file, `.wasm` with the wrong type).
+  app doesn't start in 15 s the page says why, naming the browser and what
+  to try (file:// page, a missing `website/app/` file, `.wasm` with the
+  wrong type). **Every browser** (3.0.5): `app/tool/check_preview.sh` (CI:
+  `preview.yml`, ~2 min) starts both apps in Chromium, Firefox and WebKit,
+  on a computer, in the home page's embed and on a phone-sized screen,
+  pairs them with the code and sends files (it turns on Flutter's
+  accessibility tree, `?semantics=1`, and clicks its nodes). What keeps it
+  working: `app/web/index.html` tidies `navigator.languages` before Flutter
+  reads it (Chrome on Linux says `en-US@posix`, which crashed the app) and
+  takes `?dpr=`: preview.html asks each device to draw only the pixels it
+  shows (on a phone the Mac drew 3840×2400 at full density and iPhones ran
+  out of graphics memory; text came out as blocks). Messages go only to
+  and from the site's own origin. A browser without WebAssembly or
+  `Intl.Locale` gets the hero picture and what to do instead; one without
+  graphics acceleration gets a note that it may be slow. Headless Firefox
+  has no WebGL: the check runs it under Xvfb.
 - `404.html` (top of the repo): the not-found page, for any missing
   address, so every link in it is absolute (`/…`). `.htaccess` makes the
   server show it for every wrong address, keeping the address and a real
