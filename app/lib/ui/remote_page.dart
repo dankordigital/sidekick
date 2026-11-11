@@ -211,7 +211,8 @@ class _RemoteState extends State<_Remote> {
           }
           setState(() {
             _conn = _Conn.failed;
-            _error = 'The connection dropped.';
+            _error =
+                "The connection to ${widget.device.name} dropped and didn't come back. Check that Sidekick is open on it, then tap Reconnect.";
           });
         }),
       );
@@ -301,10 +302,11 @@ class _RemoteState extends State<_Remote> {
               children: [
                 OfflineBanner(state: widget.state, device: widget.device),
                 if (!supported)
-                  const Padding(
-                    padding: EdgeInsets.only(bottom: 16),
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 16),
                     child: Text(
-                      "This device doesn't accept remote control (it's off in its settings, or its platform doesn't allow it).",
+                      "${widget.device.name} doesn't allow remote control. On ${widget.device.name}, open Sidekick → "
+                      'Settings and turn on Control mouse and keyboard.',
                     ),
                   ),
                 if (_conn == _Conn.failed && _error != null)

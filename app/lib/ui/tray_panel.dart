@@ -163,7 +163,7 @@ class _StatusCard extends StatelessWidget {
                 child: Text(
                   state.wifiConnected
                       ? 'On Wi-Fi${address == null ? '' : ' · $address'}'
-                      : 'No Wi-Fi here: direct Wi-Fi ready',
+                      : 'No Wi-Fi: devices can connect directly',
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: text.bodyMedium?.copyWith(color: _faint),
@@ -544,7 +544,7 @@ class _NothingPanel extends StatelessWidget {
                                     child: Text(
                                       state.wifiConnected
                                           ? 'On Wi-Fi${address == null ? '' : ' · $address'}'
-                                          : 'No Wi-Fi here: direct Wi-Fi ready',
+                                          : 'No Wi-Fi: devices can connect directly',
                                       maxLines: 1,
                                       overflow: TextOverflow.ellipsis,
                                       style: TextStyle(fontSize: 13, color: scheme.onSurfaceVariant),

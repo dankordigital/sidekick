@@ -181,7 +181,7 @@ class _WelcomeFlowState extends State<WelcomeFlow> {
       body: hostIsIOS
           ? 'iOS will ask to let Sidekick find devices on your network and use Bluetooth. Allow both so your '
                 'computer can find this iPhone.'
-          : 'Each one unlocks a feature. Grant what you need now or later in Settings.',
+          : 'Each one turns on a feature. Allow what you need now, or later in Settings.',
       children: [
         _Group(
           children: [

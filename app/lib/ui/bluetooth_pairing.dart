@@ -183,7 +183,7 @@ class _BluetoothPairingState extends State<_BluetoothPairing> {
                   ? Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        TextButton(onPressed: () => state.bluetooth?.retry(key), child: const Text('Retry')),
+                        TextButton(onPressed: () => state.bluetooth?.retry(key), child: const Text('Try again')),
                         if (c.error == BluetoothService.stalePairingHelp &&
                             (state.bluetooth?.canOpenBluetoothSettings ?? false))
                           TextButton(
@@ -230,7 +230,11 @@ class _Status extends StatelessWidget {
             ? TextButton(onPressed: bt.openBluetoothSettings, child: const Text('Settings'))
             : null,
       ),
-      null || BluetoothStatus.unsupported => (Icons.bluetooth_disabled, 'This device has no Bluetooth LE.', null),
+      null || BluetoothStatus.unsupported => (
+        Icons.bluetooth_disabled,
+        "This device's Bluetooth is too old for Sidekick (it needs Bluetooth 4.0 or newer).",
+        null,
+      ),
       BluetoothStatus.off => (Icons.bluetooth_disabled, 'Bluetooth is off. Turn it on to pair.', null),
       BluetoothStatus.unauthorized => (
         Icons.bluetooth_disabled,
@@ -243,7 +247,7 @@ class _Status extends StatelessWidget {
         bt!.advertising
             ? 'Other devices can find this one as "${state.name}".'
             : bt.cannotBeFound
-            ? "This device's Bluetooth can't be found by others (its adapter can't advertise), but it can find "
+            ? "Other devices can't find this one over Bluetooth (its Bluetooth can't announce itself), but it can find "
                   'them: search from here, with Sidekick open on the other device.'
             : 'This device can search, but can\'t be found. Search from here.',
         null,

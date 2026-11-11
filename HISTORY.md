@@ -20,6 +20,14 @@ detailed developer notes; every release is in `VERSIONS.md`) and
   picture and what to do; no graphics acceleration gets a "may be slow"
   note. `dart format` now reads the 120-column width from
   `analysis_options.yaml`.
+- **Plain wording** (Part 2): jargon out of the screens (AES-256-GCM, TLS,
+  certificate, Bluetooth LE, "adapter can't advertise", IP, a camera error
+  code), "Grant" → "Allow", Unpair says files stop too, Remote says how to
+  allow control on the other device, a dropped Remote says what to check,
+  the waiting sender says "Waiting for an answer…". Messages that arrive
+  from the other device ("Wrong code", "Not paired"…) stay as they are on
+  the wire (older devices send them, and code matches some): Part 3 turns
+  them into plain words where they're shown.
 - The cloud environment is now **sidekick** (personal), which can download
   Playwright's Firefox and WebKit (cdn.playwright.dev).
 

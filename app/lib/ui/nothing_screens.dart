@@ -1237,7 +1237,9 @@ class NothingDevicePage extends StatelessWidget {
       context: context,
       builder: (context) => AlertDialog(
         title: Text('Unpair ${device.name}?'),
-        content: const Text('Neither device will be able to control the other until you pair again.'),
+        content: const Text(
+          "The two devices won't be able to send files to or control each other until you pair them again.",
+        ),
         actions: [
           TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
           FilledButton(onPressed: () => Navigator.pop(context, true), child: const Text('Unpair')),
@@ -1276,7 +1278,7 @@ class NothingDevicePage extends StatelessWidget {
                   ),
                   const Spacer(),
                   PopupMenuButton<String>(
-                    tooltip: 'More',
+                    tooltip: 'More options',
                     onSelected: (_) => _unpair(context),
                     itemBuilder: (_) => const [PopupMenuItem(value: 'unpair', child: Text('Unpair'))],
                     // The menu button takes the tap; this only draws it.
@@ -1389,7 +1391,7 @@ String _transferMeta(Transfer t) => switch (t.state) {
   TransferState.running when t.reconnecting => 'Reconnecting',
   TransferState.running => '${t.total > 0 ? (t.done * 100 ~/ t.total) : 0}%',
   TransferState.done => formatBytes(t.total),
-  TransferState.failed => 'Failed',
+  TransferState.failed => "Didn't finish",
 };
 
 /// A square action: icon over a small label. Send is the red one.

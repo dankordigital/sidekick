@@ -282,7 +282,7 @@ class _ThisDeviceCard extends StatelessWidget {
     final wifi = state.addresses.isNotEmpty;
     final details = [
       wifi ? state.addresses.join(', ') : 'No Wi-Fi',
-      if (bt != null && bt.status == BluetoothStatus.on) bt.advertising ? 'Bluetooth: findable' : 'Bluetooth on',
+      if (bt != null && bt.status == BluetoothStatus.on) bt.advertising ? 'Findable over Bluetooth' : 'Bluetooth on',
     ].join(' · ');
     return Container(
       decoration: BoxDecoration(color: scheme.surfaceContainerLow, borderRadius: BorderRadius.circular(20)),
@@ -345,7 +345,9 @@ class _PairedCardState extends State<_PairedCard> {
       context: context,
       builder: (context) => AlertDialog(
         title: Text('Unpair ${device.name}?'),
-        content: const Text("Neither device will be able to control the other until you pair again."),
+        content: const Text(
+          "The two devices won't be able to send files to or control each other until you pair them again.",
+        ),
         actions: [
           TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
           FilledButton(onPressed: () => Navigator.pop(context, true), child: const Text('Unpair')),
@@ -419,7 +421,7 @@ class _PairedCardState extends State<_PairedCard> {
                   const SizedBox(height: 2),
                   StatusPill(
                     icon: _dragging ? statusIcon : null,
-                    label: state.runsOlderApp(device) ? '$status · update Sidekick on it' : status,
+                    label: state.runsOlderApp(device) ? '$status · needs a Sidekick update' : status,
                     color: reset ? scheme.error : (online ? Colors.green : scheme.outline),
                   ),
                 ],
@@ -445,7 +447,7 @@ class _PairedCardState extends State<_PairedCard> {
             else
               FilledButton(onPressed: _pickAndSend, child: const Text('Send')),
             PopupMenuButton<String>(
-              tooltip: 'More',
+              tooltip: 'More options',
               icon: const Icon(Icons.more_vert_rounded),
               onSelected: (v) => switch (v) {
                 'files' => _open(1),
@@ -540,8 +542,8 @@ List<_ConnectWay> _connectWays(BuildContext context, AppState state) => [
   ),
   (
     icon: Icons.dialpad_rounded,
-    title: 'IP address',
-    detail: 'Type the other device\'s address',
+    title: 'Address',
+    detail: 'Type the address shown on the other device',
     onTap: () => _addByIp(context, state),
   ),
   if (state.bluetooth != null || AppState.bluetoothSupported)
@@ -619,17 +621,20 @@ Future<void> _addByIp(BuildContext context, AppState state) async {
   final address = await showDialog<String>(
     context: context,
     builder: (context) => AlertDialog(
-      title: const Text('Add a device by IP'),
+      title: const Text('Connect by address'),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text("Use this if the device doesn't show up by itself. Its IP address is shown on its Devices tab."),
+          const Text(
+            "Use this when the other device doesn't show up by itself. Its address (like 192.168.1.23) is under "
+            'its name on its Devices tab.',
+          ),
           const SizedBox(height: 16),
           TextField(
             controller: controller,
             autofocus: true,
-            decoration: const InputDecoration(labelText: 'IP address', hintText: '192.168.1.23'),
+            decoration: const InputDecoration(labelText: 'Address', hintText: '192.168.1.23'),
             onSubmitted: (v) => Navigator.pop(context, v),
           ),
         ],

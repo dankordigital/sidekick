@@ -194,7 +194,8 @@ class _SettingsPageState extends State<SettingsPage> {
                               BluetoothStatus.on => 'On. Used when your devices aren\'t on the same Wi-Fi.',
                               BluetoothStatus.off => 'Bluetooth is off. Turn it on to connect without Wi-Fi.',
                               BluetoothStatus.unauthorized => "Sidekick isn't allowed to use Bluetooth.",
-                              BluetoothStatus.unsupported => "This device doesn't support Bluetooth LE.",
+                              BluetoothStatus.unsupported =>
+                                "This device's Bluetooth is too old for Sidekick (it needs 4.0 or newer).",
                               BluetoothStatus.starting => 'Starting…',
                             }),
                             trailing: switch (bt.status) {
@@ -224,7 +225,7 @@ class _SettingsPageState extends State<SettingsPage> {
                                 child: FilledButton.tonalIcon(
                                   onPressed: bt.scanning || !bt.canScan ? null : state.scanBluetoothNow,
                                   icon: const Icon(Icons.bluetooth_searching),
-                                  label: Text(bt.scanning ? 'Scanning…' : 'Scan now'),
+                                  label: Text(bt.scanning ? 'Searching…' : 'Search now'),
                                 ),
                               ),
                               const SizedBox(height: 12),
@@ -233,10 +234,10 @@ class _SettingsPageState extends State<SettingsPage> {
                               for (final s in state.bluetoothSightings)
                                 Text('${s.info.name} (${s.info.platform.name}), ${_ago(s.seen)}'),
                               const SizedBox(height: 12),
-                              Text('Log', style: Theme.of(context).textTheme.titleSmall),
+                              Text('Bluetooth log', style: Theme.of(context).textTheme.titleSmall),
                               const SizedBox(height: 4),
                               SelectableText(
-                                bt.log.isEmpty ? 'Empty' : bt.log.reversed.take(25).join('\n'),
+                                bt.log.isEmpty ? 'Nothing yet' : bt.log.reversed.take(25).join('\n'),
                                 style: const TextStyle(fontFamily: 'monospace', fontSize: 12),
                               ),
                             ],
@@ -316,7 +317,11 @@ class _SettingsPageState extends State<SettingsPage> {
                   _Group(
                     children: [
                       if (state.paired.isEmpty)
-                        const ListTile(leading: IconTile(Icons.link_off_rounded), title: Text('No paired devices yet')),
+                        const ListTile(
+                          leading: IconTile(Icons.link_off_rounded),
+                          title: Text('No paired devices yet'),
+                          subtitle: Text('Pair one on the Devices tab: open Sidekick on it, then tap Pair.'),
+                        ),
                       for (final d in state.paired)
                         ListTile(
                           leading: IconTile(platformIcon(d.platform), tone: TileTone.primary),
@@ -337,7 +342,7 @@ class _SettingsPageState extends State<SettingsPage> {
                       const ListTile(
                         leading: IconTile(Icons.lock_rounded, tone: TileTone.primary),
                         title: Text('Everything is encrypted'),
-                        subtitle: Text('TLS over Wi-Fi, AES-256-GCM over Bluetooth'),
+                        subtitle: Text('Only your paired devices can read what you send, over Wi-Fi or Bluetooth'),
                       ),
                       ListTile(
                         leading: IconTile(
@@ -353,7 +358,7 @@ class _SettingsPageState extends State<SettingsPage> {
                                   'windows' => 'Windows-protected storage',
                                   _ => 'the system keyring',
                                 }}'
-                              : "Keys are in app settings: this device's secure storage didn't work",
+                              : "Pairing keys are kept in Sidekick's settings: this device's secure storage didn't work",
                         ),
                         subtitle: const Text('They never leave this device'),
                       ),

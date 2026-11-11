@@ -21,7 +21,7 @@ List<Widget> androidPermissionRows() {
     isThreeLine: true,
     trailing: granted
         ? const Icon(Icons.check_circle, color: Colors.green)
-        : FilledButton.tonal(onPressed: grant, child: const Text('Grant')),
+        : FilledButton.tonal(onPressed: grant, child: const Text('Allow')),
   );
   return [
     row(
@@ -66,6 +66,6 @@ class MacAccessibilityRow extends StatelessWidget {
     isThreeLine: true,
     trailing: MacBridge.accessibility
         ? const Icon(Icons.check_circle, color: Colors.green)
-        : FilledButton.tonal(onPressed: MacBridge.requestAccessibility, child: const Text('Grant')),
+        : FilledButton.tonal(onPressed: MacBridge.requestAccessibility, child: const Text('Allow')),
   );
 }

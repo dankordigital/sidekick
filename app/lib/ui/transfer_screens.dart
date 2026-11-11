@@ -103,7 +103,7 @@ class _SendingScreenState extends State<SendingScreen> {
     final what = send.names.length == 1 ? send.names.first : '${send.names.length} files';
     final (title, subtitle) = switch (send.phase) {
       SendPhase.connecting => ('Connecting…', 'Reaching ${d.name}'),
-      SendPhase.waiting => ('Waiting for permission…', 'Ask ${d.name} to tap Accept'),
+      SendPhase.waiting => ('Waiting for an answer…', 'Ask someone on ${d.name} to tap Accept'),
       SendPhase.sending when send.reconnecting => (
         'Reconnecting…',
         'The connection to ${d.name} dropped. It carries on from where it stopped.',

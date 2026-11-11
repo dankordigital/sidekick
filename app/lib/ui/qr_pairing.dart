@@ -452,7 +452,7 @@ class _CameraProblem extends StatelessWidget {
               Text(
                 denied
                     ? 'Sidekick needs the camera to scan codes. Allow it in Settings, or type the 6-digit code instead.'
-                    : "The camera didn't start (${error.errorCode.name}). Type the 6-digit code instead.",
+                    : "The camera didn't start. Close other apps that use it and try again, or type the 6-digit code instead.",
                 textAlign: TextAlign.center,
                 style: const TextStyle(color: Colors.white, fontSize: 16),
               ),

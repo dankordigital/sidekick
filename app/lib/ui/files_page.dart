@@ -417,7 +417,7 @@ class _Transfers extends StatelessWidget {
                               ] else
                                 Text(
                                   t.state == TransferState.failed
-                                      ? t.error ?? 'Failed'
+                                      ? t.error ?? "Didn't finish"
                                       : '${t.upload
                                             ? 'Sent to'
                                             : t.received
@@ -483,15 +483,16 @@ void showTransferSecurity(BuildContext context, AppState state, Transfer t) {
         children: [
           Text(
             security.bluetooth
-                ? '"${t.name}" was cut into pieces and every piece was encrypted with AES-256-GCM, using the key '
-                      'only ${t.deviceName} and this device have (made when you paired them). Each piece is also '
-                      'checked for tampering, and a copy recorded and replayed later is refused.'
-                : '"${t.name}" traveled over TLS, the same encryption banks and HTTPS websites use. Before sending '
-                      'anything, Sidekick checked that ${t.deviceName} presented the exact certificate it paired with.',
+                ? '"${t.name}" was cut into pieces and every piece was locked with a key that only ${t.deviceName} '
+                      'and this device have (made when you paired them). Each piece is checked when it arrives, so '
+                      'nobody could read or change it on the way.'
+                : '"${t.name}" traveled encrypted, the way banks and secure websites protect your data. Before '
+                      'sending anything, Sidekick checked it was really talking to ${t.deviceName}, the device you '
+                      'paired with.',
           ),
           if (cert != null) ...[
             const SizedBox(height: 12),
-            Text('Certificate of ${t.deviceName}', style: Theme.of(context).textTheme.titleSmall),
+            Text("${t.deviceName}'s ID", style: Theme.of(context).textTheme.titleSmall),
             SelectableText('${grouped(cert)}…', style: const TextStyle(fontFamily: 'monospace', fontSize: 12)),
           ],
           if (code != null) ...[

@@ -1153,7 +1153,11 @@ class AppState extends ChangeNotifier {
       await Future<void>.delayed(const Duration(seconds: 1));
     }
     await _releaseDirect(d, ble);
-    _notices.add(Notice("Joined ${d.name}'s hotspot but couldn't reach it. Check the firewall."));
+    _notices.add(
+      Notice(
+        "Joined ${d.name}'s direct Wi-Fi but couldn't reach it. Check that a firewall on ${d.name} lets Sidekick through.",
+      ),
+    );
     return false;
   }
 
@@ -1385,7 +1389,7 @@ class AppState extends ChangeNotifier {
       try {
         await server.start(port: 0);
       } catch (e) {
-        networkError = "Couldn't start Sidekick's connection (${describeError(e)}). Restart Sidekick.";
+        networkError = "Sidekick couldn't start receiving (${describeError(e)}). Quit Sidekick and open it again.";
       }
     }
   }
