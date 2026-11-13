@@ -1077,34 +1077,52 @@ addEventListener('scroll', () => topbar.classList.toggle('scrolled', scrollY > 8
 
 /* ---------- the sprites: every [data-sprite] gets its little character */
 const SPRITES = (() => {
-  const INK = '#141414';
-  const bodies = {
-    phone: ['<rect x="17" y="5" width="30" height="50" rx="9"/>', 30, '<path d="M28 11h8" stroke="#141414" stroke-width="2.5" stroke-linecap="round"/>'],
-    laptop: ['<rect x="9" y="10" width="46" height="32" rx="6"/><path d="M3 46h58l-4 7a3 3 0 0 1-2.6 1.5H9.6A3 3 0 0 1 7 53z"/>', 26, ''],
-    tablet: ['<rect x="11" y="7" width="42" height="48" rx="8"/>', 30, ''],
-    file: ['<path d="M17 5h21l13 13v34a4 4 0 0 1-4 4H17a4 4 0 0 1-4-4V9a4 4 0 0 1 4-4z"/>', 35, '<path d="M38 5v13h13" fill="none" stroke="#141414" stroke-width="2.5" stroke-linejoin="round"/>'],
-    folder: ['<path d="M6 17a4 4 0 0 1 4-4h13l5 6h26a4 4 0 0 1 4 4v26a4 4 0 0 1-4 4H10a4 4 0 0 1-4-4z"/>', 36, ''],
-    bell: ['<path d="M32 6c10 0 16 8 16 18v12l6 8H10l6-8V24c0-10 6-18 16-18z"/><circle cx="32" cy="50" r="4.5"/>', 28, ''],
-    chat: ['<path d="M8 13a6 6 0 0 1 6-6h36a6 6 0 0 1 6 6v24a6 6 0 0 1-6 6H28l-11 9v-9h-3a6 6 0 0 1-6-6z"/>', 25, ''],
-    heart: ['<path d="M32 55C17 45 6 36 6 24 6 15 12 9 20 9c5.5 0 9.6 3 12 7.4C34.4 12 38.5 9 44 9c8 0 14 6 14 15 0 12-11 21-26 31z"/>', 29, ''],
+  // Sidekick's buddies: soft geometric bodies with a felt grain, a glossy top
+  // light and white pill eyes. Old names (phone, laptop…) map to a shape.
+  const shapes = {
+    squircle: '<rect x="7" y="9" width="50" height="48" rx="17"/>',
+    circle: '<circle cx="32" cy="33" r="25"/>',
+    pentagon: '<path d="M32 6.5a5 5 0 0 1 3 1l20.5 15a5 5 0 0 1 1.8 5.6l-7.8 24a5 5 0 0 1-4.8 3.4H19.3a5 5 0 0 1-4.8-3.4l-7.8-24a5 5 0 0 1 1.8-5.6L29 7.5a5 5 0 0 1 3-1z"/>',
+    triangle: '<path d="M27.7 9.5a5 5 0 0 1 8.6 0l20.6 37a5 5 0 0 1-4.3 7.5H11.4a5 5 0 0 1-4.3-7.5z"/>',
+    hexagon: '<path d="M28 6.6a8 8 0 0 1 8 0l16.3 9.4a8 8 0 0 1 4 6.9v19a8 8 0 0 1-4 6.9L36 58.2a8 8 0 0 1-8 0L11.7 48.8a8 8 0 0 1-4-6.9v-19a8 8 0 0 1 4-6.9z"/>',
+    diamond: '<rect x="14" y="15" width="36" height="36" rx="10" transform="rotate(45 32 33)"/>',
+    blob: '<path d="M33 7c12 0 23 7 24 19s-3 25-16 29-27 1-32-10S12 9 33 7z"/>',
+    heart: '<path d="M32 55C17 45 6 36 6 24 6 15 12 9 20 9c5.5 0 9.6 3 12 7.4C34.4 12 38.5 9 44 9c8 0 14 6 14 15 0 12-11 21-26 31z"/>',
   };
-  function face(y) {
-    return `<g class="eyes"><ellipse cx="26" cy="${y}" rx="2.4" ry="3.3" fill="${INK}"/><ellipse cx="38" cy="${y}" rx="2.4" ry="3.3" fill="${INK}"/>` +
-      `<circle cx="26.9" cy="${y - 1.2}" r=".9" fill="#fff"/><circle cx="38.9" cy="${y - 1.2}" r=".9" fill="#fff"/></g>` +
-      `<ellipse cx="20.5" cy="${y + 5}" rx="3" ry="1.8" fill="#ff7a9a" opacity=".6"/><ellipse cx="43.5" cy="${y + 5}" rx="3" ry="1.8" fill="#ff7a9a" opacity=".6"/>` +
-      `<path d="M29 ${y + 5} q3 3.2 6 0" fill="none" stroke="${INK}" stroke-width="2" stroke-linecap="round"/>`;
-  }
-  function draw(kind, color, size, feet) {
-    const [shape, eyeY, extra] = bodies[kind] || bodies.phone;
-    const legs = feet ? `<rect class="fl" x="22" y="56" width="8" height="7" rx="3.5" fill="${INK}"/><rect class="fr" x="34" y="56" width="8" height="7" rx="3.5" fill="${INK}"/>` : '';
-    return `<svg class="spr" width="${size}" height="${size}" viewBox="0 0 64 64" aria-hidden="true">` + legs +
-      `<g fill="${color}" stroke="${INK}" stroke-width="2.5" stroke-linejoin="round">${shape}</g>` + extra +
-      `<path d="M22 ${eyeY - 14} q5 -3 10 -2" fill="none" stroke="#ffffff" stroke-opacity=".55" stroke-width="2.5" stroke-linecap="round"/>` +
-      face(eyeY) + `</svg>`;
+  const alias = { phone: 'squircle', laptop: 'pentagon', tablet: 'hexagon', file: 'diamond', folder: 'blob', bell: 'triangle', chat: 'circle' };
+  const eyeY = { squircle: 31, circle: 31, pentagon: 32, triangle: 39, hexagon: 31, diamond: 32, blob: 31, heart: 28 };
+  const W = '#fbf7f0';
+  const eyeSets = {
+    pills: (y) => `<rect x="21" y="${y - 6}" width="7" height="13" rx="3.5"/><rect x="36" y="${y - 6}" width="7" height="13" rx="3.5"/>`,
+    dots: (y) => `<circle cx="25" cy="${y}" r="3.6"/><circle cx="39" cy="${y}" r="3.6"/>`,
+    sleepy: (y) => `<rect x="19" y="${y - 1.5}" width="10" height="3.4" rx="1.7"/><rect x="35" y="${y - 1.5}" width="10" height="3.4" rx="1.7"/>`,
+    slant: (y) => `<rect x="21" y="${y - 6}" width="6" height="12" rx="3" transform="rotate(-24 24 ${y})"/><rect x="37" y="${y - 6}" width="6" height="12" rx="3" transform="rotate(24 40 ${y})"/>`,
+    wide: (y) => `<ellipse cx="25" cy="${y}" rx="5.5" ry="6.5"/><ellipse cx="39" cy="${y}" rx="5.5" ry="6.5"/>`,
+    wink: (y) => `<rect x="21" y="${y - 6}" width="7" height="13" rx="3.5"/><rect x="35" y="${y - 1.5}" width="10" height="3.4" rx="1.7"/>`,
+  };
+  const eyeOrder = ['pills', 'dots', 'wide', 'slant', 'sleepy', 'pills', 'wink', 'dots'];
+  let uid = 0;
+  function draw(kind, color, size, feet, eyes) {
+    const shape = shapes[kind] ? kind : alias[kind] || 'squircle';
+    const id = 'b' + (uid++);
+    const y = eyeY[shape];
+    const look = eyeSets[eyes] || eyeSets.pills;
+    const legs = feet ? `<ellipse class="fl" cx="25" cy="59.5" rx="5" ry="3.2" fill="#141414"/><ellipse class="fr" cx="39" cy="59.5" rx="5" ry="3.2" fill="#141414"/>` : '';
+    return `<svg class="spr" width="${size}" height="${size}" viewBox="0 0 64 64" aria-hidden="true"><defs>` +
+      `<clipPath id="${id}c">${shapes[shape]}</clipPath>` +
+      `<radialGradient id="${id}h" cx="32%" cy="22%" r="62%"><stop offset="0" stop-color="#fff" stop-opacity=".55"/><stop offset=".45" stop-color="#fff" stop-opacity=".08"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></radialGradient>` +
+      `<linearGradient id="${id}s" x1="0" y1="0" x2="0" y2="1"><stop offset=".45" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".28"/></linearGradient>` +
+      `<filter id="${id}f" x="0" y="0" width="100%" height="100%"><feTurbulence type="fractalNoise" baseFrequency="1.4" numOctaves="2" seed="${uid % 9}"/>` +
+      `<feColorMatrix values="0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 .34 0"/><feComposite in2="SourceGraphic" operator="in"/></filter></defs>` + legs +
+      `<g clip-path="url(#${id}c)"><rect width="64" height="64" fill="${color}"/><rect width="64" height="64" filter="url(#${id}f)"/>` +
+      `<rect width="64" height="64" fill="url(#${id}s)"/><rect width="64" height="64" fill="url(#${id}h)"/></g>` +
+      `<g fill="none" stroke="#000" stroke-opacity=".18" stroke-width="1.2">${shapes[shape]}</g>` +
+      `<g class="eyes"><g fill="#000" opacity=".22" transform="translate(0 1.4)">${look(y)}</g><g fill="${W}">${look(y)}</g></g></svg>`;
   }
   function fill(root = document) {
     root.querySelectorAll('[data-sprite]').forEach((el, i) => {
-      el.innerHTML = draw(el.dataset.sprite, el.dataset.color || '#d6adf2', +(el.dataset.size || 48), el.dataset.feet === '1');
+      el.innerHTML = draw(el.dataset.sprite, el.dataset.color || '#d6adf2', +(el.dataset.size || 48), el.dataset.feet === '1',
+        el.dataset.eyes || eyeOrder[i % eyeOrder.length]);
       el.style.setProperty('--bd', (-(i * 1.37) % 5).toFixed(2) + 's');
     });
   }
@@ -1127,8 +1145,8 @@ const SPRITES = (() => {
 /* ---------- sprites floating around the last section, drifting with the pointer */
 (() => {
   const field = $('#floatField'), finale = $('#wishlist');
-  const kinds = ['phone', 'laptop', 'tablet', 'file', 'folder', 'bell', 'chat', 'heart'];
-  const colors = ['#d6adf2', '#61c985', '#e3b866', '#74b9ff', '#ee9a7d'];
+  const kinds = ['squircle', 'pentagon', 'hexagon', 'diamond', 'blob', 'triangle', 'circle', 'squircle'];
+  const colors = ['#d6adf2', '#61c985', '#e3b866', '#74b9ff', '#ee9a7d', '#a98ee8', '#4fb6a8'];
   let seed = 11;
   const rand = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
   const phone = matchMedia('(max-width: 640px)').matches;

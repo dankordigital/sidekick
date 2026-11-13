@@ -7,6 +7,11 @@ detailed developer notes; every release is in `VERSIONS.md`) and
 
 ## 13 November 2026
 
+- **Sprites redrawn as "buddies"** (the owner sent openbot-style felt
+  creatures: "not the kawaii ones", different but good): soft geometric
+  bodies in our pastels with a felt grain, a glossy top light and white
+  pill eyes in six moods, no mouths.
+
 - **The site made our own** (the owner: same colors, more animation, less
   like openbot; keep the glossy FREE; "Made with love in Poland"; cute
   sprites instead of the sk tiles): a cast of sprites (phone, laptop,

@@ -71,10 +71,13 @@ drawn in HTML; five pastel tiles (lavender #d6adf2, green #61c985, mustard
 chips. Sections: hero (the app window), together, What Sidekick does,
 Free, Make it yours (looks), platforms (`#download`), Questions,
 the wishlist (`#wishlist`), footer. **Ours, not openbot's** (the owner's
-call, 13 Nov): a cast of sprites (`SPRITES` in the page's script; any
-`[data-sprite="phone|laptop|tablet|file|folder|bell|chat|heart"]` with
-`data-color`, `data-size`, `data-feet`): pastel characters with a sticker
-outline, blinking eyes and blush. Two perch on the app window tossing a
+call, 13 Nov): a cast of "buddies" (`SPRITES` in the page's script; any
+`[data-sprite]` with `data-color`, `data-size`, `data-feet`, `data-eyes`):
+soft geometric bodies (squircle, circle, pentagon, triangle, hexagon,
+diamond, blob, heart; the old names phone, laptop… map to them) in the
+pastels, a felt grain (feTurbulence), a glossy top light, and white pill
+eyes (pills, dots, wide, slant, sleepy, wink) that blink. No mouths (the
+owner's call: "not the kawaii ones"). Two perch on the app window tossing a
 file; the "together" pair; four sit on a holographic pastel FREE (moving
 shine, tilts toward the pointer); the looks deck fans out on scroll;
 sprites float in rings around the wishlist (drifting with the pointer);
