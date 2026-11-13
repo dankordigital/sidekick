@@ -665,6 +665,19 @@ release. Keep this file for how things work now, not for history.
   is reached (`connectionLabel`: Same Wi-Fi, Direct Wi-Fi, Bluetooth) or
   "Not reachable · seen 4 min ago" with Try again instead of a dead Send.
   Sending to a device not heard from lately looks for it first.
+- **Nothing and Liquid Glass are being scrapped** (the owner's call, 13 Nov
+  2026): Sidekick will have **one look only**, the regular dark one from the
+  app concept (Design canvas https://claude.ai/artifact/N5YczZk3EXsqbULx56Qfxf,
+  clickable prototype https://claude.ai/artifact/PT9J7jBD417cBNMAwiBaQL):
+  #121212 page, #1c1c1c panels, white pill buttons, colour only where it
+  means something, the phone's floating rounded dock (Devices · Chat · Send ·
+  Remote · Settings; the selected tab a white pill with icon and name, the
+  others icons only), a Chat tab per device with a rounded message bar and
+  Send files. Until that's built, the two sections below describe code that
+  is still there; when removing them, take out the Theme dropdown entries,
+  the prefs (`look` = `nothing` / glass falls back to the regular look), the
+  alternate app icons and tray icons, and the screenshot renders. Don't add
+  features to either.
 - **Liquid Glass** (2.14.0, the owner's call: Material is the default
   everywhere): on iOS and macOS 26+ (`liquidGlassAvailable`, from
   `appleOsMajor`), Settings → Theme has a "Theme" dropdown: Default /

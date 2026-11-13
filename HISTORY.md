@@ -7,6 +7,9 @@ detailed developer notes; every release is in `VERSIONS.md`) and
 
 ## 13 November 2026
 
+- **One look only** (the owner's call): Nothing and Liquid Glass will be
+  scrapped; the regular dark look from the concept and prototype is the
+  app's only look. Written into CLAUDE.md (not built yet).
 - **A clickable prototype of the new look**
   (https://claude.ai/artifact/PT9J7jBD417cBNMAwiBaQL, private, not in the
   repo): a phone and a computer (switch at the top) where everything works
