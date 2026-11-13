@@ -7,6 +7,20 @@ detailed developer notes; every release is in `VERSIONS.md`) and
 
 ## 13 November 2026
 
+- **A clickable prototype of the new look**
+  (https://claude.ai/artifact/PT9J7jBD417cBNMAwiBaQL, private, not in the
+  repo): a phone and a computer (switch at the top) where everything works
+  for pretend. On the phone: the rounded dock (the selected tab grows into
+  a white pill with its name), Chat (switch devices, type and press Enter,
+  a pretend reply, + to add files, photos, a link or paste, Send files opens
+  the real file picker), Accept/Decline in the chat or in the sheet with a
+  progress bar, Send (pick, then Send to a device, with the progress ring,
+  Stop), Remote (drag the touchpad, clicks, keyboard), Settings (switches,
+  Quick save, Theme, Rename), browsing another device's files, Connect
+  (pair with code 481705), and Ping. The computer has the same chat with
+  drag and drop, Files, Remote and Settings. Buttons beside it play the
+  other side (a link, files arriving, a note, a ping). A standalone page,
+  separate from the Design canvas.
 - **The app concept now covers every screen** (same Design canvas,
   https://claude.ai/artifact/N5YczZk3EXsqbULx56Qfxf, 13 artboards).
   Computer: Devices (chat), Remote, Settings. Phone: Devices, **Chat**
