@@ -7,6 +7,17 @@ detailed developer notes; every release is in `VERSIONS.md`) and
 
 ## 13 November 2026
 
+- **The app concept now covers every screen** (same Design canvas,
+  https://claude.ai/artifact/N5YczZk3EXsqbULx56Qfxf, 13 artboards).
+  Computer: Devices (chat), Remote, Settings. Phone: Devices, **Chat**
+  (a new tab: device strip on top, the conversation, Accept/Decline in
+  line), Files coming in, Send, Remote, Settings, browsing another
+  device's files, Connect a device (QR code / 6 digits), Sending, Ping.
+  The phone's tab bar is a floating rounded dock (Devices · Chat · Send ·
+  Remote · Settings): the selected tab is a white pill with icon and name,
+  the others just icons. The chat's drop zone is gone: a rounded message
+  bar like the dock (+, "Message Pixel 9", white **Send files**), and
+  dropping files on the computer's chat still works. Mock-ups only.
 - **No sprites anywhere: regular icons** (the owner's call, end of the
   day). The website's felt "buddies" (too close to openbot.run's felt
   creatures: the owner worried about being sued) are gone: the "together"
