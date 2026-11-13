@@ -5,6 +5,16 @@ a new session. Newest first. For how things work, read `CLAUDE.md` (the
 detailed developer notes; every release is in `VERSIONS.md`) and
 `ARCHITECTURE.md` (the big picture).
 
+## 13 November 2026
+
+- **The site made our own** (the owner: same colors, more animation, less
+  like openbot; keep the glossy FREE; "Made with love in Poland"; cute
+  sprites instead of the sk tiles): a cast of sprites (phone, laptop,
+  tablet, file, folder, bell, chat, heart) perched on the hero window,
+  sitting on a holographic FREE, floating around the wishlist and walking
+  in the footer; the looks deck fans out on scroll. Checked: sign-up, the
+  embedded demo in Chromium and WebKit.
+
 ## 11 November 2026
 
 - **New website look, after openbot.run** (the owner: "remake my site as

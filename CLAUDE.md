@@ -70,7 +70,16 @@ drawn in HTML; five pastel tiles (lavender #d6adf2, green #61c985, mustard
 #e3b866, blue #74b9ff, salmon #ee9a7d) with dark ink, a faint grid and mono
 chips. Sections: hero (the app window), together, What Sidekick does,
 Free, Make it yours (looks), platforms (`#download`), Questions,
-the wishlist over a field of tiles (`#wishlist`), footer.
+the wishlist (`#wishlist`), footer. **Ours, not openbot's** (the owner's
+call, 13 Nov): a cast of sprites (`SPRITES` in the page's script; any
+`[data-sprite="phone|laptop|tablet|file|folder|bell|chat|heart"]` with
+`data-color`, `data-size`, `data-feet`): pastel characters with a sticker
+outline, blinking eyes and blush. Two perch on the app window tossing a
+file; the "together" pair; four sit on a holographic pastel FREE (moving
+shine, tilts toward the pointer); the looks deck fans out on scroll;
+sprites float in rings around the wishlist (drifting with the pointer);
+a parade walks in the footer, which says "Made with ♥ in Poland" (a
+beating heart sprite and a flag). Reduced motion stops all of it.
 **`np7dpanel.php`** (the owner's name for it; not linked anywhere): the
 wishlist admin panel. Tabs: Overview (counts, sign-ups per day for 30 days,
 devices), Visits (home-page visits and different visitors per day, 30-day
