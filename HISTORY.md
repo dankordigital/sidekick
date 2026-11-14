@@ -51,6 +51,7 @@ detailed developer notes; every release is in `VERSIONS.md`) and
 
 ## 14 November 2026
 
+- **Canva AI logo prompt** (`design/canva-ai-logo-prompt.md`): what Sidekick is, who it's for, the app's look, the rules (abstract, two-together, rounded, 16 px, no letters / devices / SumUp- or copyui-like shapes), and 10 named directions.
 - **Website prototype for 4.0** (https://claude.ai/artifact/KN5qtaJH4dWXy3JHoqPLnt,
   `design/website-4.0/`: `site.src.html` is the source, `index.html` the
   page with the emulator's icons put in): the wishlist page in the app's new
