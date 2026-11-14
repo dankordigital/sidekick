@@ -29,6 +29,7 @@ import 'package:sidekick/main.dart';
 import 'package:sidekick/platform/files.dart';
 import 'package:sidekick/platform/desktop_window.dart';
 import 'package:sidekick/platform/input.dart';
+import 'package:sidekick/ui/app_theme.dart';
 import 'package:sidekick/ui/dock.dart';
 import 'package:sidekick/ui/files_page.dart';
 import 'package:sidekick/ui/send_page.dart';
@@ -322,14 +323,16 @@ void main() {
     await tester.tap(tab('Settings'));
     await settle();
     final list = find.byType(Scrollable).first;
-    await tester.dragUntilVisible(find.text('What paired devices can do here'), list, const Offset(0, -200));
+    await tester.dragUntilVisible(find.text('Paired devices can'), list, const Offset(0, -200));
     await shot('iphone-settings-permissions');
     expect(find.text('Control mouse and keyboard'), findsNothing);
-    await tester.dragUntilVisible(find.text('Everything is encrypted'), list, const Offset(0, -200));
+    await tester.dragUntilVisible(find.text('Security codes'), list, const Offset(0, -200));
+    await tester.dragUntilVisible(find.textContaining('No account'), list, const Offset(0, -200));
     await shot('iphone-settings-encryption');
-    await tester.ensureVisible(find.textContaining('security code'));
+    final code = find.descendant(of: find.byType(Scrollable).first, matching: find.text(state.paired.first.name)).last;
+    await tester.ensureVisible(code);
     await tester.pumpAndSettle();
-    await tester.tap(find.textContaining('security code'));
+    await tester.tap(code);
     await shot('iphone-security-code');
     await tester.tap(find.text('Done'));
 
@@ -376,9 +379,7 @@ void main() {
     // The panel the tray / menu-bar icon opens (Windows, Mac).
     tester.view.physicalSize = DesktopWindow.panelSize * 2;
     tester.view.devicePixelRatio = 2;
-    for (final (name, theme) in [
-      ('tray-panel', ThemeData(colorSchemeSeed: const Color(0xFF6750A4), fontFamily: 'Roboto')),
-    ]) {
+    for (final (name, theme) in [('tray-panel', sidekickTheme(sidekick4Scheme()))]) {
       await tester.pumpWidget(
         RepaintBoundary(
           key: boundary,
