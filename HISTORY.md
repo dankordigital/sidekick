@@ -7,6 +7,10 @@ detailed developer notes; every release is in `VERSIONS.md`) and
 
 ## 14 November 2026
 
+- **The owner's Figma design, "Prototype" page** (`design/figma/prototype/`,
+  183 PNGs at 2x: 102 phone 390×844, 81 computer 1280×800, plus
+  `History overlay/Phone|Computer` sheets and menus). Next from the owner:
+  the "Styles & Components" page; then an interactive emulator built from it.
 - **Logo ideas** (`design/logo-ideas/`, the owner: "these are amazing"; none
   picked yet): five abstract, symmetrical, round-edged marks with no letters,
   devices or dots: Hinge, Embrace, Lock, Bloom, Pair (board:
