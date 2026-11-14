@@ -122,15 +122,45 @@ class _ChatPageState extends State<ChatPage> {
       itemCount: items.length,
       itemBuilder: (context, i) => Padding(
         padding: const EdgeInsets.only(bottom: 14),
-        child: _ItemCard(
-          key: ValueKey(items[i].id),
-          item: items[i],
-          device: d,
-          state: state,
-          fresh: i == 0 && DateTime.now().difference(items[i].at) < const Duration(seconds: 3),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            // "Tuesday", "Today": above the first thing of each day.
+            if (i == items.length - 1 || !_sameDay(items[i + 1].at, items[i].at))
+              Padding(
+                padding: const EdgeInsets.only(top: 6, bottom: 14),
+                child: Text(
+                  _dayLabel(items[i].at),
+                  textAlign: TextAlign.center,
+                  style: TextStyle(fontSize: 13, color: Theme.of(context).colorScheme.onSurfaceVariant),
+                ),
+              ),
+            _ItemCard(
+              key: ValueKey(items[i].id),
+              item: items[i],
+              device: d,
+              state: state,
+              fresh: i == 0 && DateTime.now().difference(items[i].at) < const Duration(seconds: 3),
+            ),
+          ],
         ),
       ),
     );
+  }
+
+  static bool _sameDay(DateTime a, DateTime b) => a.year == b.year && a.month == b.month && a.day == b.day;
+
+  static String _dayLabel(DateTime t) {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final day = DateTime(t.year, t.month, t.day);
+    final ago = today.difference(day).inDays;
+    if (ago == 0) return 'Today';
+    if (ago == 1) return 'Yesterday';
+    const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    if (ago < 7) return days[t.weekday - 1];
+    return '${t.day} ${months[t.month - 1]}${t.year == now.year ? '' : ' ${t.year}'}';
   }
 
   Future<void> _sendText(PairedDevice d) async {
