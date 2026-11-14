@@ -9,8 +9,11 @@ Source:
                  (The website uses the SIDEKICK wordmark, website/2.png,
                  embedded in index.html.)
 
-Writes the Windows .ico, Android launcher icons, macOS and iOS app icon sets,
-and the in-app logo. Re-run it whenever the artwork changes.
+Writes the tray icons, the in-app logo and the website's old glass icons from
+3.png, and every app icon (Windows .ico, Android launcher icons, macOS and
+iOS icon sets and the Settings → App icon choices) from the eight "sk" icons
+in design/logo-sk/ (sk_icons: Dusk is the default). Re-run it whenever the
+artwork changes.
 
 Mac and iPhone get the Liquid Glass look:
   * AppIcon.icon (Icon Composer format) in ios/Runner and macos/Runner: a
@@ -142,35 +145,6 @@ def glass_tile(size: int, *, radius_frac: float = 0.0, inset_frac: float = 0.0, 
     return out.resize((size, size), Image.LANCZOS)
 
 
-def icon_composer() -> None:
-    """AppIcon.icon for Xcode 26: the system turns it into Liquid Glass."""
-    canvas = 1024
-    glyph = _glyph_mask(canvas * 4, MONOGRAM_FRAC).resize((canvas, canvas), Image.LANCZOS)
-    layer = Image.new("RGBA", (canvas, canvas), INK + (255,))
-    layer.putalpha(glyph)
-
-    def srgb(c: tuple) -> str:
-        return "srgb:" + ",".join(f"{v / 255:.5f}" for v in c) + ",1.00000"
-
-    spec = {
-        "fill": {"linear-gradient": [srgb(GLASS_TOP), srgb(GLASS_BOTTOM)]},
-        "groups": [
-            {
-                "layers": [{"glass": True, "image-name": "sk.png", "name": "sk"}],
-                # No shadow under the letters: it blurred them.
-                "shadow": {"kind": "none", "opacity": 0.5},
-                "translucency": {"enabled": True, "value": 0.4},
-            }
-        ],
-        "supported-platforms": {"circles": ["watchOS"], "squares": "shared"},
-    }
-    for platform in ("ios", "macos"):
-        folder = APP / platform / "Runner/AppIcon.icon"
-        shutil.rmtree(folder, ignore_errors=True)
-        (folder / "Assets").mkdir(parents=True)
-        layer.save(folder / "Assets/sk.png", optimize=True)
-        (folder / "icon.json").write_text(json.dumps(spec, indent=2) + "\n")
-
 
 def png_bytes(im: Image.Image) -> bytes:
     buf = io.BytesIO()
@@ -191,42 +165,6 @@ def write_ico(path: Path, images: list) -> None:
     path.write_bytes(header + entries + b"".join(blobs))
 
 
-def windows() -> None:
-    sizes = [16, 20, 24, 32, 40, 48, 64, 128, 256]
-    write_ico(APP / "windows/runner/resources/app_icon.ico", [tile(s, radius_frac=0.2) for s in sizes])
-
-
-def android() -> None:
-    res = APP / "android/app/src/main/res"
-    densities = {"mdpi": 1, "hdpi": 1.5, "xhdpi": 2, "xxhdpi": 3, "xxxhdpi": 4}
-    for name, k in densities.items():
-        folder = res / f"mipmap-{name}"
-        folder.mkdir(parents=True, exist_ok=True)
-        # Legacy launchers: a rounded square.
-        tile(round(48 * k), radius_frac=0.22).save(folder / "ic_launcher.png", optimize=True)
-        # Adaptive icon foreground: 108dp canvas; launchers mask it to a
-        # 72dp shape and only the 66dp circle is safe. The monogram's corners
-        # stay inside it (about the same size as on the other icons).
-        px = round(108 * k)
-        fg = Image.new("RGBA", (px * 4, px * 4), (0, 0, 0, 0))
-        paste_logo(fg, (0, 0, px * 4, px * 4), frac=MONOGRAM_FRAC * 72 / 108)
-        fg.resize((px, px), Image.LANCZOS).save(folder / "ic_launcher_foreground.png", optimize=True)
-    (res / "values/colors.xml").write_text(
-        '<?xml version="1.0" encoding="utf-8"?>\n<resources>\n'
-        f'    <color name="ic_launcher_background">#FF{BG[0]:02X}{BG[1]:02X}{BG[2]:02X}</color>\n'
-        '    <color name="ic_launcher_nothing_background">#FF000000</color>\n'
-        "</resources>\n"
-    )
-    (res / "mipmap-anydpi-v26").mkdir(exist_ok=True)
-    (res / "mipmap-anydpi-v26/ic_launcher.xml").write_text(
-        '<?xml version="1.0" encoding="utf-8"?>\n'
-        '<adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">\n'
-        '    <background android:drawable="@color/ic_launcher_background" />\n'
-        '    <foreground android:drawable="@mipmap/ic_launcher_foreground" />\n'
-        "    <!-- Android 13+ themed icons -->\n"
-        '    <monochrome android:drawable="@mipmap/ic_launcher_foreground" />\n'
-        "</adaptive-icon>\n"
-    )
 
 
 def appiconset(folder: Path, make) -> None:
@@ -242,21 +180,6 @@ def appiconset(folder: Path, make) -> None:
         done.add(name)
 
 
-def macos() -> None:
-    # Before macOS 26: a rounded square with a margin, on a transparent canvas.
-    appiconset(
-        APP / "macos/Runner/Assets.xcassets/AppIcon.appiconset",
-        lambda px: glass_tile(px, radius_frac=0.225, inset_frac=0.1),
-    )
-
-
-def ios() -> None:
-    # Before iOS 26. iOS rounds the corners itself and rejects transparency:
-    # full-bleed, RGB.
-    appiconset(
-        APP / "ios/Runner/Assets.xcassets/AppIcon.appiconset",
-        lambda px: glass_tile(px, full_bleed=True).convert("RGB"),
-    )
 
 
 def website() -> None:
