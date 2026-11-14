@@ -99,6 +99,10 @@ button:disabled{cursor:default;opacity:.4}
 .ic-card .acts .rb{width:36px;height:36px;background:#ffffff12}
 .me .ic-card .acts .rb{background:#2a2a2a;color:#f2f2f2}
 .note{font-size:16px}
+.otp{font:600 30px/1.1 ui-monospace,'JetBrains Mono',monospace;letter-spacing:.14em}
+.ic-card .acts .pill.cc{background:var(--white);color:var(--onwhite);gap:8px;height:40px;padding:0 18px;font-weight:600}
+[data-hold],[data-holdtext]{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;transition:transform .18s cubic-bezier(.22,1,.36,1)}
+[data-hold].held,[data-holdtext].held,.pill.held{transform:scale(.96)}
 .thumbs{display:flex;gap:6px}
 .thumbs img{width:88px;height:88px;object-fit:cover;border-radius:12px;display:block}
 .site{font-size:19px;font-weight:700}
@@ -226,7 +230,10 @@ button:disabled{cursor:default;opacity:.4}
 .notice .x{width:40px;height:40px;border-radius:50%;border:0;background:var(--btn);display:grid;place-items:center;flex:none}
 .notice .life{position:absolute;left:16px;right:70px;bottom:7px;height:2px;border-radius:1px;background:#ffffff26;overflow:hidden}
 .notice .life i{display:block;height:100%;background:#ffffff99;animation:life linear forwards}
+.notice{touch-action:none}
 .notice.out{opacity:0;transform:translateY(8px);transition:.25s}
+.notice.drag{transition:none}
+.notice.gone{opacity:0;transform:translateY(120%)!important;transition:.22s}
 @keyframes up2{from{opacity:0;transform:translateY(12px)}}
 @keyframes life{from{width:100%}to{width:0}}
 .pop{position:absolute;inset:0;z-index:60;display:grid;place-items:center;padding:20px;background:#000c;animation:fade .2s}
@@ -295,6 +302,7 @@ button:disabled{cursor:default;opacity:.4}
     <button type="button" class="sim" data-act="simFiles"><span id="ic-a"></span><span id="sim-files">MacBook Pro sends 4 files</span></button>
     <button type="button" class="sim" data-act="simLink"><span id="ic-b"></span>Pixel 9 sends a link</button>
     <button type="button" class="sim" data-act="simNote"><span id="ic-c"></span>Pixel 9 sends a note</button>
+    <button type="button" class="sim" data-act="simCode"><span id="ic-h"></span>Pixel 9 gets a verification code</button>
     <button type="button" class="sim" data-act="simPing"><span id="ic-d"></span><span id="sim-ping">MacBook Pro pings you</span></button>
     <button type="button" class="sim" data-act="simOffline"><span id="ic-e"></span>Pixel 9 goes out of reach</button>
     <button type="button" class="sim" data-act="simError"><span id="ic-f"></span>A send fails</button>
@@ -325,7 +333,8 @@ const I={
  search:'<circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>',
  more:'<circle cx="12" cy="12" r="1.3" fill="currentColor"/><circle cx="19" cy="12" r="1.3" fill="currentColor"/><circle cx="5" cy="12" r="1.3" fill="currentColor"/>',
  down:'<path d="m6 9 6 6 6-6"/>', right:'<path d="m9 18 6-6-6-6"/>', back:'<path d="m15 18-6-6 6-6"/>',
- close:'<path d="M18 6 6 18M6 6l12 12"/>', check:'<path d="M20 6 9 17l-5-5"/>', plus:'<path d="M5 12h14M12 5v14"/>',
+ close:'<path d="M18 6 6 18M6 6l12 12"/>',
+copy:'<rect width="14" height="14" x="8" y="8" rx="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/>', check:'<path d="M20 6 9 17l-5-5"/>', plus:'<path d="M5 12h14M12 5v14"/>',
  download:'<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/><path d="M12 15V3"/>',
  star:'<path d="M11.525 2.295a.53.53 0 0 1 .95 0l2.31 4.679a2.123 2.123 0 0 0 1.595 1.16l5.166.756a.53.53 0 0 1 .294.904l-3.736 3.638a2.123 2.123 0 0 0-.611 1.878l.882 5.14a.53.53 0 0 1-.771.56l-4.618-2.428a2.122 2.122 0 0 0-1.973 0L6.396 21.01a.53.53 0 0 1-.77-.56l.881-5.139a2.122 2.122 0 0 0-.611-1.879L2.16 9.795a.53.53 0 0 1 .294-.906l5.165-.755a2.122 2.122 0 0 0 1.597-1.16z"/>',
  ping:'<path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/>',
@@ -342,6 +351,9 @@ const now=()=>{const d=new Date();return d.getHours()+':'+String(d.getMinutes())
 const fmt=b=>b>=1e9?(b/1e9).toFixed(1)+' GB':b>=1e6?(b/1e6).toFixed(1)+' MB':b>=1e3?Math.round(b/1e3)+' KB':b+' B';
 const kindOf=n=>/\.(heic|jpe?g|png|gif|webp)$/i.test(n)?'photo':/\.(mov|mp4|m4v)$/i.test(n)?'video':'file';
 const isLink=t=>/^(https?:\/\/|www\.)\S+$/i.test(t.trim())||/^[a-z0-9-]+(\.[a-z0-9-]+)+\/\S*$/i.test(t.trim());
+/* a verification code: the whole message is the code, or it says it's one */
+const codeOf=t=>{t=(t||'').trim();if(/^\d{4,8}$/.test(t))return t;if(!/(verif|one[- ]?time|\botp\b|passcode|security code|login code|sign[- ]?in code|your code|code is|kod)/i.test(t))return null;const m=t.match(/\b(\d{3}[ -]?\d{3}|\d{4,8})\b/);return m?m[1].replace(/[ -]/g,''):null};
+const clip=t=>{try{navigator.clipboard.writeText(t).catch(()=>{})}catch(x){}};
 const site=u=>{try{const x=new URL(/^https?:/i.test(u)?u:'https://'+u);return{host:x.hostname.replace(/^www\./,''),path:(x.pathname+x.search).replace(/\/$/,'')}}catch(e){return{host:u,path:''}}};
 let uid=1;const nid=()=>'i'+(uid++);
 
@@ -396,8 +408,9 @@ function itemHTML(v,k,m){
   const foot=`<span class="foot">${m.from==='me'?'You sent':'From '+esc(d.name)} · ${esc(m.when)}</span>`;
   const more=`<button type="button" class="rb" aria-label="More for this item" data-act="itemMenu" data-id="${m.id}">${ic('more',18)}</button>`;
   const who=m.from==='me'?'me':'them';
-  if(m.t==='note')return `<div class="it ${who}${nw}"><div class="ic-card"><div class="note">${esc(m.text)}</div><div class="acts"><button type="button" class="pill" data-act="copy" data-id="${m.id}">Copy</button>${more}</div></div>${foot}</div>`;
-  if(m.t==='link'){const s=site(m.url);return `<div class="it ${who}${nw}"><div class="ic-card"><div><div class="site">${esc(s.host)}</div><div class="path">${esc(s.path)}</div></div><div class="acts"><button type="button" class="pill" data-act="openLink" data-id="${m.id}">Open link</button><button type="button" class="pill" data-act="copy" data-id="${m.id}">Copy link</button>${more}</div></div>${foot}</div>`}
+  if(m.t==='note'){const c=codeOf(m.text);if(c&&m.from!=='me')return `<div class="it ${who}${nw}"><div class="ic-card" data-hold="${m.id}"><div class="note">${esc(m.text)}</div><div class="otp" aria-label="Code ${c.split('').join(' ')}">${esc(c)}</div><div class="acts"><button type="button" class="pill w cc" data-act="copyCode" data-code="${esc(c)}">${ic('copy',18)}Copy code</button>${more}</div></div>${foot}</div>`;
+    return `<div class="it ${who}${nw}"><div class="ic-card" data-hold="${m.id}"><div class="note">${esc(m.text)}</div><div class="acts">${more}</div></div>${foot}</div>`}
+  if(m.t==='link'){const s=site(m.url);return `<div class="it ${who}${nw}"><div class="ic-card" data-hold="${m.id}"><div><div class="site">${esc(s.host)}</div><div class="path">${esc(s.path)}</div></div><div class="acts"><button type="button" class="pill" data-act="openLink" data-id="${m.id}">Open link</button>${more}</div></div>${foot}</div>`}
   if(m.t==='file'){
     const sending=m.state==='sending';
     const saved=m.from==='me'?(sending?`<span data-pt="${m.id}">${Math.round(m.p*100)}%</span> · sending`:'Delivered ✓'):`Saved to ${esc(S.set[v].save)}`;
@@ -447,7 +460,13 @@ function notice(title,sub,o={}){
   const kill=()=>{el.classList.add('out');setTimeout(()=>el.remove(),260)};
   el.querySelector('.x').onclick=kill;let t=setTimeout(kill,ms);
   el.onpointerenter=()=>{clearTimeout(t);el.querySelector('.life i').style.animationPlayState='paused'};
-  el.onpointerleave=()=>{t=setTimeout(kill,2500)};
+  el.onpointerleave=()=>{if(!y0)t=setTimeout(kill,2500)};
+  /* swipe it down to close it */
+  let y0=0,dy=0;
+  el.addEventListener('pointerdown',e=>{if(e.target.closest('.x'))return;y0=e.clientY;dy=0;clearTimeout(t);el.querySelector('.life i').style.animationPlayState='paused';el.classList.add('drag');el.setPointerCapture(e.pointerId)});
+  el.addEventListener('pointermove',e=>{if(!y0)return;dy=Math.max(0,e.clientY-y0);el.style.transform=`translateY(${dy}px)`;el.style.opacity=String(Math.max(.2,1-dy/120))});
+  const end=()=>{if(!y0)return;y0=0;el.classList.remove('drag');if(dy>36){el.classList.add('gone');setTimeout(()=>el.remove(),230)}else{el.style.transform='';el.style.opacity='';el.querySelector('.life i').style.animationPlayState='running';t=setTimeout(kill,2500)}};
+  el.addEventListener('pointerup',end);el.addEventListener('pointercancel',end);
   box.appendChild(el);while(box.children.length>3)box.firstChild.remove();
 }
 
@@ -572,8 +591,7 @@ function sheetBody(sh,v){const st=S[v],s=S.set[v];
     const sub=m.t==='note'?'Note':m.t==='link'?site(m.url).path:m.t==='file'?fmt(m.size):'Saved to Photos';
     const noFolder=m.t==='note'||m.t==='link';
     return `<h3>${esc(title)}</h3><p class="sub2">${esc(sub)}</p>${opt('Open','menuOpen','data-id="'+m.id+'"')}${opt('Copy','copy','data-id="'+m.id+'"')}${opt('Show in folder','showFolder','data-id="'+m.id+'"'+(noFolder?' disabled':''))}${opt('Send again','sendAgain','data-id="'+m.id+'"')}${opt('Remove from this list','removeItem','data-id="'+m.id+'"')}${cancel}<p class="foot2">Removing only changes this list. It never deletes the file.</p>`}
-  case 'copied':return `<h3>Copied</h3><p class="sub2">The item is ready to paste.</p>${opt('Done','closeSheet')}`;
-  case 'note':return `<h3 class="sub2" style="font-size:13px;margin:0">Note</h3><div style="font-size:20px">${esc(sh.text)}</div>${opt('Copy','copyText','data-text="'+esc(sh.text)+'"')}${opt('Done','closeSheet')}`;
+  case 'note':{const c=codeOf(sh.text);return `<h3 class="sub2" style="font-size:13px;margin:0">Note</h3><div style="font-size:20px" data-holdtext="${esc(sh.text)}">${esc(sh.text)}</div>${c?opt('Copy code','copyText','data-text="'+esc(c)+'"','w'):''}${opt('Done','closeSheet')}`}
   case 'filePreview':return `<h3 class="sub2" style="font-size:13px;margin:0">File preview</h3><b style="font-size:18px">${esc(sh.name)}</b><p class="sub2">${v==='phone'?'Files':'Finder'} › Downloads › Sidekick</p>${opt('Show in folder','showFolderN','data-n="'+esc(sh.name)+'"')}${opt('Done','closeSheet')}`;
   case 'folder':return `<h3>Show in ${v==='phone'?'Files':'Finder'}</h3><p class="sub2">${v==='phone'?'Files':'Finder'} › ${esc(s.save)}</p><b>${esc(sh.name)}</b>${opt('Open','closeSheet')}${opt('Done','closeSheet')}`;
   case 'viewer':{const it=sh.items[sh.i];return `<h3>Photos</h3><p class="sub2">${sh.items.length} items · Saved to Photos</p><div class="viewer"><img src="${MEDIA[it[2]]}" alt="${esc(it[0])}"></div><div style="display:flex;align-items:center;gap:8px"><button type="button" class="rb s" aria-label="Previous" data-act="vprev">${ic('back',18)}</button><span class="sub" style="flex:1;text-align:center;font-size:13px">${esc(it[0])}${it[2]==='video'?' · video':''} · ${sh.i+1} of ${sh.items.length}</span><button type="button" class="rb s" aria-label="Next" data-act="vnext">${ic('right',18)}</button></div>${opt('Done','closeSheet')}`}
@@ -762,8 +780,9 @@ const A={
   vnext(){const sh=V().sheet;sh.i=(sh.i+1)%sh.items.length;render()},
   showFolder(e){const m=find(S.view,e.dataset.id);V().sheet={t:'folder',name:m?(m.name||'2 photos, 1 video'):''};render()},
   showFolderN(e){V().sheet={t:'folder',name:e.dataset.n};render()},
-  copy(e){const m=find(S.view,e.dataset.id);const t=m?(m.text||m.url||m.name||''):'';try{navigator.clipboard.writeText(t).catch(()=>{})}catch(x){}V().sheet={t:'copied'};render()},
-  copyText(e){try{navigator.clipboard.writeText(e.dataset.text).catch(()=>{})}catch(x){}V().sheet={t:'copied'};render()},
+  copy(e){const m=find(S.view,e.dataset.id);const t=m?((m.t==='note'&&m.from!=='me'&&codeOf(m.text))||m.text||m.url||m.name||''):'';clip(t);close();render()},
+  copyText(e){clip(e.dataset.text);close();render()},
+  copyCode(e){clip(e.dataset.code);held(e)},
   openLink(e){const m=find(S.view,e.dataset.id);if(m)openURL(m.url)},
   sendAgain(e){const m=find(S.view,e.dataset.id);close();if(!m)return;const it=m.t==='note'?{note:m.text}:m.t==='link'?{note:m.url}:m.t==='photos'?{name:'Photos',size:125.6e6,photos:m.items}:{name:m.name,size:m.size};
     if(m.t==='note'||m.t==='link'){sendItems(S.view,V().chat,[it])}else startSend(S.view,V().chat,[it])},
@@ -771,9 +790,9 @@ const A={
   remotePick(){V().sheet={t:'remotePick'};render()},
   setRemote(e){const st=V();st.remote=e.dataset.k;st.sheet=null;render();const d=S.D[e.dataset.k];if(S.view==='pc'&&!d.control)notice(/iPhone/.test(d.name)?'iPhones can\'t be controlled':'This device can\'t be controlled','Choose a computer to use the touchpad')},
   click(e){e.classList.remove('flash');void e.offsetWidth;e.classList.add('flash');trail(e.dataset.w)},
-  key(e){e.classList.remove('flash');void e.offsetWidth;e.classList.add('flash');trail('Pressed '+e.dataset.w);notice('Sent to '+S.D[V().remote].name,'Your shortcut was sent directly')},
+  key(e){e.classList.remove('flash');void e.offsetWidth;e.classList.add('flash');trail('Pressed '+e.dataset.w)},
   kbSheet(){S.phone.sheet={t:'kb'};render();setTimeout(()=>{const i=document.getElementById('kb-in');if(i)i.focus()},300)},
-  kbSend(){const t=document.getElementById('kb-in').value;close();render();if(t){trail('Typed “'+t.slice(-24)+'”');notice('Sent to '+S.D[S.phone.remote].name,'“'+t+'”')}},
+  kbSend(){const t=document.getElementById('kb-in').value;close();render();if(t){trail('Typed “'+t.slice(-24)+'”')}},
   kbFocus(){const i=document.getElementById('kb-pc');if(i)i.focus()},
   kbSendPc(){const i=document.getElementById('kb-pc');if(i&&i.value){trail('Typed “'+i.value.slice(-24)+'”');i.value=''}},
   toggle(e){const s=S.set.phone;s[e.dataset.key]=!s[e.dataset.key];render()},
@@ -793,6 +812,7 @@ const A={
   simLink(){const v=S.view;hist(v,'pixel').push({id:nid(),t:'link',from:'them',url:'https://www.theguardian.com/travel/2026/nov/12/best-winter-breaks',day:'Today',when:now(),fresh:true});stick=true;render();notice('Pixel 9 sent a link','theguardian.com')},
   simNote(){const v=S.view;hist(v,'pixel').push({id:nid(),t:'note',from:'them',text:'Pick up the charger',day:'Today',when:now(),fresh:true});stick=true;render();notice('Pixel 9 sent a note','Pick up the charger')},
   simPing(){const v=S.view;V().ping=v==='phone'?'mbp':'pixel';render()},
+  simCode(){const v=S.view;hist(v,'pixel').push({id:nid(),t:'note',from:'them',text:'Your Google verification code is 482913',day:'Today',when:now(),fresh:true});stick=true;render()},
   simOffline(){S.D.pixel.reach=!S.D.pixel.reach;render();notice(S.D.pixel.reach?'Pixel 9 is back':'Pixel 9 is out of reach',S.D.pixel.reach?'Same Wi-Fi · encrypted':'Its chat says how to reconnect')},
   simError(){V().pop={t:'error',k:'mba'};render()},
   simFresh(){const v=S.view;Object.values(S.D).forEach(d=>{if(!d.self)d.paired=false});V().stack=[];if(v==='phone')S.phone.tab='devices';else S.pc.tab='devices';render()},
@@ -800,7 +820,16 @@ const A={
 };
 function openURL(u){const a=document.createElement('a');a.href=/^https?:/.test(u)?u:'https://'+u;a.target='_blank';a.rel='noopener';document.body.appendChild(a);a.click();a.remove()}
 function labels(){const p=S.view==='phone';document.getElementById('sim-files').textContent=p?'MacBook Pro sends 4 files':'Pixel 9 sends 4 files';document.getElementById('sim-ping').textContent=p?'MacBook Pro pings this phone':'Pixel 9 pings this computer'}
-document.addEventListener('click',ev=>{const el=ev.target.closest('[data-act]');if(!el||el.disabled)return;const f=A[el.dataset.act];if(f)f(el,ev)});
+/* long press (or right-click) a note or link to copy it; nothing pops up */
+function held(el){el.classList.remove('held');void el.offsetWidth;el.classList.add('held');setTimeout(()=>el.classList.remove('held'),180);try{navigator.vibrate&&navigator.vibrate(12)}catch(x){}}
+function holdText(el){if(el.dataset.holdtext)return el.dataset.holdtext;const m=find(S.view,el.dataset.hold);return m?(m.text||m.url||''):''}
+let hold=null,justHeld=false;
+document.addEventListener('pointerdown',ev=>{const el=ev.target.closest('[data-hold],[data-holdtext]');if(!el||ev.target.closest('button')||ev.button>0)return;
+  hold={el,x:ev.clientX,y:ev.clientY,t:setTimeout(()=>{clip(holdText(el));held(el);justHeld=true;hold=null},500)}});
+document.addEventListener('pointermove',ev=>{if(hold&&Math.hypot(ev.clientX-hold.x,ev.clientY-hold.y)>8){clearTimeout(hold.t);hold=null}});
+['pointerup','pointercancel'].forEach(n=>document.addEventListener(n,()=>{if(hold){clearTimeout(hold.t);hold=null}}));
+document.addEventListener('contextmenu',ev=>{const el=ev.target.closest&&ev.target.closest('[data-hold],[data-holdtext]');if(!el)return;ev.preventDefault();if(justHeld){justHeld=false;return}clip(holdText(el));held(el)});
+document.addEventListener('click',ev=>{if(justHeld){justHeld=false;if(ev.target.closest('[data-hold],[data-holdtext]')){ev.preventDefault();return}}const el=ev.target.closest('[data-act]');if(!el||el.disabled)return;const f=A[el.dataset.act];if(f)f(el,ev)});
 document.addEventListener('input',ev=>{const t=ev.target;
   if(t.dataset.compose){const v=t.dataset.compose;S[v].draft=t.value;const bar=t.closest('.mbar'),on=!!t.value.trim();bar.classList.toggle('typing',on);bar.querySelector('.sendf').setAttribute('aria-label',on?'Send':'Send files')}
   else if(t.dataset.q){S[t.dataset.q].q=t.value;render()}
@@ -822,7 +851,7 @@ function fit(){const st=document.querySelector('.stage');const avW=Math.max(260,
   [['fit-phone',414,868],['fit-pc',1280,800]].forEach(([id,w,h])=>{const f=document.getElementById(id);if(f.hidden)return;const s=Math.max(id==='fit-phone'?.55:.2,Math.min(1,avW/w,id==='fit-phone'?avH/h:9));f.style.width=w*s+'px';f.style.height=h*s+'px';f.firstElementChild.style.transform=`scale(${s})`})}
 window.addEventListener('resize',fit);
 document.getElementById('st-r').innerHTML=ic('wifi',17,'currentColor',2.4)+'<span class="batt"><i></i></span>';
-['a','b','c','d','e','f','g'].forEach((x,i)=>{document.getElementById('ic-'+x).innerHTML=ic(['send','link','chat','ping','wifi','alert','devices'][i],18,'var(--amber)')});
+['a','b','c','d','e','f','g','h'].forEach((x,i)=>{document.getElementById('ic-'+x).innerHTML=ic(['send','link','chat','ping','wifi','alert','devices','copy'][i],18,'var(--amber)')});
 labels();render();fit();setTimeout(fit,60);
 })();
 </script>

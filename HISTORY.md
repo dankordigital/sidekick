@@ -51,6 +51,19 @@ detailed developer notes; every release is in `VERSIONS.md`) and
 
 ## 14 November 2026
 
+- **Emulator: quieter copying** (the owner: "just let people copy and don't
+  tell them"): the "Copied" sheet is gone; copying says nothing. Notes and
+  links have no Copy button any more: **long-press** (or right-click on a
+  computer) the card to copy it (a small press-in, a tick of vibration).
+  **Only a verification code gets the big button**: a note that is a code
+  (`codeOf`: just 4–8 digits, or "verification / one-time / your code is…"
+  with a number) shows the code big and a white **Copy code** that copies
+  only the code (sim: "Pixel 9 gets a verification code"; no notice for it,
+  it would cover the button). Notices can be **swiped down** to close
+  (besides ✕ and the bar running out). Remote's shortcut keys and typing
+  no longer show "Sent to …" notices. Carry all of this into the Flutter
+  app when the new design is built (the old `ReceivedTextDialog` still
+  says "Copied" on its button).
 - **Sidekick emulator from the owner's Figma design**
   (https://claude.ai/artifact/Rbd3YL2REDeDKtCK5z3px5, source in
   `design/emulator/`): phone and computer, built from the Figma Foundations
