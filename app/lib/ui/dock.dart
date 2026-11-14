@@ -168,3 +168,74 @@ class _DockButtonState extends State<_DockButton> {
     );
   }
 }
+
+/// The computer's side rail (design: Computer · *.png): the "sk" logo, then
+/// a round button per tab with its name under it; the chosen one is white.
+class SideRail extends StatelessWidget {
+  const SideRail({super.key, required this.items, required this.index, required this.onTap});
+
+  /// (tab index, item): a wide window leaves Chat out (it's beside Devices).
+  final List<(int, DockItem)> items;
+  final int index;
+  final ValueChanged<int> onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final reduce = MediaQuery.disableAnimationsOf(context);
+    return Container(
+      width: 88,
+      decoration: BoxDecoration(color: const Color(0xFF1C1C1C), borderRadius: BorderRadius.circular(22)),
+      child: SingleChildScrollView(
+        child: Column(
+          children: [
+            const SizedBox(height: 22),
+            Image.asset('assets/logo/logo.png', height: 34, color: const Color(0xFFF2F2F2), semanticLabel: 'Sidekick'),
+            const SizedBox(height: 22),
+            for (final (i, item) in items)
+              Semantics(
+                button: true,
+                selected: i == index,
+                label: item.label,
+                excludeSemantics: true,
+                child: GestureDetector(
+                  behavior: HitTestBehavior.opaque,
+                  onTap: () => onTap(i),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    child: Column(
+                      children: [
+                        AnimatedContainer(
+                          duration: reduce ? Duration.zero : const Duration(milliseconds: 320),
+                          curve: const Cubic(0.34, 1.4, 0.64, 1),
+                          width: 52,
+                          height: 52,
+                          decoration: BoxDecoration(
+                            color: i == index ? const Color(0xFFF0F0F0) : Colors.transparent,
+                            shape: BoxShape.circle,
+                          ),
+                          child: Icon(
+                            i == index ? item.selectedIcon : item.icon,
+                            size: 24,
+                            color: i == index ? const Color(0xFF141414) : const Color(0xFFF2F2F2),
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                        Text(
+                          item.label,
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: i == index ? const Color(0xFFF2F2F2) : const Color(0xFFA1A1A6),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            const SizedBox(height: 12),
+          ],
+        ),
+      ),
+    );
+  }
+}

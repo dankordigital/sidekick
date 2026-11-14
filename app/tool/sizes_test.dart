@@ -159,12 +159,14 @@ void main() {
           // found by their label, as a screen reader finds them.
           // Only the tab bar's own: Send is also a button on Devices.
           var target = find.descendant(
-            of: find.byType(NavigationRail),
+            of: find.byType(SideRail),
             matching: find.byWidgetPredicate((w) => w is Text && w.data?.toLowerCase() == tab.toLowerCase()),
           );
           if (target.evaluate().isEmpty) {
             target = find.descendant(of: find.byType(FloatingDock), matching: find.bySemanticsLabel(tab));
           }
+          // Wide windows show Chat beside Devices, not as a tab.
+          if (target.evaluate().isEmpty && tab == 'Chat' && find.byType(SideRail).evaluate().isNotEmpty) continue;
           if (target.evaluate().isEmpty) {
             overflows.add('$name: no "$tab" tab to tap');
             continue;

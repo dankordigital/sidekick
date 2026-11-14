@@ -29,7 +29,6 @@ enum _Filter { all, files, photos, links, notes }
 
 class _ChatPageState extends State<ChatPage> {
   AppState get state => widget.state;
-  String? _deviceId;
   _Filter _filter = _Filter.all;
   final _text = TextEditingController();
   final _focus = FocusNode();
@@ -45,7 +44,7 @@ class _ChatPageState extends State<ChatPage> {
     final paired = state.paired;
     if (paired.isEmpty) return null;
     // The one picked here, else the one last opened from Devices.
-    return paired.where((d) => d.id == (_deviceId ?? state.selectedId)).firstOrNull ??
+    return paired.where((d) => d.id == state.selectedId).firstOrNull ??
         // The device most recently shared with, else the first.
         (paired.toList()..sort((a, b) {
               final ta = state.history.last(a.id)?.at, tb = state.history.last(b.id)?.at;
@@ -81,14 +80,7 @@ class _ChatPageState extends State<ChatPage> {
             if (d == null)
               Expanded(child: _NoDevices(onGoToDevices: widget.onGoToDevices))
             else ...[
-              _DevicePicker(
-                state: state,
-                device: d,
-                onPick: (id) {
-                  setState(() => _deviceId = id);
-                  state.select(id);
-                },
-              ),
+              _DevicePicker(state: state, device: d, onPick: state.select),
               const SizedBox(height: 12),
               _Chips(value: _filter, onChanged: (f) => setState(() => _filter = f)),
               const SizedBox(height: 8),

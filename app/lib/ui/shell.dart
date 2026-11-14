@@ -15,6 +15,7 @@ import '../platform/notifications.dart';
 import '../platform/sound.dart';
 import 'chat_page.dart';
 import 'devices_page.dart';
+import 'kit.dart';
 import 'direct_wifi.dart';
 import 'ping.dart';
 import 'notices.dart';
@@ -185,6 +186,20 @@ class _ShellState extends State<Shell> {
     ];
     final wide = MediaQuery.sizeOf(context).width >= 700;
     final scheme = Theme.of(context).colorScheme;
+    // Wide computer windows (the design's Computer · Devices): the device
+    // list beside its Chat, so Chat isn't a tab of its own there.
+    final split = MediaQuery.sizeOf(context).width >= 1000;
+    final shown = split && _index == 1 ? 0 : _index;
+    final Widget current = split && shown == 0
+        ? Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              SizedBox(width: 390, child: pages[0]),
+              const VerticalDivider(width: 1, thickness: 1, color: K.hair),
+              Expanded(child: pages[1]),
+            ],
+          )
+        : pages[shown];
 
     final body = ListenableBuilder(
       listenable: state,
@@ -226,7 +241,7 @@ class _ShellState extends State<Shell> {
                   child: child,
                 ),
               ),
-              child: KeyedSubtree(key: ValueKey(_index), child: pages[_index]),
+              child: KeyedSubtree(key: ValueKey(shown), child: current),
             ),
           ),
         ],
@@ -249,40 +264,29 @@ class _ShellState extends State<Shell> {
     }
 
     return Scaffold(
-      backgroundColor: scheme.surfaceContainer,
-      body: Row(
-        children: [
-          NavigationRail(
-            backgroundColor: scheme.surfaceContainer,
-            selectedIndex: _index,
-            onDestinationSelected: _go,
-            labelType: NavigationRailLabelType.all,
-            groupAlignment: -0.85,
-            leading: Padding(
-              padding: const EdgeInsets.only(top: 22, bottom: 14),
-              // The "sk" logo is white-on-transparent; tint it to the theme.
-              child: Image.asset(
-                'assets/logo/logo.png',
-                height: 34,
-                color: scheme.onSurface,
-                semanticLabel: 'Sidekick',
-              ),
+      backgroundColor: const Color(0xFF0B0B0B),
+      body: Padding(
+        padding: const EdgeInsets.all(10),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            SideRail(
+              index: shown,
+              onTap: _go,
+              items: [
+                for (final (i, d) in _destinations.indexed)
+                  if (!(split && i == 1)) (i, DockItem(icon: d.icon, selectedIcon: d.selected, label: d.label)),
+              ],
             ),
-            destinations: [
-              for (final d in _destinations)
-                NavigationRailDestination(icon: Icon(d.icon), selectedIcon: Icon(d.selected), label: Text(d.label)),
-            ],
-          ),
-          Expanded(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(0, 8, 8, 8),
+            const SizedBox(width: 10),
+            Expanded(
               child: ClipRRect(
-                borderRadius: BorderRadius.circular(28),
-                child: ColoredBox(color: scheme.surface, child: body),
+                borderRadius: BorderRadius.circular(22),
+                child: ColoredBox(color: K.page, child: body),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

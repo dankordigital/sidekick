@@ -262,10 +262,10 @@ void main() {
     final zip = File(p.join(sample.path, 'Trail photos.zip'))..writeAsBytesSync(List.filled(45300, 0));
     final pdf = File(p.join(sample.path, 'Weekend plans.pdf'))..writeAsBytesSync(List.filled(2400, 0));
     sendSelection.value = [Picked.file(zip), Picked.file(pdf)];
-    await tester.tap(find.descendant(of: find.byType(NavigationRail), matching: find.text('Send')));
+    await tester.tap(find.descendant(of: find.byType(SideRail), matching: find.text('Send')));
     await shot('2-send');
     // Browse files is a device's own screen now (its hold menu).
-    unawaited(showFilesOf(tester.element(find.byType(NavigationRail)), state, state.paired.first));
+    unawaited(showFilesOf(tester.element(find.byType(SideRail)), state, state.paired.first));
     await shot('2b-files', waitForData: true);
     if (find.text('Home').evaluate().isNotEmpty) {
       await tester.tap(find.text('Home'));
@@ -273,12 +273,12 @@ void main() {
     }
     await tester.pageBack();
     await settle();
-    await tester.tap(find.descendant(of: find.byType(NavigationRail), matching: find.text('Remote')));
+    await tester.tap(find.descendant(of: find.byType(SideRail), matching: find.text('Remote')));
     await shot('3-remote', waitForData: true);
-    await tester.tap(find.descendant(of: find.byType(NavigationRail), matching: find.text('Settings')));
+    await tester.tap(find.descendant(of: find.byType(SideRail), matching: find.text('Settings')));
     await shot('5-settings');
     state.setThemeMode(ThemeMode.dark);
-    await tester.tap(find.descendant(of: find.byType(NavigationRail), matching: find.text('Devices')));
+    await tester.tap(find.descendant(of: find.byType(SideRail), matching: find.text('Devices')));
     await shot('6-devices-dark');
 
     // Phone layout. The 4.0 dock shows only the selected tab's name: the
