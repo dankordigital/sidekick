@@ -286,7 +286,8 @@ summary .ic{transition:transform .45s cubic-bezier(.34,1.56,.64,1)}
 details{border-radius:20px;background:var(--panel)}
 summary{list-style:none;display:flex;align-items:center;gap:12px;padding:18px 20px;cursor:pointer;font-weight:600;font-size:17px}
 summary::-webkit-details-marker{display:none}
-summary .ic{margin-left:auto;transition:transform .2s;color:var(--muted)}
+summary>span[data-i]{margin-left:auto;flex:none;display:grid}
+summary .ic{transition:transform .2s;color:var(--muted)}
 details[open] summary .ic{transform:rotate(180deg)}
 details p{margin:0;padding:0 20px 20px;color:var(--muted);max-width:42em}
 
@@ -311,6 +312,53 @@ footer a:hover{color:var(--text)}
 .flag{display:inline-block;width:18px;height:12px;border-radius:2px;background:linear-gradient(#fff 50%,#dc143c 50%);vertical-align:-1px;box-shadow:0 0 0 1px #ffffff22}
 .proto{position:fixed;right:max(12px,env(safe-area-inset-right,0px));bottom:calc(12px + env(safe-area-inset-bottom,0px));z-index:40;font:500 11px var(--mono);letter-spacing:.06em;text-transform:uppercase;padding:7px 11px;border-radius:14px;background:var(--amberbg);color:var(--amber);border:1px solid var(--amberline)}
 /* calm motion (reduced motion, or the Motion switch off): fades, hovers and the stack still animate; nothing swings, tilts or follows the pointer */
+/* ===== phones ===== */
+@media (max-width:600px){
+  .top .wrap{height:60px;gap:12px}
+  .top .pill{height:40px;padding:0 16px;font-size:14px}
+  .brand{font-size:17px}
+  .hero .wrap{padding-block:30px 8px;gap:28px}
+  .hero h1{font-size:clamp(40px,11.5vw,52px);margin-top:12px}
+  .hero p.lead{font-size:17px;margin-top:16px}
+  .hero .ctas{margin-top:24px;gap:10px}
+  .hero .ctas .pill{flex:1 1 100%;height:54px}
+  .facts{display:grid;grid-template-columns:1fr 1fr;gap:10px 12px;margin-top:22px;font-size:14px}
+  /* Try it: a row of chips above the phone, scrolled sideways */
+  .demo{gap:14px}
+  .tryit{order:-1;display:flex!important;flex-direction:row;gap:8px;width:auto!important;max-width:none!important;align-self:stretch;overflow-x:auto;scroll-snap-type:x mandatory;margin:0 calc(-1*max(16px,env(safe-area-inset-left,0px)));padding:2px max(16px,env(safe-area-inset-left,0px)) 6px;scrollbar-width:none}
+  .tryit::-webkit-scrollbar{display:none}
+  .tryit .label{display:none}
+  .try{flex:0 0 auto;align-items:center;gap:8px;padding:0 16px;height:44px;border-radius:22px;scroll-snap-align:start;font-size:0}
+  .try b{font-size:14px;margin:0;white-space:nowrap}
+  .phone{width:min(340px,100%)}
+  section{padding-block:52px}
+  section .wrap>h2{font-size:clamp(32px,9.6vw,42px)}
+  section .wrap>p.lead{font-size:16.5px}
+  /* the feature stack */
+  .stack{gap:16px;margin-top:28px;padding-bottom:16px}
+  .sc{top:calc(72px + var(--i)*10px)!important;padding:20px!important;gap:16px!important;border-radius:22px}
+  .sc h3{font-size:23px}
+  .sc p{font-size:15.5px}
+  .sc .txt{gap:12px}
+  .sc .vis{min-height:120px!important;padding:16px}
+  .sc .tile{width:40px;height:40px;border-radius:12px}
+  .free{padding-block:40px 24px}
+  .ticks{flex-direction:column;align-items:center;gap:10px;font-size:15px}
+  .steps,.plats{margin-top:28px}
+  .step,.plat,.f{border-radius:20px}
+  .plat{padding:18px;gap:14px}
+  .plat b{font-size:17px}
+  summary{font-size:16px;padding:16px 18px}
+  details p{padding:0 18px 18px;font-size:15px}
+  /* the wishlist form stacks */
+  form.join{flex-direction:column;gap:6px;border-radius:26px;padding:6px}
+  form.join input{height:52px;padding:0 16px;text-align:center}
+  form.join .pill{width:100%}
+  .joined{max-width:none}
+  footer .wrap{flex-direction:column;justify-content:center;text-align:center;gap:14px;padding-block:28px calc(28px + env(safe-area-inset-bottom,0px))}
+  footer nav{margin-left:0}
+  .proto{display:none}
+}
 @keyframes fadein{from{opacity:0}}
 html.calm{scroll-behavior:auto}
 html.calm [data-face],html.calm .free-tilt{transform:none!important}
@@ -576,7 +624,7 @@ if(!RM){
   const groups=[...document.querySelectorAll('.steps,.plats,.qa')];const heads=[...document.querySelectorAll('section .wrap>h2,section .wrap>.label,section .wrap>p.lead,.free-word,.ticks,form.join')];
   const els=[...heads,...groups.flatMap(g=>[...g.children].map((c,i)=>(c.style.setProperty('--d',(i%3)*90+'ms'),c)))].filter(e=>e.getBoundingClientRect().top>innerHeight);
   els.forEach(e=>e.classList.add('rv'));
-  const io=new IntersectionObserver(es=>es.forEach(en=>{if(en.isIntersecting){const t=en.target;t.classList.add('in');io.unobserve(t);setTimeout(()=>t.classList.remove('rv','in'),1100+(parseInt(t.style.getPropertyValue('--d'))||0));if(en.target.id==='code6'||en.target.contains(document.getElementById('code6')))typeCode()}}),{rootMargin:'0px 0px -8% 0px'});
+  const io=new IntersectionObserver(es=>es.forEach(en=>{if(en.isIntersecting){const t=en.target;t.classList.add('in');io.unobserve(t);setTimeout(()=>t.classList.remove('rv','in'),1100+(parseInt(t.style.getPropertyValue('--d'))||0));if(en.target.id==='code6'||en.target.contains(document.getElementById('code6')))typeCode()}}),{rootMargin:HOVER?'0px 0px -8% 0px':'0px 0px 12% 0px'});
   els.forEach(e=>io.observe(e));
   /* the code types itself in once its step shows */
   const code=document.getElementById('code6'),digits=[...code.children].map(s=>s.textContent),chip=document.getElementById('pairedChip');let typed=false;
@@ -600,8 +648,11 @@ if(!RM&&HOVER){
 const lerp=(a,b,t)=>a+(b-a)*t,clamp=(v,a,b)=>Math.min(b,Math.max(a,v));
 let mx=innerWidth/2,my=innerHeight/2,smx=mx,smy=my,ptr=false,sp=0;
 const glow=document.getElementById('glow');
-if(HOVER&&!RM){addEventListener('pointermove',e=>{if(e.pointerType!=='mouse')return;mx=e.clientX;my=e.clientY;if(!ptr){ptr=true;glow.classList.add('on')}},{passive:true});
+if(HOVER){addEventListener('pointermove',e=>{if(e.pointerType!=='mouse')return;mx=e.clientX;my=e.clientY;if(!ptr){ptr=true;glow.classList.add('on')}},{passive:true});
   document.documentElement.addEventListener('pointerleave',()=>{ptr=false;glow.classList.remove('on')})}
+else{const t=e=>{const p=e.touches[0];if(!p)return;mx=p.clientX;my=p.clientY;if(!ptr){ptr=true;smx=mx;smy=my;glow.classList.add('on')}};
+  addEventListener('touchstart',t,{passive:true});addEventListener('touchmove',t,{passive:true});
+  addEventListener('touchend',e=>{if(!e.touches.length){ptr=false;glow.classList.remove('on')}},{passive:true});addEventListener('touchcancel',()=>{ptr=false;glow.classList.remove('on')},{passive:true})}
 const V=new WeakMap(),val=(el,k,d=0)=>{let o=V.get(el);if(!o){o={};V.set(el,o)}if(!(k in o))o[k]=d;return o};
 function ease(el,prop,target,t,unit,def=0){const o=val(el,prop,def);const v=lerp(o[prop],target,t);if(Math.abs(v-o[prop])<1e-4&&Math.abs(v-target)<1e-4)return v;o[prop]=v;el.style.setProperty(prop,v.toFixed(unit==='px'?2:4)+(unit||''));return v}
 const faces=[...document.querySelectorAll('[data-face]')],freeT=document.querySelector('.free-tilt');
@@ -612,18 +663,18 @@ function measure(){const sr=stackEl.getBoundingClientRect();let y=sr.top+scrollY
   geo={stackTop:sr.top+scrollY,stackBottom:sr.top+scrollY+stackEl.offsetHeight-parseFloat(getComputedStyle(stackEl).paddingBottom||0),cards:cards.map(c=>{const g={nat:y,h:c.offsetHeight,stick:parseFloat(getComputedStyle(c).top)};y+=c.offsetHeight+gap;return g})}}
 measure();addEventListener('resize',measure);addEventListener('load',measure);
 function face(el,kx,ky,t){const r=el.getBoundingClientRect();if(r.bottom<-200||r.top>innerHeight+200)return;
-  let x=0,y=0;if(ptr){x=(smx-(r.left+r.width/2))/innerWidth;y=(smy-(r.top+r.height/2))/innerHeight}
+  let x=0,y=0;const fx=ptr?smx:HOVER?null:innerWidth/2,fy=ptr?smy:innerHeight/2;if(fx!==null){x=(fx-(r.left+r.width/2))/innerWidth;y=(fy-(r.top+r.height/2))/innerHeight}
   ease(el,'--ry',x*kx,t,'deg');ease(el,'--rx',-y*ky,t,'deg')}
 function frame(){
   smx=lerp(smx,mx,.2);smy=lerp(smy,my,.2);
   if(ptr)glow.style.transform=`translate(${smx.toFixed(1)}px,${smy.toFixed(1)}px)`;
   const h=document.documentElement.scrollHeight-innerHeight;sp=lerp(sp,h>0?scrollY/h:0,.18);top.style.setProperty('--sp',sp.toFixed(4));
   if(!RM){
-    if(HOVER&&!CALM){
+    if(!CALM){
       faces.forEach(el=>face(el,el.matches('h1,h2')?6:9,el.matches('h1,h2')?5:7,.08));
       face(freeT,20,16,.07);
-      const r=phone.getBoundingClientRect();if(r.bottom>0){let x=0,y=0;if(ptr){x=(smx-(r.left+r.width/2))/innerWidth;y=(smy-(r.top+r.height/2))/innerHeight}ease(phone,'--pry',x*13,.07,'deg');ease(phone,'--prx',-y*10,.07,'deg')}
-      mags.forEach(b=>{const r=b.getBoundingClientRect();const cx=r.left+r.width/2,cy=r.top+r.height/2;const near=ptr&&Math.abs(smx-cx)<r.width/2+28&&Math.abs(smy-cy)<r.height/2+28;
+      const r=phone.getBoundingClientRect();if(r.bottom>0){let x=0,y=0;const fx=ptr?smx:HOVER?null:innerWidth/2,fy=ptr?smy:innerHeight/2;if(fx!==null){x=(fx-(r.left+r.width/2))/innerWidth;y=(fy-(r.top+r.height/2))/innerHeight*(HOVER?1:.6)}ease(phone,'--pry',x*13,.07,'deg');ease(phone,'--prx',-y*10,.07,'deg')}
+      if(HOVER)mags.forEach(b=>{const r=b.getBoundingClientRect();const cx=r.left+r.width/2,cy=r.top+r.height/2;const near=ptr&&Math.abs(smx-cx)<r.width/2+28&&Math.abs(smy-cy)<r.height/2+28;
         const o=val(b,'mx');o.mx=lerp(o.mx,near?(smx-cx)*.22:0,.18);o.my=lerp(o.my||0,near?(smy-cy)*.3:0,.18);b.style.translate=`${o.mx.toFixed(2)}px ${o.my.toFixed(2)}px`})}
     /* the stack: cards rise and straighten as they come in, and settle back into the pile as the next covers them */
     const sY=scrollY,tops=geo.cards.map(g=>Math.min(Math.max(g.stick,g.nat-sY),geo.stackBottom-sY-g.h));
@@ -633,6 +684,7 @@ function frame(){
   requestAnimationFrame(frame)}
 requestAnimationFrame(frame);
 
+document.addEventListener('touchstart',()=>{},{passive:true});
 /* a ripple wherever you click */
 document.addEventListener('pointerdown',e=>{const el=e.target.closest('.pill,.try,.plat,.step,summary,.opt,.chip,.mini,.sc,.rb');if(!el||RM)return;
   const r=el.getBoundingClientRect(),d=Math.max(r.width,r.height)*2.2,s=document.createElement('span');s.className='rip';

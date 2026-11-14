@@ -11,7 +11,7 @@ website (`index.html` at the top of the repo; its images live in
 OVHcloud; it was at sk.dankor.digital on cyber_Folks before). Use
 getsidekick.app wherever an address is shown (ads, trailers, the app).
 The owner uploads with FileZilla: `index.html`, `index.php`, `wishlist.php`, `np7dpanel.php`, `privacy.html`, `preview.html`,
-`404.html`, `.htaccess`, `robots.txt` and `website/` (with `website/app/`, the preview's app) go in the site's root
+`404.html`, `.htaccess`, `robots.txt` and `website/` go in the site's root
 folder (`www`). The
 pages link only with relative or `/…` paths, so nothing in them names the
 domain. `.github/workflows/website.yml`
@@ -56,31 +56,33 @@ version follows GitHub by itself** (site.json `auto`, the default;
 link; otherwise, or when GitHub is out of reach, the last one offered.
 A version written in the panel is pinned (`auto` false). index.html marks the two
 looks with `only-wish` / `only-released` (Download buttons, the wishlist form,
-headings); the platform tiles in `#download` show either way: "Coming soon",
+headings); the platform tiles in `#devices` show either way: "Coming soon",
 linking to `#wishlist`, or "Available", linking to their file. Without PHP
 it's still the wishlist. index.php needs `<html lang="en"` and `</head>`
 exactly as they are; the panel's editor skips anything with class `icon`.
-**The site's look** (2026-11, the owner's call: "like openbot.run", its
-style, never its brand or words): dark (#1a1a1a page, #212121 cards, faint
-lines) unless the moon button picks light (`sidekick-theme`, shared with
-preview.html, privacy.html and 404.html, which use the same tokens); Inter
-and JetBrains Mono (labels) from Google Fonts; huge tight headings; pill
-buttons (light filled, outlined second); cards with real bits of the app
-drawn in HTML; five pastel tiles (lavender #d6adf2, green #61c985, mustard
-#e3b866, blue #74b9ff, salmon #ee9a7d) with dark ink, a faint grid and mono
-chips. Sections: hero (the app window), together, What Sidekick does,
-Free, Make it yours (looks), platforms (`#download`), Questions,
-the wishlist (`#wishlist`), footer. **No sprites or characters** (the owner's
-call, 13 Nov: the felt "buddies" looked too much like openbot's, a legal
-risk; pixel-art ones were tried and dropped too): regular Material icons on
-pastel tiles (`.ico-tile`, `--c` color, `--s` size). The "together" pair
-is two icon tiles (phone, laptop) with the Boarding pass.pdf transfer
-between them, whose bar fills as the page scrolls (`--p` on `.duo`, empty
-as it comes into view, "Received ✓" a third of the way up); a holographic
-pastel FREE (moving shine, tilts toward the pointer) stands alone; the
-looks deck fans out on scroll; icon tiles float in rings around the
-wishlist (drifting with the pointer); the footer says "Made with ♥ in
-Poland" (a beating heart icon and a flag). Reduced motion stops all of it.
+**The site's look** (4.0, 14 Nov 2026, the owner's call; prototype in
+`design/website-4.0/`, the old openbot-style page is in git history):
+`index.html` is one hand-written file (icons are the Lucide paths inline,
+`const I`), dark only (#121212 page, #1c1c1c cards, white pills, Inter +
+JetBrains Mono labels), the real wordmark up top (`website/wordmark.png`,
+white, made from `2.png`). Headings are glossy chrome (`.gl`) with one
+keyword each in an app colour (`.k`, `--c`). Sections: hero (the 4.0 chat
+running on a phone, "Try it" buttons play the MacBook: a 6-digit code with
+Copy code, hold a card for its actions, ✕ / flick down, Ping), What
+Sidekick does (a **stack of cards** that stick and pile up as you scroll,
+`#stack`), Free (the holographic FREE), Pairing (the code types itself in),
+Devices (`#devices`, tiles with `data-os`), Questions, the wishlist
+(`#wishlist`, form → `wishlist.php`, device chips), footer ("Made with ♥ in
+Poland"). **Motion everywhere, for everyone** (the owner: full motion by
+default, no switch, even with reduced motion on; `CALM=false`): one engine
+(`frame()`) eases every moving value each frame: headings, the phone, steps,
+tiles and card pictures face the pointer (`[data-face]`), a glow follows it,
+buttons are magnetic with a shine and a springy press, every click ripples,
+questions open smoothly, the wishlist bursts the app's colours. On phones
+(`max-width:600px`) the layout is its own (full-width buttons, Try it as a
+sideways row of chips, one-column stack, stacked form) and things face your
+finger while it's down, else lean as they pass the middle of the screen.
+No sounds and no light mode on this page.
 **`np7dpanel.php`** (the owner's name for it; not linked anywhere): the
 wishlist admin panel. Tabs: Overview (counts, sign-ups per day for 30 days,
 devices), Visits (home-page visits and different visitors per day, 30-day
@@ -302,64 +304,21 @@ release. Keep this file for how things work now, not for history.
   the two saying the same thing, and true: no account, no servers, no
   analytics; what's stored on the device; what's announced to nearby
   devices; every permission and why.
-- Website hero (`website/hero.webp`, `hero.png` fallback): a MacBook
-  receiving and an iPhone sending, made from the ad render frames
-  (`tool/ad_frames_test.dart`), transparent so the page's colors show; it
-  sits in the hero's app window (`#stage`) until the demo starts.
-  There is no Media anywhere on the site (removed with the feature).
-- **`preview.html`** (top of the repo; the hero's "Try it in your browser"):
-  **the real app, running in the page**, twice: Sidekick compiled for a
-  browser (`app/lib/demo/preview_main.dart`, built by
-  `app/tool/build_preview.sh` into `website/app/`, ~20 MB, CanvasKit served
-  from the site, no CDN), in a MacBook frame (`?device=mac`) and an iPhone
-  frame (`?device=iphone`). The page passes `postMessage`s between the two
-  like the network would, and moves the Mac's pointer for the iPhone's
-  touchpad. `DemoAppState` (`app/lib/demo/demo_state.dart`, a `part` of
-  app_state.dart so it can override private members) stands in for what a
-  browser lacks. **They start unpaired** (the owner's call: "first connect
-  the device, then use it however they like"): each lists the other under
-  Nearby; Pair → the other shows the real 6-digit code (and QR code for the
-  iPhone) → type it; or Connect device → QR code on the Mac and Scan a code
-  on the iPhone, whose pretend camera (`debugScanQr`, `_PretendCamera`)
-  "sees" whatever QR code the Mac is showing. Unpair works and they can
-  pair again. Then everything: Send → the real Accept card → progress on
-  both; links and notes; Ping; Files both ways (browse, download, Upload
-  here); Remote (the "is controlling this computer" banner); Settings
-  (every switch, theme, look, colors; the receive folder from a list of
-  the device's folders, `debugPickFolder`; Accessibility shows as
-  granted); "Show in folder" says where Finder / Files would open
-  (`debugRevealInFolder`). Picked files are samples (`debugPickFiles`).
-  `DesktopWindow.supported` is false on the web (window_manager would
-  throw when a link or ping arrives). **The home page runs it too**: in
-  the hero's app window (`#app`, `#stage`), **Start the demo** loads
-  `preview.html?embed=1` (just the two devices; it posts `sk-height`,
-  `sk-ready`, `sk-failed` up) in place of the picture; phones open
-  /preview.html instead. On the web there's no `dart:io` `Platform`:
-  **use `Host.isIOS` etc. (`core/host.dart`), never `Platform.isX`** (same
-  answers natively; in the preview, the device it plays). The theme's
-  `platform` follows it (release builds can't override the target
-  platform). Windows FFI lives in `input_windows.dart` /
-  `sound_platform.dart`, with web stand-ins picked by conditional imports;
-  the preview plays the app's WAVs through an `Audio` element. Inter
-  (subset) stands in for San Francisco. **Rebuild with
-  `app/tool/build_preview.sh` after UI changes** and upload `website/app/`.
-  Test it: `php -S localhost:8000` at the top, open /preview.html. If an
-  app doesn't start in 15 s the page says why, naming the browser and what
-  to try (file:// page, a missing `website/app/` file, `.wasm` with the
-  wrong type). **Every browser** (3.0.5): `app/tool/check_preview.sh` (CI:
-  `preview.yml`, ~2 min) starts both apps in Chromium, Firefox and WebKit,
-  on a computer, in the home page's embed and on a phone-sized screen,
-  pairs them with the code and sends files (it turns on Flutter's
-  accessibility tree, `?semantics=1`, and clicks its nodes). What keeps it
-  working: `app/web/index.html` tidies `navigator.languages` before Flutter
-  reads it (Chrome on Linux says `en-US@posix`, which crashed the app) and
-  takes `?dpr=`: preview.html asks each device to draw only the pixels it
-  shows (on a phone the Mac drew 3840×2400 at full density and iPhones ran
-  out of graphics memory; text came out as blocks). Messages go only to
-  and from the site's own origin. A browser without WebAssembly or
-  `Intl.Locale` gets the hero picture and what to do instead; one without
-  graphics acceleration gets a note that it may be slow. Headless Firefox
-  has no WebGL: the check runs it under Xvfb.
+- `website/hero.webp` / `hero.png` and `website/sounds/` are from the old
+  page and unused by the 4.0 one.
+- **`preview.html`** (top of the repo; "Try the demo"; source
+  `design/preview/preview.src.html` + the emulator's icons): a small
+  self-contained demo, only **file sending (both ways) and Remote** (the
+  owner's call: the Flutter-in-the-browser preview never worked for them).
+  A MacBook screen and an iPhone side by side (stacked on phones, the
+  computer pinned on top). Send files: pick sample files on the phone →
+  the corner pop-up on the Mac asks → Accept / Decline → progress on both;
+  the Mac's Send files sends one back → the phone's Accept sheet. Remote
+  control: drag on the phone's touchpad moves the Mac's pointer, tap clicks
+  (play the music, dock icons bounce), the scroll strip scrolls the recipe,
+  the keys do play/pause and volume, typing goes into Notes. Nothing leaves
+  the browser. `website/app/` (the old Flutter build) is no longer used;
+  `app/lib/demo/` and `tool/build_preview.sh` still build it if wanted.
 - `404.html` (top of the repo): the not-found page, for any missing
   address, so every link in it is absolute (`/…`). `.htaccess` makes the
   server show it for every wrong address, keeping the address and a real
@@ -371,12 +330,9 @@ release. Keep this file for how things work now, not for history.
   Google, Bing, DuckDuckGo, Apple and Yandex read the pages (they must, to
   see the noindex) and keeps every other bot out. Remove all three to be
   found.
-- Website sounds (`website/sounds/`, copies of the owner's MP3s): accept
-  on a download and on joining the wishlist, the startup chime when sounds
-  are turned back on; only after a click; the speaker button in the top
-  bar turns them off (`localStorage` `sidekick-sound`).
 - Logos (`website/`): `2.png` is the wide wordmark, used **only on the
-  website**; `3.png` is the "sk" monogram, used for every app icon and the
+  website** (white, trimmed: `website/wordmark.png`; the "sk" in white:
+  `sk-mark.png`); `3.png` is the "sk" monogram, used for every app icon and the
   logo inside the app (`app/assets/logo/logo.png`). `app/tool/make_icons.py`
   regenerates all of them; re-run it after changing 3.png.
   - Mac and iPhone icons are Liquid Glass: `Runner/AppIcon.icon` (Icon

@@ -51,6 +51,23 @@ detailed developer notes; every release is in `VERSIONS.md`) and
 
 ## 14 November 2026
 
+- **The 4.0 website is live in the repo** (`index.html`, from the prototype):
+  the real wordmark (`website/wordmark.png`, white, from `2.png`), no
+  PROTOTYPE badge, wishlist / released looks (`only-wish` / `only-released`,
+  index.php's `class="released"` and `SIDEKICK_RELEASE` fill the Devices
+  tiles and the hero's Download), the form posts to `wishlist.php` (device
+  chips, honeypot, 2-second minimum; checked with `php -S`: signed up, welcome
+  email in the outbox), "Try the demo" → `/preview.html`, Privacy →
+  `/privacy.html`; the panel's editor finds every text (165). **Phones get
+  their own layout** (full-width buttons, Try it as a row of chips, one-column
+  card stack, stacked form; the glow sits in a clipped box so the page is
+  never wider than the phone) and things face your finger.
+- **`preview.html` rebuilt** (the owner: the old one never worked; "just
+  file sending and remote controlling"): a self-contained demo, a MacBook
+  screen and an iPhone. Send files both ways with the real Accept flow;
+  Remote: the phone's touchpad moves the Mac's pointer, tap clicks, scroll
+  strip, play/volume keys, typing into Notes. Source
+  `design/preview/preview.src.html`.
 - **Canva AI logo prompt** (`design/canva-ai-logo-prompt.md`): what Sidekick is, who it's for, the app's look, the rules (abstract, two-together, rounded, 16 px, no letters / devices / SumUp- or copyui-like shapes), and 10 named directions.
 - **Website prototype for 4.0** (https://claude.ai/artifact/KN5qtaJH4dWXy3JHoqPLnt,
   `design/website-4.0/`: `site.src.html` is the source, `index.html` the

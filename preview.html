@@ -2,430 +2,443 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Try Sidekick</title>
-<meta name="description" content="Try Sidekick in your browser: the real app, running on a Mac and an iPhone side by side.">
-<!-- Sidekick itself runs here, twice: the app compiled for a browser
-     (app/lib/demo/, built into /website/app/ by app/tool/build_preview.sh),
-     once as a Mac and once as an iPhone. This page passes messages between
-     the two, like the network would. Everything loads from this site. -->
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<!-- Not in search results yet (the owner's call): see robots.txt and .htaccess. -->
 <meta name="robots" content="noindex, nofollow, noarchive, nosnippet, noimageindex">
+<title>Try Sidekick in your browser</title>
 <link rel="icon" type="image/png" sizes="64x64" href="/website/favicon.png">
 <link rel="apple-touch-icon" href="/website/apple-touch-icon.png">
-<script>
-  // The light/dark choice from the main page, if any (dark otherwise).
-  try { if (localStorage.getItem('sidekick-theme') === 'light') document.documentElement.dataset.theme = 'light'; } catch (e) {}
-  // ?embed=1: inside the home page (index.html #app), just the two devices.
-  const EMBED = new URLSearchParams(location.search).has('embed');
-  if (EMBED) document.documentElement.classList.add('embed');
-</script>
+<meta name="description" content="Try Sidekick: send a file from a phone to a computer and back, and use the phone as the computer's touchpad.">
+<meta name="theme-color" content="#121212">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500&display=swap">
 <style>
-:root {
-  /* The site's look (index.html): dark unless the visitor picked light. */
-  --h: 290;
-  --primary: #d6adf2;
-  --on-primary: #141414;
-  --primary-container: #2a2a2a;
-  --on-primary-container: #ffffff;
-  --tertiary: #74b9ff;
-  --surface: #1a1a1a;
-  --surface-container: #212121;
-  --surface-container-high: #262626;
-  --on-surface: #ffffff;
-  --on-surface-variant: #a1a1a6;
-  --outline-variant: #ffffff1f;
-  --error: #ff6b6b;
-  color-scheme: dark;
+/* The demo: a computer and a phone, paired. Two things to try: sending files (both ways) and Remote
+   (the phone is the computer's touchpad and keyboard). Self-contained: no app download, works anywhere. */
+:root{
+  --page:#0d0d0d;--bg:#121212;--panel:#1c1c1c;--raised:#262626;--btn:#2e2e2e;
+  --text:#f2f2f2;--muted:#a1a1a6;--faint:#8a8a8f;--line:#ffffff1f;--hair:#ffffff12;
+  --white:#f0f0f0;--onwhite:#141414;--ok:#45d07e;--amber:#ffc56b;--amberbg:#2f2410;--amberline:#ffc56b40;--blue:#5b9dff;--green:#4fcf86;--orange:#ffb84d;--red:#ff6b5e;
+  --sans:Inter,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;--mono:"JetBrains Mono",ui-monospace,Menlo,Consolas,monospace;
+  color-scheme:dark;
 }
-:root[data-theme="light"] {
-  --primary: #7a3fb0;
-  --on-primary: #ffffff;
-  --primary-container: #ededeb;
-  --on-primary-container: #141414;
-  --tertiary: #2f7fd6;
-  --surface: #f4f4f2;
-  --surface-container: #ffffff;
-  --surface-container-high: #ffffff;
-  --on-surface: #141414;
-  --on-surface-variant: #5c5c60;
-  --outline-variant: #1414141f;
-  --error: #c62828;
-  color-scheme: light;
-}
-* { box-sizing: border-box; }
-[hidden] { display: none !important; }
-html { -webkit-text-size-adjust: 100%; }
-body {
-  margin: 0; min-height: 100vh; min-height: 100dvh; display: flex; flex-direction: column;
-  background: var(--surface); color: var(--on-surface);
-  font: 17px/1.55 system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-}
-a { color: var(--primary); text-underline-offset: 3px; }
-.wrap { width: 100%; max-width: 1440px; margin: 0 auto; padding: 0 16px; }
-header .wrap { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding-top: 20px; padding-bottom: 8px; }
-.brand { display: inline-flex; align-items: center; gap: 12px; color: inherit; text-decoration: none; font-weight: 700; font-size: 20px; }
-.brand img { width: 40px; height: 40px; border-radius: 11px; }
-.btn {
-  display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 0 22px; border-radius: 999px;
-  font: inherit; font-size: 15px; font-weight: 600; text-decoration: none; border: 0; cursor: pointer;
-  background: var(--primary); color: var(--on-primary);
-}
-.btn.tonal { background: var(--primary-container); color: var(--on-primary-container); }
-.intro { text-align: center; padding: 20px 0 8px; }
-.intro h1 { margin: 0; font-size: clamp(34px, 6vw, 64px); line-height: 1; letter-spacing: -.05em; font-weight: 600; text-wrap: balance; }
-.intro p { margin: 12px auto 0; max-width: 680px; color: var(--on-surface-variant); text-wrap: pretty; }
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{margin:0}
+body{background:var(--page);color:var(--text);font:15px/1.45 var(--sans);-webkit-font-smoothing:antialiased;overflow-x:hidden;min-height:100vh;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:0 calc(24px + env(safe-area-inset-bottom,0px))}
+button,input{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+.ic{display:block;flex:none}
+.pill{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:42px;padding:0 18px;border-radius:21px;border:0;font-weight:600;font-size:14.5px;white-space:nowrap;background:var(--btn);color:var(--text);text-decoration:none;transition:background .2s,scale .3s cubic-bezier(.34,1.56,.64,1),opacity .2s}
+.pill:active{scale:.95}
+.pill.w{background:var(--white);color:var(--onwhite)}
+.pill.o{background:transparent;border:1px solid var(--line)}
+.pill:disabled{opacity:.4;cursor:default}
 
-/* The two devices. Each is drawn at its real size in points and scaled to fit
-   (--s, set by the script); hotspots use the app's own coordinates. */
-.stage { display: flex; align-items: flex-end; justify-content: center; gap: 40px; padding: 28px 0 8px; }
-.device { position: relative; flex: none; }
-.device > .box { position: absolute; left: 0; top: 0; transform-origin: 0 0; transform: scale(var(--s, .5)); }
-.mac { width: calc(1720px * var(--s, .5)); height: calc(1076px * var(--s, .5)); }
-.mac > .box { width: 1720px; height: 1076px; }
-.phone { width: calc(421px * var(--s, .5)); height: calc(880px * var(--s, .5)); }
-.phone > .box { width: 421px; height: 880px; }
-@media (max-width: 760px) {
-  .stage { flex-direction: column; align-items: center; gap: 28px; }
-}
+/* top */
+.top{display:flex;align-items:center;gap:16px;flex-wrap:wrap;max-width:1240px;margin:0 auto;padding-top:calc(16px + env(safe-area-inset-top,0px));padding-bottom:10px}
+.top a.home{display:flex;align-items:center;gap:12px;text-decoration:none;color:var(--muted);font-size:14px}
+.top a.home img{display:block;height:15px;width:auto}
+.seg{display:flex;gap:4px;padding:4px;border-radius:24px;background:var(--panel);border:1px solid var(--line);margin-left:auto}
+.seg button{display:flex;align-items:center;gap:8px;height:38px;padding:0 16px;border-radius:19px;border:0;background:transparent;color:var(--muted);font-weight:600;font-size:14px;transition:background .25s,color .25s}
+.seg button[aria-selected=true]{background:var(--white);color:var(--onwhite)}
+.top .join{margin-left:4px}
+.hint{max-width:1240px;margin:6px auto 14px;display:flex;align-items:center;gap:10px;color:var(--muted);font-size:14.5px;min-height:24px}
+.hint b{color:var(--text);font-weight:600}
+.hint .step{display:inline-grid;place-items:center;width:24px;height:24px;border-radius:50%;background:var(--raised);font:600 12px var(--mono);color:var(--text);flex:none}
+@media (max-width:720px){.seg{margin-left:0;order:3;width:100%}.seg button{flex:1;justify-content:center}.top .join{margin-left:auto}}
 
-/* MacBook: lid, screen, base. */
-.lid { position: absolute; left: 74px; top: 0; width: 1572px; height: 1042px; border-radius: 40px 40px 8px 8px;
-  background: #0d0d10; box-shadow: inset 0 0 0 3px #3a3a40, 0 30px 80px rgba(20, 10, 40, .25); }
-.mac .screen { position: absolute; left: 104px; top: 30px; width: 1512px; height: 982px; overflow: hidden; border-radius: 12px;
-  background: radial-gradient(120% 90% at 20% 10%, #b9a3f0 0%, #6c4fd0 38%, #2a1d63 72%, #120c2b 100%); }
-.notch { position: absolute; left: 50%; top: 0; width: 190px; height: 32px; margin-left: -95px; background: #0d0d10; border-radius: 0 0 14px 14px; z-index: 5; }
-.base { position: absolute; left: 0; top: 1040px; width: 1720px; height: 36px; border-radius: 4px 4px 30px 30px;
-  background: linear-gradient(#d9d9de, #a9a9b0 70%, #8b8b92); }
-.base::after { content: ""; position: absolute; left: 50%; top: 0; width: 260px; height: 12px; margin-left: -130px; border-radius: 0 0 14px 14px; background: #9a9aa2; }
-.menubar { position: absolute; left: 0; top: 0; right: 0; height: 32px; display: flex; align-items: center; gap: 22px; padding: 0 20px;
-  background: rgba(30, 20, 60, .28); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
-  color: #fff; font: 500 15px/1 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
-.menubar b { font-weight: 700; }
-.menubar .right { margin-left: auto; display: flex; align-items: center; gap: 18px; }
-.menubar img { width: 18px; height: 18px; border-radius: 5px; filter: grayscale(1) brightness(3); }
-.window { position: absolute; left: 116px; top: 92px; width: 1280px; height: 828px; border-radius: 12px; overflow: hidden;
-  box-shadow: 0 0 0 1px rgba(0, 0, 0, .25), 0 24px 70px rgba(0, 0, 0, .45); background: #fdf7ff; }
-.titlebar { position: relative; height: 28px; background: #ebe8ef; border-bottom: 1px solid #d6d2dc; display: flex; align-items: center; justify-content: center;
-  font: 600 13px/1 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; color: #3c3a40; }
-.lights { position: absolute; left: 12px; top: 8px; display: flex; gap: 8px; }
-.lights i { width: 12px; height: 12px; border-radius: 50%; background: #ff5f57; box-shadow: inset 0 0 0 .5px rgba(0, 0, 0, .2); }
-.lights i:nth-child(2) { background: #febc2e; }
-.lights i:nth-child(3) { background: #28c840; }
-.content { position: absolute; left: 0; top: 28px; width: 1280px; height: 800px; }
+/* the two devices */
+.stage{display:flex;justify-content:center;align-items:flex-start;gap:28px;max-width:1240px;margin:0 auto}
+.fit{position:relative;flex:none}
+.fit>.inner{position:absolute;left:0;top:0;transform-origin:0 0}
+@media (max-width:860px){.stage{flex-direction:column;align-items:center;gap:14px}
+  #fit-mac{position:sticky;top:env(safe-area-inset-top,0px);z-index:10;padding-top:6px;box-sizing:content-box;background:var(--page)}}
+@media (max-width:520px){.top .join{height:36px;padding:0 14px;font-size:13px}.top a.home span{display:none}.hint{font-size:13.5px}}
 
-/* iPhone: frame, screen, island, status bar, home bar. */
-.frame { position: absolute; inset: 0; border-radius: 68px; background: #16151a; box-shadow: inset 0 0 0 3px #4a4950, 0 30px 70px rgba(20, 10, 40, .3); }
-.phone .screen { position: absolute; left: 14px; top: 14px; width: 393px; height: 852px; border-radius: 55px; overflow: hidden; background: #fdf7ff; }
-.island { position: absolute; left: 50%; top: 11px; width: 126px; height: 37px; margin-left: -63px; border-radius: 20px; background: #000; z-index: 5; }
-.status { position: absolute; left: 0; right: 0; top: 0; height: 54px; display: flex; align-items: center; justify-content: space-between; padding: 6px 34px 0 48px; z-index: 4;
-  font: 600 17px/1 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; color: #1d1b20; pointer-events: none; }
-.status svg { display: block; }
-.status .icons { display: flex; gap: 6px; align-items: center; }
-.homebar { position: absolute; left: 50%; bottom: 8px; width: 134px; height: 5px; margin-left: -67px; border-radius: 3px; background: #1d1b20; z-index: 4; pointer-events: none; }
+/* computer: 860 x 540 screen in a thin frame */
+.mac{width:900px;height:600px;padding:20px 20px 40px;border-radius:26px;background:#1d1d1f;box-shadow:inset 0 0 0 2px #2c2c2e,0 30px 80px #000c;position:relative}
+.mac::after{content:"";position:absolute;left:50%;bottom:16px;width:70px;height:6px;margin-left:-35px;border-radius:3px;background:#2c2c2e}
+.screen{position:relative;width:860px;height:540px;border-radius:10px;overflow:hidden;background:radial-gradient(120% 90% at 20% 0%,#23344f 0%,#141a26 45%,#0e0f13 100%);cursor:default;user-select:none;-webkit-user-select:none}
+.menubar{position:absolute;left:0;right:0;top:0;height:26px;display:flex;align-items:center;gap:18px;padding:0 14px;background:#0f1117cc;backdrop-filter:blur(10px);font-size:12.5px;font-weight:500;color:#e8e8ea;z-index:3}
+.menubar .r{margin-left:auto;display:flex;align-items:center;gap:14px;color:#cfd0d4}
+.menubar .sk{display:flex;align-items:center;gap:6px}
+.menubar .sk i{width:7px;height:7px;border-radius:50%;background:var(--ok);display:block}
+.win{position:absolute;border-radius:12px;background:#17181c;border:1px solid #ffffff1a;box-shadow:0 18px 50px #0009;overflow:hidden;display:flex;flex-direction:column}
+.win .tb{height:30px;flex:none;display:flex;align-items:center;gap:7px;padding:0 11px;background:#1d1e23;border-bottom:1px solid #ffffff10;font-size:12px;color:var(--muted)}
+.win .tb i{width:11px;height:11px;border-radius:50%;background:#3a3a3d;display:block}
+.win .tb span{margin-left:8px;font-weight:600;color:#d9d9dc}
+/* Sidekick's window on the computer */
+#skwin{left:28px;top:44px;width:470px;height:400px}
+#skwin .body{flex:1;min-height:0;display:flex}
+#skwin .side{width:150px;flex:none;padding:12px 10px;border-right:1px solid #ffffff10;display:flex;flex-direction:column;gap:6px}
+#skwin .side b{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--faint);font-weight:600;margin:2px 4px 4px}
+.drow{display:flex;align-items:center;gap:9px;padding:8px;border-radius:10px;background:#ffffff0c;font-size:12.5px}
+.drow small{display:block;color:var(--ok);font-size:10.5px}
+.dv{display:grid;place-items:center;width:30px;height:30px;border-radius:9px;background:var(--raised);flex:none}
+#skwin .main{flex:1;min-width:0;display:flex;flex-direction:column;padding:12px 14px;gap:10px}
+#skwin .main h4{margin:0;font-size:15px;font-weight:700;display:flex;align-items:center;gap:8px}
+#skwin .main h4 .pill{margin-left:auto;height:30px;padding:0 12px;font-size:12px}
+.feed{flex:1;min-height:0;overflow:auto;display:flex;flex-direction:column;gap:8px;scrollbar-width:none}
+.feed::-webkit-scrollbar{display:none}
+.row{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:12px;background:var(--raised);font-size:12.5px;animation:pop .35s cubic-bezier(.22,1,.36,1)}
+.row .t{flex:1;min-width:0}
+.row .t b{display:block;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.row .t small{color:var(--muted);font-size:11px}
+.row.me{background:var(--white);color:var(--onwhite)}
+.row.me small{color:#555}
+.empty{color:var(--faint);font-size:12.5px;padding:8px 2px}
+@keyframes pop{from{opacity:0;transform:translateY(8px) scale(.98)}}
+/* the menu of files on the computer */
+.cmenu{position:absolute;right:14px;top:72px;width:230px;padding:6px;border-radius:12px;background:#24252b;border:1px solid #ffffff1f;box-shadow:0 14px 40px #000a;z-index:4;animation:pop .2s}
+.cmenu button{display:flex;align-items:center;gap:9px;width:100%;padding:8px;border-radius:8px;border:0;background:transparent;text-align:left;font-size:12.5px;color:var(--text)}
+.cmenu button:hover,.cmenu button.hot{background:#ffffff14}
+.cmenu small{color:var(--muted);font-size:11px;margin-left:auto}
+/* the corner pop-up when a file arrives (Sidekick in the tray) */
+.corner{position:absolute;right:14px;bottom:62px;width:300px;padding:14px;border-radius:16px;background:#1f2026;border:1px solid #ffffff22;box-shadow:0 20px 50px #000b;z-index:5;display:flex;flex-direction:column;gap:10px;animation:rise .45s cubic-bezier(.22,1,.36,1)}
+@keyframes rise{from{opacity:0;transform:translateY(24px) scale(.96)}}
+.corner .h{display:flex;align-items:center;gap:10px}
+.corner .h .t{flex:1;min-width:0;font-size:12.5px}
+.corner .h b{display:block;font-size:13.5px}
+.corner .btns{display:flex;gap:8px}
+.corner .btns .pill{flex:1;height:34px;font-size:13px}
+.corner .bar{height:4px;border-radius:2px;background:#ffffff1f;overflow:hidden}
+.corner .bar i{display:block;height:100%;width:0;background:var(--amber);border-radius:2px;transition:width .12s linear}
+.corner .count{height:2px;border-radius:1px;background:#ffffff1a;overflow:hidden;margin:-4px -2px 0}
+.corner .count i{display:block;height:100%;background:#ffffff66;animation:count 12s linear forwards}
+@keyframes count{from{width:100%}to{width:0}}
+.corner.out{animation:out .3s ease forwards}
+@keyframes out{to{opacity:0;transform:translateY(14px)}}
+.ring{position:relative;width:34px;height:34px;flex:none}
+.ring svg{display:block}
+.ring .ic{position:absolute;inset:0;margin:auto}
+/* desktop things for Remote */
+#music{left:530px;top:44px;width:300px;height:120px}
+#music .body{flex:1;display:flex;align-items:center;gap:14px;padding:12px 14px}
+.art{width:64px;height:64px;border-radius:10px;background:linear-gradient(135deg,#ffb84d,#ff6b5e 60%,#d6adf2);flex:none;transition:transform .4s cubic-bezier(.34,1.56,.64,1)}
+.playing .art{animation:breathe 1.6s ease-in-out infinite}
+@keyframes breathe{50%{transform:scale(1.05)}}
+#music .t{flex:1;min-width:0;font-size:12.5px}
+#music .t b{display:block;font-size:13.5px}
+#music .t small{color:var(--muted)}
+.mbtn{display:grid;place-items:center;width:38px;height:38px;border-radius:50%;border:0;background:var(--white);color:var(--onwhite);flex:none}
+.eq{display:flex;gap:2px;align-items:flex-end;height:12px;margin-top:6px}
+.eq i{width:3px;height:3px;background:var(--green);border-radius:1px;display:block}
+.playing .eq i{animation:eq .8s ease-in-out infinite}
+.eq i:nth-child(2){animation-delay:.15s}.eq i:nth-child(3){animation-delay:.3s}.eq i:nth-child(4){animation-delay:.45s}
+@keyframes eq{50%{height:12px}}
+#notes{left:530px;top:180px;width:300px;height:150px}
+#notes .body{flex:1;padding:10px 12px;font-size:13px;color:#e6e6e8;white-space:pre-wrap;overflow:hidden}
+#notes .caret{display:inline-block;width:1.5px;height:15px;background:var(--blue);vertical-align:-2px;animation:blink 1s steps(1) infinite}
+@keyframes blink{50%{opacity:0}}
+#doc{left:530px;top:346px;width:300px;height:118px}
+#doc .body{flex:1;overflow:hidden;position:relative}
+#doc .page{position:absolute;left:0;right:0;top:0;padding:10px 12px;font-size:11.5px;color:#cfcfd3;transition:transform .12s linear}
+#doc .page p{margin:0 0 8px}
+#doc .page b{color:#fff}
+.dock{position:absolute;left:50%;bottom:8px;transform:translateX(-50%);display:flex;gap:8px;padding:7px;border-radius:16px;background:#ffffff14;border:1px solid #ffffff1a;backdrop-filter:blur(12px);z-index:3}
+.dock button{width:40px;height:40px;border-radius:11px;border:0;display:grid;place-items:center;color:#fff;transition:transform .3s cubic-bezier(.34,1.56,.64,1)}
+.dock button.bounce{animation:bounce .7s cubic-bezier(.34,1.56,.64,1)}
+@keyframes bounce{30%{transform:translateY(-16px)}60%{transform:translateY(0)}80%{transform:translateY(-5px)}}
+.hud{position:absolute;left:50%;top:50%;width:170px;padding:16px;margin:-60px 0 0 -85px;border-radius:18px;background:#1c1c1fdd;backdrop-filter:blur(14px);display:flex;flex-direction:column;align-items:center;gap:10px;z-index:6;animation:fadein .2s;font-size:12.5px;color:var(--muted)}
+.hud .vol{width:100%;height:6px;border-radius:3px;background:#ffffff22;overflow:hidden}
+.hud .vol i{display:block;height:100%;background:#fff;border-radius:3px;transition:width .2s}
+@keyframes fadein{from{opacity:0}}
+.cursor{position:absolute;left:0;top:0;width:22px;height:22px;pointer-events:none;z-index:9;transition:transform .05s linear;filter:drop-shadow(0 2px 3px #0008)}
+.click{position:absolute;width:40px;height:40px;margin:-20px 0 0 -20px;border-radius:50%;border:2px solid #fff;pointer-events:none;z-index:8;animation:clk .45s ease-out forwards}
+@keyframes clk{from{transform:scale(.3);opacity:1}to{transform:scale(1.2);opacity:0}}
+.banner{position:absolute;left:50%;top:34px;transform:translateX(-50%);display:flex;align-items:center;gap:8px;padding:6px 12px;border-radius:14px;background:#2f2410ee;border:1px solid var(--amberline);color:#ffe2ad;font-size:12px;z-index:4;animation:fadein .3s}
+.banner i{width:7px;height:7px;border-radius:50%;background:var(--amber);display:block;animation:blink 1.4s infinite}
+.mode-send #music,.mode-send #notes,.mode-send #doc{opacity:.35;filter:saturate(.4)}
+.win{transition:opacity .4s,filter .4s}
 
-.content iframe, .phone .screen iframe { position: absolute; left: 0; top: 0; border: 0; display: block; background: #fdf7ff; }
-.content iframe { width: 1280px; height: 800px; }
-.phone .screen iframe { width: 393px; height: 852px; }
-.loading { position: absolute; inset: 0; z-index: 3; display: grid; place-items: center; background: #fdf7ff; color: #6b6480;
-  font: 500 15px/1.4 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; transition: opacity .4s; }
-.loading.done { opacity: 0; pointer-events: none; }
-.loading .why { max-width: 300px; margin: 12px auto 0; font-size: 13px; color: #8c2f39; text-align: center; }
-.loading .why code { font-size: 12px; }
-.mac .loading .why { font-size: 16px; max-width: 520px; }
-.loading img { width: 72px; height: 72px; border-radius: 18px; display: block; margin: 0 auto 14px; animation: breathe 1.6s ease-in-out infinite; }
-@keyframes breathe { 50% { transform: scale(.94); opacity: .7; } }
-.pointer { position: absolute; z-index: 6; left: 700px; top: 470px; width: 22px; height: 33px; pointer-events: none; opacity: 0; transition: opacity .3s; }
-.pointer.on { opacity: 1; }
-.pointer svg { position: absolute; left: 0; top: 0; }
-.pointer i { position: absolute; left: -14px; top: -14px; width: 28px; height: 28px; border-radius: 50%; background: rgba(124, 92, 255, .45); transform: scale(0); }
-.pointer i.go { animation: click .35s ease-out; }
-@keyframes click { from { transform: scale(.3); opacity: 1; } to { transform: scale(1.4); opacity: 0; } }
-.again { display: inline-flex; align-items: center; gap: 6px; margin: 14px auto 0; padding: 8px 16px; border: 0; border-radius: 999px; cursor: pointer;
-  background: var(--surface-container); color: var(--on-surface-variant); font: inherit; font-size: 14px; }
-.center { text-align: center; }
-.steps { display: flex; justify-content: center; flex-wrap: wrap; gap: 10px; margin: 18px 0 0; padding: 0; list-style: none; }
-.steps li { padding: 8px 16px; border-radius: 999px; background: var(--surface-container); color: var(--on-surface-variant); font-size: 15px; }
-.steps li.now { background: var(--primary-container); color: var(--on-primary-container); font-weight: 600; }
-.fine { text-align: center; color: var(--on-surface-variant); font-size: 14px; max-width: 760px; margin: 20px auto 0; text-wrap: pretty; }
-.cta { text-align: center; margin: 28px 0 0; }
-footer { margin-top: 48px; padding: 24px 0 32px; color: var(--on-surface-variant); font-size: 14px; }
-footer .wrap { display: flex; gap: 18px; justify-content: center; flex-wrap: wrap; }
-@media (prefers-reduced-motion: reduce) { .pointer i.go, .loading img { animation: none; } }
-.note { max-width: 760px; margin: 18px auto 0; padding: 12px 18px; border-radius: 16px; text-align: center; font-size: 15px;
-  background: var(--surface-container); color: var(--on-surface-variant); text-wrap: pretty; }
-.fallback { text-align: center; padding: 28px 0 8px; }
-.fallback img { width: 100%; max-width: 900px; height: auto; display: block; margin: 0 auto; }
-.fallback h2 { margin: 18px 0 0; font-size: 22px; }
-.fallback p { margin: 8px auto 0; max-width: 620px; color: var(--on-surface-variant); text-wrap: pretty; }
-.embed body { background: transparent; }
-.embed header, .embed .intro, .embed .fine, .embed .cta, .embed footer, .embed .again { display: none; }
-.embed main { padding-top: 0; padding-bottom: 8px; }
-.embed .steps { margin-top: 0; margin-bottom: 18px; }
+/* phone: 330 x 690 */
+.phone{width:350px;height:710px;padding:10px;border-radius:54px;background:#2a2a2a;box-shadow:inset 0 0 0 2px #3a3a3a,0 30px 80px #000c}
+.ph{position:relative;width:330px;height:690px;border-radius:45px;overflow:hidden;background:var(--bg);display:flex;flex-direction:column}
+.status{height:46px;flex:none;display:flex;align-items:center;justify-content:space-between;padding:6px 28px 0 32px;font-weight:600;font-size:14px}
+.status .r{display:flex;gap:6px;align-items:center}
+.batt{width:22px;height:11px;border-radius:3px;border:1.5px solid #f2f2f2aa;padding:1.5px}.batt i{display:block;height:100%;width:80%;background:#f2f2f2;border-radius:1px}
+.pview{flex:1;min-height:0;display:flex;flex-direction:column;gap:12px;padding:6px 18px 18px;animation:fadein .3s}
+.pview h3{margin:0;font-size:26px;font-weight:700;letter-spacing:-.02em}
+.to{display:flex;align-items:center;gap:11px;padding:11px;border-radius:18px;background:var(--panel)}
+.to b{display:block;font-size:15px;font-weight:600}
+.to small{display:block;color:var(--ok);font-size:12px}
+.lbl{color:var(--muted);font-size:12.5px;font-weight:600;margin:4px 2px -2px}
+.files{display:flex;flex-direction:column;gap:8px}
+.file{display:flex;align-items:center;gap:11px;padding:11px 12px;border-radius:16px;background:var(--panel);border:1.5px solid transparent;text-align:left;width:100%;transition:border-color .2s,background .2s,scale .3s cubic-bezier(.34,1.56,.64,1)}
+.file:active{scale:.98}
+.file .t{flex:1;min-width:0}
+.file .t b{display:block;font-weight:500;font-size:14px}
+.file .t small{color:var(--muted);font-size:12px}
+.file .tick{width:24px;height:24px;border-radius:50%;border:1.5px solid #ffffff40;display:grid;place-items:center;flex:none;transition:background .2s,border-color .2s}
+.file[aria-pressed=true]{border-color:var(--white);background:#232323}
+.file .tick .ic{opacity:0;transform:scale(.5);transition:opacity .2s,transform .3s cubic-bezier(.34,1.56,.64,1)}
+.file[aria-pressed=true] .tick .ic{opacity:1;transform:none}
+.file[aria-pressed=true] .tick{background:var(--white);border-color:var(--white);color:var(--onwhite)}
+.thumb{width:40px;height:40px;border-radius:10px;flex:none;display:grid;place-items:center;background:var(--raised)}
+.spacer{flex:1}
+.pview .pill.big{height:52px;border-radius:26px;font-size:16px}
+.card{padding:16px;border-radius:20px;background:var(--panel);display:flex;flex-direction:column;gap:10px}
+.card .k{font-size:12.5px;font-weight:600;color:var(--muted)}
+.card.amber{background:var(--amberbg);border:1px solid var(--amberline);color:#ffe2ad}
+.card.amber .k{color:var(--amber)}
+.card .bar{height:5px;border-radius:3px;background:#ffffff1f;overflow:hidden}
+.card .bar i{display:block;height:100%;width:0;background:var(--amber);border-radius:3px;transition:width .12s linear}
+.card .done{color:var(--ok);font-weight:600}
+.sheetback{position:absolute;inset:0;background:#000b;z-index:5;animation:fadein .2s}
+.sheet{position:absolute;left:8px;right:8px;bottom:8px;z-index:6;padding:12px 16px 18px;border-radius:30px;background:var(--panel);display:flex;flex-direction:column;gap:10px;animation:up .35s cubic-bezier(.22,1,.36,1)}
+.sheet .gr{align-self:center;width:36px;height:4px;border-radius:2px;background:#ffffff33}
+@keyframes up{from{transform:translateY(100%)}}
+.sheet .btns{display:flex;gap:8px}.sheet .btns .pill{flex:1;height:48px}
+.dockp{flex:none;margin:0 14px 14px;display:flex;justify-content:space-between;padding:6px;border-radius:30px;background:var(--panel);border:1px solid var(--line)}
+.dockp span{display:flex;align-items:center;height:42px;min-width:42px;padding:0 11px;border-radius:21px;color:var(--text)}
+.dockp span.on{background:var(--white);color:var(--onwhite);padding:0 18px;gap:8px;font-weight:600;font-size:14px}
+/* the touchpad */
+.pad{position:relative;flex:1;min-height:200px;border-radius:24px;background:var(--panel);background-image:radial-gradient(#ffffff17 1px,transparent 1.4px);background-size:22px 22px;touch-action:none;cursor:grab;overflow:hidden}
+.pad:active{cursor:grabbing}
+.pad .tip{position:absolute;left:0;right:0;top:50%;transform:translateY(-50%);text-align:center;color:var(--faint);font-size:13px;pointer-events:none;transition:opacity .4s;padding:0 30px}
+.pad .touch{position:absolute;width:56px;height:56px;margin:-28px 0 0 -28px;border-radius:50%;background:#ffffff1c;border:1px solid #ffffff33;pointer-events:none;opacity:0;transition:opacity .2s}
+.pad .scroll{position:absolute;right:6px;top:12px;bottom:12px;width:30px;border-radius:15px;background:#ffffff0a;display:flex;align-items:center;justify-content:center;color:var(--faint);touch-action:none;cursor:ns-resize}
+.keys{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.key{height:46px;border-radius:15px;border:0;background:var(--panel);display:grid;place-items:center;color:var(--text);transition:background .2s,scale .3s cubic-bezier(.34,1.56,.64,1)}
+.key:active{scale:.92;background:var(--raised)}
+.kb{display:flex;align-items:center;gap:8px;padding:5px 5px 5px 14px;border-radius:24px;background:var(--panel);border:1px solid var(--line)}
+.kb input{flex:1;min-width:0;height:38px;border:0;outline:0;background:transparent;font-size:14px}
+.kb input::placeholder{color:var(--faint)}
+.kb .pill{height:38px;padding:0 14px;font-size:13px}
+.foot{max-width:1240px;margin:22px auto 0;display:flex;gap:10px;flex-wrap:wrap;align-items:center;justify-content:center;color:var(--muted);font-size:14px;text-align:center}
+.foot a{color:var(--text)}
+@media (prefers-reduced-motion:no-preference){.cursor{transition:transform .06s linear}}
 </style>
 </head>
 <body>
-<header>
-  <div class="wrap">
-    <a class="brand" href="/"><img src="/website/favicon.png" alt="">Sidekick</a>
-    <a class="btn" href="/#wishlist">Join the wishlist</a>
+<header class="top">
+  <a class="home" href="/" aria-label="Back to Sidekick's home page"><img src="/website/wordmark.png" alt="Sidekick" width="148" height="15"><span>Demo</span></a>
+  <div class="seg" role="tablist" aria-label="What to try">
+    <button type="button" role="tab" id="t-send" aria-selected="true" data-mode="send"><span data-i="send" data-s="17"></span>Send files</button>
+    <button type="button" role="tab" id="t-remote" aria-selected="false" data-mode="remote"><span data-i="remote" data-s="17"></span>Remote control</button>
   </div>
+  <a class="pill w join" href="/#wishlist">Join the wishlist</a>
 </header>
+<p class="hint" id="hint" aria-live="polite"></p>
 
-<main class="wrap">
-  <section class="intro">
-    <h1>Try Sidekick, no download needed.</h1>
-    <p>This is the real app, running right here: once as a Mac and once as an iPhone, on the same Wi-Fi.
-      They aren't paired yet. Pair them first, like your own devices, then use them however you like.</p>
-  </section>
-
-  <ol class="steps" aria-label="Things to try">
-    <li class="now">First, pair: on the iPhone, tap MacBook Pro under Nearby and type the code the Mac shows</li>
-    <li>Send files either way</li>
-    <li>Browse the Mac's files from the iPhone</li>
-    <li>Use the iPhone's Remote tab as a touchpad</li>
-    <li>Ping the iPhone from the Mac</li>
-    <li>Change anything in Settings</li>
-  </ol>
-
-  <p class="note" id="slowNote" hidden></p>
-
-  <!-- When this browser can't run the app: what it looks like instead. -->
-  <div class="fallback" id="fallback" hidden>
-    <picture>
-      <source srcset="/website/hero.webp" type="image/webp">
-      <img src="/website/hero.png" width="1600" height="1206" alt="Sidekick on a MacBook receiving files that an iPhone is sending">
-    </picture>
-    <h2 id="fallbackTitle">The demo can't run in this browser</h2>
-    <p id="fallbackWhy"></p>
-  </div>
-
-  <div class="stage" id="stage">
-    <div class="device mac" id="mac" role="group" aria-label="Sidekick on a MacBook">
-      <div class="box">
-        <div class="lid"></div>
-        <div class="screen">
-          <div class="notch"></div>
-          <div class="menubar" aria-hidden="true">
-            <svg width="16" height="19" viewBox="0 0 170 200" fill="#fff"><path d="M150 170c-8 12-17 24-30 24s-17-8-32-8-20 8-32 8-22-13-30-25C9 145-3 101 14 72c8-15 24-24 41-24 13 0 25 9 33 9s23-11 39-9c7 0 25 3 37 20-1 1-22 13-22 38 0 30 26 40 27 40-1 2-5 14-19 24zM113 21c7-8 11-19 10-30-10 0-21 7-28 15-6 7-12 18-10 29 11 1 21-6 28-14z"/></svg>
-            <b>Sidekick</b><span>File</span><span>Edit</span><span>View</span><span>Window</span><span>Help</span>
-            <span class="right"><img src="/website/favicon.png" alt=""><span id="clock">9:41</span></span>
-          </div>
-          <div class="window">
-            <div class="titlebar"><span class="lights"><i></i><i></i><i></i></span>Sidekick</div>
-            <div class="content">
-              <iframe id="macFrame" title="Sidekick on the Mac" data-device="mac" allow="autoplay; clipboard-read; clipboard-write"></iframe>
-              <div class="loading" id="macLoading"><div><img src="/website/apple-touch-icon.png" alt="">Starting Sidekick…</div></div>
-            </div>
-          </div>
-          <div class="pointer" id="pointer" aria-hidden="true"><i></i><svg viewBox="0 0 22 33" width="22" height="33"><path d="M1.5 1.5v26l6.4-6.2 4.1 9.6 4.3-1.8-4-9.4h9z" fill="#000" stroke="#fff" stroke-width="1.6" stroke-linejoin="round"/></svg></div>
-        </div>
-        <div class="base"></div>
+<div class="stage" id="stage">
+  <div class="fit" id="fit-mac"><div class="inner"><div class="mac"><div class="screen" id="screen">
+    <div class="menubar"><b>Finder</b><span>File</span><span>Edit</span><span>View</span><span class="r"><span class="sk"><i></i>Sidekick</span><span data-i="wifi" data-s="14"></span><span id="clock">9:41</span></span></div>
+    <section class="win" id="skwin" aria-label="Sidekick on the MacBook">
+      <div class="tb"><i></i><i></i><i></i><span>Sidekick</span></div>
+      <div class="body">
+        <div class="side"><b>Devices</b><div class="drow"><span class="dv" data-i="phone" data-s="16" data-c="#4fcf86"></span><div>iPhone 16<small>Same Wi-Fi · ready</small></div></div></div>
+        <div class="main"><h4>iPhone 16 <button type="button" class="pill w" id="macSend" data-hit><span data-i="send" data-s="14"></span>Send files</button></h4><div class="feed" id="macFeed"><div class="empty" id="macEmpty">Nothing shared yet. Send a file from the phone.</div></div></div>
       </div>
-    </div>
+    </section>
+    <section class="win" id="music" aria-label="Music">
+      <div class="tb"><i></i><i></i><i></i><span>Music</span></div>
+      <div class="body"><div class="art"></div><div class="t"><b>Golden Hour</b><small>Lakeside Radio</small><div class="eq"><i></i><i></i><i></i><i></i></div></div><button type="button" class="mbtn" id="playBtn" data-hit aria-label="Play"><span data-i="play" data-s="16"></span></button></div>
+    </section>
+    <section class="win" id="notes" aria-label="Notes">
+      <div class="tb"><i></i><i></i><i></i><span>Notes</span></div>
+      <div class="body"><span id="typed">Shopping: milk, bread</span><span class="caret"></span></div>
+    </section>
+    <section class="win" id="doc" aria-label="Recipe">
+      <div class="tb"><i></i><i></i><i></i><span>Lemon drizzle cake.pdf</span></div>
+      <div class="body"><div class="page" id="docPage">
+        <p><b>Lemon drizzle cake</b></p><p>225 g butter, 225 g caster sugar, 4 eggs, 275 g self-raising flour, the zest of 1 lemon.</p>
+        <p><b>Method</b></p><p>1. Heat the oven to 180°C. Beat the butter and sugar until pale and creamy.</p><p>2. Add the eggs one at a time, then fold in the flour and the zest.</p>
+        <p>3. Pour into a lined loaf tin and bake for 45 to 50 minutes.</p><p><b>The drizzle</b></p><p>Mix the juice of 1½ lemons with 85 g caster sugar and spoon it over the warm cake.</p><p>Leave it in the tin until cool. Enjoy!</p>
+      </div></div>
+    </section>
+    <nav class="dock" aria-label="Dock">
+      <button type="button" style="background:#2e7cf6" data-hit data-bounce aria-label="Finder"><span data-i="folder" data-s="20"></span></button>
+      <button type="button" style="background:#ff6b5e" data-hit data-bounce aria-label="Music"><span data-i="music" data-s="20"></span></button>
+      <button type="button" style="background:#ffc56b;color:#241800" data-hit data-bounce aria-label="Notes"><span data-i="chat" data-s="20"></span></button>
+      <button type="button" style="background:#f0f0f0;color:#141414" data-hit data-bounce aria-label="Sidekick"><b style="font-size:15px;letter-spacing:-.06em">sk</b></button>
+    </nav>
+    <div id="macOver"></div>
+    <svg class="cursor" id="cursor" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 3l14 8-6.2 1.6L10 19z" fill="#fff" stroke="#111" stroke-width="1.4" stroke-linejoin="round"/></svg>
+  </div></div></div></div>
 
-    <div class="device phone" id="phone" role="group" aria-label="Sidekick on an iPhone">
-      <div class="box">
-        <div class="frame"></div>
-        <div class="screen">
-          <div class="island"></div>
-          <div class="status" aria-hidden="true">
-            <span>9:41</span>
-            <span class="icons">
-              <svg width="19" height="12" viewBox="0 0 19 12" fill="currentColor"><rect x="0" y="8" width="3.2" height="4" rx="1"/><rect x="5" y="5.5" width="3.2" height="6.5" rx="1"/><rect x="10" y="3" width="3.2" height="9" rx="1"/><rect x="15" y="0" width="3.2" height="12" rx="1"/></svg>
-              <svg width="17" height="12" viewBox="0 0 17 12" fill="currentColor"><path d="M8.5 2.6c2.4 0 4.6.9 6.3 2.4l1.2-1.2C14 1.9 11.4.9 8.5.9S3 1.9 1 3.8l1.2 1.2C3.9 3.5 6.1 2.6 8.5 2.6zm0 3.3c1.5 0 2.9.6 4 1.5l1.2-1.2C12.3 5 10.5 4.2 8.5 4.2S4.7 5 3.3 6.2l1.2 1.2c1.1-.9 2.5-1.5 4-1.5zm0 3.3c.7 0 1.3.2 1.8.6L8.5 11.6 6.7 9.8c.5-.4 1.1-.6 1.8-.6z"/></svg>
-              <svg width="27" height="13" viewBox="0 0 27 13"><rect x=".5" y=".5" width="23" height="12" rx="3.8" fill="none" stroke="currentColor" opacity=".4"/><rect x="2" y="2" width="20" height="9" rx="2.5" fill="currentColor"/><path d="M25 4.5v4c.8-.3 1.3-1.1 1.3-2s-.5-1.7-1.3-2z" fill="currentColor" opacity=".45"/></svg>
-            </span>
-          </div>
-          <iframe id="phoneFrame" title="Sidekick on the iPhone" data-device="iphone" allow="autoplay; clipboard-read; clipboard-write"></iframe>
-          <div class="loading" id="phoneLoading"><div><img src="/website/apple-touch-icon.png" alt="">Starting Sidekick…</div></div>
-          <div class="homebar"></div>
-        </div>
-      </div>
-    </div>
-  </div>
-  <p class="center"><button class="again" id="again" type="button">↺ Start over</button></p>
-
-  <p class="fine">This is Sidekick's own code, compiled to run in a browser, in its default look (on macOS and iOS 26
-    you can also pick Liquid Glass). A browser can't reach your real devices or files, so the two copies talk through
-    this page, and the files you send are samples. Inter stands in for Apple's system font. Nothing leaves this page.</p>
-  <p class="cta"><a class="btn" href="/#wishlist">Join the wishlist</a></p>
-</main>
-
-<footer>
-  <div class="wrap">
-    <a href="/">Sidekick</a>
-    <a href="/#features">Features</a>
-    <a href="/privacy.html">Privacy</a>
-  </div>
-</footer>
+  <div class="fit" id="fit-phone"><div class="inner"><div class="phone"><div class="ph" id="ph">
+    <div class="status" aria-hidden="true"><span id="pclock">9:41</span><span class="r"><span data-i="wifi" data-s="15"></span><span class="batt"><i></i></span></span></div>
+    <div id="pview" class="pview"></div>
+    <div class="dockp" aria-hidden="true"><span data-i="devices"></span><span data-i="chat"></span><span id="dk-send"></span><span id="dk-remote"></span><span data-i="settings"></span></div>
+    <div id="phOver"></div>
+  </div></div></div></div>
+</div>
+<p class="foot">This is a demo with sample files: nothing leaves your browser. <a href="/">Back to Sidekick</a> · <a href="/privacy.html">Privacy</a></p>
 
 <script>
-(() => {
-  const $ = (id) => document.getElementById(id);
-  const frames = { mac: $('macFrame'), iphone: $('phoneFrame') };
-  const ready = { mac: false, iphone: false };
-  const loading = { mac: $('macLoading'), iphone: $('phoneLoading') };
-  const query = new URLSearchParams(location.search);
+(()=>{
+const I={
+ devices:'<path d="M18 8V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h8"/><path d="M10 19v-3.96 3.15"/><path d="M7 19h5"/><rect width="6" height="10" x="16" y="12" rx="2"/>',
+ chat:'<rect x="3" y="3" width="18" height="18" rx="4"/><path d="M7.5 8.5h9M7.5 12h9M7.5 15.5h6"/>',
+ send:'<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m17 8-5-5-5 5"/><path d="M12 3v12"/>',
+ remote:'<path d="m9 10 3-3 3 3"/><path d="M12 13V7"/><rect width="20" height="14" x="2" y="3" rx="2"/><path d="M12 17v4"/><path d="M8 21h8"/>',
+ settings:'<path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/>',
+ file:'<path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M16 13H8M16 17H8M10 9H8"/>',
+ photo:'<rect width="18" height="18" x="3" y="3" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.09-3.09a2 2 0 0 0-2.82 0L6 21"/>',
+ link:'<path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>',
+ paste:'<rect width="8" height="4" x="8" y="2" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="M12 11h4M12 16h4M8 11h.01M8 16h.01"/>',
+ phone:'<rect width="14" height="20" x="5" y="2" rx="2"/><path d="M12 18h.01"/>',
+ tablet:'<rect width="16" height="20" x="4" y="2" rx="2"/><path d="M12 18h.01"/>',
+ laptop:'<path d="M20 16V7a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v9m16 0H4m16 0 1.28 2.55a1 1 0 0 1-.9 1.45H3.62a1 1 0 0 1-.9-1.45L4 16"/>',
+ monitor:'<rect width="20" height="14" x="2" y="3" rx="2"/><path d="M8 21h8M12 17v4"/>',
+ folder:'<path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/>',
+ search:'<circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>',
+ more:'<circle cx="12" cy="12" r="1.3" fill="currentColor"/><circle cx="19" cy="12" r="1.3" fill="currentColor"/><circle cx="5" cy="12" r="1.3" fill="currentColor"/>',
+ down:'<path d="m6 9 6 6 6-6"/>', right:'<path d="m9 18 6-6-6-6"/>', back:'<path d="m15 18-6-6 6-6"/>',
+ close:'<path d="M18 6 6 18M6 6l12 12"/>',
+copy:'<rect width="14" height="14" x="8" y="8" rx="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/>', check:'<path d="M20 6 9 17l-5-5"/>', plus:'<path d="M5 12h14M12 5v14"/>',
+ download:'<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/><path d="M12 15V3"/>',
+ star:'<path d="M11.525 2.295a.53.53 0 0 1 .95 0l2.31 4.679a2.123 2.123 0 0 0 1.595 1.16l5.166.756a.53.53 0 0 1 .294.904l-3.736 3.638a2.123 2.123 0 0 0-.611 1.878l.882 5.14a.53.53 0 0 1-.771.56l-4.618-2.428a2.122 2.122 0 0 0-1.973 0L6.396 21.01a.53.53 0 0 1-.77-.56l.881-5.139a2.122 2.122 0 0 0-.611-1.879L2.16 9.795a.53.53 0 0 1 .294-.906l5.165-.755a2.122 2.122 0 0 0 1.597-1.16z"/>',
+ ping:'<path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/>',
+ keyboard:'<path d="M10 8h.01M12 12h.01M14 8h.01M16 12h.01M18 8h.01M6 8h.01M7 16h10M8 12h.01"/><rect width="20" height="16" x="2" y="4" rx="2"/>',
+ lock:'<rect width="18" height="11" x="3" y="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>',
+ wifi:'<path d="M12 20h.01M2 8.82a15 15 0 0 1 20 0M5 12.859a10 10 0 0 1 14 0M8.5 16.429a5 5 0 0 1 7 0"/>',
+ up:'<path d="m5 12 7-7 7 7"/><path d="M12 19V5"/>',
+ alert:'<circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/>',
+ refresh:'<path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/>'
+};
+const ic=(n,s=20,c='currentColor',w=2)=>`<svg class="ic" width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="${c}" stroke-width="${w}" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${I[n]}</svg>`;
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+I.play='<path d="M7 4.5v15l12-7.5z" fill="currentColor" stroke="none"/>';
+I.pause='<rect x="6" y="4.5" width="4" height="15" rx="1" fill="currentColor" stroke="none"/><rect x="14" y="4.5" width="4" height="15" rx="1" fill="currentColor" stroke="none"/>';
+I.music='<path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/>';
+I.vdown='<path d="M11 5 6 9H2v6h4l5 4z"/><path d="M15.5 12h5"/>';
+I.vup='<path d="M11 5 6 9H2v6h4l5 4z"/><path d="M15.5 12h5M18 9.5v5"/>';
+I.space='<path d="M4 10v4h16v-4"/>';
+const $=s=>document.querySelector(s);
+const paint=root=>root.querySelectorAll('[data-i]').forEach(el=>{if(el.firstElementChild&&el.firstElementChild.tagName==='svg')return;el.insertAdjacentHTML('afterbegin',ic(el.dataset.i,+(el.dataset.s||20),el.dataset.c||'currentColor'))});
+paint(document);
 
-  // The browser's name, to say what to try in words people know.
-  const ua = navigator.userAgent;
-  const browser = /SamsungBrowser/.test(ua) ? 'Samsung Internet'
-    : /OPR\/|Opera/.test(ua) ? 'Opera'
-    : /Edg(A|iOS)?\//.test(ua) ? 'Edge'
-    : /Firefox\/|FxiOS/.test(ua) ? 'Firefox'
-    : /CriOS|Chrome\//.test(ua) ? 'Chrome'
-    : /Safari\//.test(ua) ? 'Safari' : 'this browser';
-  const others = ['Chrome', 'Edge', 'Firefox', 'Safari'].filter((b) => b !== browser).join(', ').replace(/, ([^,]*)$/, ' or $1');
+/* ---------- fitting both devices on any screen ---------- */
+const MAC=[900,600],PHONE=[350,710];
+function fit(){const stage=$('#stage'),W=Math.min(1240,document.body.clientWidth-2);const narrow=W<860;
+  let sm,sp;if(narrow){sm=Math.min(1,W/MAC[0]);sp=Math.max(.62,Math.min(1,W/PHONE[0],.95,(innerHeight-MAC[1]*sm-24)/PHONE[1]))}
+  else{const avH=Math.max(480,innerHeight-150);const s=Math.min(1,(W-28)/(MAC[0]+PHONE[0]),avH/PHONE[1]);sm=s;sp=s}
+  [['fit-mac',MAC,sm],['fit-phone',PHONE,sp]].forEach(([id,[w,h],s])=>{const f=document.getElementById(id);f.style.width=w*s+'px';f.style.height=h*s+'px';f.firstElementChild.style.transform=`scale(${s})`;f.dataset.s=s})}
+addEventListener('resize',fit);fit();
 
-  // ---- fitting both devices on the screen (each is drawn at its real size in points, then scaled)
-  function fit() {
-    const width = $('stage').clientWidth;
-    let mac, phone;
-    if (width <= 728) {
-      mac = width / 1720;
-      phone = Math.min(1, (width * 0.82) / 421);
-    } else {
-      mac = Math.min(0.62, (width - 72) / (1720 + 421 * 1.1), EMBED ? 1 : (innerHeight * 0.78) / 1076);
-      phone = mac * 1.1;
-    }
-    $('mac').style.setProperty('--s', mac);
-    $('phone').style.setProperty('--s', phone);
-    tell({ t: 'sk-height', height: document.documentElement.scrollHeight });
-  }
-  // Inside the home page: tell it how tall this is, and when the apps are up.
-  function tell(m) { if (EMBED && parent !== window) parent.postMessage(JSON.stringify(m), location.origin); }
-  if (EMBED) new ResizeObserver(() => tell({ t: 'sk-height', height: document.documentElement.scrollHeight })).observe(document.body);
-  addEventListener('resize', fit);
-  fit();
+/* ---------- sample files ---------- */
+const PFILES=[{n:'Boarding pass.pdf',sz:1.2,ic:'file',c:'#5b9dff'},{n:'Beach day.jpg',sz:4.8,ic:'photo',c:'#4fcf86'},{n:'Holiday video.mov',sz:86.4,ic:'photo',c:'#ffb84d'}];
+const MFILES=[{n:'Lemon drizzle cake.pdf',sz:0.4,ic:'file',c:'#ffc56b'},{n:'Presentation.key',sz:12.6,ic:'file',c:'#5b9dff'},{n:'Family photo.png',sz:6.2,ic:'photo',c:'#d6adf2'}];
+const mb=x=>x<1?Math.round(x*1000)+' KB':x.toFixed(1)+' MB';
 
-  // ---- can this browser run it at all? (WebAssembly, and Intl.Locale: Flutter needs both)
-  const missing = typeof WebAssembly !== 'object' ? 'WebAssembly'
-    : typeof Intl !== 'object' || typeof Intl.Locale !== 'function' ? 'Intl.Locale' : null;
-  function cantRun(title, why) {
-    $('fallbackTitle').textContent = title;
-    $('fallbackWhy').textContent = why;
-    $('fallback').hidden = false;
-    for (const id of ['stage', 'again']) $(id).hidden = true;
-    document.querySelector('.steps').hidden = true;
-    document.querySelector('.intro p').textContent = 'Sidekick runs in most browsers, but not this one. Here is what it looks like.';
-    document.querySelector('.fine').hidden = true;
-    tell({ t: 'sk-failed', why });
-  }
+/* ---------- state ---------- */
+let mode='send',sel=new Set([0]),busy=false,cur={x:300,y:300},playing=false,vol=.5,docY=0;
 
-  // ---- start the two apps, each drawing only the pixels it shows (see ?dpr in the app's index.html)
-  function start() {
-    for (const d of ['mac', 'iphone']) {
-      const scale = parseFloat(getComputedStyle($(d === 'mac' ? 'mac' : 'phone')).getPropertyValue('--s')) || 1;
-      const real = window.devicePixelRatio || 1;
-      const dpr = Math.round(Math.min(real, Math.max(0.75, real * scale * 1.1)) * 100) / 100;
-      const src = '/website/app/index.html?device=' + d + '&dpr=' + dpr + (query.has('semantics') ? '&semantics=1' : '');
-      frames[d].src = src;
-    }
-  }
-  if (missing) {
-    cantRun('The demo can\'t run in this browser',
-      'This version of ' + browser + ' is too old for it (it has no ' + missing + '). Update ' + browser +
-      ', or open this page in ' + others + '. The picture above shows what Sidekick looks like.');
-  } else {
-    start();
-    // Without graphics acceleration it still works, only slowly: say so.
-    const c = document.createElement('canvas');
-    if (!(c.getContext('webgl2') || c.getContext('webgl'))) {
-      $('slowNote').textContent = browser + ' has graphics acceleration turned off, so the demo may be slow. ' +
-        'Turning on "Use hardware acceleration" in its settings makes it smooth.';
-      $('slowNote').hidden = false;
-    }
-  }
+/* ---------- hints ---------- */
+function hint(n,html){$('#hint').innerHTML=(n?`<span class="step">${n}</span>`:'')+`<span>${html}</span>`}
 
-  // ---- the network between the two: each copy posts its messages here, and they go to the other
-  addEventListener('message', (e) => {
-    if (e.source !== frames.mac.contentWindow && e.source !== frames.iphone.contentWindow) return;
-    let m;
-    try { m = JSON.parse(e.data); } catch { return; }
-    const from = e.source === frames.mac.contentWindow ? 'mac' : 'iphone';
-    if (m.t === 'ready') {
-      loading[from].classList.add('done');
-      loading[from].querySelector('.why')?.remove(); // slow to start, but it did
-      ready[from] = true;
-      if (ready.mac && ready.iphone) tell({ t: 'sk-ready' });
-      return;
-    }
-    if (m.t === 'input' && from === 'iphone') remote(JSON.parse(m.msg));
-    if (m.t === 'remote') $('pointer').classList.toggle('on', m.active === true && from === 'iphone');
-    // The app calls the two "macos" and "ios".
-    const to = from === 'mac' ? 'iphone' : 'mac';
-    frames[to].contentWindow.postMessage(JSON.stringify({ ...m, to: to === 'mac' ? 'macos' : 'ios' }), location.origin);
-  });
+/* ---------- the phone ---------- */
+const pview=$('#pview'),phOver=$('#phOver');
+function dockp(){$('#dk-send').className=mode==='send'?'on':'';$('#dk-remote').className=mode==='remote'?'on':'';
+  $('#dk-send').innerHTML=ic('send',20)+(mode==='send'?'Send':'');$('#dk-remote').innerHTML=ic('remote',20)+(mode==='remote'?'Remote':'')}
+function phoneSend(){pview.innerHTML=`<h3>Send</h3>
+  <div class="to"><span class="dv" style="width:38px;height:38px;border-radius:12px">${ic('laptop',19,'#5b9dff')}</span><div style="flex:1"><b>MacBook Pro</b><small>Same Wi-Fi · encrypted</small></div></div>
+  <div class="lbl">Pick what to send</div>
+  <div class="files">${PFILES.map((f,i)=>`<button type="button" class="file" data-f="${i}" aria-pressed="${sel.has(i)}"><span class="thumb">${ic(f.ic,20,f.c)}</span><span class="t"><b>${f.n}</b><small>${mb(f.sz)}</small></span><span class="tick">${ic('check',14)}</span></button>`).join('')}</div>
+  <div class="spacer"></div>
+  <button type="button" class="pill w big" id="sendBtn" ${sel.size?'':'disabled'}>${ic('send',18)}Send ${sel.size||''} ${sel.size===1?'file':'files'} to MacBook Pro</button>`;
+  pview.querySelectorAll('.file').forEach(b=>b.onclick=()=>{const i=+b.dataset.f;sel.has(i)?sel.delete(i):sel.add(i);phoneSend()});
+  $('#sendBtn').onclick=()=>sendFromPhone()}
+function phoneRemote(){pview.innerHTML=`<h3>Remote</h3>
+  <div class="to"><span class="dv" style="width:38px;height:38px;border-radius:12px">${ic('laptop',19,'#5b9dff')}</span><div style="flex:1"><b>MacBook Pro</b><small>Connected · encrypted</small></div></div>
+  <div class="pad" id="pad"><span class="tip" id="padTip">Drag here to move the pointer.<br>Tap to click.</span><span class="touch" id="touch"></span><span class="scroll" id="scrollStrip" title="Scroll">${ic('down',14)}</span></div>
+  <div class="keys"><button type="button" class="key" data-k="play" aria-label="Play or pause">${ic('play',18)}</button><button type="button" class="key" data-k="vdown" aria-label="Volume down">${ic('vdown',20)}</button><button type="button" class="key" data-k="vup" aria-label="Volume up">${ic('vup',20)}</button><button type="button" class="key" data-k="space" aria-label="Space">${ic('space',20)}</button></div>
+  <form class="kb" id="kb"><label for="kbIn" style="position:absolute;left:-9999px">Type on the MacBook</label><input id="kbIn" placeholder="Type on MacBook Pro" autocomplete="off"><button class="pill w" type="submit">Enter</button></form>`;
+  setupPad()}
+function renderPhone(){dockp();mode==='send'?phoneSend():phoneRemote()}
 
-  // ---- the iPhone's touchpad moves the Mac's pointer (macOS draws it, not the app)
-  const pointer = { x: 700, y: 470 };
-  function remote(msg) {
-    const el = $('pointer');
-    el.classList.add('on');
-    if (msg.t === 'move') {
-      pointer.x = Math.max(0, Math.min(1500, pointer.x + msg.dx));
-      pointer.y = Math.max(32, Math.min(975, pointer.y + msg.dy));
-      el.style.left = pointer.x + 'px';
-      el.style.top = pointer.y + 'px';
-    } else if (msg.t === 'click' || msg.t === 'down') {
-      const ring = el.querySelector('i');
-      ring.classList.remove('go'); void ring.offsetWidth; ring.classList.add('go');
-    }
-  }
+/* ---------- the computer ---------- */
+const macFeed=$('#macFeed'),macOver=$('#macOver'),screen=$('#screen');
+function addMac(f,me){$('#macEmpty')&&$('#macEmpty').remove();const r=document.createElement('div');r.className='row'+(me?' me':'');
+  r.innerHTML=`<span class="thumb" style="width:32px;height:32px;border-radius:9px;${me?'background:#e2e2e2':''}">${ic(f.ic,16,f.c)}</span><span class="t"><b>${f.n}</b><small>${me?'You sent · Delivered ✓':'From iPhone 16 · Saved to Downloads'}</small></span>`;macFeed.appendChild(r);macFeed.scrollTop=macFeed.scrollHeight}
 
-  // ---- if an app doesn't start, say why instead of waiting forever
-  function say(dev, html) {
-    let why = loading[dev].querySelector('.why');
-    if (!why) { why = document.createElement('p'); why.className = 'why'; loading[dev].firstElementChild.appendChild(why); }
-    why.innerHTML = html;
-  }
-  async function diagnose() {
-    const waiting = ['mac', 'iphone'].filter((d) => !ready[d]);
-    if (!waiting.length) return;
-    let why;
-    if (location.protocol === 'file:') {
-      why = 'This page only works on the website: open <b>getsidekick.app/preview.html</b>.';
-    } else {
-      const files = ['index.html', 'flutter_bootstrap.js', 'main.dart.js', 'canvaskit/canvaskit.wasm', 'fonts/Inter-Regular.ttf'];
-      for (const f of files) {
-        try {
-          const r = await fetch('/website/app/' + f, { method: 'HEAD', cache: 'no-store' });
-          const type = r.headers.get('content-type') || '';
-          if (!r.ok || type.includes('text/html') && f !== 'index.html') {
-            why = 'The app isn\'t on the server: <code>/website/app/' + f + '</code> is missing. Upload the <code>website/app</code> folder into <code>www/website/</code>.';
-            break;
-          }
-          if (f.endsWith('.wasm') && !type.includes('wasm')) {
-            why = 'The server sends <code>' + f + '</code> as <code>' + (type || 'nothing') + '</code>. Upload the new <code>.htaccess</code> into <code>www</code>.';
-            break;
-          }
-        } catch (e) {
-          why = 'Couldn\'t load <code>/website/app/' + f + '</code> (' + e.message + ').';
-          break;
-        }
-      }
-      why ??= 'Sidekick didn\'t start in ' + browser + '. Reload the page. If that doesn\'t help, update ' + browser +
-        ' or try ' + others + '.';
-    }
-    for (const d of waiting) say(d, why);
-    const plain = document.createElement('div');
-    plain.innerHTML = why;
-    tell({ t: 'sk-failed', why: plain.textContent });
-  }
-  if (!missing) setTimeout(diagnose, 15000);
+/* ---------- sending: phone → computer ---------- */
+function sendFromPhone(){if(busy||!sel.size)return;busy=true;const files=[...sel].map(i=>PFILES[i]);const total=files.reduce((a,f)=>a+f.sz,0);
+  pview.querySelector('.spacer').insertAdjacentHTML('beforebegin',`<div class="card amber" id="pcard"><span class="k">Waiting for MacBook Pro</span><span>${files.length===1?files[0].n:files.length+' files'} · ${mb(total)}</span><div class="bar"><i id="pbar"></i></div></div>`);
+  $('#sendBtn').disabled=true;pview.querySelectorAll('.file').forEach(b=>b.disabled=true);
+  hint(2,'The MacBook asks first. Click <b>Accept</b> in the corner of its screen (or Decline).');
+  setTimeout(()=>{macOver.insertAdjacentHTML('beforeend',`<div class="corner" id="corner" role="alertdialog" aria-label="iPhone 16 wants to send files"><div class="count"><i></i></div><div class="h"><span class="dv" style="width:36px;height:36px;border-radius:11px">${ic('phone',18,'#4fcf86')}</span><div class="t"><b>iPhone 16</b>wants to send you ${files.length===1?files[0].n:files.length+' files'} · ${mb(total)}</div></div><div class="btns"><button type="button" class="pill" id="decline" data-hit>Decline</button><button type="button" class="pill w" id="accept" data-hit>Accept</button></div></div>`);
+    $('#decline').onclick=()=>answer(false);$('#accept').onclick=()=>answer(true)},600);
+  function answer(ok){const c=$('#corner');
+    if(!ok){c.classList.add('out');setTimeout(()=>c.remove(),300);$('#pcard').className='card';$('#pcard').innerHTML=`<span class="k">MacBook Pro said no</span><span>Nothing was sent.</span>`;hint(0,'Declined. Pick files and try again, or switch to <b>Remote control</b>.');setTimeout(reset,2200);return}
+    c.querySelector('.count').remove();c.querySelector('.btns').outerHTML=`<div class="bar"><i id="cbar"></i></div><span id="cpct" style="font-size:12px;color:var(--muted)">Receiving… 0%</span>`;
+    c.querySelector('.h .t').innerHTML=`<b>Receiving from iPhone 16</b>${files.length===1?files[0].n:files.length+' files'}`;
+    $('#pcard').querySelector('.k').textContent='Sending to MacBook Pro';
+    hint(3,'Sending… both devices show how far it is.');
+    let p=0;const step=Math.max(.025,Math.min(.12,8/total/10));const t=setInterval(()=>{p=Math.min(1,p+step*(.7+Math.random()*.6));const w=(p*100).toFixed(1)+'%';$('#cbar').style.width=w;$('#pbar').style.width=w;$('#cpct').textContent='Receiving… '+Math.round(p*100)+'%';
+      if(p>=1){clearInterval(t);$('#cbar').style.background=$('#pbar').style.background='var(--ok)';$('#cpct').innerHTML='<span style="color:var(--ok);font-weight:600">Received ✓</span> Saved to Downloads';
+        $('#pcard').className='card';$('#pcard').innerHTML=`<span class="k">Sent to MacBook Pro</span><span class="done">Delivered ✓</span>`;
+        files.forEach(f=>addMac(f,false));setTimeout(()=>{c.classList.add('out');setTimeout(()=>c.remove(),300)},1400);
+        hint(0,'Done! Now send one back: click <b>Send files</b> in Sidekick on the MacBook.');setTimeout(reset,2600)}},110)}
+  function reset(){busy=false;sel=new Set();if(mode==='send')phoneSend()}}
 
-  $('again').addEventListener('click', () => {
-    for (const d of ['mac', 'iphone']) {
-      ready[d] = false;
-      loading[d].querySelector('.why')?.remove();
-      loading[d].classList.remove('done');
-    }
-    start();
-    $('pointer').classList.remove('on');
-    setTimeout(diagnose, 15000);
-  });
+/* ---------- sending: computer → phone ---------- */
+$('#macSend').onclick=()=>{if(busy)return;if($('.cmenu')){$('.cmenu').remove();return}
+  macOver.insertAdjacentHTML('beforeend',`<div class="cmenu" role="menu">${MFILES.map((f,i)=>`<button type="button" role="menuitem" data-m="${i}" data-hit>${ic(f.ic,16,f.c)}${f.n}<small>${mb(f.sz)}</small></button>`).join('')}</div>`);
+  macOver.querySelectorAll('.cmenu button').forEach(b=>b.onclick=()=>{$('.cmenu').remove();sendFromMac(MFILES[+b.dataset.m])});
+  hint(1,'Pick a file to send to the iPhone.')};
+function sendFromMac(f){if(busy)return;busy=true;if(mode!=='send'){setMode('send')}
+  const row=document.createElement('div');row.className='row me';row.innerHTML=`<span class="thumb" style="width:32px;height:32px;border-radius:9px;background:#e2e2e2">${ic(f.ic,16,f.c)}</span><span class="t"><b>${f.n}</b><small id="mstat">Waiting for iPhone 16…</small></span>`;$('#macEmpty')&&$('#macEmpty').remove();macFeed.appendChild(row);
+  hint(2,'Now the iPhone asks. Tap <b>Accept</b> on the phone.');
+  setTimeout(()=>{phOver.innerHTML=`<div class="sheetback"></div><div class="sheet" role="dialog" aria-label="MacBook Pro wants to send a file"><span class="gr"></span><div class="to" style="background:var(--raised)"><span class="dv" style="width:38px;height:38px;border-radius:12px">${ic('laptop',19,'#5b9dff')}</span><div style="flex:1"><b>MacBook Pro</b><span style="font-size:13px;color:var(--muted)">wants to send you a file</span></div></div><div class="to" style="background:var(--raised)"><span class="thumb">${ic(f.ic,20,f.c)}</span><div style="flex:1"><b style="font-weight:500;font-size:14px">${f.n}</b><span style="font-size:12px;color:var(--muted)">${mb(f.sz)}</span></div></div><div class="btns"><button type="button" class="pill" id="pdec">Decline</button><button type="button" class="pill w" id="pacc">Accept</button></div></div>`;
+    $('#pdec').onclick=()=>{phOver.innerHTML='';$('#mstat').textContent='iPhone 16 said no';hint(0,'Declined. Try again, or switch to <b>Remote control</b>.');busy=false};
+    $('#pacc').onclick=()=>{const sh=phOver.querySelector('.sheet');sh.querySelector('.btns').outerHTML=`<div class="card" style="background:var(--raised)"><span class="k" id="rk">Receiving… 0%</span><div class="bar"><i id="rbar" style="background:var(--amber)"></i></div></div>`;
+      hint(3,'Receiving on the iPhone…');let p=0;const t=setInterval(()=>{p=Math.min(1,p+.07+Math.random()*.06);$('#rbar').style.width=(p*100)+'%';$('#rk').textContent='Receiving… '+Math.round(p*100)+'%';$('#mstat').textContent='Sending… '+Math.round(p*100)+'%';
+        if(p>=1){clearInterval(t);$('#rbar').style.background='var(--ok)';$('#rk').innerHTML=`<span class="done">Received ✓</span> ${f.ic==='photo'?'Saved to Photos':'Saved to Files'}`;$('#mstat').textContent='You sent · Delivered ✓';
+          setTimeout(()=>{phOver.innerHTML='';busy=false},1500);hint(0,'Both ways work. Now try <b>Remote control</b> up top.')}},120)}},500)}
 
-  $('clock').textContent = new Date().toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }) + '  9:41';
+/* ---------- Remote: the phone is the touchpad and keyboard ---------- */
+const cursorEl=$('#cursor');
+function placeCursor(){cursorEl.style.transform=`translate(${cur.x.toFixed(1)}px,${cur.y.toFixed(1)}px)`}placeCursor();
+function clickAt(){const s=+$('#fit-mac').dataset.s,r=screen.getBoundingClientRect();const x=r.left+(cur.x+3)*s,y=r.top+(cur.y+3)*s;
+  const ring=document.createElement('span');ring.className='click';ring.style.left=cur.x+3+'px';ring.style.top=cur.y+3+'px';screen.appendChild(ring);setTimeout(()=>ring.remove(),460);
+  cursorEl.style.visibility='hidden';const el=document.elementFromPoint(x,y);cursorEl.style.visibility='';
+  const hit=el&&el.closest('[data-hit]');if(hit){if(hit.dataset.bounce!==undefined){hit.classList.remove('bounce');void hit.offsetWidth;hit.classList.add('bounce')}hit.click()}
+  else if(el&&el.closest('#notes'))notesFocus()}
+function notesFocus(){$('#notes').style.borderColor='#5b9dff66';setTimeout(()=>$('#notes').style.borderColor='',600)}
+function setupPad(){const pad=$('#pad'),touch=$('#touch'),tip=$('#padTip'),strip=$('#scrollStrip');let last=null,moved=0,downAt=0;
+  const ps=()=>+$('#fit-phone').dataset.s||1;
+  pad.addEventListener('pointerdown',e=>{if(e.target.closest('#scrollStrip'))return;pad.setPointerCapture(e.pointerId);last={x:e.clientX,y:e.clientY};moved=0;downAt=Date.now();tip.style.opacity=0;const r=pad.getBoundingClientRect(),s=ps();touch.style.left=(e.clientX-r.left)/s+'px';touch.style.top=(e.clientY-r.top)/s+'px';touch.style.opacity=1});
+  pad.addEventListener('pointermove',e=>{if(!last)return;const s=ps(),dx=(e.clientX-last.x)/s,dy=(e.clientY-last.y)/s;last={x:e.clientX,y:e.clientY};moved+=Math.abs(dx)+Math.abs(dy);
+    const r=pad.getBoundingClientRect();touch.style.left=(e.clientX-r.left)/s+'px';touch.style.top=(e.clientY-r.top)/s+'px';
+    const k=1.9+Math.min(2,Math.hypot(dx,dy)/12);cur.x=Math.max(0,Math.min(845,cur.x+dx*k));cur.y=Math.max(0,Math.min(525,cur.y+dy*k));placeCursor()});
+  const up=()=>{if(!last)return;last=null;touch.style.opacity=0;if(moved<6&&Date.now()-downAt<350)clickAt()};
+  pad.addEventListener('pointerup',up);pad.addEventListener('pointercancel',up);
+  let sy=null;strip.addEventListener('pointerdown',e=>{strip.setPointerCapture(e.pointerId);sy=e.clientY;tip.style.opacity=0});
+  strip.addEventListener('pointermove',e=>{if(sy===null)return;const d=(e.clientY-sy)/ps();sy=e.clientY;scrollDoc(d*1.6)});
+  strip.addEventListener('pointerup',()=>sy=null);strip.addEventListener('pointercancel',()=>sy=null);
+  pad.addEventListener('wheel',e=>{e.preventDefault();scrollDoc(e.deltaY*.4)},{passive:false});
+  pview.querySelectorAll('.key').forEach(k=>k.onclick=()=>key(k.dataset.k));
+  $('#kb').onsubmit=e=>{e.preventDefault();typeText('\n')};
+  $('#kbIn').addEventListener('input',e=>{const v=e.target.value;if(v)typeText(v);e.target.value=''})}
+function scrollDoc(d){const page=$('#docPage');const max=Math.max(0,page.scrollHeight-88);docY=Math.max(0,Math.min(max,docY+d));page.style.transform=`translateY(${-docY}px)`;$('#doc').style.borderColor='#ffffff40';clearTimeout(scrollDoc.t);scrollDoc.t=setTimeout(()=>$('#doc').style.borderColor='',500)}
+function typeText(t){const el=$('#typed');el.textContent=(el.textContent+t).slice(-140);notesFocus()}
+function hud(icon,label,level){const old=$('.hud');old&&old.remove();screen.insertAdjacentHTML('beforeend',`<div class="hud">${ic(icon,30,'#fff')}${level!=null?`<div class="vol"><i style="width:${level*100}%"></i></div>`:''}<span>${label}</span></div>`);clearTimeout(hud.t);hud.t=setTimeout(()=>{const h=$('.hud');h&&h.remove()},1100)}
+function setPlay(on){playing=on;$('#music').classList.toggle('playing',on);$('#playBtn').innerHTML=ic(on?'pause':'play',16);$('#playBtn').setAttribute('aria-label',on?'Pause':'Play')}
+$('#playBtn').onclick=()=>{setPlay(!playing);hud(playing?'play':'pause',playing?'Playing':'Paused')};
+function key(k){if(k==='play'){setPlay(!playing);hud(playing?'play':'pause',playing?'Playing':'Paused')}
+  if(k==='vup'){vol=Math.min(1,vol+.1);hud('vup','Volume',vol)}if(k==='vdown'){vol=Math.max(0,vol-.1);hud('vdown','Volume',vol)}if(k==='space'){typeText(' ')}}
+document.querySelectorAll('[data-bounce]').forEach(b=>b.addEventListener('click',()=>{if(b.getAttribute('aria-label')==='Music'){setPlay(!playing);hud(playing?'play':'pause',playing?'Playing':'Paused')}}));
+/* the cursor wanders a little on its own until you take over, so it's clear what moves */
+let idle=true,idleT=0;function wander(){if(!idle||mode!=='remote')return;idleT+=.02;cur.x=300+Math.cos(idleT)*60;cur.y=280+Math.sin(idleT*1.3)*40;placeCursor();requestAnimationFrame(wander)}
+document.addEventListener('pointerdown',e=>{if(e.target.closest('#pad,#scrollStrip,.key,#kb'))idle=false},true);
+
+/* ---------- modes ---------- */
+function setMode(m){mode=m;document.querySelectorAll('.seg button').forEach(b=>b.setAttribute('aria-selected',String(b.dataset.mode===m)));
+  screen.classList.toggle('mode-send',m==='send');cursorEl.style.opacity=m==='remote'?1:0;
+  const banner=$('.banner');banner&&banner.remove();
+  if(m==='remote'){screen.insertAdjacentHTML('beforeend','<div class="banner"><i></i>iPhone 16 is controlling this computer</div>');hint(1,'Drag on the phone\'s touchpad to move the pointer, tap to click. Try the <b>play</b> button, the <b>volume</b> keys, the <b>scroll</b> strip, or type into Notes.');idle=true;wander()}
+  else if(!busy)hint(1,'Pick a file on the phone, then tap <b>Send</b>. The MacBook asks before it accepts.');
+  renderPhone()}
+document.querySelectorAll('.seg button').forEach(b=>b.onclick=()=>setMode(b.dataset.mode));
+setMode(location.hash==='#remote'?'remote':'send');
+const tick=()=>{const d=new Date(),t=d.getHours()+':'+String(d.getMinutes()).padStart(2,'0');$('#clock').textContent=t;$('#pclock').textContent=t};tick();setInterval(tick,10000);
 })();
 </script>
 </body>
