@@ -14,11 +14,8 @@ import 'ui/app_theme.dart';
 import 'ui/corner_popup.dart';
 import 'ui/glass.dart';
 import 'ui/notices.dart';
-import 'ui/nothing.dart';
-import 'ui/widgets.dart';
 import 'ui/shell.dart';
 import 'ui/startup.dart';
-import 'ui/theme_maker.dart';
 import 'ui/tray_panel.dart';
 import 'ui/welcome.dart';
 
@@ -142,26 +139,12 @@ class SidekickApp extends StatelessWidget {
   /// whole app.
   static final _themes = <Object, ThemeData>{};
 
-  ThemeData _themeFor(ColorScheme? dynamic, Brightness brightness) {
-    // Settings → Theme → Make theme: the made theme, the same in light and
-    // dark (its background decides).
-    final custom = state.customLook ? state.customTheme : null;
-    final key = custom ?? (state.themeColor, state.pureBlack, brightness, dynamic, _glass, state.nothingLook);
-    final theme = _themes[key];
-    if (theme != null) return theme;
-    if (_themes.length > 8) _themes.clear();
-    if (custom != null) return _themes[key] = customThemeData(custom);
-    // Settings → Theme → Nothing: its own colors, whatever the color choice.
-    if (state.nothingLook) return _themes[key] = nothingTheme(sidekickTheme(nothingScheme(brightness)));
-    // Sidekick 4.0: one look, dark, whatever the colour or light/dark choice.
-    final material = sidekickTheme(sidekick4Scheme());
-    return _themes[key] = _glass ? glassTheme(material) : material;
-  }
+  /// Sidekick 4.0: one look, dark (the owner's call). Made once.
+  ThemeData _themeFor(ColorScheme? dynamic, Brightness brightness) =>
+      _themes['4.0'] ??= sidekickTheme(sidekick4Scheme());
 
-  /// Settings → Theme → Liquid Glass, where it's offered (iOS/macOS 26+).
-  bool get _glass => state.customLook && state.customTheme != null
-      ? customThemeIsGlass(state.customTheme!)
-      : state.liquidGlass && liquidGlassAvailable;
+  /// Liquid Glass is gone with 4.0's one look.
+  bool get _glass => false;
 
 
 
@@ -180,7 +163,6 @@ class SidekickApp extends StatelessWidget {
           state.themeColor,
           state.pureBlack,
           state.customLook,
-          state.customTheme,
           state.liquidGlass,
           state.nothingLook,
           state.welcomed,

@@ -7,7 +7,6 @@ import '../core/bluetooth.dart';
 import '../core/models.dart';
 import '../platform/autoload.dart';
 import 'permissions.dart';
-import 'theme_chooser.dart';
 import 'widgets.dart';
 
 class SettingsPage extends StatefulWidget {
@@ -374,8 +373,6 @@ class _SettingsPageState extends State<SettingsPage> {
                       ),
                     ],
                   ),
-                  const SectionLabel('Look', icon: Icons.palette_outlined),
-                  _Group(children: [ThemeChooser(state: state)]),
                   const SectionLabel('About', icon: Icons.info_outline_rounded),
                   _Group(
                     children: [

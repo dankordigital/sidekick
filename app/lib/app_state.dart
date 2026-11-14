@@ -14,7 +14,6 @@ import 'core/ble_protocol.dart';
 import 'core/bluetooth.dart';
 import 'core/client.dart';
 import 'core/crypto.dart';
-import 'core/custom_theme.dart';
 import 'core/discovery.dart';
 import 'core/errors.dart';
 import 'core/models.dart';
@@ -247,19 +246,14 @@ class AppState extends ChangeNotifier {
   /// platform. A trial look; see ui/nothing.dart.
   bool nothingLook = false;
 
-  /// Settings → Theme → Make theme: the theme made there (pref
-  /// `customTheme`), kept while another look is on so it can be picked again.
-  CustomTheme? customTheme;
-
-  /// The made theme is the one in use (pref `look` = `custom`).
+  /// Made themes are gone with 4.0 (kept false for the code that still asks).
   bool customLook = false;
 
-  /// Whether the app's icon is the Nothing one: the Nothing look, or a theme
-  /// made from it.
-  bool get nothingIcon => nothingLook || (customLook && customTheme?.template == ThemeTemplate.nothing);
+  /// Whether the app's icon is the Nothing one.
+  bool get nothingIcon => nothingLook;
 
-  /// Liquid Glass is on: the look, or a theme made from it.
-  bool get _glassOn => liquidGlass || (customLook && customTheme?.template == ThemeTemplate.glass);
+  /// Liquid Glass is on.
+  bool get _glassOn => liquidGlass;
 
   /// The first-launch welcome has been shown (it never shows again).
   bool welcomed = false;
@@ -543,10 +537,12 @@ class AppState extends ChangeNotifier {
     themeColor = _prefs.getString('themeColor') ?? (Host.isIOS ? 'purple' : 'system');
     if (themeColor != 'system' && !themeColors.containsKey(themeColor)) themeColor = 'system';
     pureBlack = _prefs.getBool('pureBlack') ?? false;
-    liquidGlass = _prefs.getString('look') == 'glass';
-    nothingLook = _prefs.getString('look') == 'nothing';
-    customTheme = CustomTheme.decode(_prefs.getString('customTheme'));
-    customLook = _prefs.getString('look') == 'custom' && customTheme != null;
+    // Sidekick 4.0 has one look (the owner's call): Nothing, Liquid Glass and
+    // made themes are no longer offered, and a saved choice is ignored, so
+    // everyone gets the 4.0 look (and the default app icon) back.
+    liquidGlass = false;
+    nothingLook = false;
+    customLook = false;
     if (_glassOn && (_prefs.getBool('glassCheck') ?? false)) {
       liquidGlass = false;
       customLook = false;
@@ -2343,34 +2339,6 @@ class AppState extends ChangeNotifier {
     _prefs.setString('look', value ? 'nothing' : 'material');
     // The app's icon follows: "sk." in dots, or the usual one.
     unawaited(AppIcon.apply(nothing: nothingIcon));
-    notifyListeners();
-  }
-
-  /// Saves [theme] (Make theme → Save) and puts it on.
-  void setCustomTheme(CustomTheme theme) {
-    customTheme = theme;
-    _prefs.setString('customTheme', theme.encode());
-    useCustomTheme();
-  }
-
-  /// Puts the made theme back on (Settings → Theme → its name).
-  void useCustomTheme() {
-    final theme = customTheme;
-    if (theme == null) return;
-    customLook = true;
-    liquidGlass = false;
-    nothingLook = false;
-    _prefs.setString('look', 'custom');
-    unawaited(AppIcon.apply(nothing: nothingIcon));
-    if (theme.template == ThemeTemplate.glass) _watchGlass();
-    notifyListeners();
-  }
-
-  /// Forgets the made theme (back to Default if it was on).
-  void deleteCustomTheme() {
-    customTheme = null;
-    _prefs.remove('customTheme');
-    if (customLook) setNothingLook(false);
     notifyListeners();
   }
 

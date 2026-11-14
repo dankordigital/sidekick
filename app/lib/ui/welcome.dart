@@ -3,11 +3,10 @@ import 'package:material_ui/material_ui.dart';
 import '../app_state.dart';
 import '../core/bluetooth.dart';
 import 'permissions.dart';
-import 'theme_chooser.dart';
 import 'widgets.dart';
 
 /// The first-launch setup: what Sidekick does, this device's name, the
-/// permissions it needs here, a look, and how to connect another device.
+/// permissions it needs here, and how to connect another device.
 /// Shown once; [AppState.finishWelcome] remembers it.
 class WelcomeFlow extends StatefulWidget {
   const WelcomeFlow({super.key, required this.state});
@@ -17,7 +16,7 @@ class WelcomeFlow extends StatefulWidget {
   State<WelcomeFlow> createState() => _WelcomeFlowState();
 }
 
-enum _Step { hello, name, permissions, look, connect }
+enum _Step { hello, name, permissions, connect }
 
 class _WelcomeFlowState extends State<WelcomeFlow> {
   late final TextEditingController _name = TextEditingController(text: widget.state.name);
@@ -32,7 +31,6 @@ class _WelcomeFlowState extends State<WelcomeFlow> {
     _Step.hello,
     _Step.name,
     if (hostIsAndroid || hostIsMacOS || hostIsIOS) _Step.permissions,
-    _Step.look,
     _Step.connect,
   ];
 
@@ -214,21 +212,6 @@ class _WelcomeFlowState extends State<WelcomeFlow> {
                   _ => null,
                 },
               ),
-          ],
-        ),
-      ],
-    ),
-    _Step.look => _Page(
-      icon: Icons.palette_outlined,
-      title: 'Make it yours',
-      body: 'Pick a look. Settings → Theme has it all again later.',
-      children: [
-        _Group(
-          children: [
-            Padding(
-              padding: const EdgeInsets.only(bottom: 8),
-              child: ThemeChooser(state: state),
-            ),
           ],
         ),
       ],

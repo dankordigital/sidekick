@@ -51,6 +51,7 @@ detailed developer notes; every release is in `VERSIONS.md`) and
 
 ## 14 November 2026
 
+- **4.0, step 1b-i: one look only.** Old looks can't come back (saved choices ignored, Settings and the welcome no longer offer them); Make theme deleted. Analyze clean, 111 tests, sizes_test passes.
 - **4.0, step 2a: the floating dock on phones** (`ui/dock.dart`): the selected tab springs open into a white pill with its name. Analyze clean, 115 tests, sizes_test passes (no overflow at 360/430 wide, 100/150 % text).
 - **4.0, step 1a: the app wears the 4.0 colours** (`sidekick4Scheme`: #121212 / #1c1c1c / #262626, white pill buttons with dark text, dark only). Analyze clean, 115 tests pass, renders checked. Next: 1b (remove Nothing, Liquid Glass, Make theme), then the dock (plan, phase 2).
 - **4.0 is next, by plan** (`design/4.0-build-plan.md`): the owner asked for 4.0 (the app like the prototypes, smooth motion, released with screenshots). It starts when the usage limit resets (a scheduled check-in in this session), phase by phase, each phase green and pushed; the plan's boxes are the progress record.
