@@ -340,7 +340,11 @@ release. Keep this file for how things work now, not for history.
   found.
 - Logos (`website/`): `2.png` is the wide wordmark, used **only on the
   website** (white, trimmed: `website/wordmark.png`; the "sk" in white:
-  `sk-mark.png`); `3.png` is the "sk" monogram, used for every app icon and the
+  `sk-mark.png`). **The website's icon is the new "sk" Dusk**
+  (`design/logo-sk/8-dusk.png` → `website/icon-64.png` tab icon,
+  `icon-192.png`, `icon-512.png`, `icon-apple.png` full-bleed home-screen
+  icon), next to the wordmark and in the demo's Dock and window; the old
+  glass `favicon.png` / `apple-touch-icon.png` stay for the welcome email; `3.png` is the "sk" monogram, used for every app icon and the
   logo inside the app (`app/assets/logo/logo.png`). `app/tool/make_icons.py`
   regenerates all of them; re-run it after changing 3.png.
   - Mac and iPhone icons are Liquid Glass: `Runner/AppIcon.icon` (Icon
@@ -653,6 +657,16 @@ release. Keep this file for how things work now, not for history.
   the prefs (`look` = `nothing` / glass falls back to the regular look), the
   alternate app icons and tray icons, and the screenshot renders. Don't add
   features to either.
+- **4.0: people choose their app icon** (the owner's call, 14 Nov 2026; not
+  built yet, comes with the 4.0 build): Settings → App icon, a row of the
+  eight "sk" icons in `design/logo-sk/` (Ink, Paper, Sky, Amber, Mint,
+  Signal, Chrome, Dusk: the same letters on new backgrounds; 1024 px PNGs,
+  `board.png` shows them all). **Dusk is the default** and the website's
+  logo. Build it on the Nothing look's icon switching (`platform/app_icon.dart`
+  `AppIcon.apply`: iPhone alternate icons, Android launcher `activity-alias`es,
+  Mac `setDockIcon`, Windows `windowManager.setIcon`; tray icons stay
+  monochrome) with one alternate per icon instead of Nothing's one, made by
+  `make_icons.py`. The .exe's own icon can't change on Windows.
 - **Liquid Glass** (2.14.0, the owner's call: Material is the default
   everywhere): on iOS and macOS 26+ (`liquidGlassAvailable`, from
   `appleOsMajor`), Settings → Theme has a "Theme" dropdown: Default /

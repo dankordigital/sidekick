@@ -51,6 +51,13 @@ detailed developer notes; every release is in `VERSIONS.md`) and
 
 ## 14 November 2026
 
+- **A new "sk" logo** (`design/logo-sk/`, the owner: same letters, new
+  background and colours): eight icons from `3.png`'s letters (Ink, Paper,
+  Sky, Amber, Mint, Signal, Chrome, Dusk; `board.png`). **Dusk** (white on
+  blue → purple → coral) is now the website's and the demo's icon: tab icon,
+  home-screen icon, beside the wordmark, the Mac's Dock and the Sidekick
+  window. **4.0 will let people choose their app icon** from all eight
+  (CLAUDE.md; not built yet).
 - **Short addresses** (the owner: "redirect to getsidekick.app/preview"): every link goes to `/preview` and `/privacy`; `.htaccess` serves them and sends `/preview.html` and `/privacy.html` there (301). Checked on a real Apache: 200s, 301s with the query kept, 404 page, noindex header.
 - **The demo's Mac looks like a Mac**: a MacBook with a notch and an aluminium base, a macOS-style wallpaper, a translucent menu bar (Apple logo, menus, Sidekick's menu-bar icon, battery, Wi-Fi, Control Center, date and time), a glass Dock (Finder, Safari, Music, Notes, the real Sidekick icon, running dots, hover lift), coloured window buttons; the iPhone got a Dynamic Island.
 - **`preview.html` is the 4.0 design** (the owner: "make the newest design,

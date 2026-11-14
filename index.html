@@ -6,8 +6,8 @@
 <!-- Not in search results yet (the owner's call): see robots.txt and .htaccess. -->
 <meta name="robots" content="noindex, nofollow, noarchive, nosnippet, noimageindex">
 <title>Sidekick: your phone and computer, as one</title>
-<link rel="icon" type="image/png" sizes="64x64" href="/website/favicon.png">
-<link rel="apple-touch-icon" href="/website/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="64x64" href="/website/icon-64.png">
+<link rel="apple-touch-icon" href="/website/icon-apple.png">
 <meta name="description" content="Sidekick makes your phone and computer work as one. Send files both ways, use your phone as a touchpad, find your phone, and keep everything you shared in one place. Encrypted, no account.">
 <meta name="theme-color" content="#121212">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -235,6 +235,8 @@ main,footer{position:relative;z-index:1}
 .top nav a{position:relative;transition:color .25s,background .25s}
 .top nav a::after{content:"";position:absolute;left:14px;right:14px;bottom:4px;height:1.5px;border-radius:1px;background:currentColor;transform:scaleX(0);transition:transform .35s cubic-bezier(.22,1,.36,1)}
 .top nav a:hover::after{transform:scaleX(1)}
+.brandicon{display:block;flex:none;border-radius:22%;transition:transform .5s cubic-bezier(.34,1.56,.64,1)}
+.brand:hover .brandicon{transform:rotate(-8deg) scale(1.08)}
 .wordmark{display:block;height:auto;transition:transform .5s cubic-bezier(.34,1.56,.64,1),opacity .25s}
 .brand:hover .wordmark{transform:scale(1.05) rotate(-1.5deg)}
 /* ripples on click */
@@ -402,7 +404,7 @@ html.calm .pill,html.calm .try{translate:none!important}
 </head>
 <body>
 <header class="top"><div class="wrap">
-  <a class="brand" href="#top" aria-label="Sidekick, back to the top"><img class="wordmark" src="/website/wordmark.png" alt="Sidekick" width="157" height="16"></a>
+  <a class="brand" href="#top" aria-label="Sidekick, back to the top"><img class="brandicon" src="/website/icon-64.png" alt="" width="32" height="32"><img class="wordmark" src="/website/wordmark.png" alt="Sidekick" width="157" height="16"></a>
   <nav aria-label="Sections"><a href="#what">What it does</a><a href="#pair">Pairing</a><a href="#devices">Devices</a><a href="#questions">Questions</a></nav>
   <a class="pill w only-wish" href="#wishlist">Join the wishlist</a><a class="pill w only-released" id="navDownload" href="#devices">Download</a>
 </div></header>
@@ -529,7 +531,7 @@ html.calm .pill,html.calm .try{translate:none!important}
 </main>
 
 <footer><div class="wrap">
-  <a class="brand" href="#top" aria-label="Sidekick, back to the top"><img class="wordmark" src="/website/wordmark.png" alt="Sidekick" width="128" height="13"></a>
+  <a class="brand" href="#top" aria-label="Sidekick, back to the top"><img class="brandicon" src="/website/icon-64.png" alt="" width="26" height="26"><img class="wordmark" src="/website/wordmark.png" alt="Sidekick" width="128" height="13"></a>
   <span>Made with <span class="heart" aria-label="love">♥</span> in Poland <span class="flag" aria-label="Polish flag"></span></span>
   <nav><a href="/preview">Demo</a><a href="#questions">Questions</a><a href="#wishlist" class="only-wish">Wishlist</a><a href="#devices" class="only-released">Download</a><a href="/privacy">Privacy</a></nav>
 </div></footer>
