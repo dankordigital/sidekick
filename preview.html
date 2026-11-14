@@ -189,7 +189,7 @@
 .pingrings i:nth-child(2){animation-delay:.85s}.pingrings i:nth-child(3){animation-delay:1.7s}
 @keyframes ring{0%{transform:scale(.45);opacity:1}100%{transform:scale(1.15);opacity:0}}
 .bar2{position:absolute;left:16px;right:16px;bottom:22px;z-index:31;display:flex;gap:8px;padding:7px;border-radius:32px;background:var(--panel);border:1px solid #ffffff1f;box-shadow:0 10px 30px #00000080}
-.bar2 .pill{flex:1;height:48px;border-radius:24px;justify-content:flex-start;padding:0 18px}
+.bar2 .pill{flex:1;height:48px;border-radius:24px;padding:0 18px}
 .full{position:absolute;inset:0;z-index:30;background:var(--bg);display:flex;flex-direction:column;gap:14px;padding:62px 24px 30px;overflow-y:auto;scrollbar-width:none}
 .full::-webkit-scrollbar{display:none}
 .full.anim{animation:push .32s cubic-bezier(.22,1,.36,1)}
@@ -512,7 +512,7 @@ function reqHTML(from,kind,color,files,where,ids){const tot=files.reduce((a,f)=>
   return `<div class="needs" style="flex-direction:row;align-items:center">${dev(kind,48,color,'#00000033')}<div><div style="color:var(--amber);font-size:16px">${esc(from)} wants to send you ${files.length===1?'a file':files.length+' files'}</div><div style="font-size:12.5px;color:#ffe2adb3;margin-top:4px">${fmt(tot)} · Same Wi-Fi · encrypted</div></div></div>
   ${files.map(f=>`<div style="display:flex;align-items:center;gap:12px;padding:6px 0">${ic(kindOf(f.name),22)}<span style="flex:1">${esc(f.name)}</span><span class="sub" style="font-size:12.5px">${fmt(f.size)}</span></div>`).join('')}
   <p class="sub" style="font-size:13.5px;margin:0">${where}</p>
-  <div style="display:flex;gap:10px"><button type="button" class="pill o lg" style="flex:1;justify-content:flex-start" id="${ids}-no" data-hit>Decline</button><button type="button" class="pill a lg" style="flex:1;justify-content:flex-start" id="${ids}-yes" data-hit>Accept</button></div>`}
+  <div style="display:flex;gap:10px"><button type="button" class="pill o lg" style="flex:1" id="${ids}-no" data-hit>Decline</button><button type="button" class="pill a lg" style="flex:1" id="${ids}-yes" data-hit>Accept</button></div>`}
 /* notices: one at a time, like the app */
 function notice(box,title,sub){const el=document.createElement('div');el.className='notice';el.innerHTML=`<div class="t">${esc(title)}${sub?'<small>'+esc(sub)+'</small>':''}</div><button type="button" class="x" aria-label="Close">${ic('close',18)}</button><span class="life"><i style="animation-duration:4000ms"></i></span>`;
   box.innerHTML='';box.appendChild(el);const kill=()=>{el.classList.add('out');setTimeout(()=>el.remove(),260)};el.querySelector('.x').onclick=kill;setTimeout(kill,4000)}
