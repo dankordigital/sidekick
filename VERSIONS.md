@@ -4,6 +4,36 @@ Every release, newest first, with its biggest features and fixes. Add an
 entry here with each release (see "Releasing" in `CLAUDE.md`). The history
 starts at 1.1.3.
 
+## 4.0.0
+- **A new Sidekick, built to the owner's design:** one dark look (#121212,
+  white pill buttons, colour only where it means something, Inter), every
+  screen rebuilt to match the design rather than recoloured, with fewer
+  things per screen and bigger targets (whole rows, the main action near
+  your thumb, the rest behind a hold). The Nothing look, Liquid Glass and
+  Make theme are gone.
+- **Chat for every device:** everything you sent a device and got from it
+  (files, photos, links, notes) in one place, newest at the bottom, with a
+  message bar to send a note or files. A 6-digit code gets a big Copy
+  code; hold anything else for its actions.
+- **A Send tab:** pick files, photos, a note or what's on the clipboard,
+  then Send to any device. Sending shows a big ring with the time left and
+  each file's own bar; a request to send you files is an amber card with
+  Decline and Accept side by side.
+- **The floating dock on phones** (Devices · Chat · Send · Remote ·
+  Settings): slide a finger along it to switch, tabs glide in. Computers
+  get a side rail, and on a wide window the device list sits beside its
+  Chat.
+- **Devices:** "Needs you" in amber when a device waits on you, Favorites,
+  Paired and Nearby; tap a device for its Chat, hold it for everything
+  else. Remote and Settings are simpler too.
+- **Choose your app icon** (Settings → App icon): eight new "sk" icons;
+  Dusk is the new default.
+- **Home-screen widgets** on iPhone and Android: the last file you got,
+  and your devices with Send and Ping.
+- **Only verification codes reach your computer** from an Android phone's
+  notifications ("Copy code 482913"), never the messages themselves.
+- Notices show one at a time.
+
 ## 3.0.5
 - **When something goes wrong, Sidekick says what and how to fix it:**
   every error is now a pop-up with a clear title ("Couldn't send to

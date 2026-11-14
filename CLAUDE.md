@@ -198,8 +198,7 @@ release. Keep this file for how things work now, not for history.
     layout, like the shell. Rows that put a button beside text stack it
     underneath when big text leaves no room (device cards, Quick save).
     Tap areas on phones are at least 48 points. Text is at least 4.5:1 in
-    every built-in theme (`test/contrast_test.dart`; the Nothing look's
-    light grey is #666661 for this). main.dart rebuilds the app only when
+    the theme (`test/contrast_test.dart`). main.dart rebuilds the app only when
     its look changes (`_RebuildOn`), not on every state change (ten a
     second during a transfer): screens listen to the state themselves, so
     a new screen must too (`ListenableBuilder`).
@@ -221,8 +220,8 @@ release. Keep this file for how things work now, not for history.
   (launch), `newfilesendrequest` → request.wav (Accept/Decline card
   appears), `filerequest_accept` → accept.wav and `filerequest_deny` →
   decline.wav (on both devices: the one tapping and the sender getting the
-  answer). One switch for all of them: Settings → Sound ("Sound enabled" /
-  "Sound disabled"; `AppState.sound`, pref `sound`). Don't synthesize
+  answer). One switch for all of them: Settings → Sound ("Play sounds";
+  `AppState.sound`, pref `sound`). Don't synthesize
   replacements.
 - `platform/desktop_window.dart` (Windows, Mac; `window_manager`,
   `tray_manager` 0.5.x: 0.6+ is a native-library rewrite): closing the
@@ -260,7 +259,8 @@ release. Keep this file for how things work now, not for history.
   showed it (2.17.1: "opens and closes"). A request arriving takes over the
   window as the corner pop-up. Rendered by `tool/screenshots_test.dart`
   (`tray-panel.png`).
-- **Auto-load** (`platform/autoload.dart`, Settings, Windows and Mac, on by
+- **Auto-load** (`platform/autoload.dart`, Settings → "Open when you log
+  in", Windows and Mac, on by
   default; the owner's call): starts at login, straight to the tray.
   Windows: a `Run` registry value with `--hidden` (the runner then never
   shows the window; it also allows one Sidekick at a time, bringing the
@@ -349,20 +349,14 @@ release. Keep this file for how things work now, not for history.
   (`design/logo-sk/8-dusk.png` → `website/icon-64.png` tab icon,
   `icon-192.png`, `icon-512.png`, `icon-apple.png` full-bleed home-screen
   icon), next to the wordmark and in the demo's Dock and window; the old
-  glass `favicon.png` / `apple-touch-icon.png` stay for the welcome email; `3.png` is the "sk" monogram, used for every app icon and the
-  logo inside the app (`app/assets/logo/logo.png`). `app/tool/make_icons.py`
-  regenerates all of them; re-run it after changing 3.png.
-  - Mac and iPhone icons are Liquid Glass: `Runner/AppIcon.icon` (Icon
-    Composer format, in both Xcode projects' Resources) is what macOS/iOS
-    26+ show, rendered live by the system (Dark, Clear, Tinted too). The
-    `AppIcon.appiconset` PNGs are a pre-rendered glass look for older
-    systems. Both come from `make_icons.py`; Xcode 26 (CI) builds the .icon.
-    **No shadow or edge highlight behind "sk"** (the owner's call: they
-    blurred the letters): the .icon's group shadow is `none`, and
-    `glass_tile` draws the glyph crisp.
-  - The website's tab icon (`website/favicon.png`) and home-screen icon
-    (`website/apple-touch-icon.png`) are the same glass "sk", also from
-    `make_icons.py`.
+  glass `favicon.png` / `apple-touch-icon.png` stay for the welcome email.
+  **The app's icons are the "sk" icons in `design/logo-sk/`** (Dusk the
+  app's own; see App icon below); `3.png` is still the "sk" monogram for
+  the logo inside the app (`app/assets/logo/logo.png`) and the tray icons.
+  `app/tool/make_icons.py` regenerates all of them (run it from the repo
+  root after changing either). Mac and iPhone also get `Runner/AppIcon.icon`
+  (Icon Composer, what macOS/iOS 26+ show): the Dusk art as one plain
+  layer, the system rounds it.
 - Mac: the file picker (`file_picker`) needs the
   `files.user-selected.read-write` entitlement and `prepareFilePicker()`
   (skips its sandbox check), or Send files silently does nothing.
@@ -420,14 +414,19 @@ release. Keep this file for how things work now, not for history.
     or the iPhone shows up in the Mac's Nearby list), saves stills of a
     paired iPhone's Remote tab and the Mac's Devices tab, paired with a
     real loopback stand-in.
-  - `flutter test tool/sizes_test.dart` (then with
-    `--dart-define=SIDEKICK_LOOK=nothing`) opens every tab at phone
+  - `flutter test tool/sizes_test.dart` opens every tab at phone
     (360×740, 430×932), tablet (820×1180 both ways) and computer
     (1280×800, 1920×1080) sizes, at 100 % and 150 % text, and fails on any
     "overflowed" (pictures in `build/screenshots/sizes/`). ~40 s each, so it
     fits the very_good_cli MCP test tool's 60 s limit; the full
     `screenshots_test.dart` doesn't (in a session where a plugin blocks
     `flutter test` in the shell, it can't run here: CI or a computer).
+  - **CI renders the screens on every push** (the `test` job also runs
+    sizes_test, screenshots_test and transfer_shots_test) and keeps them on
+    a hidden ref: `git fetch origin refs/ci/app-screens:refs/ci/app-screens`
+    then `git archive refs/ci/app-screens | tar -x -C <dir>`. That's how to
+    see the app (and compare it with `design/figma/prototype/`) when tests
+    can't run in the session.
   - Output goes to `build/screenshots/`.
 - Swift can't be compiled here. CI (`ios` and `macos` jobs) is the check.
 - Bluetooth:
@@ -517,26 +516,22 @@ release. Keep this file for how things work now, not for history.
   `NSSupportsLiveActivities` is on in Info.plist. When adding objects to
   the .pbxproj by hand, use IDs nothing else has (2.7.0's first push reused
   the app icon's and Xcode called the project damaged).
-- **Verification codes only** (the owner's call, 14 Nov 2026; not built
-  yet): the computer should get **verification codes** from the phone's
-  notifications (one-time codes like "Your code is 482913") with a **Copy
-  code** button, **not the text of every message from anybody**. When this
-  is built, `NotificationRelay` / `_relayNotification` send only what looks
-  like a code (the code and the app's name, never the rest of the message),
-  the computer shows "Copy code 482913", the setting's wording says so, and
-  both privacy policies change to match. Until then the section below is how
-  it works now.
-- **Phone notifications on computers** (2.15.0, Android only: iOS lets
-  no app see others' notifications; Settings → Show notifications on
-  computers, pref `relayNotifications`, off by default): `NotificationRelay`
+- **Verification codes only** (4.0, the owner's call; Android only: iOS
+  lets no app see others' notifications; Settings → "Send verification
+  codes to computers · Only the code, never the message", pref
+  `relayNotifications`, off by default): `NotificationRelay`
   (PhoneRelay.kt, a NotificationListenerService the user allows in
   Notification access) skips ongoing, private, summary and system ones and
-  calls Dart on `sidekick/phone`; `AppState._relayNotification` posts
-  `/v1/notification` {app, title, text} to paired computers in reach. Macs
-  and PCs show it with `platform/desktop_notify.dart`: Notification Center
-  (`showNotification` on `sidekick/macos`, `MacNotifications`) or a Windows
-  toast through PowerShell under the AUMID `Sidekick.Sidekick`, which the
-  installer's Start menu shortcut carries (`Steps.Aumid`).
+  calls Dart on `sidekick/phone`; `AppState._relayNotification` passes on
+  only a one-time code (`verificationCode` in core/history.dart: 4–8 digits
+  next to a code word; tested) with the app's name to paired computers in
+  reach (`/v1/notification` {app, title '', text = code, code}), never the
+  message. The computer drops anything without a code (older phones send
+  whole messages), puts "Verification code from Messages on Pixel 9:
+  482913" in that phone's Chat (Copy code) and shows a notification "Code
+  482913" (`platform/desktop_notify.dart`: Notification Center or a Windows
+  toast under the AUMID `Sidekick.Sidekick`, which the installer's Start
+  menu shortcut carries).
 - **Screenshots to computers** (2.15.0, phones; Settings → Send screenshots
   to computers, pref `sendScreenshots`, off by default): Android's
   `ScreenshotWatcher` (MediaStore observer, READ_MEDIA_IMAGES) and the
@@ -572,10 +567,9 @@ release. Keep this file for how things work now, not for history.
   Settings → Sound says.
 - **Links and notes** (3.0.2, `/v1/text`, every look): send a link or a
   short note (up to `maxTextMessage`, 20,000 characters) to a paired
-  device. Default look: a device card's ⋮ → "Send text or a link"
-  (`askAndSendText`, with Paste); Nothing look: Send → Text / Paste
-  (`_pickedTexts`: they wait in the selection as .txt files but go as
-  messages). The receiver **always asks, Copy or Open** (Open only for a
+  device: a device's hold menu → "Send text or a link"
+  (`askAndSendText`, with Paste), or the Send tab's Text or link / Paste
+  (they go as messages). The receiver **always asks, Copy or Open** (Open only for a
   link: `linkIn`, http/https only, "www." gets https; a note with a link
   in it gets Open too), **even from favourites / Quick save** (the owner's
   call): never saved as a file (`ui/text_messages.dart`
@@ -585,8 +579,8 @@ release. Keep this file for how things work now, not for history.
   shows its site big ("bbcgoodfood.com", `linkSite`) and the rest under it;
   "Open link" / "Copy link" / "Copy text"; Copy says "Copied" on the button,
   then the card closes; Enter does the main action, Esc closes; buttons sit
-  side by side on computers, stacked full width (main on top) on phones;
-  the Nothing look gets hairlines and one red action. The tray
+  side by side on computers, stacked full width (main on top) on phones.
+  The tray
   opens the window (like Ping); a phone in the background gets a
   notification (`OfferNotifications.showText`). Opening uses
   `url_launcher`. Longer text, and devices before 3.0.2 (they answer 404),
@@ -628,12 +622,13 @@ release. Keep this file for how things work now, not for history.
   `Notice.problem` (the shell calls `showError`); a send's failure isn't
   repeated while its sending screen shows it (`OutgoingSend.watchers`).
   Never show `'$e'` to people. Tests: `test/errors_test.dart`.
-- **Successes are a short notice** (`ui/notices.dart`, 3.0.5, the owner's
+- **Successes are a short notice, one at a time** (4.0: when another is
+  waiting, the one up leaves 3 s after it appeared; `ui/notices.dart`, 3.0.5, the owner's
   call: no more snackbars): `showNotice` (or a plain `Notice` from
   AppState) slides up at the bottom (above the phone's tab bar), a thin bar
   along its bottom empties over 5 s (10 s for long news, never more), then
-  it fades. Hover or touch pauses it; swipe or ✕ closes it; up to 3 stack,
-  the rest wait (`NoticeCenter`). `NoticeArea` sits in MaterialApp's
+  it fades. Hover or touch pauses it; swipe or ✕ closes it; one shows, the
+  rest wait (`NoticeCenter`). `NoticeArea` sits in MaterialApp's
   `builder`, over every screen. Reduced motion: no slide. Screen readers
   hear it (live region; ✕ is its own button). Flat (no shadow), colors
   from the theme's snackBarTheme. Tests: `test/notices_test.dart`;
@@ -647,124 +642,70 @@ release. Keep this file for how things work now, not for history.
   is reached (`connectionLabel`: Same Wi-Fi, Direct Wi-Fi, Bluetooth) or
   "Not reachable · seen 4 min ago" with Try again instead of a dead Send.
   Sending to a device not heard from lately looks for it first.
-- **Nothing and Liquid Glass are being scrapped** (the owner's call, 13 Nov
-  2026): Sidekick will have **one look only**, the regular dark one from the
-  app concept (Design canvas https://claude.ai/artifact/N5YczZk3EXsqbULx56Qfxf,
-  clickable prototype https://claude.ai/artifact/PT9J7jBD417cBNMAwiBaQL):
-  #121212 page, #1c1c1c panels, white pill buttons, colour only where it
-  means something, the phone's floating rounded dock (Devices · Chat · Send ·
-  Remote · Settings; the selected tab a white pill with icon and name, the
-  others icons only), a Chat tab per device with a rounded message bar and
-  Send files. **No attention dots, badges or counters** (on the dock, tabs
-  or icons; the owner's call): the amber "Needs you" card and the device in
-  amber already show it. Until that's built, the two sections below describe code that
-  is still there; when removing them, take out the Theme dropdown entries,
-  the prefs (`look` = `nothing` / glass falls back to the regular look), the
-  alternate app icons and tray icons, and the screenshot renders. Don't add
-  features to either.
-- **4.0 screens are rebuilt to match the design, not recoloured** (the
-  owner, 14 Nov: "it looks like a recolored version of original default
-  sidekick"), and **less bloated by Fitts's law**: fewer things per screen,
-  whole rows as tap targets, the main action big and near the thumb, the
-  rest behind a hold, nothing under 44 pt. Building blocks: `ui/kit.dart`.
-  Method: `design/4.0-build-plan.md` ("How each screen is built").
-- **4.0: people choose their app icon** (the owner's call, 14 Nov 2026; not
-  built yet, comes with the 4.0 build): Settings → App icon (**only in
-  Settings, never in the first-time setup**, the owner's call), a row of the
-  eight "sk" icons in `design/logo-sk/` (Ink, Paper, Sky, Amber, Mint,
-  Signal, Chrome, Dusk: the same letters on new backgrounds; 1024 px PNGs,
-  `board.png` shows them all). **Dusk is the default** and the website's
-  logo. Build it on the Nothing look's icon switching (`platform/app_icon.dart`
-  `AppIcon.apply`: iPhone alternate icons, Android launcher `activity-alias`es,
-  Mac `setDockIcon`, Windows `windowManager.setIcon`; tray icons stay
-  monochrome) with one alternate per icon instead of Nothing's one, made by
-  `make_icons.py`. The .exe's own icon can't change on Windows.
-- **4.0: home-screen widgets on Android and iPhone** (the owner's call, 14
-  Nov 2026; not built yet): small (last file received / Ready to receive)
-  and medium (up to 3 devices with status and Send / Ping), in the 4.0 look.
-  Plan: `design/4.0-build-plan.md` step 9b.
-- **Liquid Glass** (2.14.0, the owner's call: Material is the default
-  everywhere): on iOS and macOS 26+ (`liquidGlassAvailable`, from
-  `appleOsMajor`), Settings → Theme has a "Theme" dropdown: Default /
-  Liquid Glass (`AppState.liquidGlass`, pref `look`). Nowhere else is it
-  offered. `ui/glass.dart`: `glassTheme` turns the Material theme
-  translucent (cards, dialogs, sheets, menus, bars) and adds `GlassLook`;
-  `GlassBackdrop` (soft blobs of the theme's colors) sits under every
-  screen (MaterialApp `builder`); `GlassPanel` (blur, tint, bright rim)
-  frames the phone's floating tab bar and the computer's content panel
-  (shell.dart). On iOS 26 the iPhone's tab bar is Flutter's on Apple's
-  `UIGlassEffect` (a `sidekick/glass` platform view under it, IgnorePointer,
-  registered with the `DoNotBlockGesture` policy: with the default one, taps
-  on it during the intro froze the app for good, 2.17.5):
-  **never embed Apple's `UITabBar` as a platform view**: tapping it crashed
-  the app (2.17.4). If Sidekick closes within 10 s of starting with Liquid
-  Glass (or turning it on), the next start turns it off and says so
-  (`_watchGlass`, pref `glassCheck`), so it always opens. Since 2.17.0 `glassTheme` also makes buttons (`GlassFill`
-  through `backgroundBuilder`), selections, switches, fields, menus,
-  snackbars and tooltips glass, each tinted in its own color. **No live
-  blur on controls or the computer's content panel** (2.17.1): only the
-  soft backdrop is behind them, and a BackdropFilter per button made
-  screens slow; only the phone's floating tab bar blurs. Rendered by `tool/screenshots_test.dart` (`glass-*.png`).
-- **The Nothing look** (2.17.6, redesigned in 2.18.0 from the owner's
-  approved "paper" mock-ups: Settings → Theme → Nothing, every platform;
-  pref `look` = `nothing`, `AppState.nothingLook`, off by default). Ink on
-  paper (`#F2F2EF` / `#0D0D0D`) or paper on ink (`#0A0A0A` / `#F0F0EC`),
-  hairlines instead of cards (`outlineVariant`), small uppercase mono
-  labels, page titles in dots (`DotText`, a 5×7 dot font), **one red
-  action per screen** (`nothingRed`), **green only for "connected" dots**
-  (the owner's dad: red reads as "broken"). `ui/nothing.dart`: theme
-  (`nothingScheme`, `nothingTheme`, `NothingLook` / `isNothing`), `DotText`,
-  `DotLogo` ("sk." in dots), `DotIcon` (the four tab icons in dots), and the
-  pieces (`NothingHair`, `NothingSection`, `NothingRing`, `NothingDot`,
-  `NothingButton`, `NothingChip`, `NothingSendDot`, `NothingSegments`).
-  `ui/nothing_screens.dart`: tabs **Devices · Send · Remote · Settings**
-  (`nothingTabs`; Files is gone from the bar, the owner's call, like
-  LocalSend): Devices (count of ready devices in dots, rows that open the
-  device, red Send files), **Send** (`NothingSendPage`: File / Media /
-  Text / Paste on phones, File / Folder / Text / Paste on computers;
-  `sendSelection` stays until Clear; devices in reach with red send
-  buttons; + Add by address), **Browse files** (`NothingBrowsePage`, full
-  screen, X to close, device switcher, New folder → `/v1/fs/mkdir`, Upload
-  here), a device's page (Send / Files / Remote / Ping, Always accept,
-  Recent), the Accept screen (`showNothingIncoming`, full screen on phones,
-  a card on computers), the tab bar, the computer's side bar and its
-  **Receive** column (`NothingReceivePanel`: this device, Quick save,
-  recent; beside Devices and Send when the window is 1100+ wide), and the
-  sending screen (`NothingSendView`); the tray panel has `_NothingPanel`.
-  Remote and Settings keep their layout in its colors. **The app icon
-  follows** (`platform/app_icon.dart`
-  `AppIcon.apply`, at start and on every look change): iPhone
-  `setAppIcon` → alternate icon `AppIcon-Nothing` (build setting
-  `ASSETCATALOG_COMPILER_ALTERNATE_APPICON_NAMES`; only asked when it
-  changes, iOS shows a note); Android `setAppIcon` → two launcher
-  `activity-alias`es (`.LauncherDefault`, `.LauncherNothing`) for
-  MainActivity, one enabled; Mac `setDockIcon` (Dock, while running);
-  Windows `windowManager.setIcon` (window/taskbar; the .exe's can't change);
-  tray / menu-bar icons swap (`DesktopWindow.setNothingIcons`; Mac and
-  Windows touch no icon unless Nothing is on). Icons:
-  `python app/tool/make_icons.py nothing`. Rendered by the screenshot tools
-  (`nothing-*.png`, `tray-panel-nothing.png`, `send_nothing.png`).
-- **Make theme** (2.19.0, the owner's idea: like Discord's theme maker,
-  every platform): Settings → Theme's dropdown ends with **Make theme…**,
-  which opens `ui/theme_maker.dart` (`ThemeMakerPage`, full screen; editor
-  left and live preview right on computers, preview on top on phones).
-  Start from a template (Default, Liquid Glass where
-  `liquidGlassAvailable`, Nothing; `starterTheme`), Light / Dark, then four
-  colors (Accent, Background, Cards, Text) with presets and Hue /
-  Saturation / Brightness sliders on gradient tracks; the preview (a made-up
-  Devices screen in the real theme, `customThemeData`) changes at once; a
-  warning shows when text is hard to read (contrast under 3). One made
-  theme is kept (`core/custom_theme.dart` `CustomTheme`, pref
-  `customTheme`; `AppState.customTheme`, `customLook` = pref `look`
-  `custom`), shown by name in the dropdown with Edit theme / Delete. Its
-  background decides light or dark, so it ignores the light/dark choice.
-  Made from Nothing: the Nothing screens and app icon (`nothingIcon`), its
-  accent replacing the red (the Nothing pieces use
-  `ColorScheme.tertiary`, `nothingScheme(accent:)`). Made from Liquid
-  Glass: the glass crash guard covers it (`_glassOn`). The app's base
-  theme is `ui/app_theme.dart` `sidekickTheme`, shared by main.dart and
-  the maker. Rendered by `tool/theme_maker_shots_test.dart`
-  (`theme-maker-*.png`).
+- **One look: Sidekick 4.0** (the owner's call, 13–14 Nov 2026; Nothing,
+  Liquid Glass and Make theme are deleted, a saved `look` is ignored): the
+  regular dark look from the owner's Figma design (`design/figma/prototype/
+  *.png`, the clickable emulator `design/emulator/`, Design canvas
+  https://claude.ai/artifact/N5YczZk3EXsqbULx56Qfxf): #121212 page, #1c1c1c
+  panels, white pill buttons, colour only where it means something, Inter
+  (bundled, `assets/fonts`, Latin subsets). `ui/app_theme.dart`
+  `sidekick4Scheme` / `sidekickTheme`; dark only. **No attention dots,
+  badges or counters** (the owner's call): the amber "Needs you" card says
+  it.
+  - **Screens are rebuilt to match the design, not recoloured** (the owner:
+    "it looks like a recolored version"), and **less bloated by Fitts's
+    law**: fewer things per screen, whole rows as tap targets, the main
+    action big and near the thumb, the rest behind a hold (`showActions`),
+    nothing under 44 pt. Building blocks: `ui/kit.dart` (`K` colours,
+    `KTitle`, `KSub`, `KLabel`, `KPanel`, `KDeviceTile`, `KRow`, `KPill`,
+    `KDevicePicker`, `showActions`). Check a screen against its design
+    picture side by side (CI renders: below). Method:
+    `design/4.0-build-plan.md`.
+  - Phones: the floating dock (`ui/dock.dart` `FloatingDock`): Devices ·
+    Chat · Send · Remote · Settings; the chosen tab a white pill with its
+    name, the others icons; a finger can slide along it; tabs glide in
+    from their side. Computers: `SideRail` (the "sk" logo, round buttons,
+    the chosen one white); from 1000 wide the Devices list sits beside its
+    Chat. Files is not a tab: Browse files is a device's own screen
+    (`showFilesOf`, from its hold menu).
+  - Devices (`devices_page.dart`): amber "Needs you" for waiting requests
+    (`AppState.waitingOffers`), Favorites, Paired, dashed Nearby; tap a
+    device → its Chat, hold → Browse files / Remote / Send text / Ping /
+    Favorites / Unpair. Chat (`chat_page.dart`, `core/history.dart`: every
+    file, link and note per device, 500 each, `history.json`; 6-digit codes
+    get a big Copy code, everything else is held for its actions). Send
+    (`send_page.dart`: Files / Photos & videos / Text or link / Paste
+    tiles, the selection kept across tabs, Send per device). Sending (a
+    ring with the percent and time left, each file's bar, Stop) and the
+    incoming request (amber card, Decline / amber Accept; a sheet on
+    phones) in `transfer_screens.dart`. Remote (device panel, dotted
+    touchpad, Left click (hold: keep it down) / Right click / Keyboard,
+    four shortcuts + More). Settings (whole-row switches, green).
+- **App icon, in Settings only** (4.0, the owner's call: never in the
+  first-time setup): the eight "sk" icons from `design/logo-sk/` (Ink,
+  Paper, Sky, Amber, Mint, Signal, Chrome, Dusk). **Dusk is the default
+  and the app's own icon** everywhere. `tool/make_icons.py` `sk_icons()`
+  makes them all: iPhone alternate icons (`AppIcon-Ink`… in
+  `ASSETCATALOG_COMPILER_ALTERNATE_APPICON_NAMES`), Android launcher
+  `activity-alias`es (`.LauncherDefault` = Dusk, `.LauncherInk`…,
+  MainActivity `setAppIcon`), the Mac Dock while running (`setDockIcon`,
+  `assets/icons/dock-*.png`) and the Windows window/taskbar
+  (`assets/icons/*.ico`; the .exe's own can't change). Tray and menu-bar
+  icons stay as they are. `AppState.appIcon` (pref `appIcon`),
+  `platform/app_icon.dart` `AppIcon.apply`.
+- **Home-screen widgets** (4.0, iPhone and Android): small "Last file"
+  (or "Ready to receive") and medium "Devices" (up to three, Send and
+  Ping). `platform/home_widgets.dart` writes what they show at most once a
+  second (`updateWidgets`); taps open Sidekick with `sidekick://open`,
+  `send?id=` (Send for that device) or `ping?id=`, taken on start and on
+  resume (`takeWidgetLink`). iPhone: SwiftUI widgets in the SidekickLive
+  extension (`SidekickLive.swift`), data through the App Group
+  `group.dev.sidekick.sidekick` (both targets' entitlements; the TestFlight
+  job renames it with the bundle id), links caught by `WidgetLinks` (a
+  Flutter scene delegate) and the `sidekick` URL scheme in Info.plist.
+  Android: `SidekickWidgets.kt` (`SmallWidget`, `DevicesWidget`,
+  RemoteViews, `res/layout/widget_*.xml`), answered on
+  `sidekick/background` so they update with no screen open.
 - **Always accept from a device / Quick save** (2.18.0, every look): the
   Accept card's "Always accept from …" tick and the Nothing device page's
   switch add the device to `AppState.alwaysAccept` (pref `alwaysAccept`,

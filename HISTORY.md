@@ -51,6 +51,7 @@ detailed developer notes; every release is in `VERSIONS.md`) and
 
 ## 14 November 2026
 
+- **4.0, step 7: notices one at a time**; CLAUDE.md rewritten for 4.0 (one look, kit, dock and rail, app icons, widgets, codes only, CI renders on `refs/ci/app-screens`); version 4.0.0 and its VERSIONS.md entry.
 - **4.0, step 9b: home-screen widgets** on iPhone and Android: Last file (small) and Devices with Send / Ping (medium), in the 4.0 look; the app writes what they show (App Group on iPhone, preferences on Android); taps open Sidekick on Send or ring the device. Privacy policies say what they keep.
 - **4.0, step 8: verification codes only** from phone notifications (the code and the app's name, never the message); privacy policies updated.
 - **4.0, step 6d: the computer layout** (the design's side rail; wide windows show Devices beside Chat).

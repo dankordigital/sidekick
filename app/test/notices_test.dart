@@ -94,19 +94,23 @@ void main() {
     semantics.dispose();
   });
 
-  testWidgets('a few stack, the rest wait their turn', (tester) async {
+  testWidgets('one at a time: the next waits about 3 seconds, then takes its place', (tester) async {
     await tester.pumpWidget(app());
-    for (var i = 1; i <= 5; i++) {
-      showNotice('Notice $i');
-    }
+    showNotice('Notice 1');
+    showNotice('Notice 2');
     await tester.pump();
-    expect(find.byType(NoticeCard), findsNWidgets(NoticeCenter.maxShown));
-    expect(find.text('Notice 4'), findsNothing);
-    await tester.pump(const Duration(seconds: 6));
+    expect(find.byType(NoticeCard), findsOneWidget);
+    expect(find.text('Notice 2'), findsNothing);
+    await tester.pump(const Duration(seconds: 2));
+    expect(find.text('Notice 1'), findsOneWidget, reason: 'up for 3 seconds at least');
+    await tester.pump(const Duration(milliseconds: 1200));
     await tester.pump(const Duration(milliseconds: 300));
     await tester.pump();
-    expect(find.text('Notice 4'), findsOneWidget);
-    expect(find.text('Notice 5'), findsOneWidget);
+    expect(find.text('Notice 1'), findsNothing);
+    expect(find.text('Notice 2'), findsOneWidget);
+    // Nothing waiting now: the usual 5 seconds.
+    await tester.pump(const Duration(seconds: 3));
+    expect(find.text('Notice 2'), findsOneWidget);
   });
 
   testWidgets('reduced motion: no sliding, the bar still runs', (tester) async {

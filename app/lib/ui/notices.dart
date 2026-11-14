@@ -2,7 +2,9 @@
 // "Paired with MacBook Pro", "Received report.pdf"): they slide up at the
 // bottom, a thin bar along their bottom edge empties, and they go by
 // themselves (5 seconds, never more than 10). Hovering or touching one
-// pauses it; swiping or ✕ closes it; a few in a row stack, the rest wait.
+// pauses it; swiping or ✕ closes it. One at a time (the owner's call, 4.0):
+// when another is waiting, the one up hurries its bar to leave 3 seconds
+// after it appeared, then the next comes.
 //
 // Problems never come here: they're a pop-up with a Close button
 // (showError in widgets.dart).
@@ -38,8 +40,14 @@ class NoticeCenter extends ChangeNotifier {
   NoticeCenter._();
   static final instance = NoticeCenter._();
 
-  /// At most this many at once, newest at the bottom.
-  static const maxShown = 3;
+  /// One at a time (4.0); the rest wait.
+  static const maxShown = 1;
+
+  /// How long a notice stays up, at least, before a waiting one takes its place.
+  static const minShown = Duration(seconds: 3);
+
+  /// Another notice is waiting for this one to go.
+  bool get hasWaiting => _waiting.isNotEmpty;
 
   final List<NoticeData> shown = [];
   final List<NoticeData> _waiting = [];
@@ -147,7 +155,8 @@ class _NoticeCardState extends State<NoticeCard> with TickerProviderStateMixin {
       if (status == AnimationStatus.dismissed) _leave();
     });
     _appear.forward();
-    _life.reverse();
+    NoticeCenter.instance.addListener(_queueChanged);
+    _run();
   }
 
   @override
@@ -159,17 +168,43 @@ class _NoticeCardState extends State<NoticeCard> with TickerProviderStateMixin {
 
   @override
   void dispose() {
+    NoticeCenter.instance.removeListener(_queueChanged);
     _life.dispose();
     _appear.dispose();
     super.dispose();
   }
+
+  final _shownAt = DateTime.now();
+  bool _hurrying = false;
 
   void _hold() {
     if (_holds++ == 0) _life.stop();
   }
 
   void _release() {
-    if (_holds > 0 && --_holds == 0 && !_leaving) _life.reverse();
+    if (_holds > 0 && --_holds == 0 && !_leaving) _run();
+  }
+
+  /// Counts down: the usual way, or, with another notice waiting, so that it
+  /// goes [NoticeCenter.minShown] after it appeared.
+  void _run() {
+    if (_leaving || _holds > 0) return;
+    if (!NoticeCenter.instance.hasWaiting) {
+      _life.reverse();
+      return;
+    }
+    _hurrying = true;
+    final left = NoticeCenter.minShown - DateTime.now().difference(_shownAt);
+    final ms = left.inMilliseconds.clamp(250, NoticeCenter.minShown.inMilliseconds);
+    _life.animateTo(
+      0,
+      duration: Duration(milliseconds: ms),
+      curve: Curves.linear,
+    );
+  }
+
+  void _queueChanged() {
+    if (!_hurrying && NoticeCenter.instance.hasWaiting) _run();
   }
 
   Future<void> _leave() async {
