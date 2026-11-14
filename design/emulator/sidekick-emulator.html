@@ -101,8 +101,8 @@ button:disabled{cursor:default;opacity:.4}
 .note{font-size:16px}
 .otp{font:600 30px/1.1 ui-monospace,'JetBrains Mono',monospace;letter-spacing:.14em}
 .ic-card .acts .pill.cc{background:var(--white);color:var(--onwhite);gap:8px;height:40px;padding:0 18px;font-weight:600}
-[data-hold],[data-holdtext]{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;transition:transform .18s cubic-bezier(.22,1,.36,1)}
-[data-hold].held,[data-holdtext].held,.pill.held{transform:scale(.96)}
+[data-hold]{cursor:default;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;transition:transform .18s cubic-bezier(.22,1,.36,1)}
+[data-hold].held,.pill.held{transform:scale(.96)}
 .thumbs{display:flex;gap:6px}
 .thumbs img{width:88px;height:88px;object-fit:cover;border-radius:12px;display:block}
 .site{font-size:19px;font-weight:700}
@@ -214,6 +214,8 @@ button:disabled{cursor:default;opacity:.4}
 .sheet.grab{padding-top:12px}
 .sheet .gr{align-self:flex-start;width:36px;height:4px;border-radius:2px;background:#ffffff33;margin:4px 0 8px}
 @keyframes up{from{transform:translateY(100%)}}
+.shead{display:flex;align-items:flex-start;gap:12px}.shead>div{flex:1;min-width:0;display:flex;flex-direction:column;gap:8px;overflow-wrap:anywhere}.shead .sub2{margin:0!important}
+.sheet{touch-action:pan-x}.sheet.drag{animation:none;transition:none}.sheet.snap{transition:transform .25s cubic-bezier(.22,1,.36,1)}.sheet.gone{transform:translateY(110%)!important;transition:transform .2s ease-in}
 .sheet h3,.dlg h3{margin:0;font-size:17px;font-weight:600}
 .sheet .sub2,.dlg .sub2{margin:-4px 0 2px;color:var(--muted);font-size:13px}
 .opt{display:flex;align-items:center;gap:12px;width:100%;min-height:46px;padding:0 16px;border-radius:23px;border:0;background:var(--raised);text-align:left;font-weight:500;font-size:14.5px}
@@ -352,7 +354,7 @@ const fmt=b=>b>=1e9?(b/1e9).toFixed(1)+' GB':b>=1e6?(b/1e6).toFixed(1)+' MB':b>=
 const kindOf=n=>/\.(heic|jpe?g|png|gif|webp)$/i.test(n)?'photo':/\.(mov|mp4|m4v)$/i.test(n)?'video':'file';
 const isLink=t=>/^(https?:\/\/|www\.)\S+$/i.test(t.trim())||/^[a-z0-9-]+(\.[a-z0-9-]+)+\/\S*$/i.test(t.trim());
 /* a verification code: the whole message is the code, or it says it's one */
-const codeOf=t=>{t=(t||'').trim();if(/^\d{4,8}$/.test(t))return t;if(!/(verif|one[- ]?time|\botp\b|passcode|security code|login code|sign[- ]?in code|your code|code is|kod)/i.test(t))return null;const m=t.match(/\b(\d{3}[ -]?\d{3}|\d{4,8})\b/);return m?m[1].replace(/[ -]/g,''):null};
+const codeOf=t=>{t=(t||'').trim();if(/^\d{3}[ -]?\d{3}$/.test(t))return t.replace(/[ -]/g,'');if(!/(\bcode|verif|one[- ]?time|\botp\b|passcode|\bkod)/i.test(t))return null;const m=t.match(/(?<!\d[ -]?)(\d{3}[ -]?\d{3})(?![ -]?\d)/);return m?m[1].replace(/[ -]/g,''):null};
 const clip=t=>{try{navigator.clipboard.writeText(t).catch(()=>{})}catch(x){}};
 const site=u=>{try{const x=new URL(/^https?:/i.test(u)?u:'https://'+u);return{host:x.hostname.replace(/^www\./,''),path:(x.pathname+x.search).replace(/\/$/,'')}}catch(e){return{host:u,path:''}}};
 let uid=1;const nid=()=>'i'+(uid++);
@@ -406,19 +408,19 @@ function lastOf(v,k){const h=hist(v,k);const m=h[h.length-1];if(!m)return['Nothi
 function itemHTML(v,k,m){
   const d=S.D[k];const nw=m.fresh?' new':'';m.fresh=false;
   const foot=`<span class="foot">${m.from==='me'?'You sent':'From '+esc(d.name)} · ${esc(m.when)}</span>`;
-  const more=`<button type="button" class="rb" aria-label="More for this item" data-act="itemMenu" data-id="${m.id}">${ic('more',18)}</button>`;
+  const H=`data-hold="${m.id}" tabindex="0" aria-label="Hold for more actions"`;
   const who=m.from==='me'?'me':'them';
-  if(m.t==='note'){const c=codeOf(m.text);if(c&&m.from!=='me')return `<div class="it ${who}${nw}"><div class="ic-card" data-hold="${m.id}"><div class="note">${esc(m.text)}</div><div class="otp" aria-label="Code ${c.split('').join(' ')}">${esc(c)}</div><div class="acts"><button type="button" class="pill w cc" data-act="copyCode" data-code="${esc(c)}">${ic('copy',18)}Copy code</button>${more}</div></div>${foot}</div>`;
-    return `<div class="it ${who}${nw}"><div class="ic-card" data-hold="${m.id}"><div class="note">${esc(m.text)}</div><div class="acts">${more}</div></div>${foot}</div>`}
-  if(m.t==='link'){const s=site(m.url);return `<div class="it ${who}${nw}"><div class="ic-card" data-hold="${m.id}"><div><div class="site">${esc(s.host)}</div><div class="path">${esc(s.path)}</div></div><div class="acts"><button type="button" class="pill" data-act="openLink" data-id="${m.id}">Open link</button>${more}</div></div>${foot}</div>`}
+  if(m.t==='note'){const c=codeOf(m.text);if(c&&m.from!=='me')return `<div class="it ${who}${nw}"><div class="ic-card" ${H}><div class="note">${esc(m.text)}</div><div class="otp" aria-label="Code ${c.split('').join(' ')}">${esc(c)}</div><div class="acts"><button type="button" class="pill w cc" data-act="copyCode" data-code="${esc(c)}">${ic('copy',18)}Copy code</button></div></div>${foot}</div>`;
+    return `<div class="it ${who}${nw}"><div class="ic-card" ${H}><div class="note">${esc(m.text)}</div></div>${foot}</div>`}
+  if(m.t==='link'){const s=site(m.url);return `<div class="it ${who}${nw}"><div class="ic-card" ${H}><div><div class="site">${esc(s.host)}</div><div class="path">${esc(s.path)}</div></div><div class="acts"><button type="button" class="pill" data-act="openLink" data-id="${m.id}">Open link</button></div></div>${foot}</div>`}
   if(m.t==='file'){
     const sending=m.state==='sending';
     const saved=m.from==='me'?(sending?`<span data-pt="${m.id}">${Math.round(m.p*100)}%</span> · sending`:'Delivered ✓'):`Saved to ${esc(S.set[v].save)}`;
     const bar=sending?`<div class="bar" style="background:#00000022"><i data-p="${m.id}" style="width:${m.p*100}%;background:var(--onwhite)"></i></div>`:'';
-    return `<div class="it ${who}${nw}"><div class="ic-card"><div class="row1">${ic(kindOf(m.name)==='file'?'file':'photo',24)}<div style="min-width:0"><div class="nm">${esc(m.name)}</div><div class="sz">${fmt(m.size)}</div></div></div><div class="saved">${saved}</div>${bar}${sending?'':`<div class="acts"><button type="button" class="pill" data-act="openFile" data-id="${m.id}">Open</button><button type="button" class="pill" data-act="showFolder" data-id="${m.id}">Show in folder</button>${more}</div>`}</div>${foot}</div>`}
+    return `<div class="it ${who}${nw}"><div class="ic-card" ${H}><div class="row1">${ic(kindOf(m.name)==='file'?'file':'photo',24)}<div style="min-width:0"><div class="nm">${esc(m.name)}</div><div class="sz">${fmt(m.size)}</div></div></div><div class="saved">${saved}</div>${bar}${sending?'':`<div class="acts"><button type="button" class="pill" data-act="openFile" data-id="${m.id}">Open</button><button type="button" class="pill" data-act="showFolder" data-id="${m.id}">Show in folder</button></div>`}</div>${foot}</div>`}
   if(m.t==='photos'){
     const n=m.items.filter(x=>x[2]!=='video').length,vd=m.items.length-n;
-    return `<div class="it ${who}${nw}"><div class="ic-card"><div class="thumbs">${m.items.map(x=>`<img src="${MEDIA[x[2]]}" alt="${esc(x[0])}">`).join('')}</div><div><div class="nm" style="font-weight:500">${n} photo${n>1?'s':''}${vd?', '+vd+' video':''}</div><div class="saved" style="margin-top:6px">${m.from==='me'?'Delivered ✓':'Saved to Photos'}</div></div><div class="acts"><button type="button" class="pill" data-act="openPhotos" data-id="${m.id}">Open photos</button>${more}</div></div>${foot}</div>`}
+    return `<div class="it ${who}${nw}"><div class="ic-card" ${H}><div class="thumbs">${m.items.map(x=>`<img src="${MEDIA[x[2]]}" alt="${esc(x[0])}">`).join('')}</div><div><div class="nm" style="font-weight:500">${n} photo${n>1?'s':''}${vd?', '+vd+' video':''}</div><div class="saved" style="margin-top:6px">${m.from==='me'?'Delivered ✓':'Saved to Photos'}</div></div><div class="acts"><button type="button" class="pill" data-act="openPhotos" data-id="${m.id}">Open photos</button></div></div>${foot}</div>`}
   if(m.t==='req'){
     const total=m.files.reduce((a,f)=>a+f[1],0),n=m.files.length;const names=m.files.map(f=>esc(f[0])).join(' · ');
     if(m.status==='waiting')return `<div class="it them wide${nw}"><div class="req"><span class="k">Waiting for you</span><span class="t">${esc(d.name)} wants to send you ${n} files · ${fmt(total)}</span><span class="names">${names}</span><div style="display:flex;gap:8px;margin-top:4px"><button type="button" class="pill o" style="border-color:#ffc56b55;color:#ffe2ad" data-act="decline" data-v="${v}" data-k="${k}" data-id="${m.id}">Decline</button><button type="button" class="pill a" data-act="accept" data-v="${v}" data-k="${k}" data-id="${m.id}">Accept</button></div></div>${foot}</div>`;
@@ -453,21 +455,30 @@ function chatHead(v){const st=S[v],k=st.chat,d=S.D[k];
 }
 
 /* ---------- notices ---------- */
-function notice(title,sub,o={}){
-  const box=document.getElementById(S.view==='phone'?'ph-notices':'pc-notices');if(S.view==='phone')noticePlace();
-  const ms=o.long?9000:5000;const el=document.createElement('div');el.className='notice';
-  el.innerHTML=`<div class="t">${esc(title)}${sub?'<small>'+esc(sub)+'</small>':''}</div><button type="button" class="x" aria-label="Close">${ic('close',18)}</button><span class="life"><i style="animation-duration:${ms}ms"></i></span>`;
-  const kill=()=>{el.classList.add('out');setTimeout(()=>el.remove(),260)};
-  el.querySelector('.x').onclick=kill;let t=setTimeout(kill,ms);
-  el.onpointerenter=()=>{clearTimeout(t);el.querySelector('.life i').style.animationPlayState='paused'};
-  el.onpointerleave=()=>{if(!y0)t=setTimeout(kill,2500)};
+/* one notice at a time: a new one waits; the one showing then leaves 3 s later (or at once on ✕ / swipe) */
+const NQ={phone:{q:[],cur:null},pc:{q:[],cur:null}};
+function notice(title,sub,o={}){const v=S.view,N=NQ[v];N.q.push({title,sub,o});if(N.cur)N.cur.hurry();else showNotice(v)}
+function showNotice(v){const N=NQ[v];const n=N.q.shift();if(!n)return;
+  const box=document.getElementById(v==='phone'?'ph-notices':'pc-notices');if(v==='phone')noticePlace();
+  const ms=n.o.long?9000:5000;const el=document.createElement('div');el.className='notice';
+  el.innerHTML=`<div class="t">${esc(n.title)}${n.sub?'<small>'+esc(n.sub)+'</small>':''}</div><button type="button" class="x" aria-label="Close">${ic('close',18)}</button><span class="life"><i style="animation-duration:${ms}ms"></i></span>`;
+  const bar=el.querySelector('.life i');let t,ends=Date.now()+ms,over=false,hurried=false,done=false;
+  const finish=()=>{if(done)return;done=true;clearTimeout(t);if(N.cur&&N.cur.el===el)N.cur=null;setTimeout(()=>{el.remove();if(!N.cur)showNotice(v)},260)};
+  const kill=()=>{el.classList.add('out');finish()};
+  const runFor=ms2=>{clearTimeout(t);ends=Date.now()+ms2;const f=bar.getBoundingClientRect().width/Math.max(1,bar.parentNode.getBoundingClientRect().width);bar.style.animation='none';bar.style.transition='none';bar.style.width=(f*100)+'%';void bar.offsetWidth;bar.style.transition=`width ${ms2}ms linear`;bar.style.width='0%';t=setTimeout(kill,ms2)};
+  const pause=()=>{clearTimeout(t);const w=getComputedStyle(bar).width;bar.style.transition='none';bar.style.width=w;bar.style.animationPlayState='paused'};
+  const resume=()=>runFor(hurried?Math.min(3000,Math.max(1200,ends-Date.now())):2500);
+  N.cur={el,hurry(){if(hurried)return;hurried=true;if(!over&&!y0)runFor(Math.min(3000,Math.max(0,ends-Date.now())))}};
+  el.querySelector('.x').onclick=kill;t=setTimeout(kill,ms);
+  el.onpointerenter=()=>{over=true;pause()};
+  el.onpointerleave=()=>{over=false;if(!y0&&!done)resume()};
   /* swipe it down to close it */
   let y0=0,dy=0;
-  el.addEventListener('pointerdown',e=>{if(e.target.closest('.x'))return;y0=e.clientY;dy=0;clearTimeout(t);el.querySelector('.life i').style.animationPlayState='paused';el.classList.add('drag');el.setPointerCapture(e.pointerId)});
+  el.addEventListener('pointerdown',e=>{if(e.target.closest('.x'))return;y0=e.clientY;dy=0;pause();el.classList.add('drag');el.setPointerCapture(e.pointerId)});
   el.addEventListener('pointermove',e=>{if(!y0)return;dy=Math.max(0,e.clientY-y0);el.style.transform=`translateY(${dy}px)`;el.style.opacity=String(Math.max(.2,1-dy/120))});
-  const end=()=>{if(!y0)return;y0=0;el.classList.remove('drag');if(dy>36){el.classList.add('gone');setTimeout(()=>el.remove(),230)}else{el.style.transform='';el.style.opacity='';el.querySelector('.life i').style.animationPlayState='running';t=setTimeout(kill,2500)}};
+  const end=()=>{if(!y0)return;y0=0;el.classList.remove('drag');if(dy>36){el.classList.add('gone');finish()}else{el.style.transform='';el.style.opacity='';if(!over)resume()}};
   el.addEventListener('pointerup',end);el.addEventListener('pointercancel',end);
-  box.appendChild(el);while(box.children.length>3)box.firstChild.remove();
+  box.appendChild(el);
 }
 
 /* ---------- transfers ---------- */
@@ -590,8 +601,8 @@ function sheetBody(sh,v){const st=S[v],s=S.set[v];
     const title=m.t==='note'?m.text:m.t==='link'?site(m.url).host:m.t==='file'?m.name:m.t==='photos'?`${m.items.length} items`:'Transfer';
     const sub=m.t==='note'?'Note':m.t==='link'?site(m.url).path:m.t==='file'?fmt(m.size):'Saved to Photos';
     const noFolder=m.t==='note'||m.t==='link';
-    return `<h3>${esc(title)}</h3><p class="sub2">${esc(sub)}</p>${opt('Open','menuOpen','data-id="'+m.id+'"')}${opt('Copy','copy','data-id="'+m.id+'"')}${opt('Show in folder','showFolder','data-id="'+m.id+'"'+(noFolder?' disabled':''))}${opt('Send again','sendAgain','data-id="'+m.id+'"')}${opt('Remove from this list','removeItem','data-id="'+m.id+'"')}${cancel}<p class="foot2">Removing only changes this list. It never deletes the file.</p>`}
-  case 'note':{const c=codeOf(sh.text);return `<h3 class="sub2" style="font-size:13px;margin:0">Note</h3><div style="font-size:20px" data-holdtext="${esc(sh.text)}">${esc(sh.text)}</div>${c?opt('Copy code','copyText','data-text="'+esc(c)+'"','w'):''}${opt('Done','closeSheet')}`}
+    return `<div class="shead"><div><h3>${esc(title)}</h3><p class="sub2">${esc(sub)}</p></div><button type="button" class="rb s" aria-label="Close" data-act="closeSheet">${ic('close',18)}</button></div>${opt('Open','menuOpen','data-id="'+m.id+'"')}${opt('Copy','copy','data-id="'+m.id+'"')}${opt('Show in folder','showFolder','data-id="'+m.id+'"'+(noFolder?' disabled':''))}${opt('Send again','sendAgain','data-id="'+m.id+'"')}${opt('Remove from this list','removeItem','data-id="'+m.id+'"')}<p class="foot2">Removing only changes this list. It never deletes the file.</p>`}
+  case 'note':{const c=codeOf(sh.text);return `<h3 class="sub2" style="font-size:13px;margin:0">Note</h3><div style="font-size:20px">${esc(sh.text)}</div>${c?opt('Copy code','copyText','data-text="'+esc(c)+'"','w'):''}${opt('Done','closeSheet')}`}
   case 'filePreview':return `<h3 class="sub2" style="font-size:13px;margin:0">File preview</h3><b style="font-size:18px">${esc(sh.name)}</b><p class="sub2">${v==='phone'?'Files':'Finder'} › Downloads › Sidekick</p>${opt('Show in folder','showFolderN','data-n="'+esc(sh.name)+'"')}${opt('Done','closeSheet')}`;
   case 'folder':return `<h3>Show in ${v==='phone'?'Files':'Finder'}</h3><p class="sub2">${v==='phone'?'Files':'Finder'} › ${esc(s.save)}</p><b>${esc(sh.name)}</b>${opt('Open','closeSheet')}${opt('Done','closeSheet')}`;
   case 'viewer':{const it=sh.items[sh.i];return `<h3>Photos</h3><p class="sub2">${sh.items.length} items · Saved to Photos</p><div class="viewer"><img src="${MEDIA[it[2]]}" alt="${esc(it[0])}"></div><div style="display:flex;align-items:center;gap:8px"><button type="button" class="rb s" aria-label="Previous" data-act="vprev">${ic('back',18)}</button><span class="sub" style="flex:1;text-align:center;font-size:13px">${esc(it[0])}${it[2]==='video'?' · video':''} · ${sh.i+1} of ${sh.items.length}</span><button type="button" class="rb s" aria-label="Next" data-act="vnext">${ic('right',18)}</button></div>${opt('Done','closeSheet')}`}
@@ -621,7 +632,7 @@ function phRender(){
   let o='';
   if(P.sending)o+=`<div class="full rise" style="z-index:35">${sendingView(P.sending,'phone')}</div>`;
   if(P.ping)o+=`<div class="full rise" style="z-index:45;padding-bottom:34px">${pingView('phone')}</div>`;
-  if(P.sheet)o+=`<div class="back" data-act="closeSheet"></div><div class="sheet${P.sheet.t==='req'?' grab':''}" role="dialog" aria-modal="true">${P.sheet.t==='req'?'<span class="gr"></span>':''}${sheetBody(P.sheet,'phone')}</div>`;
+  if(P.sheet)o+=`<div class="back" data-act="closeSheet"></div><div class="sheet${/^(req|menu)$/.test(P.sheet.t)?' grab':''}" role="dialog" aria-modal="true">${/^(req|menu)$/.test(P.sheet.t)?'<span class="gr" style="align-self:center"></span>':''}${sheetBody(P.sheet,'phone')}</div>`;
   if(P.pop)o+=popHTML(P.pop,'phone');
   const ov=document.getElementById('ph-over');const sig=[P.sending&&P.sending.id,P.ping,P.sheet&&P.sheet.t+P.sheet.id,P.pop&&P.pop.t].join('|');
   ov.innerHTML=o;if(ov.dataset.sig===sig)ov.querySelectorAll('.full,.sheet,.back,.pop').forEach(e=>e.style.animation='none');ov.dataset.sig=sig;
@@ -816,20 +827,26 @@ const A={
   simOffline(){S.D.pixel.reach=!S.D.pixel.reach;render();notice(S.D.pixel.reach?'Pixel 9 is back':'Pixel 9 is out of reach',S.D.pixel.reach?'Same Wi-Fi · encrypted':'Its chat says how to reconnect')},
   simError(){V().pop={t:'error',k:'mba'};render()},
   simFresh(){const v=S.view;Object.values(S.D).forEach(d=>{if(!d.self)d.paired=false});V().stack=[];if(v==='phone')S.phone.tab='devices';else S.pc.tab='devices';render()},
-  reset(){jobs.length=0;const v=S.view;S=fresh();S.view=v;S.pc.remote='mbp';lastKey='';stick=true;document.getElementById('ph-notices').innerHTML='';document.getElementById('pc-notices').innerHTML='';render();notice('Started over','Everything is back to how it was')}
+  reset(){jobs.length=0;const v=S.view;S=fresh();S.view=v;S.pc.remote='mbp';lastKey='';stick=true;for(const k in NQ){NQ[k].q.length=0;NQ[k].cur=null}document.getElementById('ph-notices').innerHTML='';document.getElementById('pc-notices').innerHTML='';render();notice('Started over','Everything is back to how it was')}
 };
 function openURL(u){const a=document.createElement('a');a.href=/^https?:/.test(u)?u:'https://'+u;a.target='_blank';a.rel='noopener';document.body.appendChild(a);a.click();a.remove()}
 function labels(){const p=S.view==='phone';document.getElementById('sim-files').textContent=p?'MacBook Pro sends 4 files':'Pixel 9 sends 4 files';document.getElementById('sim-ping').textContent=p?'MacBook Pro pings this phone':'Pixel 9 pings this computer'}
-/* long press (or right-click) a note or link to copy it; nothing pops up */
+/* hold (or right-click, or the Menu key) a card for all its actions; flick a sheet down to close it */
 function held(el){el.classList.remove('held');void el.offsetWidth;el.classList.add('held');setTimeout(()=>el.classList.remove('held'),180);try{navigator.vibrate&&navigator.vibrate(12)}catch(x){}}
-function holdText(el){if(el.dataset.holdtext)return el.dataset.holdtext;const m=find(S.view,el.dataset.hold);return m?(m.text||m.url||''):''}
+function actions(el){held(el);V().sheet={t:'menu',id:el.dataset.hold};setTimeout(render,120)}
 let hold=null,justHeld=false;
-document.addEventListener('pointerdown',ev=>{const el=ev.target.closest('[data-hold],[data-holdtext]');if(!el||ev.target.closest('button')||ev.button>0)return;
-  hold={el,x:ev.clientX,y:ev.clientY,t:setTimeout(()=>{clip(holdText(el));held(el);justHeld=true;hold=null},500)}});
+document.addEventListener('pointerdown',ev=>{const el=ev.target.closest('[data-hold]');if(!el||ev.button>0)return;
+  hold={el,x:ev.clientX,y:ev.clientY,t:setTimeout(()=>{justHeld=true;hold=null;actions(el)},480)}});
 document.addEventListener('pointermove',ev=>{if(hold&&Math.hypot(ev.clientX-hold.x,ev.clientY-hold.y)>8){clearTimeout(hold.t);hold=null}});
 ['pointerup','pointercancel'].forEach(n=>document.addEventListener(n,()=>{if(hold){clearTimeout(hold.t);hold=null}}));
-document.addEventListener('contextmenu',ev=>{const el=ev.target.closest&&ev.target.closest('[data-hold],[data-holdtext]');if(!el)return;ev.preventDefault();if(justHeld){justHeld=false;return}clip(holdText(el));held(el)});
-document.addEventListener('click',ev=>{if(justHeld){justHeld=false;if(ev.target.closest('[data-hold],[data-holdtext]')){ev.preventDefault();return}}const el=ev.target.closest('[data-act]');if(!el||el.disabled)return;const f=A[el.dataset.act];if(f)f(el,ev)});
+document.addEventListener('contextmenu',ev=>{const el=ev.target.closest&&ev.target.closest('[data-hold]');if(!el)return;ev.preventDefault();if(justHeld){justHeld=false;return}actions(el)});
+document.addEventListener('keydown',ev=>{const el=ev.target;if(el.dataset&&el.dataset.hold&&(ev.key==='ContextMenu'||(ev.shiftKey&&ev.key==='F10')||(ev.key==='Enter'&&el===ev.target))){ev.preventDefault();actions(el)}});
+let flick=null,flicked=false;
+document.addEventListener('pointerdown',ev=>{const sh=ev.target.closest('.sheet');if(!sh||sh.scrollTop>0||ev.target.closest('input,textarea'))return;flick={sh,y:ev.clientY,dy:0}},true);
+document.addEventListener('pointermove',ev=>{if(!flick)return;const dy=ev.clientY-flick.y;if(dy>8||flick.dy){flick.dy=Math.max(0,dy);flick.sh.classList.add('drag');flick.sh.style.transform=`translateY(${flick.dy}px)`}});
+['pointerup','pointercancel'].forEach(n=>document.addEventListener(n,()=>{if(!flick)return;const f=flick;flick=null;if(!f.dy)return;flicked=true;setTimeout(()=>flicked=false,60);f.sh.classList.remove('drag');
+  if(f.dy>70){f.sh.classList.add('gone');setTimeout(()=>{close();render()},190)}else{f.sh.classList.add('snap');f.sh.style.transform='';setTimeout(()=>f.sh.classList.remove('snap'),260)}}));
+document.addEventListener('click',ev=>{if(flicked){ev.preventDefault();return}if(justHeld){justHeld=false;if(ev.target.closest('[data-hold]')){ev.preventDefault();return}}const el=ev.target.closest('[data-act]');if(!el||el.disabled)return;const f=A[el.dataset.act];if(f)f(el,ev)});
 document.addEventListener('input',ev=>{const t=ev.target;
   if(t.dataset.compose){const v=t.dataset.compose;S[v].draft=t.value;const bar=t.closest('.mbar'),on=!!t.value.trim();bar.classList.toggle('typing',on);bar.querySelector('.sendf').setAttribute('aria-label',on?'Send':'Send files')}
   else if(t.dataset.q){S[t.dataset.q].q=t.value;render()}

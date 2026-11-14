@@ -10,7 +10,7 @@ await c('.sheet [data-act=accept]');await p.waitForTimeout(600);await shot('03-r
 await p.waitForTimeout(9000);await shot('04-received');
 await c('.dk[data-t=chat]');await c('[data-act=devPicker]');await c('.sheet [data-k=pixel]');await shot('05-chat');
 await p.fill('#msg-phone','see you at 6');await p.waitForTimeout(300);await shot('06-typing');await p.press('#msg-phone','Enter');await p.waitForTimeout(300);
-await c('[data-act=itemMenu]',0);await shot('07-menu');await c('.sheet [data-act=closeSheet]');
+{await p.evaluate(()=>document.querySelectorAll('.notice').forEach(n=>n.remove()));const hl=p.locator('#ph [data-hold]').last();await hl.scrollIntoViewIfNeeded();const bx=await hl.boundingBox();await p.mouse.move(bx.x+20,bx.y+15);await p.mouse.down();await p.waitForTimeout(650);await p.mouse.up();await p.waitForTimeout(300)}await shot('07-menu');await c('.sheet [data-act=closeSheet]');
 await c('[data-act=filter][data-f=links]');await shot('08-links');await c('[data-act=filter][data-f=all]');
 await c('[data-act=search]');await c('.sheet [data-act=searchFor]',0);await shot('09-search');await c('[data-act=closeSearch]');
 await c('[data-act=attach]');await shot('10-attach');await c('.sheet [data-act=pickPhotos]');await c('.sheet [data-act=addPhotos]');await p.waitForTimeout(700);await shot('11-sending');await p.waitForTimeout(5500);await c('[data-act=closeSending]');

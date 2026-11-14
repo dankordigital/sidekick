@@ -51,6 +51,16 @@ detailed developer notes; every release is in `VERSIONS.md`) and
 
 ## 14 November 2026
 
+- **Emulator: hold for actions, 6-digit codes, one notice at a time** (the
+  owner): only a **6-digit code** gets the big **Copy code** button
+  (`codeOf`: "482913", "482 913", "G-482913 is your Google code", "Kod BLIK
+  123456"; not 4- or 8-digit numbers, not order numbers without "code").
+  Every other card has no ⋯ any more: **hold it** (right-click or the Menu
+  key on a computer) for all its actions (Open, Copy, Show in folder, Send
+  again, Remove). That sheet closes with **✕** or a **flick down** (grab
+  handle; no Cancel). Notices show **one at a time**: a new one waits, the
+  one showing leaves 3 s later (its bar speeds up to match), at once on ✕ or
+  swipe; hovering or touching it pauses it.
 - **Emulator: quieter copying** (the owner: "just let people copy and don't
   tell them"): the "Copied" sheet is gone; copying says nothing. Notes and
   links have no Copy button any more: **long-press** (or right-click on a
