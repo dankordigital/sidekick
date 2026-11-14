@@ -97,7 +97,13 @@ class _ShellState extends State<Shell> {
     super.dispose();
   }
 
-  void _go(int index) => setState(() => _index = index);
+  /// Which way the last tab change went, for the slide.
+  bool _cameFromRight = true;
+
+  void _go(int index) => setState(() {
+    _cameFromRight = index >= _index;
+    _index = index;
+  });
 
   void _openTab() {
     final tab = DesktopWindow.instance.openTab.value;
@@ -207,11 +213,19 @@ class _ShellState extends State<Shell> {
             // Like Apple's tab bars: the old tab is gone at once and the new
             // one fades in quickly. (Cross-fading two whole tabs meant drawing
             // both for 300 ms on every switch.)
+            // The new tab glides in from the side it's on (right when moving
+            // right along the dock), fading in; the old one is gone at once.
             child: AnimatedSwitcher(
-              duration: const Duration(milliseconds: 180),
+              duration: MediaQuery.disableAnimationsOf(context) ? Duration.zero : const Duration(milliseconds: 300),
               reverseDuration: Duration.zero,
-              switchInCurve: Curves.easeOut,
-              transitionBuilder: (child, animation) => FadeTransition(opacity: animation, child: child),
+              switchInCurve: const Cubic(0.22, 1, 0.36, 1),
+              transitionBuilder: (child, animation) => FadeTransition(
+                opacity: animation,
+                child: SlideTransition(
+                  position: Tween(begin: Offset(_cameFromRight ? 0.06 : -0.06, 0), end: Offset.zero).animate(animation),
+                  child: child,
+                ),
+              ),
               child: KeyedSubtree(key: ValueKey(_index), child: pages[_index]),
             ),
           ),

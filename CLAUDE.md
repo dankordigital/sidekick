@@ -662,6 +662,12 @@ release. Keep this file for how things work now, not for history.
   the prefs (`look` = `nothing` / glass falls back to the regular look), the
   alternate app icons and tray icons, and the screenshot renders. Don't add
   features to either.
+- **4.0 screens are rebuilt to match the design, not recoloured** (the
+  owner, 14 Nov: "it looks like a recolored version of original default
+  sidekick"), and **less bloated by Fitts's law**: fewer things per screen,
+  whole rows as tap targets, the main action big and near the thumb, the
+  rest behind a hold, nothing under 44 pt. Building blocks: `ui/kit.dart`.
+  Method: `design/4.0-build-plan.md` ("How each screen is built").
 - **4.0: people choose their app icon** (the owner's call, 14 Nov 2026; not
   built yet, comes with the 4.0 build): Settings → App icon (**only in
   Settings, never in the first-time setup**, the owner's call), a row of the

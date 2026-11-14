@@ -51,6 +51,7 @@ detailed developer notes; every release is in `VERSIONS.md`) and
 
 ## 14 November 2026
 
+- **4.0: swipe along the dock** to change tabs (haptic tick), tabs glide in from their side; plan: less bloated by Fitts's law (whole rows as targets, main action big and near the thumb, the rest behind a hold); `ui/kit.dart`, the design's building blocks for the rebuilt screens.
 - **4.0 course change** (the owner: "this looks nothing like the promised design"): screens were being recoloured, not rebuilt. From now on each screen is rebuilt to match its Figma picture and the emulator, checked side by side with the design before it's ticked (`design/4.0-build-plan.md`, "How each screen is built"). Devices first.
 - **4.0, step 4a:** a paired device's card shows the last thing shared and opens its Chat when tapped.
 - **4.0, step 3b: the Chat tab** (`ui/chat_page.dart`): per-device cards (files, links, notes, 6-digit codes with Copy code), hold for actions (✕ to close), the message bar whose Send files turns into Send while typing. Dock has 5 tabs (Devices · Chat · Files · Remote · Settings). Analyze clean, tests and sizes_test pass.
