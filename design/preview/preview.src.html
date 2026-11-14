@@ -302,7 +302,7 @@ function sendingHTML(){const o=S.out,tot=o.items.reduce((a,f)=>a+f.size,0),r=80,
   <div>${done?ic('check',56,'var(--ok)',2.6)+'<span class="sub" style="margin-top:6px">Sent</span>':no?ic('close',52,'var(--red)',2.6)+'<span class="sub" style="margin-top:6px">Declined</span>':wait?`<span class="sub" style="text-align:center;padding:0 30px">Waiting for MacBook Pro to accept</span>`:`<b id="phPct">${Math.round(o.p*100)}%</b><span class="sub" style="font-size:12.5px" id="phEta">About ${Math.max(1,Math.round((1-o.p)*4))} seconds left</span>`}</div></div>
   <div style="text-align:center;font-size:15px" id="phOf">${no?'MacBook Pro said no. Nothing was sent.':`${fmt(tot*o.p)} of ${fmt(tot)}${o.state==='going'?' · 12 MB/s':''}`}</div>
   <div class="card" style="padding:16px;display:flex;flex-direction:column;gap:14px">${o.items.map(f=>`<div><div>${esc(f.name)}</div><div class="sub" style="font-size:12.5px;margin:4px 0 8px">${fmt(f.size)}${done?' · sent ✓':''}</div><div class="bar" style="height:3px"><i class="phBar" style="width:${done?100:o.p*100}%;background:var(--white)"></i></div></div>`).join('')}</div>
-  ${o.state==='going'?'<button type="button" class="pill o lg" id="phStop" style="justify-content:flex-start">Stop</button>':''}`}
+  ${o.state==='going'?'<button type="button" class="pill o lg" id="phStop">Stop</button>':''}`}
 
 /* ---------- phone → computer ---------- */
 function phoneSends(){if(!S.sel.length||S.out||S.req)return;S.out={items:S.sel.slice(),p:0,state:'wait'};S.sel=[];S.tab='send';phRender();
