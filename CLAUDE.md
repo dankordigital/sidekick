@@ -38,7 +38,12 @@ delivered on the hosting, so it's only a fallback), the password in
 to `sidekick-wishlist/mail.log` (never the password). The email is HTML
 (`welcome_html`: the header image, a signature at the bottom (`email_footer`: the "sk" logo as `cid:logo`, Sidekick, getsidekick.app, `FROM`), `website/email-header.png` as a JPEG inside `wishlist.php` (`header_image`), attached inline as `cid:header`,
 a "Cancel my sign-up" button: the remove link) with a plain-text part, with a
-remove link, and a note to `FROM` about each sign-up (`NOTIFY_OWNER`); a
+remove link. **Every email is in the 4.0 look** (`email_shell`: near-black
+page, the header (`website/email-header.png`: the Dusk "sk" and the wordmark
+on a dark glow), a #1c1c1c card, white text with one word in an app colour,
+white pill "Try the demo" (→ /preview) beside an outlined "Cancel my
+sign-up", chips, and the signature with the Dusk icon; `color-scheme: dark`);
+np7dpanel's `announce_html` uses the same frame. Also and a note to `FROM` about each sign-up (`NOTIFY_OWNER`); a
 honeypot field, a 2-second minimum, and 5 tries an hour per hashed IP.
 `wishlist-check.php` (upload once, open, delete) loads `wishlist.php`'s
 functions (`WISHLIST_LIB`) and checks the hosting: PHP, the private

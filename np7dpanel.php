@@ -157,41 +157,28 @@ function welcome_to(string $email): bool {
     return $sent;
 }
 
-/** The announcement, designed like the welcome email: the header image,
- *  a heading, the message and a "Remove me" link. */
+/** The announcement, in the same 4.0 frame as the welcome email: a heading,
+ *  the message (links become links) and a "Remove me" link. */
 function announce_html(string $heading, string $message, string $remove): string {
-    $footer = email_footer();
-    $site = e(SITE);
     $remove = e($remove);
-    $font = "font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif";
+    $f = EMAIL_FONT;
     $title = e($heading);
     $paragraphs = '';
     foreach (preg_split('/\R{2,}/', trim($message)) as $p) {
         $p = nl2br(e(trim($p)));
-        // Links in the message become real links.
-        $p = preg_replace('~(https?://[^\s<]+)~', '<a href="$1" style="color:#6a4cff">$1</a>', $p);
-        $paragraphs .= "<p style=\"margin:0 0 16px;font-size:16px;line-height:1.55;color:#3d3550\">$p</p>\n";
+        $p = preg_replace('~(https?://[^\s<]+)~', '<a href="$1" style="color:#5b9dff">$1</a>', $p);
+        $paragraphs .= "<p style=\"margin:0 0 16px;font-size:16px;line-height:1.6;color:#d6d6d9\">$p</p>\n";
     }
-    return <<<HTML
-<!doctype html>
-<html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="color-scheme" content="light only"><title>$title</title></head>
-<body style="margin:0;padding:0;background:#f1edf8">
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f1edf8"><tr><td align="center" style="padding:24px 12px">
-<table role="presentation" width="600" cellpadding="0" cellspacing="0" style="width:100%;max-width:600px;background:#ffffff;border-radius:24px;overflow:hidden">
-<tr><td bgcolor="#2a1257" align="center" style="background:#2a1257"><a href="$site" style="color:#ffffff;text-decoration:none"><img src="cid:header" width="600" alt="Sidekick" style="display:block;width:100%;height:auto;border:0;background:#2a1257;color:#ffffff;$font;font-size:28px;font-weight:800;line-height:80px;text-align:center;text-decoration:none"></a></td></tr>
-<tr><td style="padding:36px 40px 16px;$font;color:#1d1530">
-<h1 style="margin:0 0 16px;font-size:28px;line-height:1.2;font-weight:800">$title</h1>
+    $inner = <<<HTML
+<tr><td style="padding:34px 36px 14px;$f;color:#f2f2f2">
+<h1 style="margin:0 0 16px;font-size:30px;line-height:1.15;font-weight:800;letter-spacing:-0.5px;color:#f2f2f2">$title</h1>
 $paragraphs
 </td></tr>
-<tr><td style="padding:0 40px 32px;$font;font-size:13px;line-height:1.5;color:#8a8399;border-top:1px solid #eee8f6">
-<p style="margin:22px 0 0">You're getting this because you joined the Sidekick wishlist. <a href="$remove" style="color:#8a8399">Remove me from the list</a>.</p>
+<tr><td style="padding:0 36px 30px;$f;font-size:13px;line-height:1.55;color:#8a8a8f;border-top:1px solid #2a2a2a">
+<p style="margin:22px 0 0">You're getting this because you joined the Sidekick wishlist. <a href="$remove" style="color:#8a8a8f">Remove me from the list</a>.</p>
 </td></tr>
-</table>
-{$footer}
-</td></tr></table>
-</body></html>
 HTML;
+    return email_shell($heading, '', $inner);
 }
 
 function send_announcement(string $to, string $token, string $subject, string $heading, string $message): bool {

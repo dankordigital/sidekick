@@ -51,6 +51,7 @@ detailed developer notes; every release is in `VERSIONS.md`) and
 
 ## 14 November 2026
 
+- **The emails are in the 4.0 look** (`wishlist.php` `email_shell`, used by the welcome email and np7dpanel's announcements): dark card, the new header (Dusk "sk" + wordmark), "Got your **email!**", chips, a white "Try the demo" pill beside "Cancel my sign-up", the Dusk icon in the signature, "Made with ♥ in Poland". The plain-text part links the demo too. Checked with a real local sign-up (outbox) and a rendered announcement.
 - **A new "sk" logo** (`design/logo-sk/`, the owner: same letters, new
   background and colours): eight icons from `3.png`'s letters (Ink, Paper,
   Sky, Amber, Mint, Signal, Chrome, Dusk; `board.png`). **Dusk** (white on
