@@ -19,6 +19,7 @@ import 'core/errors.dart';
 import 'core/models.dart';
 import 'core/pairing_qr.dart';
 import 'core/server.dart';
+import 'core/history.dart';
 import 'core/text_message.dart';
 import 'core/trust.dart';
 import 'platform/app_icon.dart';
@@ -465,6 +466,7 @@ class AppState extends ChangeNotifier {
     try {
       if (text.length > maxTextMessage) return await _sendTextAsFile(d, text);
       await (await _clientForTransfer(d, text.length)).sendText(text);
+      _record(HistoryItem.text(device: d.id, fromMe: true, text: text));
       _notices.add(Notice('Sent the $what to ${d.name}'));
     } on SidekickException catch (e) {
       if (e.status == 404) return _sendTextAsFile(d, text);
@@ -509,10 +511,28 @@ class AppState extends ChangeNotifier {
   Timer? _scanTimer;
   Timer? _permissionTimer;
 
+  /// Everything shared with each paired device (the Chat tab). In memory
+  /// only until [load] finds the app's folder.
+  History history = History(null);
+
+  void _record(HistoryItem item) {
+    history.add(item);
+    notifyListeners();
+  }
+
   static Future<AppState> load() async {
     final state = AppState._(await SharedPreferences.getInstance());
     state._restore();
     await state._loadSecrets();
+    // What each device and this one shared: the Chat tab (4.0).
+    if (!Host.isWeb) {
+      try {
+        state.history = History(File(p.join((await getApplicationSupportDirectory()).path, 'history.json')));
+        await state.history.load();
+      } catch (_) {
+        state.history = History(null);
+      }
+    }
     // Use the device's real name unless the user picked one (older versions
     // saved made-up names like "My ios"; replace those too).
     final saved = state._prefs.getString('name');
@@ -1820,6 +1840,7 @@ class AppState extends ChangeNotifier {
       }
     }
     _paired.remove(deviceId);
+    history.forget(deviceId);
     trust.remove(deviceId);
     _savePaired();
     setAlwaysAccept(deviceId, false);
@@ -1853,6 +1874,7 @@ class AppState extends ChangeNotifier {
           notifyListeners();
         }
       case TextReceived(:final from, :final text):
+        _record(HistoryItem.text(device: from.id, fromMe: false, text: text));
         _texts.add(ReceivedText(from, text));
       case JoinNetworkByHand(:final credentials):
         final joined = waitForSubnet(credentials.addresses, timeout: SidekickServer.joinByHandTime);
@@ -1864,6 +1886,7 @@ class AppState extends ChangeNotifier {
         _notices.add(Notice('Paired with ${device.name}'));
       case Unpaired(:final peerId):
         final name = _paired.remove(peerId)?.name;
+        history.forget(peerId);
         _savePaired();
         notifyListeners();
         if (name != null) _notices.add(Notice('$name unpaired from this device', info: true));
@@ -1885,7 +1908,9 @@ class AppState extends ChangeNotifier {
           ..localPath = file.path;
         transfers.insert(0, transfer);
         if (transfers.length > 50) transfers.removeLast();
-        notifyListeners();
+        _record(
+          HistoryItem.file(device: from.id, fromMe: false, name: p.basename(file.path), size: size, path: file.path),
+        );
         if (screenshot) {
           _notices.add(Notice('Screenshot from ${from.name}', revealPath: file.path));
           unawaited(DesktopNotify.show(title: 'Screenshot from ${from.name}', body: p.basename(file.path)));
@@ -2095,6 +2120,7 @@ class AppState extends ChangeNotifier {
           ..state = TransferState.done
           ..security = current.lastSecurity;
         sent++;
+        _record(HistoryItem.file(device: d.id, fromMe: true, name: names[i], size: sizes[i]));
       } catch (e) {
         failure ??= e;
         _noteFailure(d, e);
