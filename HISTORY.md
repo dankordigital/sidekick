@@ -7,6 +7,14 @@ detailed developer notes; every release is in `VERSIONS.md`) and
 
 ## 14 November 2026
 
+- **Chat isn't a messaging app** (follow-up Figma prompt,
+  `design/figma-ai-prompt-chat.md`): Figma AI read the Chat tab as a chat
+  with a person. It's one place per device for everything sent between
+  your own devices (files, photos, links, notes), only borrowing a chat's
+  familiar layout: no typing, receipts, reactions or chatty sample text;
+  items are cards with actions; filter chips (All · Files · Photos · Links ·
+  Notes), search, an empty state; the bar says "Write a note or paste a
+  link".
 - **No attention dots** (the owner's call): no badges, dots or counters
   on the dock or icons when something needs you; the amber "Needs you"
   card and the amber device already show it. Taken out of the prototype,
