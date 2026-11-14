@@ -114,6 +114,12 @@ body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset
 .sheet.drag{animation:none;transition:none}
 .sheet.gone{transform:translateY(110%)!important;transition:transform .2s ease-in}
 @keyframes up{from{transform:translateY(100%)}}
+.ring{position:absolute;inset:0;z-index:10;background:var(--page);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:26px;padding:40px 22px;animation:fade .25s}
+.rings{position:relative;width:210px;height:210px;display:grid;place-items:center}
+.rings i{position:absolute;inset:0;border-radius:50%;border:2px solid #ffc56b66;animation:rg 2.6s ease-out infinite}
+.rings i:nth-child(2){animation-delay:.85s}.rings i:nth-child(3){animation-delay:1.7s}
+@keyframes rg{0%{transform:scale(.45);opacity:1}100%{transform:scale(1.15);opacity:0}}
+.dev.big{width:84px;height:84px;border-radius:26px}
 .tryit{flex:0 1 190px;min-width:0;display:flex;flex-direction:column;gap:10px;padding-top:40px}
 .tryit .label{margin-bottom:4px}
 .try{display:flex;gap:10px;align-items:flex-start;padding:12px;border-radius:16px;background:var(--panel);border:1px solid var(--hair);text-align:left;font-size:13.5px;color:var(--muted)}
@@ -147,6 +153,21 @@ section .wrap>p.lead{margin:16px 0 0;max-width:36em;color:var(--muted);font-size
 .f.wide .two{display:grid;grid-template-columns:1fr 1fr;gap:18px;align-items:center}
 @media (max-width:760px){.f.wide .two{grid-template-columns:1fr}}
 
+/* FREE: holographic chrome in pastels, a shine sweeping across, tilting toward the pointer */
+.free{padding-block:56px 40px}
+.free .wrap{display:flex;flex-direction:column;align-items:center;text-align:center}
+.free-word{display:inline-block;margin:18px 0 22px;perspective:900px;max-width:100%}
+.free-tilt{transform-style:preserve-3d;transform:rotateX(var(--rx,0deg)) rotateY(var(--ry,0deg));transition:transform .25s ease-out}
+.holo{font-size:clamp(120px,24vw,320px);line-height:.9;font-weight:800;letter-spacing:-.07em;padding:0 .05em;
+  background-image:linear-gradient(105deg,transparent 38%,#ffffffd9 48%,#fff 50%,#ffffffd9 52%,transparent 62%),linear-gradient(180deg,#ffffff38 0%,transparent 45%,#00000040 100%),linear-gradient(100deg,#d6adf2 0%,#74b9ff 18%,#61c985 34%,#f4f4f2 47%,#e3b866 60%,#ee9a7d 76%,#d6adf2 90%,#74b9ff 100%);
+  background-size:260% 100%,100% 100%,220% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;
+  animation:shine 4.8s ease-in-out infinite,holo 12s linear infinite;filter:drop-shadow(0 18px 50px #d6adf233)}
+@keyframes shine{0%{background-position:160% 0,0 0,0 0}60%,100%{background-position:-60% 0,0 0,0 0}}
+@keyframes holo{to{background-position-x:-60%,0,-220%}}
+.ticks{display:flex;flex-wrap:wrap;justify-content:center;gap:10px 26px;font-size:16px}
+.ticks span{display:inline-flex;align-items:center;gap:8px}
+.ticks .ic{color:var(--ok)}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 .steps{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-top:40px;counter-reset:s}
 @media (max-width:860px){.steps{grid-template-columns:1fr}}
 .step{padding:22px;border-radius:24px;border:1px solid var(--line);display:flex;flex-direction:column;gap:12px;min-width:0}
@@ -225,7 +246,7 @@ footer a:hover{color:var(--text)}
       <button type="button" class="try" data-go="code"><span data-i="copy" data-s="18"></span><span><b>Get a code</b>A 6-digit code gets a Copy code button.</span></button>
       <button type="button" class="try" data-go="file"><span data-i="file" data-s="18"></span><span><b>Receive a file</b>It lands in the chat.</span></button>
       <button type="button" class="try" data-go="link"><span data-i="link" data-s="18"></span><span><b>Receive a link</b>Hold it for Copy, Send again…</span></button>
-      <button type="button" class="try" data-go="two"><span data-i="ping" data-s="18"></span><span><b>Two at once</b>Notices take turns.</span></button>
+      <button type="button" class="try" data-go="ping"><span data-i="ping" data-s="18"></span><span><b>Ring this phone</b>Lost it in the couch? Ping it.</span></button>
     </div>
   </div>
 </div></section>
@@ -250,6 +271,13 @@ footer a:hover{color:var(--text)}
     <article class="f"><span class="tile" data-i="wifi"></span><h3>No Wi-Fi? Still works</h3><p>The two devices make a direct Wi-Fi link between them. iPhones and Macs use Apple's own, like AirDrop.</p><div class="bit"><span class="chip ok">Direct Wi-Fi · encrypted</span></div></article>
     <article class="f"><span class="tile" data-i="lock"></span><h3>Stays between your devices</h3><p>Everything is encrypted end to end. No account, no servers, no tracking. Only devices you paired can connect.</p><div class="bit"><span class="chip">No account</span> <span class="chip">No servers</span></div></article>
   </div>
+</div></section>
+
+<section class="free" aria-labelledby="free-h"><div class="wrap">
+  <span class="label">Free for everyone</span>
+  <h2 id="free-h" class="sr">Sidekick is free</h2>
+  <div class="free-word" id="freeWord" aria-hidden="true"><div class="free-tilt"><div class="holo">Free</div></div></div>
+  <div class="ticks"><span data-i="check" data-s="18">No account</span><span data-i="check" data-s="18">No ads, no tracking</span><span data-i="check" data-s="18">Windows, Mac, Android, iPhone</span></div>
 </div></section>
 
 <section id="pair"><div class="wrap">
@@ -385,9 +413,16 @@ const go={
   code(){const c=codes[ci++%codes.length];add({t:'note',text:`Your Microsoft sign-in code is ${c.replace(' ','')}`,when:now()},true)},
   file(){add({t:'file',name:'Holiday photos.zip',size:'45.3 MB',when:now()},true);notice('Received Holiday photos.zip','Saved to Downloads')},
   link(){add({t:'link',host:'theguardian.com',path:'/travel/2026/nov/12/best-winter-breaks',when:now()},true);notice('MacBook Pro sent a link','theguardian.com')},
-  two(){notice('Sent to MacBook Pro','Boarding pass.pdf');setTimeout(()=>notice('MacBook Pro is back','Same Wi-Fi · encrypted'),400)}
+  ping(){over.innerHTML=`<div class="ring" role="alertdialog" aria-label="MacBook Pro is ringing this phone"><div class="rings"><i></i><i></i><i></i><span class="dev big">${ic('laptop',34,'#5b9dff')}</span></div><div style="text-align:center"><b style="display:block;font-size:22px;font-weight:700;letter-spacing:-.01em">MacBook Pro is<br>ringing this phone</b><span style="color:var(--muted);font-size:13.5px">It keeps ringing, even on silent,<br>until you tap Found it.</span></div><button type="button" class="pill w lg" data-found>${ic('check',18)}Found it!</button></div>`;
+    over.querySelector('[data-found]').onclick=()=>{over.innerHTML='';notice('Found it','The sound stopped on both devices')};
+    over.querySelector('[data-found]').focus({preventScroll:true})}
 };
 document.querySelectorAll('[data-go]').forEach(b=>b.onclick=()=>go[b.dataset.go]());
+
+/* FREE tilts toward the pointer */
+const word=document.getElementById('freeWord'),tilt=word.querySelector('.free-tilt');
+if(!matchMedia('(prefers-reduced-motion: reduce)').matches)addEventListener('pointermove',e=>{const r=word.getBoundingClientRect();if(r.bottom<0||r.top>innerHeight)return;
+  const x=(e.clientX-(r.left+r.width/2))/innerWidth,y=(e.clientY-(r.top+r.height/2))/innerHeight;tilt.style.setProperty('--ry',(x*18).toFixed(2)+'deg');tilt.style.setProperty('--rx',(-y*14).toFixed(2)+'deg')},{passive:true});
 
 /* wishlist (prototype: nothing is sent) */
 const f=document.getElementById('join');

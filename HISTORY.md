@@ -61,6 +61,10 @@ detailed developer notes; every release is in `VERSIONS.md`) and
   soon), questions, the wishlist form (prototype: sends nothing). Not live:
   the real `index.html` is unchanged. **Next: the owner says when to build
   4.0** (the app in the new design, then this site for real).
+  Then: "Two at once" (notices taking turns: "not a feature", the owner)
+  became **Ring this phone** (the Ping screen with Found it!), and a **Free**
+  section with the old site's holographic FREE (pastel chrome, moving shine,
+  tilts toward the pointer) sits after What Sidekick does.
 - **Emulator: hold for actions, 6-digit codes, one notice at a time** (the
   owner): only a **6-digit code** gets the big **Copy code** button
   (`codeOf`: "482913", "482 913", "G-482913 is your Google code", "Kod BLIK
