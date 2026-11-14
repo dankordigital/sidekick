@@ -311,7 +311,9 @@ release. Keep this file for how things work now, not for history.
   `design/preview/build.py` from `design/preview/preview.src.html` plus the
   emulator's CSS and icons (`design/emulator/`), so its cards, sheets, dock,
   request dialog and sending ring are the 4.0 design's own. Only **file
-  sending (both ways) and Remote**. A MacBook desktop (the 4.0 Sidekick
+  sending (both ways) and Remote**. A MacBook (Apple-like: notch, macOS-style
+  wallpaper, translucent menu bar, glass Dock with Finder / Safari / Music /
+  Notes and the real Sidekick icon) whose desktop has the 4.0 Sidekick
   window: rail, Devices with "Needs you", Chat with iPhone 16; Music, Notes
   and a recipe beside it) and an iPhone (the 4.0 Send, Sending, Chat and
   Remote screens with the dock), side by side; stacked on phones with the

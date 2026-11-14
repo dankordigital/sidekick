@@ -51,6 +51,7 @@ detailed developer notes; every release is in `VERSIONS.md`) and
 
 ## 14 November 2026
 
+- **The demo's Mac looks like a Mac**: a MacBook with a notch and an aluminium base, a macOS-style wallpaper, a translucent menu bar (Apple logo, menus, Sidekick's menu-bar icon, battery, Wi-Fi, Control Center, date and time), a glass Dock (Finder, Safari, Music, Notes, the real Sidekick icon, running dots, hover lift), coloured window buttons; the iPhone got a Dynamic Island.
 - **`preview.html` is the 4.0 design** (the owner: "make the newest design,
   not the old one"): rebuilt from the emulator's own CSS and icons
   (`design/preview/build.py`): a MacBook desktop with the 4.0 Sidekick window
