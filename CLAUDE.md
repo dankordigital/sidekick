@@ -14,7 +14,11 @@ The owner uploads with FileZilla: `index.html`, `index.php`, `wishlist.php`, `np
 `404.html`, `.htaccess`, `robots.txt` and `website/` go in the site's root
 folder (`www`). The
 pages link only with relative or `/…` paths, so nothing in them names the
-domain. `.github/workflows/website.yml`
+domain. **Short addresses:** pages link to `/preview` and `/privacy`
+(getsidekick.app/preview, …/privacy); `.htaccess` serves preview.html and
+privacy.html there and moves the old `.html` addresses to them (301, the
+query kept). Tested on Apache; `php -S` doesn't read `.htaccess`, so test
+them locally as /preview.html. `.github/workflows/website.yml`
 uploads exactly those over FTPS whenever they change on the branch, once
 the owner adds the secrets `FTP_SERVER`, `FTP_USERNAME`, `FTP_PASSWORD` and
 `FTP_DIR` (it skips until then). Never put the FTP login anywhere else.

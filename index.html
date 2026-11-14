@@ -414,7 +414,7 @@ html.calm .pill,html.calm .try{translate:none!important}
     <span class="label"><span class="only-wish">Coming soon · Windows, Mac, Android, iPhone</span><span class="only-released">Out now · Windows, Mac, Android, iPhone</span></span>
     <h1 data-face><span class="gl">Your phone and computer, <span class="k" style="--c:var(--blue)">as one.</span></span></h1>
     <p class="lead">Send files both ways, keep everything you shared with each device in one place, and use your phone as your computer's touchpad. Encrypted, with no account and no servers.</p>
-    <div class="ctas"><a class="pill w lg only-wish" href="#wishlist">Join the wishlist</a><a class="pill w lg only-released" id="heroDownload" href="#devices">Download Sidekick</a><a class="pill o lg" href="/preview.html">Try the demo</a></div>
+    <div class="ctas"><a class="pill w lg only-wish" href="#wishlist">Join the wishlist</a><a class="pill w lg only-released" id="heroDownload" href="#devices">Download Sidekick</a><a class="pill o lg" href="/preview">Try the demo</a></div>
     <div class="facts"><span data-i="check"></span></div>
   </div>
   <div class="demo">
@@ -484,7 +484,7 @@ html.calm .pill,html.calm .try{translate:none!important}
     <a class="plat" href="#wishlist" data-face data-os="android"><span data-i="phone" data-s="26"></span><div><b>Android</b><small style="display:block">Phones and tablets</small></div><span class="soon"><span class="only-wish">Coming soon</span><span class="only-released">Download .apk</span></span></a>
     <a class="plat" href="#wishlist" data-face data-os="ios"><span data-i="phone" data-s="26"></span><div><b>iPhone</b><small style="display:block">And iPad</small></div><span class="soon"><span class="only-wish">Coming soon</span><span class="only-released">Download .ipa</span></span></a>
   </div>
-  <p class="fine"><a href="/preview.html">Try it in your browser first</a><span class="only-released" id="releaseNote"> · <a href="https://github.com/dankordigital/sidekick/releases/latest">Release notes and older versions</a></span></p>
+  <p class="fine"><a href="/preview">Try it in your browser first</a><span class="only-released" id="releaseNote"> · <a href="https://github.com/dankordigital/sidekick/releases/latest">Release notes and older versions</a></span></p>
   <p class="fine only-released" id="macMore">On a Mac you can also use the <a id="macPkgLink" href="https://github.com/dankordigital/sidekick/releases/latest">.pkg installer</a>. Older Mac with an Intel chip? <a id="macIntelLink" href="https://github.com/dankordigital/sidekick/releases/latest">Intel .dmg</a> · <a id="macIntelPkgLink" href="https://github.com/dankordigital/sidekick/releases/latest">Intel .pkg</a></p>
 </div></section>
 
@@ -523,7 +523,7 @@ html.calm .pill,html.calm .try{translate:none!important}
       <button class="pill w lg" type="submit" id="joinBtn">Join the wishlist</button>
     </form>
     <div class="joined" id="joined" hidden><span class="tile" data-i="check" data-s="20"></span><div><b id="joinedTitle">Got your email!</b><div style="color:var(--muted);font-size:14px" id="joinedText">We'll remind you when Sidekick comes out.</div></div></div>
-    <p class="small" id="join-msg" role="status">One email now, one when Sidekick is out. Nothing else · <a href="/privacy.html">Privacy</a></p>
+    <p class="small" id="join-msg" role="status">One email now, one when Sidekick is out. Nothing else · <a href="/privacy">Privacy</a></p>
   </div>
 </div></section>
 </main>
@@ -531,7 +531,7 @@ html.calm .pill,html.calm .try{translate:none!important}
 <footer><div class="wrap">
   <a class="brand" href="#top" aria-label="Sidekick, back to the top"><img class="wordmark" src="/website/wordmark.png" alt="Sidekick" width="128" height="13"></a>
   <span>Made with <span class="heart" aria-label="love">♥</span> in Poland <span class="flag" aria-label="Polish flag"></span></span>
-  <nav><a href="/preview.html">Demo</a><a href="#questions">Questions</a><a href="#wishlist" class="only-wish">Wishlist</a><a href="#devices" class="only-released">Download</a><a href="/privacy.html">Privacy</a></nav>
+  <nav><a href="/preview">Demo</a><a href="#questions">Questions</a><a href="#wishlist" class="only-wish">Wishlist</a><a href="#devices" class="only-released">Download</a><a href="/privacy">Privacy</a></nav>
 </div></footer>
 
 <script>
@@ -750,7 +750,7 @@ function burst(x,y){if(RM)return;const cs=['#5b9dff','#4fcf86','#ffc56b','#ffb84
 const f=document.getElementById('join'),loaded=Date.now(),msg=document.getElementById('join-msg'),btn=document.getElementById('joinBtn'),msgDefault=msg.innerHTML;
 document.querySelectorAll('.oschip').forEach(c=>c.onclick=()=>c.setAttribute('aria-pressed',c.getAttribute('aria-pressed')==='true'?'false':'true'));
 function joined(title,text){document.getElementById('joinedTitle').textContent=title;document.getElementById('joinedText').textContent=text;f.hidden=true;document.querySelector('.oschips').hidden=true;document.getElementById('joined').hidden=false;
-  msg.innerHTML='Changed your mind? The email has a link that takes you off the list · <a href="/privacy.html">Privacy</a>'}
+  msg.innerHTML='Changed your mind? The email has a link that takes you off the list · <a href="/privacy">Privacy</a>'}
 function failed(text){msg.textContent=text;msg.style.color='#ff8f85'}
 document.getElementById('email').addEventListener('input',()=>{msg.innerHTML=msgDefault;msg.style.color=''});
 f.addEventListener('submit',async e=>{e.preventDefault();const v=document.getElementById('email').value.trim();

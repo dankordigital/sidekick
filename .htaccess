@@ -23,8 +23,13 @@ DirectoryIndex index.php index.html
 <IfModule mod_rewrite.c>
   RewriteEngine On
   RewriteRule ^index\.html$ /index.php [L]
+  # Short addresses: getsidekick.app/preview and /privacy serve preview.html
+  # and privacy.html; the old .html addresses move there (301, query kept).
+  RewriteCond %{THE_REQUEST} \s/+(preview|privacy)\.html[\s?] [NC]
+  RewriteRule ^ /%1 [R=301,L]
+  RewriteRule ^(preview|privacy)/?$ $1.html [L]
 </IfModule>
 
-# The preview (preview.html) runs Sidekick compiled for a browser, from
-# website/app/: browsers want its WebAssembly served as such.
+# The old preview (website/app/, Sidekick compiled for a browser) needed its
+# WebAssembly served as such; harmless now that preview.html is plain HTML.
 AddType application/wasm .wasm
