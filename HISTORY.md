@@ -12,7 +12,9 @@ detailed developer notes; every release is in `VERSIONS.md`) and
   the dock and the dock-shaped message bar, the logo), every phone and
   computer screen and state, how to build it in Figma (pages, styles,
   components with variants, auto layout, the clickable prototype), then
-  improve it on a separate "Improved" page.
+  improve it on a separate "Improved" page. Figma AI can't open our links,
+  so `design/reference/` has screenshots of the prototype (11 phone, 4
+  computer) to drag in with it.
 
 ## 13 November 2026
 

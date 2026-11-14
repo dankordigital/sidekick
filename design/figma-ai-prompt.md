@@ -1,13 +1,15 @@
 # Prompt for Figma AI: the Sidekick app design
 
 Paste everything under the line into Figma Make (or First Draft) as one
-prompt. If you can, drag in screenshots of the Design canvas
-(https://claude.ai/artifact/N5YczZk3EXsqbULx56Qfxf) and the clickable
-prototype (https://claude.ai/artifact/PT9J7jBD417cBNMAwiBaQL) with it.
+prompt, and drag in the screenshots from `design/reference/` with it
+(Figma AI can't open links to the Design canvas or the prototype, but it
+can look at pictures): 11 phone screens (`phone-01-devices.png` …
+`phone-11-add-to-chat.png`) and 4 computer screens (`computer-01…04`).
 
 ---
 
-Design and build the app **Sidekick** in this file: a complete, clickable
+Design and build the app **Sidekick** in this file (the attached
+screenshots show the look; match them, then build it properly): a complete, clickable
 design for a phone (390×844) and a computer window (1280×800), built from
 proper styles and components.
 
