@@ -48,6 +48,12 @@ object SidekickEngine {
                     result.success(null)
                 }
                 "batteryUnrestricted" -> result.success(Battery.unrestricted(app))
+                // Home-screen widgets (SidekickWidgets.kt).
+                "updateWidgets" -> {
+                    SidekickWidgets.save(app, call.argument<String>("json") ?: "{}")
+                    result.success(null)
+                }
+                "takeWidgetLink" -> result.success(WidgetLinks.take())
                 "notificationAccess" -> result.success(PhoneRelay.notificationAccess(app))
                 "openNotificationAccess" -> {
                     PhoneRelay.openNotificationAccess(app)

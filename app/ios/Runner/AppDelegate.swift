@@ -5,6 +5,7 @@ import NetworkExtension
 import Photos
 import UserNotifications
 import UIKit
+import WidgetKit
 
 @main
 @objc class AppDelegate: FlutterAppDelegate, FlutterImplicitEngineDelegate {
@@ -15,6 +16,7 @@ import UIKit
   private let screenshots = ScreenshotWatcher()
   private var ble: SidekickBLE?
   private var p2p: SidekickP2P?
+  private let widgetLinks = WidgetLinks()
 
   override func application(
     _ application: UIApplication,
@@ -32,6 +34,8 @@ import UIKit
       let offers = self.offers
       let live = self.live
       let screenshots = self.screenshots
+      let widgetLinks = self.widgetLinks
+      registrar.addSceneDelegate(widgetLinks)
       screenshots.channel = FlutterMethodChannel(name: "sidekick/phone", binaryMessenger: registrar.messenger())
       offers.attach(channel)
       channel.setMethodCallHandler { call, result in
@@ -131,6 +135,14 @@ import UIKit
           let ssid = (call.arguments as? [String: Any])?["ssid"] as? String ?? ""
           NEHotspotConfigurationManager.shared.removeConfiguration(forSSID: ssid)
           result(nil)
+        case "updateWidgets":
+          // The home-screen widgets (SidekickLive extension) read this.
+          let json = (call.arguments as? [String: Any])?["json"] as? String ?? "{}"
+          UserDefaults(suiteName: WidgetLinks.group)?.set(json, forKey: "widget")
+          if #available(iOS 14.0, *) { WidgetCenter.shared.reloadAllTimelines() }
+          result(nil)
+        case "takeWidgetLink":
+          result(widgetLinks.take())
         case "setAppIcon":
           // Settings → App icon: an alternate icon (AppIcon-Ink, …); nil is
           // the usual one (Dusk). iOS says it changed; only
@@ -166,6 +178,38 @@ import UIKit
         gestureRecognizersBlockingPolicy: FlutterPlatformViewGestureRecognizersBlockingPolicyDoNotBlockGesture
       )
     }
+  }
+}
+
+/// A home-screen widget's tap opens Sidekick with a sidekick:// link (send,
+/// ping, open); it's kept until the app takes it ("takeWidgetLink").
+final class WidgetLinks: NSObject, FlutterSceneLifeCycleDelegate {
+  /// The App Group the app and the SidekickLive extension share.
+  static let group = "group.dev.sidekick.sidekick"
+
+  private var pending: String?
+
+  func scene(
+    _ scene: UIScene, willConnectTo session: UISceneSession, options connectionOptions: UIScene.ConnectionOptions?
+  ) -> Bool {
+    guard let url = connectionOptions?.urlContexts.first?.url else { return false }
+    return keep(url)
+  }
+
+  func scene(_ scene: UIScene, openURLContexts URLContexts: Set<UIOpenURLContext>) -> Bool {
+    guard let url = URLContexts.first?.url else { return false }
+    return keep(url)
+  }
+
+  private func keep(_ url: URL) -> Bool {
+    guard url.scheme == "sidekick", ["open", "send", "ping"].contains(url.host ?? "") else { return false }
+    pending = url.absoluteString
+    return true
+  }
+
+  func take() -> String? {
+    defer { pending = nil }
+    return pending
   }
 }
 

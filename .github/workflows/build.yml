@@ -517,6 +517,8 @@ jobs:
           sed -i '' "s/PRODUCT_BUNDLE_IDENTIFIER = dev.sidekick.sidekick;/PRODUCT_BUNDLE_IDENTIFIER = $BUNDLE_ID;/" ios/Runner.xcodeproj/project.pbxproj
           # The Live Activity extension's id has to start with the app's.
           sed -i '' "s/PRODUCT_BUNDLE_IDENTIFIER = dev.sidekick.sidekick.LiveActivity;/PRODUCT_BUNDLE_IDENTIFIER = $BUNDLE_ID.LiveActivity;/" ios/Runner.xcodeproj/project.pbxproj
+          # The App Group the home-screen widgets share with the app, after it.
+          sed -i '' "s/group\.dev\.sidekick\.sidekick/group.$BUNDLE_ID/g" ios/Runner/Runner.entitlements ios/SidekickLive/SidekickLive.entitlements ios/Runner/AppDelegate.swift ios/SidekickLive/SidekickLive.swift
           flutter build ios --release --config-only --build-name=${{ steps.version.outputs.version }} --build-number=${{ github.run_number }}
 
       # Xcode signs with automatically managed certificates and profiles,

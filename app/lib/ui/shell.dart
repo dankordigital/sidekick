@@ -10,6 +10,7 @@ import '../core/server.dart';
 import '../core/trust.dart';
 import '../platform/desktop_window.dart';
 import '../platform/gallery.dart';
+import '../platform/home_widgets.dart';
 import '../platform/live_activity.dart';
 import '../platform/notifications.dart';
 import '../platform/sound.dart';
@@ -73,7 +74,17 @@ class _ShellState extends State<Shell> {
         if (mounted) unawaited(showManualJoin(context, join));
       }),
     ];
-    _lifecycle = AppLifecycleListener(onResume: state.resumed);
+    _lifecycle = AppLifecycleListener(
+      onResume: () {
+        state.resumed();
+        // A home-screen widget may have brought Sidekick forward.
+        Timer(const Duration(milliseconds: 300), _widgetLink);
+      },
+    );
+    // Home-screen widgets (phones) follow the devices and the last file.
+    state.addListener(_updateWidgets);
+    _updateWidgets();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _widgetLink());
     // The tray panel's Settings opens that tab.
     DesktopWindow.instance.openTab.addListener(_openTab);
     // The first time this device pairs with an iPhone: it can't be controlled.
@@ -94,6 +105,7 @@ class _ShellState extends State<Shell> {
       s.cancel();
     }
     _lifecycle.dispose();
+    state.removeListener(_updateWidgets);
     DesktopWindow.instance.openTab.removeListener(_openTab);
     super.dispose();
   }
@@ -105,6 +117,27 @@ class _ShellState extends State<Shell> {
     _cameFromRight = index >= _index;
     _index = index;
   });
+
+  void _updateWidgets() => HomeWidgets.update(state);
+
+  /// A widget's Send opens Send for that device; Ping rings it.
+  Future<void> _widgetLink() async {
+    final link = await HomeWidgets.takeLink();
+    if (link == null || !mounted) return;
+    final device = state.paired.where((d) => d.id == link.queryParameters['id']).firstOrNull;
+    switch (link.host) {
+      case 'send' when device != null:
+        state.select(device.id);
+        _go(2);
+      case 'ping' when device != null:
+        state.select(device.id);
+        _go(0);
+        final rang = await state.ping(device);
+        if (!rang && mounted) await showAlreadyPinged(context, device.name);
+      default:
+        _go(0);
+    }
+  }
 
   void _openTab() {
     final tab = DesktopWindow.instance.openTab.value;

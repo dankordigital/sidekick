@@ -56,6 +56,18 @@
 	<true/>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<!-- sidekick:// links from the home-screen widgets (send, ping, open). -->
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleURLName</key>
+			<string>dev.sidekick.sidekick</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>sidekick</string>
+			</array>
+		</dict>
+	</array>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>

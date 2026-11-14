@@ -53,6 +53,17 @@ class MainActivity : FlutterActivity() {
 
     override fun shouldDestroyEngineWithHost(): Boolean = false
 
+    override fun onCreate(savedInstanceState: android.os.Bundle?) {
+        // A home-screen widget's tap (SidekickWidgets.kt): kept for the app to take.
+        WidgetLinks.from(intent)
+        super.onCreate(savedInstanceState)
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        WidgetLinks.from(intent)
+        super.onNewIntent(intent)
+    }
+
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
         // Replaces the engine's background handler (KeepRunning.kt) while

@@ -172,6 +172,30 @@
             </intent-filter>
         </activity-alias>
 
+        <!-- Home-screen widgets (SidekickWidgets.kt): the last file, and devices. -->
+        <receiver
+            android:name=".SmallWidget"
+            android:exported="false"
+            android:label="Sidekick: last file">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_small_info" />
+        </receiver>
+        <receiver
+            android:name=".DevicesWidget"
+            android:exported="false"
+            android:label="Sidekick: devices">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_devices_info" />
+        </receiver>
+
         <!-- Keeps Sidekick running in the background, even swiped away. -->
         <service
             android:name=".SidekickService"

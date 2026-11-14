@@ -16,6 +16,10 @@ WHAT SIDEKICK KEEPS ON YOUR DEVICE
   received from it (file names and sizes, links, notes and codes), up to
   500 per device, so you can find them again. It stays on this device and
   is deleted when you unpair that device.
+- For the home-screen widgets (iPhone and Android): the names of up to
+  three paired devices, whether each can be reached, and the name of the
+  last file you received, in storage only Sidekick and its widgets can
+  read, so the widgets can show them.
 - Your paired devices: each one's name, device ID, certificate fingerprint,
   and the keys that let the two of you talk securely. These are kept in the
   system's protected storage: the Keychain on iPhone, storage encrypted with
