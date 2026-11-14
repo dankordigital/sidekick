@@ -82,4 +82,15 @@ void main() {
     expect(broken.forDevice('pixel'), isEmpty);
     await dir.delete(recursive: true);
   });
+
+  test('only verification codes are picked out of notifications', () {
+    expect(verificationCode('Your code is 482913'), '482913');
+    expect(verificationCode('G-482913 is your Google verification code.'), '482913');
+    expect(verificationCode('Twój kod: 4821'), '4821');
+    expect(verificationCode('Your Uber code: 1234. Never share this code.'), '1234');
+    expect(verificationCode('Verification code 482 913'), '482913');
+    expect(verificationCode('See you at 8'), isNull);
+    expect(verificationCode('Lunch at 12:30? Call me on 600 123 456'), isNull);
+    expect(verificationCode('Your order 48291377 has shipped'), isNull);
+  });
 }

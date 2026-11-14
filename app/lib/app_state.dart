@@ -1880,14 +1880,16 @@ class AppState extends ChangeNotifier {
         _pairRequests.add(request);
       case InviteScanned(:final device):
         _inviteScans.add(device);
-      case PhoneNotification(:final from, :final app, :final title, :final text):
-        unawaited(
-          DesktopNotify.show(
-            title: title.isEmpty ? app : title,
-            subtitle: title.isEmpty ? from.name : '$app · ${from.name}',
-            body: text,
-          ),
-        );
+      case PhoneNotification(:final from, :final app, :final title, :final text, :final code):
+        // Only codes are shown (older phones send whole messages: their code
+        // is picked out, the rest dropped). In the phone's Chat as a code,
+        // with Copy code, and as a notification.
+        final found = code ?? verificationCode('$title $text');
+        if (found == null) break;
+        final where = app.isEmpty ? from.name : '$app on ${from.name}';
+        _record(HistoryItem.text(device: from.id, fromMe: false, text: 'Verification code from $where: $found'));
+        unawaited(DesktopNotify.show(title: 'Code $found', subtitle: where, body: 'Open Sidekick to copy it'));
+        notifyListeners();
       case Pinged(:final from):
         // One at a time (the server refuses more, but two can cross).
         if (ringingFrom == null) {
@@ -2340,16 +2342,20 @@ class AppState extends ChangeNotifier {
   /// The same notification is often posted again (updated); sent once.
   final _relayed = <String>[];
 
+  /// Android: a notification came in. Only a verification code goes on to
+  /// the computers (with the app's name), never the message itself.
   void _relayNotification(String app, String title, String text) {
     if (!relayNotifications) return;
-    final key = '$app\n$title\n$text';
+    final code = verificationCode('$title $text');
+    if (code == null) return;
+    final key = '$app\n$code';
     if (_relayed.contains(key)) return;
     _relayed.add(key);
     if (_relayed.length > 30) _relayed.removeAt(0);
     for (final d in _computersInReach()) {
       unawaited(
         clientFor(d)
-            .sendNotification(app: app, title: title, text: text)
+            .sendNotification(app: app, title: '', text: code, code: code)
             .catchError((Object e) => debugPrint('Sidekick: notification to ${d.name}: $e')),
       );
     }

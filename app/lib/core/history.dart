@@ -229,3 +229,22 @@ class History {
     await _changes.close();
   }
 }
+
+/// The one-time code in a phone notification ("Your code is 482913",
+/// "G-482913 is your Google verification code", "Kod: 4821"), or null when
+/// it doesn't look like one. Sidekick passes on only this, never the rest of
+/// the message (the owner's call, 4.0).
+String? verificationCode(String text) {
+  final t = text.replaceAll('\n', ' ');
+  if (!RegExp(
+    r'(\bcodes?\b|verif|one[- ]?time|\botp\b|passcode|\bpin\b|2fa|two[- ]factor|security code|\bkod|\bcódigo|\bcode\b)',
+    caseSensitive: false,
+  ).hasMatch(t)) {
+    return null;
+  }
+  // 4 to 8 digits, maybe split in two by a space or dash ("482 913"), not
+  // part of a longer number (a phone number, an amount, a date).
+  final m = RegExp(r'(?<![\d.,:/])(\d{3,4}[ -]\d{3,4}|\d{4,8})(?![\d,:/]|[.]\d)')
+      .firstMatch(t.replaceAll(RegExp(r'\b[A-Z]-(?=\d)'), ' '));
+  return m?.group(1)?.replaceAll(RegExp(r'[ -]'), '');
+}

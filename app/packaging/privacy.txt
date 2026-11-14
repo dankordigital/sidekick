@@ -1,5 +1,5 @@
 SIDEKICK PRIVACY POLICY
-Effective 5 October 2026 (updated for 2.13.0 and the wishlist)
+Effective 5 October 2026 (updated 15 November 2026 for Sidekick 4.0)
 
 THE SHORT VERSION
 
@@ -10,8 +10,12 @@ when Sidekick is out.
 
 WHAT SIDEKICK KEEPS ON YOUR DEVICE
 
-- Your settings: the device name, theme, sound, the folder for received
-  files, and what paired devices may do.
+- Your settings: the device name, app icon, sound, the folder for
+  received files, and what paired devices may do.
+- Each device's Chat: a list of what you sent each paired device and
+  received from it (file names and sizes, links, notes and codes), up to
+  500 per device, so you can find them again. It stays on this device and
+  is deleted when you unpair that device.
 - Your paired devices: each one's name, device ID, certificate fingerprint,
   and the keys that let the two of you talk securely. These are kept in the
   system's protected storage: the Keychain on iPhone, storage encrypted with
@@ -71,11 +75,14 @@ them with a 6-digit code or a QR code. Paired devices can then:
   and a link opens in your browser only if you tap Open.
 Two things a phone can pass on to your paired Macs and PCs by itself, both
 off until you turn them on:
-- its notifications (Android only, Settings → "Show notifications on
-  computers"): each new notification's app name, title and text go to your
-  paired computers in reach, encrypted, and appear in their notifications.
-  Ongoing ones (music, downloads), private ones and system ones are left
-  out. Nothing is kept on the phone or sent anywhere else;
+- verification codes (Android only, Settings → "Send verification codes
+  to computers"): when a new notification holds a one-time code (like
+  "Your code is 482913"), only the code and the app's name go to your
+  paired computers in reach, encrypted, where it shows in that phone's
+  Chat with Copy code and as a notification. The rest of the message, and
+  every notification without a code, never leaves the phone. Ongoing,
+  private and system notifications are left out. Nothing is kept on the
+  phone or sent anywhere else;
 - its screenshots (Settings → "Send screenshots to computers"): each new
   screenshot goes to your paired computers in reach over Wi-Fi, encrypted,
   into their receive folder. The original stays in your Photos or gallery;
@@ -95,7 +102,7 @@ PERMISSIONS, AND WHY
 - Notifications (iPhone and Android): to show a file request while
   Sidekick is in the background, with Accept and Decline, and on Android
   its progress and the "Ready to receive" notice. Mac and Windows: to show
-  your phone's notifications and screenshots as they arrive.
+  your phone's verification codes and screenshots as they arrive.
 - Background running (iPhone and Android): to stay reachable while you use
   other apps. Android may ask to stop optimising Sidekick's battery use
   (Settings → Keep running); the iPhone plays silence in the background.
@@ -106,9 +113,10 @@ PERMISSIONS, AND WHY
   the rest of your library. If you turn on "Send screenshots to
   computers", iPhone and Android ask to read your photos, and Sidekick only
   looks for new screenshots.
-- Notification access (Android): only if you turn on "Show notifications
-  on computers", which you allow yourself in Android's settings, to pass
-  new notifications on to your paired computers.
+- Notification access (Android): only if you turn on "Send verification
+  codes to computers", which you allow yourself in Android's settings, to
+  find one-time codes in new notifications and pass on only the code to
+  your paired computers.
 - Files and "All files access" (Android): to save files you receive and,
   if you allow it, let paired devices browse your files.
 - Location (Android 12 and older only): those Android versions require it

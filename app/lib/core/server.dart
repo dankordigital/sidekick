@@ -49,14 +49,17 @@ class Paired extends ServerEvent {
   final PairedDevice device;
 }
 
-/// A notification that showed up on a paired Android phone, to show on
-/// this computer too.
+/// A verification code from a paired Android phone's notifications, to
+/// show on this computer.
 class PhoneNotification extends ServerEvent {
-  PhoneNotification(this.from, {required this.app, required this.title, required this.text});
+  PhoneNotification(this.from, {required this.app, required this.title, required this.text, this.code});
   final TrustedPeer from;
   final String app;
   final String title;
   final String text;
+
+  /// The verification code (phones on 4.0 send only that).
+  final String? code;
 }
 
 /// A paired device pinged this one: play a loud sound, to find it.
@@ -631,7 +634,16 @@ class SidekickServer {
 
     final title = field('title', 200), text = field('text', 1000);
     if (title.isEmpty && text.isEmpty) return _error(400, 'Empty notification');
-    _events.add(PhoneNotification(_peer(r), app: field('app', 80), title: title, text: text));
+    final code = field('code', 12);
+    _events.add(
+      PhoneNotification(
+        _peer(r),
+        app: field('app', 80),
+        title: title,
+        text: text,
+        code: RegExp(r'^\d{4,8}$').hasMatch(code) ? code : null,
+      ),
+    );
     return _json({'ok': true});
   }
 

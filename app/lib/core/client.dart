@@ -368,8 +368,10 @@ class PeerClient {
   Future<void> sendText(String text) => _postJson('/v1/text', {'text': text});
 
   /// Shows a notification from this phone on the computer.
-  Future<void> sendNotification({required String app, required String title, required String text}) =>
-      _postJson('/v1/notification', {'app': app, 'title': title, 'text': text});
+  /// A verification code from this phone's notifications ([code]; [text]
+  /// carries it too, for computers before 4.0).
+  Future<void> sendNotification({required String app, required String title, required String text, String? code}) =>
+      _postJson('/v1/notification', {'app': app, 'title': title, 'text': text, 'code': ?code});
 
   /// Sends a screenshot this phone just took (Wi-Fi only: never worth
   /// Bluetooth's time).

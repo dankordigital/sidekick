@@ -51,6 +51,7 @@ detailed developer notes; every release is in `VERSIONS.md`) and
 
 ## 14 November 2026
 
+- **4.0, step 8: verification codes only** from phone notifications (the code and the app's name, never the message); privacy policies updated.
 - **4.0, step 6d: the computer layout** (the design's side rail; wide windows show Devices beside Chat).
 - **4.0, steps 6b–6c: Settings rebuilt to the design, and the App icon choice** (eight "sk" icons, Dusk the default and now the app's own icon everywhere; switching on iPhone, Android, Mac Dock and Windows window). Sending screen keeps the design's dark page and shows ✓/✕ as icons.
 - **4.0, step 6a: Remote rebuilt to the design** (device panel, dotted touchpad, three big buttons, four shortcuts + More). The render tool now waits for the phone layout before tapping the dock (CI caught it).

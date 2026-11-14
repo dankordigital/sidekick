@@ -210,9 +210,10 @@ class _SettingsPageState extends State<SettingsPage> {
                             _Switch('Send screenshots to computers', state.sendScreenshots, state.setSendScreenshots),
                           if (hostIsAndroid)
                             _Switch(
-                              'Show notifications on computers',
+                              'Send verification codes to computers',
                               state.relayNotifications,
                               state.setRelayNotifications,
+                              detail: 'Only the code, never the message',
                             ),
                           if (state.bluetoothOn) ?_bluetoothDetails(),
                         ],
