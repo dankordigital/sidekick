@@ -98,9 +98,12 @@ enum SendPhase { connecting, waiting, sending, done, declined, noAnswer, failed 
 /// Files being sent with Send: asks the other device first, then uploads.
 /// The full-screen sending view follows it.
 class OutgoingSend extends ChangeNotifier {
-  OutgoingSend({required this.device, required this.names, required this.total});
+  OutgoingSend({required this.device, required this.names, required this.total, this.sizes = const []});
   final PairedDevice device;
   final List<String> names;
+
+  /// Each file's size, in [names]' order (empty when not known).
+  final List<int> sizes;
   final int total;
 
   SendPhase phase = SendPhase.connecting;
@@ -143,6 +146,16 @@ class OutgoingSend extends ChangeNotifier {
 
   /// Where the speed is measured from (reset after a reconnect).
   ({DateTime at, int bytes})? _mark;
+
+  /// Bytes a second, once there's enough to tell.
+  double? get speed {
+    final mark = _mark;
+    if (mark == null || phase != SendPhase.sending) return null;
+    final seconds = DateTime.now().difference(mark.at).inMilliseconds / 1000;
+    final moved = done - mark.bytes;
+    if (seconds < 1.5 || moved <= 0) return null;
+    return moved / seconds;
+  }
 
   /// About how long the rest takes, once there's enough to tell.
   Duration? get remaining {
@@ -2037,7 +2050,7 @@ class AppState extends ChangeNotifier {
     if (remoteDir != null) {
       _notices.add(Notice('Sending $what to ${d.name}…', info: true));
     }
-    final send = OutgoingSend(device: d, names: names, total: total);
+    final send = OutgoingSend(device: d, names: names, total: total, sizes: sizes);
     if (remoteDir == null) _sends.add(send);
 
     final PeerClient client;

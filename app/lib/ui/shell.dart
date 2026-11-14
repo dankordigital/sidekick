@@ -126,7 +126,7 @@ class _ShellState extends State<Shell> {
 
   void _showSend(OutgoingSend send) {
     LiveTransfers.followOutgoing(send);
-    if (mounted) showSendingScreen(context, send);
+    if (mounted) showSendingScreen(context, send, state: state);
   }
 
   void _showNotice(Notice notice) {

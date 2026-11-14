@@ -90,12 +90,18 @@ void main() {
     );
     // Every phase, then sending while the connection is back in a moment.
     for (final (phase, reconnecting) in [for (final p in SendPhase.values) (p, false), (SendPhase.sending, true)]) {
-      final send = OutgoingSend(device: mac, names: ['IMG_2041.HEIC', 'IMG_2042.HEIC', 'Trip.mov'], total: 47100000)
-        ..phase = phase
-        ..done = 31000000
-        ..current = 2
-        ..reconnecting = reconnecting
-        ..error = phase == SendPhase.failed ? "Can't reach Pixel 9." : null;
+      final send =
+          OutgoingSend(
+              device: mac,
+              names: ['IMG_2041.HEIC', 'IMG_2042.HEIC', 'Trip.mov'],
+              total: 47100000,
+              sizes: [8200000, 7800000, 31100000],
+            )
+            ..phase = phase
+            ..done = 31000000
+            ..current = 2
+            ..reconnecting = reconnecting
+            ..error = phase == SendPhase.failed ? "Can't reach Pixel 9." : null;
       await tester.pumpWidget(
         RepaintBoundary(
           key: key,

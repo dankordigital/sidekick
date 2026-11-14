@@ -51,6 +51,7 @@ detailed developer notes; every release is in `VERSIONS.md`) and
 
 ## 14 November 2026
 
+- **4.0, step 5b: Sending and the incoming request rebuilt to the design** (ring with percent, per-file bars, Stop; the amber request sheet with Decline / Accept side by side).
 - **4.0, step 5a: the Send tab** (`ui/send_page.dart`): pick files, photos, a note or the clipboard, see them with ✕ / Clear, Send to a device. The dock is now Devices · Chat · Send · Remote · Settings; Browse files opens from a device's hold menu.
 - **4.0, step 4b: Devices rebuilt to match the design** (`ui/devices_page.dart` on `ui/kit.dart`): title with + Connect, amber "Needs you" for waiting requests (`AppState.waitingOffers`), Favorites and Paired panels of whole-row targets (tap opens Chat, hold for Browse files / Remote / Ping / Favorites / Unpair), dashed Nearby. Inter is bundled (`assets/fonts`, Latin subsets). CI now also runs sizes_test, renders the screens and keeps them on `refs/ci/app-screens` (a plugin here blocks running tests in the shell).
 - **4.0: swipe along the dock** to change tabs (haptic tick), tabs glide in from their side; plan: less bloated by Fitts's law (whole rows as targets, main action big and near the thumb, the rest behind a hold); `ui/kit.dart`, the design's building blocks for the rebuilt screens.

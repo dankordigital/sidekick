@@ -19,7 +19,7 @@ void main() {
   for (final (phase, label) in [
     (SendPhase.connecting, 'Cancel'),
     (SendPhase.waiting, 'Cancel'),
-    (SendPhase.sending, 'Hide'),
+    (SendPhase.sending, 'Stop'),
     (SendPhase.done, 'Close'),
     (SendPhase.declined, 'Close'),
     (SendPhase.failed, 'Close'),
