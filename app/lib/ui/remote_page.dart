@@ -8,6 +8,7 @@ import '../app_state.dart';
 import '../core/errors.dart';
 import '../core/client.dart';
 import '../core/models.dart';
+import 'kit.dart';
 import 'widgets.dart';
 import '../core/host.dart';
 
@@ -86,33 +87,51 @@ class _IphoneCantBeControlledState extends State<_IphoneCantBeControlled> {
   }
 
   @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    final text = Theme.of(context).textTheme;
-    return PageFrame(
-      title: 'Remote',
-      subtitle: widget.device.name,
-      actions: [DevicePicker(state: widget.state)],
-      child: Container(
-        padding: const EdgeInsets.all(28),
-        decoration: BoxDecoration(color: scheme.surfaceContainerLow, borderRadius: BorderRadius.circular(28)),
+  Widget build(BuildContext context) => ListView(
+    padding: const EdgeInsets.fromLTRB(20, 18, 20, 24),
+    children: [
+      const KTitle('Remote'),
+      const SizedBox(height: 10),
+      const KSub('A little more room to move.'),
+      const SizedBox(height: 22),
+      KDevicePicker(state: widget.state, device: widget.device, onPick: (d) => widget.state.select(d.id)),
+      const SizedBox(height: 16),
+      KPanel(
+        padding: const EdgeInsets.all(18),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const GradientBadge(icon: Icons.phone_iphone_rounded, size: 64),
-            const SizedBox(height: 16),
-            Text("iPhones can't be controlled", style: text.titleLarge, textAlign: TextAlign.center),
-            const SizedBox(height: 8),
-            Text(
-              "Apple doesn't let any app move the pointer or type on an iPhone. Use ${widget.device.name} as "
-              'the remote instead: open Sidekick on it and pick this device in its Remote tab.',
-              textAlign: TextAlign.center,
-              style: TextStyle(color: scheme.onSurfaceVariant),
+            const Icon(Icons.smartphone_outlined, size: 24, color: K.text),
+            const SizedBox(height: 14),
+            const Text(
+              "iPhones can't be controlled",
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600, color: K.text),
             ),
+            const SizedBox(height: 10),
+            KSub(
+              'You can still send files and links, browse shared files, or ping this iPhone. Choose a '
+              'computer to use the touchpad.',
+            ),
+            if (widget.state.paired.any((d) => d.platform != DevicePlatform.ios)) ...[
+              const SizedBox(height: 16),
+              KPill(
+                'Choose a computer',
+                onPressed: () => showActions(
+                  context,
+                  title: 'Choose a computer',
+                  options: [
+                    for (final d in widget.state.paired)
+                      if (d.platform != DevicePlatform.ios)
+                        (d.name, deviceIcon(d.platform), () => widget.state.select(d.id)),
+                  ],
+                ),
+              ),
+            ],
           ],
         ),
       ),
-    );
-  }
+    ],
+  );
 }
 
 enum _Conn { connecting, connected, failed }
@@ -280,109 +299,195 @@ class _RemoteState extends State<_Remote> {
     for (var i = 1; i <= 12; i++) LogicalKeyboardKey.findKeyByKeyId(LogicalKeyboardKey.f1.keyId + i - 1)!: 'f$i',
   };
 
+  /// Keyboard open (phones: the typing box; computers: capture + send text).
+  bool _keyboard = false;
+
+  void _pick(PairedDevice d) {
+    widget.state.select(d.id);
+  }
+
+  Future<void> _speedSheet() => showModalBottomSheet<void>(
+    context: context,
+    showDragHandle: true,
+    backgroundColor: K.panel,
+    builder: (context) => StatefulBuilder(
+      builder: (context, setSheet) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Pointer speed',
+                style: TextStyle(fontSize: 17, fontWeight: FontWeight.w600, color: K.text),
+              ),
+              Slider(
+                value: _speed,
+                min: 0.5,
+                max: 4,
+                onChanged: (v) {
+                  setState(() => _speed = v);
+                  setSheet(() {});
+                },
+              ),
+            ],
+          ),
+        ),
+      ),
+    ),
+  );
+
+  /// The four the design shows up front; the rest are under More.
+  bool _main((String, String, List<String>) s) => const {
+    'Start menu', 'Switch window', 'Show desktop', 'Lock PC', // Windows
+    'Spotlight', 'Switch app', 'Lock Mac', // Mac (and Show desktop)
+    'Back', 'Home', 'Recent apps', 'Lock screen', // Android
+  }.contains(s.$1);
+
+  Future<void> _more() => showActions(
+    context,
+    title: 'More shortcuts',
+    options: [
+      ('Pointer speed', Icons.speed_rounded, _speedSheet),
+      for (final (label, key, mods) in _shortcutsFor(widget.device.platform))
+        if (!_main((label, key, mods)))
+          (label, Icons.keyboard_command_key_rounded, _s == null ? null : () => _s!.key(key, modifiers: mods)),
+    ],
+  );
+
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
     final supported = widget.state.capabilitiesOf(widget.device.id)?.input ?? true;
-
-    return PageFrame(
-      title: 'Remote',
-      subtitle: 'Use ${widget.device.name} from here',
-      actions: [
-        if (_online) ...[_StatusChip(conn: _conn, onRetry: _connect), const SizedBox(width: 8)],
-        DevicePicker(state: widget.state),
-      ],
-      child: !_online
-          ? Container(
-              decoration: BoxDecoration(color: scheme.surfaceContainerLow, borderRadius: BorderRadius.circular(28)),
-              child: UnreachableDevice(state: widget.state, device: widget.device),
-            )
-          : Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                OfflineBanner(state: widget.state, device: widget.device),
-                if (!supported)
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 16),
-                    child: Text(
-                      "${widget.device.name} doesn't allow remote control. On ${widget.device.name}, open Sidekick → "
-                      'Settings and turn on Control mouse and keyboard.',
-                    ),
-                  ),
-                if (_conn == _Conn.failed && _error != null)
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 16),
-                    child: Text(_error!, style: TextStyle(color: scheme.error)),
-                  ),
-                _Touchpad(
-                  enabled: _s != null,
-                  onMove: (d) => _s?.move(d.dx * _speed, d.dy * _speed),
-                  onClick: () => _s?.click(),
-                  onRightClick: () => _s?.click(button: 'right'),
-                  onScroll: (dx, dy) => _s?.scroll(dx: dx, dy: dy),
-                ),
-                const SizedBox(height: 12),
-                Row(
-                  children: [
-                    Expanded(
-                      child: _BigButton(label: 'Left click', onPressed: _s == null ? null : () => _s!.click()),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: _BigButton(
-                        label: 'Right click',
-                        onPressed: _s == null ? null : () => _s!.click(button: 'right'),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Tooltip(
-                      message: 'Hold the left button down, for dragging and selecting',
-                      child: SizedBox(
-                        height: 56,
-                        child: FilterChip(
-                          label: const Text('Hold'),
-                          avatar: const Icon(Icons.pan_tool_alt_outlined, size: 18),
-                          selected: _holding,
-                          onSelected: _s == null
-                              ? null
-                              : (v) {
-                                  v ? _s!.buttonDown() : _s!.buttonUp();
-                                  setState(() => _holding = v);
-                                },
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                Row(
-                  children: [
-                    const Icon(Icons.speed, size: 20),
-                    const SizedBox(width: 8),
-                    const Text('Pointer speed'),
-                    Expanded(
-                      child: Slider(value: _speed, min: 0.5, max: 4, onChanged: (v) => setState(() => _speed = v)),
-                    ),
-                  ],
-                ),
-                const SectionLabel('Keyboard'),
-                if (isMobile) _liveTyping() else ..._desktopKeyboard(scheme),
-                const SectionLabel('Shortcuts'),
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  children: [
-                    for (final (label, key, mods) in _shortcutsFor(widget.device.platform))
-                      ActionChip(
-                        label: _arrows[label] == null
-                            ? Text(label)
-                            : Icon(_arrows[label], size: 18, semanticLabel: key),
-                        onPressed: _s == null ? null : () => _s!.key(key, modifiers: mods),
-                      ),
-                  ],
-                ),
-              ],
+    final ready = _s != null;
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(20, 18, 20, 24),
+      children: [
+        const KTitle('Remote'),
+        const SizedBox(height: 10),
+        const KSub('A little more room to move.'),
+        const SizedBox(height: 22),
+        KDevicePicker(
+          state: widget.state,
+          device: widget.device,
+          onPick: _pick,
+          only: (d) => d.platform != DevicePlatform.ios,
+        ),
+        const SizedBox(height: 16),
+        if (!_online)
+          KPanel(
+            child: UnreachableDevice(state: widget.state, device: widget.device),
+          )
+        else ...[
+          OfflineBanner(state: widget.state, device: widget.device),
+          if (!supported)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 14),
+              child: KSub(
+                "${widget.device.name} doesn't allow remote control. On ${widget.device.name}, open Sidekick → "
+                'Settings and turn on Control mouse and keyboard.',
+              ),
             ),
+          if (_conn == _Conn.failed)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 14),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(_error ?? "Couldn't connect", style: const TextStyle(fontSize: 13.5, color: K.red)),
+                  ),
+                  const SizedBox(width: 10),
+                  KPill('Reconnect', style: KPillStyle.white, small: true, onPressed: _connect),
+                ],
+              ),
+            ),
+          _Touchpad(
+            enabled: ready,
+            connecting: _conn == _Conn.connecting,
+            onMove: (d) => _s?.move(d.dx * _speed, d.dy * _speed),
+            onClick: () => _s?.click(),
+            onRightClick: () => _s?.click(button: 'right'),
+            onScroll: (dx, dy) => _s?.scroll(dx: dx, dy: dy),
+          ),
+          const SizedBox(height: 14),
+          Row(
+            children: [
+              Expanded(
+                // Hold it to keep the button down (dragging, selecting).
+                child: GestureDetector(
+                  onLongPress: ready
+                      ? () {
+                          HapticFeedback.mediumImpact();
+                          _holding ? _s!.buttonUp() : _s!.buttonDown();
+                          setState(() => _holding = !_holding);
+                        }
+                      : null,
+                  child: KPill(
+                    _holding ? 'Holding' : 'Left click',
+                    style: _holding ? KPillStyle.white : KPillStyle.dark,
+                    onPressed: !ready
+                        ? null
+                        : _holding
+                        ? () {
+                            _s!.buttonUp();
+                            setState(() => _holding = false);
+                          }
+                        : () => _s!.click(),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: KPill(
+                  'Right click',
+                  style: KPillStyle.dark,
+                  onPressed: ready ? () => _s!.click(button: 'right') : null,
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: KPill(
+                  'Keyboard',
+                  style: _keyboard ? KPillStyle.white : KPillStyle.dark,
+                  onPressed: ready ? () => setState(() => _keyboard = !_keyboard) : null,
+                ),
+              ),
+            ],
+          ),
+          AnimatedSize(
+            duration: MediaQuery.disableAnimationsOf(context) ? Duration.zero : const Duration(milliseconds: 320),
+            curve: const Cubic(0.22, 1, 0.36, 1),
+            alignment: Alignment.topCenter,
+            child: _keyboard
+                ? Padding(
+                    padding: const EdgeInsets.only(top: 14),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: isMobile ? [_liveTyping()] : _desktopKeyboard(Theme.of(context).colorScheme),
+                    ),
+                  )
+                : const SizedBox(width: double.infinity),
+          ),
+          const SizedBox(height: 20),
+          const KLabel('Shortcuts'),
+          const SizedBox(height: 12),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              for (final (label, key, mods) in _shortcutsFor(widget.device.platform).where(_main))
+                KPill(
+                  label,
+                  style: KPillStyle.outline,
+                  onPressed: ready ? () => _s!.key(key, modifiers: mods) : null,
+                ),
+              KPill('More', style: KPillStyle.outline, icon: Icons.more_horiz_rounded, onPressed: _more),
+            ],
+          ),
+          const SizedBox(height: 16),
+          KSub('Keep Sidekick open on ${widget.device.name}.', size: 12.5),
+        ],
+      ],
     );
   }
 
@@ -524,13 +629,6 @@ class _RemoteState extends State<_Remote> {
     ('Lock screen', 'lock', []),
   ];
 
-  static const _arrows = {
-    '←': Icons.arrow_back,
-    '→': Icons.arrow_forward,
-    '↑': Icons.arrow_upward,
-    '↓': Icons.arrow_downward,
-  };
-
   static const _shortcuts = <(String, String, List<String>)>[
     ('Esc', 'esc', []),
     ('Tab', 'tab', []),
@@ -552,50 +650,13 @@ class _RemoteState extends State<_Remote> {
   ];
 }
 
-class _StatusChip extends StatelessWidget {
-  const _StatusChip({required this.conn, required this.onRetry});
-  final _Conn conn;
-  final VoidCallback onRetry;
-
-  @override
-  Widget build(BuildContext context) => switch (conn) {
-    _Conn.connecting => const Chip(
-      avatar: SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2)),
-      label: Text('Connecting'),
-    ),
-    _Conn.connected => const Chip(
-      avatar: Icon(Icons.circle, size: 10, color: Colors.green),
-      label: Text('Connected'),
-    ),
-    _Conn.failed => ActionChip(
-      avatar: const Icon(Icons.refresh, size: 18),
-      label: const Text('Reconnect'),
-      onPressed: onRetry,
-    ),
-  };
-}
-
-class _BigButton extends StatelessWidget {
-  const _BigButton({required this.label, required this.onPressed});
-  final String label;
-  final VoidCallback? onPressed;
-
-  @override
-  Widget build(BuildContext context) => SizedBox(
-    height: 56,
-    child: FilledButton.tonal(
-      onPressed: onPressed,
-      style: FilledButton.styleFrom(shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18))),
-      child: Text(label),
-    ),
-  );
-}
-
-/// Drag to move the pointer, tap to click, right-click (or long-press) for
-/// a right click, mouse wheel or two fingers to scroll.
+/// The design's touchpad: a dotted #1c1c1c panel; one finger moves the
+/// pointer (a white dot follows it), tap clicks, hold or right-click is a
+/// right click, two fingers or the wheel scroll.
 class _Touchpad extends StatefulWidget {
   const _Touchpad({
     required this.enabled,
+    required this.connecting,
     required this.onMove,
     required this.onClick,
     required this.onRightClick,
@@ -603,6 +664,7 @@ class _Touchpad extends StatefulWidget {
   });
 
   final bool enabled;
+  final bool connecting;
   final void Function(Offset delta) onMove;
   final VoidCallback onClick;
   final VoidCallback onRightClick;
@@ -628,69 +690,107 @@ class _TouchpadState extends State<_Touchpad> {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    return Listener(
-      onPointerSignal: (e) {
-        if (widget.enabled && e is PointerScrollEvent) _scrollBy(e.scrollDelta);
-      },
-      child: GestureDetector(
-        onTap: widget.enabled ? widget.onClick : null,
-        onSecondaryTap: widget.enabled ? widget.onRightClick : null,
-        onLongPress: widget.enabled ? widget.onRightClick : null,
-        onScaleStart: widget.enabled ? (d) => setState(() => _active = true) : null,
-        onScaleUpdate: widget.enabled
-            ? (d) {
-                setState(() => _dot = d.localFocalPoint);
-                if (d.pointerCount >= 2) {
-                  _scrollBy(-d.focalPointDelta);
-                } else {
-                  widget.onMove(d.focalPointDelta);
+    final reduce = MediaQuery.disableAnimationsOf(context);
+    return Semantics(
+      label: 'Touchpad',
+      child: Listener(
+        onPointerSignal: (e) {
+          if (widget.enabled && e is PointerScrollEvent) _scrollBy(e.scrollDelta);
+        },
+        child: GestureDetector(
+          onTap: widget.enabled ? widget.onClick : null,
+          onSecondaryTap: widget.enabled ? widget.onRightClick : null,
+          onLongPress: widget.enabled ? widget.onRightClick : null,
+          onScaleStart: widget.enabled
+              ? (d) => setState(() {
+                  _active = true;
+                  _dot = d.localFocalPoint;
+                })
+              : null,
+          onScaleUpdate: widget.enabled
+              ? (d) {
+                  setState(() => _dot = d.localFocalPoint);
+                  if (d.pointerCount >= 2) {
+                    _scrollBy(-d.focalPointDelta);
+                  } else {
+                    widget.onMove(d.focalPointDelta);
+                  }
                 }
-              }
-            : null,
-        onScaleEnd: widget.enabled ? (_) => setState(() => _active = false) : null,
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 150),
-          height: 300,
-          decoration: BoxDecoration(
-            color: _active ? scheme.secondaryContainer : scheme.surfaceContainerHigh,
-            borderRadius: BorderRadius.circular(_active ? 36 : 28),
-          ),
-          child: Stack(
-            children: [
-              Center(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(Icons.touch_app_outlined, size: 36, color: scheme.onSurfaceVariant.withValues(alpha: 0.6)),
-                    const SizedBox(height: 8),
-                    Text(
-                      widget.enabled
-                          ? (isMobile
-                                ? 'Drag to move · tap to click · two fingers to scroll'
-                                : 'Drag to move · click to click · scroll to scroll')
-                          : 'Not connected',
-                      style: TextStyle(color: scheme.onSurfaceVariant),
-                    ),
-                  ],
-                ),
+              : null,
+          onScaleEnd: widget.enabled ? (_) => setState(() => _active = false) : null,
+          child: AnimatedScale(
+            scale: _active ? 0.99 : 1,
+            duration: reduce ? Duration.zero : const Duration(milliseconds: 220),
+            curve: const Cubic(0.22, 1, 0.36, 1),
+            child: Container(
+              height: 300,
+              clipBehavior: Clip.antiAlias,
+              decoration: BoxDecoration(color: K.panel, borderRadius: BorderRadius.circular(22)),
+              child: LayoutBuilder(
+                builder: (context, box) {
+                  final dot = _dot ?? Offset(box.maxWidth / 2, 120);
+                  return Stack(
+                    children: [
+                      const Positioned.fill(child: CustomPaint(painter: _DotGrid())),
+                      // Where the finger is (rests in the middle).
+                      AnimatedPositioned(
+                        duration: _active || reduce ? Duration.zero : const Duration(milliseconds: 420),
+                        curve: const Cubic(0.22, 1, 0.36, 1),
+                        left: dot.dx - 6,
+                        top: dot.dy - 6,
+                        child: AnimatedOpacity(
+                          opacity: widget.enabled ? 1 : 0.25,
+                          duration: const Duration(milliseconds: 200),
+                          child: AnimatedScale(
+                            scale: _active ? 1.6 : 1,
+                            duration: reduce ? Duration.zero : const Duration(milliseconds: 200),
+                            child: Container(
+                              width: 12,
+                              height: 12,
+                              decoration: const BoxDecoration(color: K.white, shape: BoxShape.circle),
+                            ),
+                          ),
+                        ),
+                      ),
+                      Positioned(
+                        left: 12,
+                        right: 12,
+                        bottom: 18,
+                        child: Text(
+                          widget.enabled
+                              ? (isMobile ? 'Move one finger · scroll with two' : 'Drag to move · click · scroll')
+                              : widget.connecting
+                              ? 'Connecting…'
+                              : 'Not connected',
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(fontSize: 12.5, color: K.muted),
+                        ),
+                      ),
+                    ],
+                  );
+                },
               ),
-              if (_active && _dot != null)
-                Positioned(
-                  left: _dot!.dx - 14,
-                  top: _dot!.dy - 14,
-                  child: IgnorePointer(
-                    child: Container(
-                      width: 28,
-                      height: 28,
-                      decoration: BoxDecoration(color: scheme.primary.withValues(alpha: 0.35), shape: BoxShape.circle),
-                    ),
-                  ),
-                ),
-            ],
+            ),
           ),
         ),
       ),
     );
   }
+}
+
+class _DotGrid extends CustomPainter {
+  const _DotGrid();
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()..color = const Color(0x1AFFFFFF);
+    for (var y = 22.0; y < size.height; y += 26) {
+      for (var x = 22.0; x < size.width; x += 26) {
+        canvas.drawCircle(Offset(x, y), 1, paint);
+      }
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }

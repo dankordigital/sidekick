@@ -288,6 +288,7 @@ void main() {
     state.setThemeMode(ThemeMode.light);
     debugForceMobile = true;
     tester.view.physicalSize = const Size(412, 915);
+    await settle();
     for (final (tab_, name) in [
       ('Devices', 'devices'),
       ('Chat', 'chat'),

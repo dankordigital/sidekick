@@ -6,6 +6,7 @@ library;
 
 import 'package:material_ui/material_ui.dart';
 
+import '../app_state.dart';
 import '../core/models.dart';
 
 /// The design's colours.
@@ -414,4 +415,78 @@ Future<void> showActions(
       ),
     );
   }
+}
+
+/// The device a tab is about, as a panel (design: Remote, Chat): its tile,
+/// name and how it's reached, and a chevron that picks another one.
+class KDevicePicker extends StatelessWidget {
+  const KDevicePicker({super.key, required this.state, required this.device, required this.onPick, this.only});
+  final AppState state;
+  final PairedDevice device;
+  final ValueChanged<PairedDevice> onPick;
+
+  /// Which devices the list offers (all paired ones when null).
+  final bool Function(PairedDevice d)? only;
+
+  List<PairedDevice> get _choices => [
+    for (final d in state.paired)
+      if (only?.call(d) ?? true) d,
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    final how = state.connectionLabel(device.id);
+    final online = state.isOnline(device.id);
+    final many = state.paired.length > 1;
+    return Semantics(
+      button: many,
+      label: '${device.name}${many ? '. Pick another device' : ''}',
+      excludeSemantics: true,
+      child: Material(
+        color: K.panel,
+        borderRadius: BorderRadius.circular(22),
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: many ? () => pickDevice(context) : null,
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(14, 12, 18, 12),
+            child: Row(
+              children: [
+                KDeviceTile(platform: device.platform, color: K.deviceColor(device.id)),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        device.name,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(fontSize: 16, color: K.text),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        online ? '${how ?? 'Connected'} · encrypted' : 'Not reachable',
+                        style: TextStyle(fontSize: 12.5, color: online ? K.ok : K.faint),
+                      ),
+                    ],
+                  ),
+                ),
+                if (many) const Icon(Icons.keyboard_arrow_down_rounded, size: 26, color: K.text),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// The list of devices to pick from (also for "Choose a computer").
+  Future<void> pickDevice(BuildContext context) => showActions(
+    context,
+    title: 'Choose a device',
+    options: [
+      for (final d in _choices) (d.id == device.id ? '${d.name}  ✓' : d.name, deviceIcon(d.platform), () => onPick(d)),
+    ],
+  );
 }
