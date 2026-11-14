@@ -81,6 +81,13 @@ detailed developer notes; every release is in `VERSIONS.md`) and
   ripples on click; the Ping chip's bell wobbles on hover; the pairing code
   types itself in, then "Paired" pops. Reduced motion turns it all off;
   pointer effects only with a mouse.
+  Then (the owner: "I meant…"): **the features are a stack of cards**: each
+  big card (text left, its picture right; one column on phones) sticks below
+  the top bar and the next slides up over it; the one underneath shrinks and
+  dims a little. **Things face the pointer** like the FREE: the headings,
+  the hero phone, the pairing steps, the device tiles and each card's
+  picture turn slightly toward the pointer wherever it is on the page (the
+  per-card hover tilt is gone; the soft light under the pointer stays).
 - **Emulator: hold for actions, 6-digit codes, one notice at a time** (the
   owner): only a **6-digit code** gets the big **Copy code** button
   (`codeOf`: "482913", "482 913", "G-482913 is your Google code", "Kod BLIK

@@ -162,7 +162,8 @@ section .wrap>p.lead{margin:16px 0 0;max-width:36em;color:var(--muted);font-size
 
 /* moving with the scroll and the pointer */
 .top::after{content:"";position:absolute;left:0;right:0;bottom:-1px;height:2px;background:linear-gradient(90deg,var(--blue),var(--green),var(--amber),var(--orange));transform-origin:0 50%;transform:scaleX(var(--sp,0))}
-.f,.step,.plat{--mx:50%;--my:-300px;background-image:radial-gradient(420px circle at var(--mx) var(--my),#ffffff12,transparent 62%);transform:perspective(1000px) rotateX(var(--rx,0deg)) rotateY(var(--ry,0deg)) translateY(var(--ty,0px));transition:transform .35s cubic-bezier(.22,1,.36,1),border-color .3s}
+.f,.step,.plat{--mx:50%;--my:-300px;background-image:radial-gradient(520px circle at var(--mx) var(--my),#ffffff10,transparent 62%)}
+.step,.plat{transform:perspective(1000px) rotateX(var(--rx,0deg)) rotateY(var(--ry,0deg)) translateY(var(--ty,0px));transition:transform .45s cubic-bezier(.22,1,.36,1),border-color .3s}
 .step:hover,.plat:hover{border-color:#ffffff33}
 .plat:hover{--ty:-4px}
 .plat>span:first-child{transition:transform .35s cubic-bezier(.22,1,.36,1)}
@@ -181,6 +182,18 @@ section .wrap>p.lead{margin:16px 0 0;max-width:36em;color:var(--muted);font-size
 #pairedChip.pop{animation:pop .4s cubic-bezier(.22,1,.36,1)}
 @keyframes pop{0%{transform:scale(.6);opacity:0}100%{transform:none;opacity:1}}
 .facts span{animation:none}
+
+/* the feature stack: each card sticks below the top bar and the next slides over it */
+.stack{display:flex;flex-direction:column;gap:28px;margin-top:40px;padding-bottom:40px}
+.sc{position:sticky;top:calc(92px + var(--i)*14px);display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:32px;align-items:center;min-height:min(380px,70vh);padding:36px;border:1px solid var(--line);background-color:var(--panel);box-shadow:0 -14px 40px #00000080;transform-origin:50% 0;
+  transform:scale(var(--sc,1));filter:brightness(var(--dim,1));transition:none}
+.sc .txt{display:flex;flex-direction:column;gap:16px}
+.sc h3{font-size:clamp(24px,3vw,34px);letter-spacing:-.02em;font-weight:700}
+.sc p{font-size:17px;max-width:30em}
+.sc .vis{display:grid;place-items:center;min-height:240px;padding:24px;border-radius:20px;background:var(--page);border:1px solid var(--hair)}
+@media (max-width:760px){.sc{grid-template-columns:1fr;top:calc(80px + var(--i)*8px);padding:22px;gap:18px;min-height:0}.sc .vis{min-height:150px}}
+[data-face]{transform:perspective(1000px) rotateX(var(--rx,0deg)) rotateY(var(--ry,0deg));transition:transform .45s cubic-bezier(.22,1,.36,1)}
+h1[data-face],h2[data-face]{transform-origin:30% 50%}
 
 /* FREE: holographic chrome in pastels, a shine sweeping across, tilting toward the pointer */
 .free{padding-block:56px 40px}
@@ -254,7 +267,7 @@ footer a:hover{color:var(--text)}
 <section class="hero" style="padding:0"><div class="wrap">
   <div>
     <span class="label">Sidekick 4.0 · coming soon</span>
-    <h1><span class="gl">Your phone and computer, <span class="k" style="--c:var(--blue)">as one.</span></span></h1>
+    <h1 data-face><span class="gl">Your phone and computer, <span class="k" style="--c:var(--blue)">as one.</span></span></h1>
     <p class="lead">Send files both ways, keep everything you shared with each device in one place, and use your phone as your computer's touchpad. Encrypted, with no account and no servers.</p>
     <div class="ctas"><a class="pill w lg" href="#wishlist">Join the wishlist</a><a class="pill o lg" href="#what">See what it does</a></div>
     <div class="facts"><span data-i="check"></span></div>
@@ -282,23 +295,20 @@ footer a:hover{color:var(--text)}
 
 <section id="what"><div class="wrap">
   <span class="label">What Sidekick does</span>
-  <h2><span class="gl">Everything between your devices, <span class="k" style="--c:var(--green)">in one place.</span></span></h2>
+  <h2 data-face><span class="gl">Everything between your devices, <span class="k" style="--c:var(--green)">in one place.</span></span></h2>
   <p class="lead">Each device you pair gets its own chat: the files, photos, links and notes you sent each other, with what you can do with them a hold away.</p>
-  <div class="grid">
-    <article class="f wide" id="sendCard"><div class="two">
-      <div style="display:flex;flex-direction:column;gap:14px"><span class="tile" data-i="send"></span><h3>Send files both ways</h3><p>Pick files on one device and they arrive on the other. The receiver taps Accept, or lets favourite devices send without asking. If the connection drops, the transfer picks up where it stopped.</p></div>
-      <div class="bit" style="display:flex;flex-direction:column;gap:8px">
+  <div class="stack" id="stack">
+    <article class="f sc" style="--i:0" id="sendCard"><div class="txt"><span class="tile" data-i="send"></span><h3>Send files both ways</h3><p>Pick files on one device and they arrive on the other. The receiver taps Accept, or lets favourite devices send without asking. If the connection drops, the transfer picks up where it stopped.</p></div><div class="vis" data-face><div style="display:flex;flex-direction:column;gap:10px;width:100%;max-width:380px">
         <div class="mini" style="background:var(--amberbg);border:1px solid var(--amberline);color:#ffe2ad;flex-direction:column;align-items:stretch;gap:4px"><span style="color:var(--amber);font-size:12px;font-weight:600" id="sendState">Receiving files</span><span>Pixel 9 is sending you 4 files · <span id="sendPct">64%</span></span><div class="bar"><i id="sendBar"></i></div></div>
         <div class="mini"><span data-i="file" data-s="18"></span><div class="t">Travel checklist.pdf<small>2.4 MB · Saved to Downloads</small></div></div>
-      </div>
-    </div></article>
-    <article class="f"><span class="tile" data-i="copy"></span><h3>Codes from your phone</h3><p>A sign-in code arrives on your Android phone and shows up on your computer, ready to paste. Only the code is sent, never your messages.</p><div class="bit"><span class="chip" style="font-family:var(--mono);letter-spacing:.1em">482 913</span> <span class="chip">Copy code</span></div></article>
-    <article class="f"><span class="tile" data-i="remote"></span><h3>Your phone is a touchpad</h3><p>Move the pointer, click, scroll, type and press shortcuts on your computer from the couch.</p><div class="bit pad" aria-hidden="true"><i id="padDot"></i></div></article>
-    <article class="f"><span class="tile" data-i="link"></span><h3>Links and notes</h3><p>Paste a link or write a note in the chat and it's on the other device. Hold it there to copy it or send it again.</p><div class="bit mini"><span data-i="link" data-s="18"></span><div class="t"><b style="font-weight:700">bbcgoodfood.com</b><small>/recipes/lemon-drizzle-cake</small></div></div></article>
-    <article class="f"><span class="tile" data-i="ping"></span><h3>Find your phone</h3><p>Ping rings it at full volume, even on silent, until you tap Found it.</p><div class="bit"><span class="chip am ringer"><span data-i="ping" data-s="14"></span>iPhone 16 is ringing</span></div></article>
-    <article class="f"><span class="tile" data-i="folder"></span><h3>Browse the other device</h3><p>Open your computer's folders from your phone, or the other way round, and copy what you need.</p><div class="bit mini"><span data-i="folder" data-s="18"></span><div class="t">Documents<small>48 items</small></div></div></article>
-    <article class="f"><span class="tile" data-i="wifi"></span><h3>No Wi-Fi? Still works</h3><p>The two devices make a direct Wi-Fi link between them. iPhones and Macs use Apple's own, like AirDrop.</p><div class="bit"><span class="chip ok">Direct Wi-Fi · encrypted</span></div></article>
-    <article class="f"><span class="tile" data-i="lock"></span><h3>Stays between your devices</h3><p>Everything is encrypted end to end. No account, no servers, no tracking. Only devices you paired can connect.</p><div class="bit"><span class="chip">No account</span> <span class="chip">No servers</span></div></article>
+        <div class="mini"><span data-i="photo" data-s="18"></span><div class="t">3 photos, 1 video<small>Saved to Photos</small></div></div></div></div></article>
+    <article class="f sc" style="--i:1"><div class="txt"><span class="tile" data-i="copy"></span><h3>Codes from your phone</h3><p>A sign-in code arrives on your Android phone and shows up on your computer, ready to paste. Only the code is sent, never your messages.</p></div><div class="vis" data-face><div class="mini" style="flex-direction:column;align-items:flex-start;gap:10px;padding:18px;max-width:320px;width:100%"><span style="font-size:14px">Your Google verification code is 482913</span><span style="font:600 30px/1 var(--mono);letter-spacing:.14em">482913</span><span class="pill w" style="height:38px;font-size:14px">Copy code</span></div></div></article>
+    <article class="f sc" style="--i:2"><div class="txt"><span class="tile" data-i="remote"></span><h3>Your phone is a touchpad</h3><p>Move the pointer, click, scroll, type and press shortcuts on your computer from the couch.</p></div><div class="vis" data-face><div class="pad" aria-hidden="true" style="width:100%;max-width:380px;height:200px"><i id="padDot"></i></div></div></article>
+    <article class="f sc" style="--i:3"><div class="txt"><span class="tile" data-i="link"></span><h3>Links and notes</h3><p>Paste a link or write a note in the chat and it's on the other device. Hold it there to copy it or send it again.</p></div><div class="vis" data-face><div style="display:flex;flex-direction:column;gap:10px;width:100%;max-width:340px"><div class="mini"><span data-i="link" data-s="18"></span><div class="t"><b style="font-weight:700">bbcgoodfood.com</b><small>/recipes/lemon-drizzle-cake</small></div></div><div class="mini" style="align-self:flex-end;background:var(--white);color:var(--onwhite)">Pick up the charger</div></div></div></article>
+    <article class="f sc" style="--i:4"><div class="txt"><span class="tile" data-i="ping"></span><h3>Find your phone</h3><p>Ping rings it at full volume, even on silent, until you tap Found it.</p></div><div class="vis" data-face><span class="chip am ringer" style="height:40px;padding:0 16px;font-size:14px"><span data-i="ping" data-s="16"></span>iPhone 16 is ringing</span></div></article>
+    <article class="f sc" style="--i:5"><div class="txt"><span class="tile" data-i="folder"></span><h3>Browse the other device</h3><p>Open your computer's folders from your phone, or the other way round, and copy what you need.</p></div><div class="vis" data-face><div style="display:flex;flex-direction:column;gap:8px;width:100%;max-width:340px"><div class="mini"><span data-i="folder" data-s="18"></span><div class="t">Documents<small>48 items</small></div></div><div class="mini"><span data-i="folder" data-s="18"></span><div class="t">Downloads<small>112 items</small></div></div><div class="mini"><span data-i="file" data-s="18"></span><div class="t">Invoice March.pdf<small>340 KB</small></div></div></div></div></article>
+    <article class="f sc" style="--i:6"><div class="txt"><span class="tile" data-i="wifi"></span><h3>No Wi-Fi? Still works</h3><p>The two devices make a direct Wi-Fi link between them. iPhones and Macs use Apple's own, like AirDrop.</p></div><div class="vis" data-face><span class="chip ok" style="height:40px;padding:0 16px;font-size:14px">Direct Wi-Fi · encrypted</span></div></article>
+    <article class="f sc" style="--i:7"><div class="txt"><span class="tile" data-i="lock"></span><h3>Stays between your devices</h3><p>Everything is encrypted end to end. No account, no servers, no tracking. Only devices you paired can connect.</p></div><div class="vis" data-face><div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center"><span class="chip" style="height:40px;padding:0 16px;font-size:14px">No account</span><span class="chip" style="height:40px;padding:0 16px;font-size:14px">No servers</span><span class="chip" style="height:40px;padding:0 16px;font-size:14px">Encrypted</span></div></div></article>
   </div>
 </div></section>
 
@@ -311,29 +321,29 @@ footer a:hover{color:var(--text)}
 
 <section id="pair"><div class="wrap">
   <span class="label">Pairing</span>
-  <h2><span class="gl">Connected in <span class="k" style="--c:var(--amber)">three steps.</span></span></h2>
+  <h2 data-face><span class="gl">Connected in <span class="k" style="--c:var(--amber)">three steps.</span></span></h2>
   <div class="steps">
-    <div class="step"><span class="n">Step 1</span><h3>Open Sidekick on both</h3><p>Each device lists the other under Nearby when they're on the same Wi-Fi.</p><div class="mini"><span class="dev" style="width:34px;height:34px;border-radius:10px" data-i="phone" data-s="17" data-c="#4fcf86"></span><div class="t">Pixel 9<small>Nearby · tap Pair</small></div></div></div>
-    <div class="step"><span class="n">Step 2</span><h3>Type the 6-digit code</h3><p>The other device shows a code. Type it, or scan its QR code with your phone.</p><div class="code6" id="code6" aria-label="Example code 8 4 7 2 9 1"><span>8</span><span>4</span><span>7</span><span>2</span><span>9</span><span>1</span></div></div>
-    <div class="step"><span class="n">Step 3</span><h3>That's it</h3><p>They remember each other from now on and connect by themselves, on any network they share.</p><div><span class="chip ok" id="pairedChip"><span data-i="check" data-s="14"></span>Paired · encrypted</span></div></div>
+    <div class="step" data-face><span class="n">Step 1</span><h3>Open Sidekick on both</h3><p>Each device lists the other under Nearby when they're on the same Wi-Fi.</p><div class="mini"><span class="dev" style="width:34px;height:34px;border-radius:10px" data-i="phone" data-s="17" data-c="#4fcf86"></span><div class="t">Pixel 9<small>Nearby · tap Pair</small></div></div></div>
+    <div class="step" data-face><span class="n">Step 2</span><h3>Type the 6-digit code</h3><p>The other device shows a code. Type it, or scan its QR code with your phone.</p><div class="code6" id="code6" aria-label="Example code 8 4 7 2 9 1"><span>8</span><span>4</span><span>7</span><span>2</span><span>9</span><span>1</span></div></div>
+    <div class="step" data-face><span class="n">Step 3</span><h3>That's it</h3><p>They remember each other from now on and connect by themselves, on any network they share.</p><div><span class="chip ok" id="pairedChip"><span data-i="check" data-s="14"></span>Paired · encrypted</span></div></div>
   </div>
 </div></section>
 
 <section id="devices"><div class="wrap">
   <span class="label">Devices</span>
-  <h2><span class="gl">On <span class="k" style="--c:var(--orange)">every device</span> you use.</span></h2>
+  <h2 data-face><span class="gl">On <span class="k" style="--c:var(--orange)">every device</span> you use.</span></h2>
   <p class="lead">One app for Windows, Mac, Android and iPhone, free with every feature.</p>
   <div class="plats">
-    <a class="plat" href="#wishlist"><span data-i="monitor" data-s="26"></span><div><b>Windows</b><small style="display:block">10 and 11</small></div><span class="soon">Coming soon</span></a>
-    <a class="plat" href="#wishlist"><span data-i="laptop" data-s="26"></span><div><b>Mac</b><small style="display:block">Apple silicon and Intel</small></div><span class="soon">Coming soon</span></a>
-    <a class="plat" href="#wishlist"><span data-i="phone" data-s="26"></span><div><b>Android</b><small style="display:block">Phones and tablets</small></div><span class="soon">Coming soon</span></a>
-    <a class="plat" href="#wishlist"><span data-i="phone" data-s="26"></span><div><b>iPhone</b><small style="display:block">And iPad</small></div><span class="soon">Coming soon</span></a>
+    <a class="plat" href="#wishlist" data-face><span data-i="monitor" data-s="26"></span><div><b>Windows</b><small style="display:block">10 and 11</small></div><span class="soon">Coming soon</span></a>
+    <a class="plat" href="#wishlist" data-face><span data-i="laptop" data-s="26"></span><div><b>Mac</b><small style="display:block">Apple silicon and Intel</small></div><span class="soon">Coming soon</span></a>
+    <a class="plat" href="#wishlist" data-face><span data-i="phone" data-s="26"></span><div><b>Android</b><small style="display:block">Phones and tablets</small></div><span class="soon">Coming soon</span></a>
+    <a class="plat" href="#wishlist" data-face><span data-i="phone" data-s="26"></span><div><b>iPhone</b><small style="display:block">And iPad</small></div><span class="soon">Coming soon</span></a>
   </div>
 </div></section>
 
 <section id="questions"><div class="wrap">
   <span class="label">Questions</span>
-  <h2><span class="gl">Good to <span class="k" style="--c:var(--blue)">know.</span></span></h2>
+  <h2 data-face><span class="gl">Good to <span class="k" style="--c:var(--blue)">know.</span></span></h2>
   <div class="qa">
     <details><summary>Is Sidekick free?<span data-i="down"></span></summary><p>Yes, with every feature, on every device. There's no account and no subscription.</p></details>
     <details><summary>Do I need an account or the internet?<span data-i="down"></span></summary><p>No. Your devices talk to each other directly, on your own Wi-Fi or a direct Wi-Fi link between the two. Nothing goes through our servers, because there aren't any.</p></details>
@@ -347,7 +357,7 @@ footer a:hover{color:var(--text)}
 
 <section class="wish" id="wishlist"><div class="wrap">
   <span class="label">The wishlist</span>
-  <h2><span class="gl">Be the first to <span class="k" style="--c:var(--green)">try it.</span></span></h2>
+  <h2 data-face><span class="gl">Be the first to <span class="k" style="--c:var(--green)">try it.</span></span></h2>
   <p class="lead">Leave your email and we'll write once, the day Sidekick comes out.</p>
   <form class="join" id="join" novalidate>
     <label for="email" style="position:absolute;left:-9999px">Email</label>
@@ -463,10 +473,14 @@ function onScroll(){const h=document.documentElement.scrollHeight-innerHeight;to
   const r=sendCard.getBoundingClientRect();const p=Math.min(1,Math.max(0,(innerHeight*.95-r.top)/(innerHeight*.55)));
   sendBar.style.width=(p*100).toFixed(1)+'%';sendPct.textContent=Math.round(p*100)+'%';
   const done=p>=1;sendState.textContent=done?'Received ✓':'Receiving files';sendBar.style.background=done?'var(--ok)':'';sendState.style.color=done?'var(--ok)':''}
-addEventListener('scroll',onScroll,{passive:true});onScroll();
+const stackCards=[...document.querySelectorAll('.sc')];
+function stackScroll(){if(RM)return;stackCards.forEach((c,i)=>{const n=stackCards[i+1];if(!n){c.style.setProperty('--sc',1);c.style.setProperty('--dim',1);return}
+  const a=c.getBoundingClientRect(),b=n.getBoundingClientRect();const p=Math.min(1,Math.max(0,1-(b.top-a.top)/Math.max(1,a.height)));
+  c.style.setProperty('--sc',(1-.06*p).toFixed(4));c.style.setProperty('--dim',(1-.5*p).toFixed(3))})}
+addEventListener('scroll',()=>{onScroll();stackScroll()},{passive:true});addEventListener('resize',stackScroll);onScroll();stackScroll();
 if(!RM){
   /* reveal what's below the first screen as it scrolls in */
-  const groups=[...document.querySelectorAll('.grid,.steps,.plats,.qa')];const heads=[...document.querySelectorAll('section .wrap>h2,section .wrap>.label,section .wrap>p.lead,.free-word,.ticks,form.join')];
+  const groups=[...document.querySelectorAll('.steps,.plats,.qa')];const heads=[...document.querySelectorAll('section .wrap>h2,section .wrap>.label,section .wrap>p.lead,.free-word,.ticks,form.join')];
   const els=[...heads,...groups.flatMap(g=>[...g.children].map((c,i)=>(c.style.setProperty('--d',(i%3)*90+'ms'),c)))].filter(e=>e.getBoundingClientRect().top>innerHeight);
   els.forEach(e=>e.classList.add('rv'));
   const io=new IntersectionObserver(es=>es.forEach(en=>{if(en.isIntersecting){const t=en.target;t.classList.add('in');io.unobserve(t);setTimeout(()=>t.classList.remove('rv','in'),1100+(parseInt(t.style.getPropertyValue('--d'))||0));if(en.target.id==='code6'||en.target.contains(document.getElementById('code6')))typeCode()}}),{rootMargin:'0px 0px -8% 0px'});
@@ -480,18 +494,23 @@ if(!RM){
 }
 if(!RM&&HOVER){
   /* the hero phone leans toward the pointer */
-  const hero=document.querySelector('.hero');
-  hero.addEventListener('pointermove',e=>{const r=phone.getBoundingClientRect();const x=(e.clientX-(r.left+r.width/2))/innerWidth,y=(e.clientY-(r.top+r.height/2))/innerHeight;
-    phone.style.setProperty('--pry',(x*10).toFixed(2)+'deg');phone.style.setProperty('--prx',(-y*8).toFixed(2)+'deg')});
-  hero.addEventListener('pointerleave',()=>{phone.style.setProperty('--pry','0deg');phone.style.setProperty('--prx','0deg')});
+  /* the phone, headings, steps, device tiles and card pictures turn slightly toward the pointer, wherever it is */
+  let px=innerWidth/2,py=innerHeight/2,raf=0;
+  const face=()=>{raf=0;const faces=document.querySelectorAll('[data-face]');
+    faces.forEach(el=>{const r=el.getBoundingClientRect();if(r.bottom<-100||r.top>innerHeight+100)return;
+      const x=(px-(r.left+r.width/2))/innerWidth,y=(py-(r.top+r.height/2))/innerHeight;
+      const k=el.matches('h1,h2')?5:8;el.style.setProperty('--ry',(x*k).toFixed(2)+'deg');el.style.setProperty('--rx',(-y*k*.8).toFixed(2)+'deg')});
+    const r=phone.getBoundingClientRect(),x=(px-(r.left+r.width/2))/innerWidth,y=(py-(r.top+r.height/2))/innerHeight;
+    phone.style.setProperty('--pry',(x*12).toFixed(2)+'deg');phone.style.setProperty('--prx',(-y*9).toFixed(2)+'deg')};
+  addEventListener('pointermove',e=>{px=e.clientX;py=e.clientY;if(!raf)raf=requestAnimationFrame(face)},{passive:true});
+  addEventListener('scroll',()=>{if(!raf)raf=requestAnimationFrame(face)},{passive:true});
   /* cards: a soft light under the pointer and a slight tilt */
   document.querySelectorAll('.f,.step,.plat').forEach(c=>{
-    c.addEventListener('pointermove',e=>{const r=c.getBoundingClientRect(),x=e.clientX-r.left,y=e.clientY-r.top;c.style.setProperty('--mx',x+'px');c.style.setProperty('--my',y+'px');
-      c.style.setProperty('--ry',((x/r.width-.5)*5).toFixed(2)+'deg');c.style.setProperty('--rx',(-(y/r.height-.5)*5).toFixed(2)+'deg')});
-    c.addEventListener('pointerleave',()=>{c.style.setProperty('--my','-300px');c.style.setProperty('--rx','0deg');c.style.setProperty('--ry','0deg')})});
+    c.addEventListener('pointermove',e=>{const r=c.getBoundingClientRect();c.style.setProperty('--mx',(e.clientX-r.left)+'px');c.style.setProperty('--my',(e.clientY-r.top)+'px')});
+    c.addEventListener('pointerleave',()=>{c.style.setProperty('--my','-300px')})});
   /* the touchpad card: its pointer follows yours */
   const pad=document.querySelector('.pad'),dot=document.getElementById('padDot'),padCard=pad.closest('.f');
-  padCard.addEventListener('pointermove',e=>{const r=padCard.getBoundingClientRect();dot.style.left=(8+84*(e.clientX-r.left)/r.width).toFixed(1)+'%';dot.style.top=(12+76*(e.clientY-r.top)/r.height).toFixed(1)+'%'});
+  padCard.addEventListener('pointermove',e=>{const r=pad.getBoundingClientRect();if(e.clientX<r.left-60||e.clientX>r.right+60)return;dot.style.left=Math.min(96,Math.max(4,100*(e.clientX-r.left)/r.width)).toFixed(1)+'%';dot.style.top=Math.min(94,Math.max(6,100*(e.clientY-r.top)/r.height)).toFixed(1)+'%'});
   padCard.addEventListener('pointerdown',()=>{dot.animate([{boxShadow:'0 0 0 10px #ffffff22'},{boxShadow:'0 0 0 22px #ffffff00'}],{duration:400})});
 }
 
