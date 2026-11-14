@@ -51,6 +51,16 @@ detailed developer notes; every release is in `VERSIONS.md`) and
 
 ## 14 November 2026
 
+- **Website prototype for 4.0** (https://claude.ai/artifact/KN5qtaJH4dWXy3JHoqPLnt,
+  `design/website-4.0/`: `site.src.html` is the source, `index.html` the
+  page with the emulator's icons put in): the wishlist page in the app's new
+  look (#121212, #1c1c1c panels, white pills, Inter + JetBrains Mono labels),
+  the 4.0 chat working in the hero (Copy code on 6-digit codes, hold a card
+  for actions, ✕ / flick down, one notice at a time; "Try it" buttons play
+  the MacBook), What Sidekick does, pairing in three steps, devices (coming
+  soon), questions, the wishlist form (prototype: sends nothing). Not live:
+  the real `index.html` is unchanged. **Next: the owner says when to build
+  4.0** (the app in the new design, then this site for real).
 - **Emulator: hold for actions, 6-digit codes, one notice at a time** (the
   owner): only a **6-digit code** gets the big **Copy code** button
   (`codeOf`: "482913", "482 913", "G-482913 is your Google code", "Kod BLIK
