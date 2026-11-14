@@ -7,10 +7,20 @@ detailed developer notes; every release is in `VERSIONS.md`) and
 
 ## 14 November 2026
 
+- **Sidekick emulator from the owner's Figma design**
+  (https://claude.ai/artifact/Rbd3YL2REDeDKtCK5z3px5, source in
+  `design/emulator/`): phone and computer, built from the Figma Foundations
+  tokens, components, icons and photos. Every Prototype-page screen works:
+  Devices (Needs you, favourites, paired, nearby, first launch), Chat (device
+  picker, filters, search, item cards and their ⋯ menu, waiting / receiving /
+  received / declined, not reachable, the message bar that turns into Send),
+  Send and Sending, Remote, Settings, Connect (nearby / QR / code), Browse
+  files, Ping, notices, error. A side panel plays the other devices.
+  Checked end to end in Chromium (`check.js`).
 - **The owner's Figma design, "Prototype" page** (`design/figma/prototype/`,
   183 PNGs at 2x: 102 phone 390×844, 81 computer 1280×800, plus
-  `History overlay/Phone|Computer` sheets and menus). Next from the owner:
-  the "Styles & Components" page; then an interactive emulator built from it.
+  `History overlay/Phone|Computer` sheets and menus) and its "Styles &
+  Components" page (`design/figma/styles-and-components/`).
 - **Logo ideas** (`design/logo-ideas/`, the owner: "these are amazing"; none
   picked yet): five abstract, symmetrical, round-edged marks with no letters,
   devices or dots: Hinge, Embrace, Lock, Bloom, Pair (board:

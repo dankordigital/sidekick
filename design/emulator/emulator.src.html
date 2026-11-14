@@ -1,0 +1,828 @@
+<title>Sidekick emulator</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap">
+<style>
+/* Layout: a test bench. The device (phone or computer window, scaled to fit) beside a panel that plays the other devices.
+   Tokens are the owner's Figma "Foundations" exactly. One committed dark look. */
+:root{
+  --page:#0a0a0a;
+  --bg:#121212;--panel:#1c1c1c;--raised:#262626;--btn:#2e2e2e;
+  --text:#f2f2f2;--muted:#a1a1a6;--faint:#8a8a8f;
+  --ok:#45d07e;--amber:#ffc56b;--amberbg:#2f2410;--amberline:#ffc56b40;
+  --blue:#5b9dff;--green:#4fcf86;--orange:#ffb84d;
+  --white:#f0f0f0;--onwhite:#141414;--hair:#ffffff14;--line:#ffffff26;
+  --red:#ff6b5e;
+  --font:Inter,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;background:var(--page);color:var(--text);font:14px/1.35 var(--font);padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:0 24px;overflow-x:hidden;-webkit-font-smoothing:antialiased}
+button,input,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+button:disabled{cursor:default;opacity:.4}
+:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+.top{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:16px 0 14px;max-width:1520px;margin:0 auto}
+.brand{display:flex;align-items:center;gap:10px;font-weight:700;font-size:17px}
+.brand .sk{font-weight:800;font-size:22px;letter-spacing:-.06em}
+.tag{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);border:1px solid var(--line);padding:3px 8px;border-radius:99px}
+.seg2{display:flex;gap:4px;padding:4px;border-radius:24px;background:var(--panel);border:1px solid var(--line);margin-left:auto}
+.seg2 button{height:36px;padding:0 16px;border-radius:18px;border:0;background:transparent;color:var(--muted);font-weight:600}
+.seg2 button[aria-pressed=true]{background:var(--white);color:var(--onwhite)}
+.bench{display:flex;gap:20px;align-items:flex-start;justify-content:center;flex-wrap:wrap;max-width:1520px;margin:0 auto}
+.stage{flex:1 1 420px;min-width:0;display:flex;justify-content:center}
+.fit{position:relative}
+.fit>.inner{position:absolute;left:0;top:0;transform-origin:0 0}
+.side{flex:0 1 270px;min-width:0;display:flex;flex-direction:column;gap:8px;padding:16px;border-radius:22px;background:var(--panel);border:1px solid var(--hair)}
+.side h2{margin:0;font-size:15px}
+.side p{margin:0 0 4px;color:var(--muted);font-size:13px}
+.sim{display:flex;align-items:center;gap:10px;min-height:42px;padding:8px 12px;border-radius:14px;border:1px solid var(--hair);background:var(--raised);text-align:left;font-weight:600;font-size:13.5px}
+.sim:hover{background:var(--btn)}
+.sim.quiet{background:transparent;border-color:var(--line);color:var(--muted);justify-content:center}
+@media (max-width:760px){.side{flex-basis:100%}.seg2{margin-left:0}}
+
+/* ---------- shared pieces ---------- */
+.ic{display:block;flex:none}
+.pill{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:40px;padding:0 16px;border-radius:20px;border:0;font-weight:600;font-size:14px;white-space:nowrap;background:var(--btn);color:var(--text);transition:transform .12s,background .15s}
+.pill:active{transform:scale(.96)}
+.pill.w{background:var(--white);color:var(--onwhite)}
+.pill.o{background:transparent;border:1px solid var(--line)}
+.pill.a{background:var(--amber);color:#241800}
+.pill.ao{background:transparent;border:1px solid #ffc56b66;color:var(--amberink,#ffe2ad)}
+.pill.sm{height:34px;padding:0 13px;font-size:13.5px}
+.pill.lg{height:50px;border-radius:25px;font-size:15px}
+.pill.blk{width:100%}
+.rb{display:grid;place-items:center;width:44px;height:44px;flex:none;border-radius:50%;border:0;background:var(--btn);color:var(--text)}
+.rb.s{width:36px;height:36px}
+.rb.ghost{background:transparent;color:var(--muted)}
+.dev{position:relative;flex:none;display:grid;place-items:center;background:var(--raised);border-radius:14px}
+.h1row{display:flex;align-items:center;gap:10px}
+.h1{margin:0;font-size:30px;font-weight:700;letter-spacing:-.02em;flex:none}
+.h1row .h1{flex:1}
+.sub{margin:0;color:var(--muted);font-size:14px}
+.lbl{color:var(--muted);font-size:12.5px;font-weight:600;display:flex;align-items:center;gap:8px;margin:6px 2px 0}
+.card{background:var(--panel);border-radius:22px}
+.st{font-size:12.5px;font-weight:500;color:var(--ok)}
+.st.off{color:var(--faint)}
+.chips{display:flex;gap:8px;flex:none;overflow-x:auto;scrollbar-width:none}
+.chips::-webkit-scrollbar{display:none}
+.chip{height:40px;padding:0 15px;border-radius:20px;border:0;background:var(--raised);color:var(--text);font-weight:500;font-size:14.5px;flex:none}
+.chip[aria-pressed=true]{background:var(--white);color:var(--onwhite);font-weight:600}
+.day{align-self:center;color:var(--muted);font-size:13px;font-weight:500}
+.sw{position:relative;width:48px;height:28px;flex:none;border-radius:14px;border:0;padding:0;background:#3a3a3c;transition:background .2s}
+.sw:after{content:"";position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:#fff;transition:transform .2s cubic-bezier(.22,1,.36,1)}
+.sw[aria-checked=true]{background:var(--ok)}
+.sw[aria-checked=true]:after{transform:translateX(20px)}
+.seg{display:flex;padding:5px;border-radius:26px;background:var(--panel);flex:none}
+.seg button{flex:1;height:40px;border-radius:20px;border:0;background:transparent;color:var(--muted);font-weight:500;font-size:14.5px}
+.seg button[aria-selected=true]{background:var(--white);color:var(--onwhite);font-weight:600}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+
+/* item cards (the device history) */
+.items{display:flex;flex-direction:column;gap:6px}
+.it{display:flex;flex-direction:column;gap:6px;max-width:86%}
+.it.me{align-self:flex-end;align-items:flex-end}
+.it.them{align-self:flex-start}
+.it.wide{max-width:100%;align-self:stretch}
+.it .foot{color:var(--faint);font-size:12px;padding:0 2px}
+.ic-card{padding:16px;border-radius:22px;background:var(--raised);display:flex;flex-direction:column;gap:10px;min-width:240px}
+.me .ic-card{background:var(--white);color:var(--onwhite)}
+.ic-card .row1{display:flex;gap:12px;align-items:flex-start}
+.ic-card .nm{font-weight:600;font-size:15.5px;overflow-wrap:anywhere}
+.ic-card .sz{font-size:13px;color:var(--muted);margin-top:2px}
+.me .ic-card .sz,.me .ic-card .saved{color:#555}
+.ic-card .saved{font-size:13px;color:var(--text)}
+.ic-card .acts{display:flex;gap:8px;flex-wrap:wrap}
+.ic-card .acts .pill{height:36px;padding:0 14px;font-size:14px;background:#ffffff12}
+.me .ic-card .acts .pill{background:#2a2a2a;color:#f2f2f2}
+.ic-card .acts .rb{width:36px;height:36px;background:#ffffff12}
+.me .ic-card .acts .rb{background:#2a2a2a;color:#f2f2f2}
+.note{font-size:16px}
+.thumbs{display:flex;gap:6px}
+.thumbs img{width:88px;height:88px;object-fit:cover;border-radius:12px;display:block}
+.site{font-size:19px;font-weight:700}
+.path{font-size:12.5px;color:var(--muted);overflow-wrap:anywhere}
+.req{border-radius:22px;padding:16px;display:flex;flex-direction:column;gap:8px;background:var(--amberbg);border:1px solid var(--amberline);color:#ffe2ad}
+.req .k{color:var(--amber);font-size:12.5px;font-weight:600}
+.req .t{color:var(--amber);font-size:15.5px}
+.req .names{font-size:12.5px;color:#ffe2adb3}
+.req.plain{background:var(--raised);border-color:transparent;color:var(--text)}
+.req.plain .k{color:var(--muted)}
+.req.plain .t{color:var(--text)}
+.req.plain .names{color:var(--muted)}
+.bar{height:4px;border-radius:2px;background:#ffffff1f;overflow:hidden}
+.bar>i{display:block;height:100%;border-radius:2px;background:var(--amber)}
+.empty{padding:18px;border-radius:22px;background:var(--panel)}
+.empty b{display:block;font-size:17px;margin-bottom:6px}
+.empty span{color:var(--muted);font-size:13.5px}
+.it.new{animation:pop .3s cubic-bezier(.22,1,.36,1)}
+@keyframes pop{from{opacity:0;transform:translateY(8px)}}
+
+/* message bar */
+.mbar{display:flex;align-items:center;gap:8px;padding:7px;border-radius:32px;background:var(--panel);border:1px solid #ffffff1f;box-shadow:0 10px 30px #00000080;flex:none}
+.mbar .rb{width:46px;height:46px}
+.mbar input{flex:1;min-width:0;height:46px;border:0;outline:0;background:transparent;font-size:15px;padding:0 4px}
+.mbar input::placeholder{color:var(--faint)}
+.sendf{position:relative;display:inline-flex;align-items:center;height:46px;min-width:46px;padding:0 18px 0 44px;flex:none;border-radius:23px;border:0;background:var(--white);color:var(--onwhite);font-weight:600;font-size:14.5px;overflow:hidden;transition:padding .32s cubic-bezier(.22,1,.36,1)}
+.sendf .a,.sendf .b{position:absolute;left:13px;top:13px;transition:transform .32s cubic-bezier(.22,1,.36,1),opacity .2s}
+.sendf .b{opacity:0;transform:translateY(10px) scale(.6)}
+.sendf .l{display:inline-block;max-width:90px;white-space:nowrap;overflow:hidden;transition:max-width .32s cubic-bezier(.22,1,.36,1),opacity .2s}
+.mbar.typing .sendf{padding:0 0 0 46px}
+.mbar.typing .sendf .a{opacity:0;transform:translateY(-10px) scale(.6)}
+.mbar.typing .sendf .b{opacity:1;transform:none}
+.mbar.typing .sendf .l{max-width:0;opacity:0}
+
+/* ---------- phone ---------- */
+.bezel{width:414px;height:868px;padding:12px;border-radius:60px;background:#2a2a2a;box-shadow:inset 0 0 0 2px #3a3a3a,0 30px 80px #000c}
+.ph{position:relative;width:390px;height:844px;border-radius:48px;overflow:hidden;background:var(--bg)}
+.status{position:absolute;left:0;right:0;top:0;height:50px;display:flex;align-items:center;justify-content:space-between;padding:6px 30px 0 32px;font-weight:600;font-size:15px;z-index:70;pointer-events:none}
+.status .r{display:flex;gap:6px;align-items:center}
+.batt{width:24px;height:12px;border-radius:3px;border:1.5px solid #f2f2f2aa;padding:1.5px}.batt i{display:block;height:100%;width:80%;background:#f2f2f2;border-radius:1px}
+.scr{position:absolute;inset:0;display:flex;flex-direction:column;gap:12px;padding:62px 24px 112px;overflow-y:auto;scrollbar-width:none}
+.scr::-webkit-scrollbar{display:none}
+.scr.enter{animation:enter .26s cubic-bezier(.22,1,.36,1)}
+.scr.push{animation:push .32s cubic-bezier(.22,1,.36,1)}
+@keyframes enter{from{opacity:0;transform:translateY(6px)}}
+@keyframes push{from{transform:translateX(36px);opacity:.3}}
+.chat{position:absolute;inset:0;display:flex;flex-direction:column;gap:12px;padding:62px 24px 98px}
+.chat .feed{flex:1;min-height:0;overflow-y:auto;display:flex;flex-direction:column;gap:14px;scrollbar-width:none;padding-bottom:6px}
+.chat .feed::-webkit-scrollbar{display:none}
+.chat .feed>:first-child{margin-top:0}
+.devpick{display:flex;align-items:center;gap:14px;border:0;background:none;padding:0;text-align:left;width:100%}
+.devpick.card{background:var(--panel)}
+.devpick .t{flex:1;min-width:0}
+.devpick b{display:block;font-size:20px;font-weight:600}
+.dock{position:absolute;left:16px;right:16px;bottom:22px;z-index:20;display:flex;align-items:center;justify-content:space-between;padding:8px;border-radius:34px;background:var(--panel);border:1px solid #ffffff1f;box-shadow:0 10px 30px #00000080;transition:transform .3s cubic-bezier(.22,1,.36,1),opacity .2s}
+.dock.away{transform:translateY(140%);opacity:0;pointer-events:none}
+.dk{display:flex;align-items:center;height:48px;min-width:48px;padding:0 12px;border-radius:24px;border:0;background:transparent;color:var(--text);transition:background .3s,padding .3s}
+.dk span{max-width:0;overflow:hidden;white-space:nowrap;font-weight:600;font-size:15px;transition:max-width .35s cubic-bezier(.22,1,.36,1),margin .35s}
+.dk.on{background:var(--white);color:var(--onwhite);padding:0 26px}
+.dk.on span{max-width:96px;margin-left:10px}
+.drow{display:flex;align-items:center;gap:14px;padding:14px}
+.drow+.drow{padding-top:6px}
+.drow .main{flex:1;min-width:0;display:flex;align-items:center;gap:14px;border:0;background:none;padding:0;text-align:left}
+.drow .main b{display:block;font-size:16px;font-weight:500}
+.drow .st{display:block;margin-top:2px}
+.nearby{border:1.5px dashed var(--line);border-radius:22px}
+.needs{display:flex;flex-direction:column;gap:12px;padding:16px;border-radius:22px;background:var(--amberbg);border:1px solid var(--amberline)}
+.needs .k{color:var(--amber);font-weight:600;font-size:14px}
+.tiles{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.tile{display:flex;flex-direction:column;align-items:flex-start;gap:16px;padding:18px 16px;border-radius:22px;border:0;background:var(--panel);font-size:15px;text-align:left}
+.selrow{display:flex;align-items:center;gap:12px;padding:12px;border-radius:16px;background:var(--raised)}
+.selrow .t{flex:1;min-width:0}
+.selrow b{display:block;font-weight:500;overflow-wrap:anywhere}
+.selrow small{color:var(--muted);font-size:12px}
+.pad{position:relative;flex:1;min-height:200px;border-radius:24px;background:var(--panel);background-image:radial-gradient(#ffffff17 1px,transparent 1.4px);background-size:22px 22px;touch-action:none;cursor:crosshair;overflow:hidden}
+.pad .ptr{position:absolute;width:12px;height:12px;margin:-6px 0 0 -6px;border-radius:50%;background:#fff;transition:box-shadow .15s}
+.pad .ptr.click{box-shadow:0 0 0 14px #ffffff33}
+.pad .hint{position:absolute;left:0;right:0;bottom:14px;text-align:center;color:var(--faint);font-size:12.5px;pointer-events:none}
+.pad .trail{position:absolute;left:16px;top:14px;color:var(--muted);font-size:12.5px;font-weight:600;pointer-events:none}
+.flash{animation:flash .3s}
+@keyframes flash{50%{background:var(--white);color:var(--onwhite)}}
+.setrow{display:flex;align-items:center;gap:12px;min-height:52px;padding:0 16px;border:0;background:none;width:100%;text-align:left;font-size:15px}
+.setrow .t{flex:1}
+.setrow .v{color:var(--muted);display:flex;align-items:center;gap:6px}
+.ring{position:relative;align-self:center;width:210px;height:210px}
+.ring>div{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.ring b{font-size:40px;font-weight:700;letter-spacing:-.02em}
+.codebox{display:flex;gap:8px;position:relative;justify-content:space-between}
+.codebox span{flex:1;height:54px;border-radius:14px;background:var(--panel);border:1px solid #ffffff1f;display:grid;place-items:center;font-size:22px;font-weight:600}
+.codebox span.cur{border:2px solid var(--white)}
+.codebox input{position:absolute;inset:0;opacity:0;width:100%;height:100%;font-size:16px}
+.codebox.bad{animation:shake .35s}
+@keyframes shake{25%{transform:translateX(-8px)}75%{transform:translateX(8px)}}
+.pingrings{position:relative;width:250px;height:250px;display:grid;place-items:center}
+.pingrings i{position:absolute;inset:0;border-radius:50%;border:2px solid #ffc56b66;animation:ring 2.6s ease-out infinite}
+.pingrings i:nth-child(2){animation-delay:.85s}.pingrings i:nth-child(3){animation-delay:1.7s}
+@keyframes ring{0%{transform:scale(.45);opacity:1}100%{transform:scale(1.15);opacity:0}}
+.bar2{position:absolute;left:16px;right:16px;bottom:22px;z-index:31;display:flex;gap:8px;padding:7px;border-radius:32px;background:var(--panel);border:1px solid #ffffff1f;box-shadow:0 10px 30px #00000080}
+.bar2 .pill{flex:1;height:48px;border-radius:24px;justify-content:flex-start;padding:0 18px}
+.full{position:absolute;inset:0;z-index:30;background:var(--bg);display:flex;flex-direction:column;gap:14px;padding:62px 24px 30px;overflow-y:auto;scrollbar-width:none}
+.full::-webkit-scrollbar{display:none}
+.full.anim{animation:push .32s cubic-bezier(.22,1,.36,1)}
+.full.rise{animation:up .34s cubic-bezier(.22,1,.36,1)}
+
+/* sheets, dialogs and notices */
+.back{position:absolute;inset:0;z-index:40;background:#000c;animation:fade .2s}
+@keyframes fade{from{opacity:0}}
+.sheet{position:absolute;left:8px;right:8px;bottom:8px;z-index:41;display:flex;flex-direction:column;gap:10px;padding:20px 18px 20px;border-radius:30px;background:var(--panel);animation:up .32s cubic-bezier(.22,1,.36,1);max-height:88%;overflow-y:auto}
+.sheet.grab{padding-top:12px}
+.sheet .gr{align-self:flex-start;width:36px;height:4px;border-radius:2px;background:#ffffff33;margin:4px 0 8px}
+@keyframes up{from{transform:translateY(100%)}}
+.sheet h3,.dlg h3{margin:0;font-size:17px;font-weight:600}
+.sheet .sub2,.dlg .sub2{margin:-4px 0 2px;color:var(--muted);font-size:13px}
+.opt{display:flex;align-items:center;gap:12px;width:100%;min-height:46px;padding:0 16px;border-radius:23px;border:0;background:var(--raised);text-align:left;font-weight:500;font-size:14.5px}
+.opt.w{background:var(--white);color:var(--onwhite);font-weight:600}
+.opt[disabled]{color:var(--faint);opacity:1}
+.foot2{color:var(--faint);font-size:12px;margin-top:2px}
+.viewer img{width:100%;border-radius:16px;display:block}
+.notices{position:absolute;left:12px;right:12px;bottom:100px;z-index:50;display:flex;flex-direction:column;gap:8px;pointer-events:none}
+.notices.low{bottom:96px}
+.notices.onchat{bottom:168px}
+.notice{pointer-events:auto;position:relative;overflow:hidden;display:flex;align-items:center;gap:12px;padding:14px 12px 16px 16px;border-radius:20px;background:var(--panel);border:1px solid #ffffff1f;box-shadow:0 10px 30px #00000080;animation:up2 .3s cubic-bezier(.22,1,.36,1);font-size:14.5px}
+.notice .t{flex:1;min-width:0}
+.notice small{display:block;color:var(--text);font-size:14px}
+.notice .x{width:40px;height:40px;border-radius:50%;border:0;background:var(--btn);display:grid;place-items:center;flex:none}
+.notice .life{position:absolute;left:16px;right:70px;bottom:7px;height:2px;border-radius:1px;background:#ffffff26;overflow:hidden}
+.notice .life i{display:block;height:100%;background:#ffffff99;animation:life linear forwards}
+.notice.out{opacity:0;transform:translateY(8px);transition:.25s}
+@keyframes up2{from{opacity:0;transform:translateY(12px)}}
+@keyframes life{from{width:100%}to{width:0}}
+.pop{position:absolute;inset:0;z-index:60;display:grid;place-items:center;padding:20px;background:#000c;animation:fade .2s}
+.dlg{width:100%;max-width:420px;display:flex;flex-direction:column;gap:12px;padding:22px;border-radius:26px;background:var(--panel);animation:pop .25s}
+.dlg ol{margin:0;padding-left:20px;line-height:1.5}
+
+/* ---------- computer ---------- */
+.win{width:1280px;height:800px;border-radius:14px;overflow:hidden;background:var(--bg);box-shadow:0 0 0 1px #ffffff1f,0 30px 80px #000c;display:flex;flex-direction:column;position:relative}
+.wbar{height:38px;flex:none;display:flex;align-items:center;gap:16px;padding:0 14px;font-size:13px;color:var(--muted)}
+.wbar .l{display:flex;gap:8px}.wbar .l i{width:12px;height:12px;border-radius:50%;background:#3a3a3c;display:block}
+.wbar .r{margin-left:auto}
+.wbody{flex:1;min-height:0;display:flex;gap:12px;padding:0 12px 12px}
+.rail{width:64px;flex:none;display:flex;flex-direction:column;align-items:center;gap:6px;padding:14px 0;border-radius:22px;background:var(--panel)}
+.rail .logo{font-weight:800;font-size:29px;letter-spacing:-.07em;margin-bottom:14px;line-height:1}
+.rail button{display:flex;flex-direction:column;align-items:center;gap:5px;border:0;background:none;color:var(--muted);font-size:10.5px;padding:6px 0;width:60px}
+.rail button .c{width:42px;height:42px;border-radius:50%;display:grid;place-items:center;color:var(--text)}
+.rail button[aria-current=true] .c{background:var(--white);color:var(--onwhite)}
+.rail button[aria-current=true]{color:var(--text)}
+.col{width:300px;flex:none;display:flex;flex-direction:column;gap:10px;padding:16px 14px;border-radius:22px;background:var(--panel);overflow-y:auto;scrollbar-width:none}
+.col::-webkit-scrollbar{display:none}
+.col h2{margin:0;font-size:20px;font-weight:600;flex:1}
+.wrow{display:flex;align-items:center;gap:12px;padding:10px;border-radius:16px;border:0;background:none;text-align:left;width:100%}
+.wrow:hover{background:#ffffff08}
+.wrow[aria-current=true]{background:var(--raised)}
+.wrow .t{flex:1;min-width:0}
+.wrow b{display:flex;font-weight:500;font-size:14.5px}
+.wrow b em{margin-left:auto;font-style:normal;color:var(--faint);font-size:12px;font-weight:400}
+.wrow small{display:block;color:var(--muted);font-size:12.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.wmain{flex:1;min-width:0;display:flex;flex-direction:column;gap:14px;padding:20px 24px;border-radius:22px;background:var(--panel);position:relative;overflow:hidden}
+.wmain .feed{flex:1;min-height:0;overflow-y:auto;display:flex;flex-direction:column;gap:14px;scrollbar-width:none}
+.wmain .feed::-webkit-scrollbar{display:none}
+.wmain .it{max-width:62%}
+.wmain .it.wide{max-width:560px;align-self:flex-start}
+.drop{position:absolute;inset:8px;border-radius:20px;border:2px dashed var(--white);background:#121212e6;display:none;place-items:center;z-index:5;font-size:20px;font-weight:600;pointer-events:none}
+.wmain.dragging .drop{display:grid}
+.wnot{position:absolute;right:24px;bottom:24px;width:380px;z-index:50;display:flex;flex-direction:column;gap:8px;pointer-events:none}
+@media (prefers-reduced-motion:reduce){*,*:before,*:after{animation:none!important;transition:none!important}}
+</style>
+
+<header class="top">
+  <div class="brand"><span class="sk">sk</span>Sidekick <span class="tag">Emulator</span></div>
+  <div class="seg2" role="group" aria-label="Device">
+    <button type="button" id="v-phone" aria-pressed="true" data-act="view" data-v="phone">Phone</button>
+    <button type="button" id="v-pc" aria-pressed="false" data-act="view" data-v="pc">Computer</button>
+  </div>
+</header>
+<div class="bench">
+  <div class="stage">
+    <div class="fit" id="fit-phone"><div class="inner"><div class="bezel"><div class="ph" id="ph">
+      <div class="status" aria-hidden="true"><span>9:41</span><span class="r" id="st-r"></span></div>
+      <div id="ph-main"></div>
+      <nav class="dock" id="dock" aria-label="Tabs"></nav>
+      <div id="ph-over"></div>
+      <div class="notices" id="ph-notices" aria-live="polite"></div>
+    </div></div></div></div>
+    <div class="fit" id="fit-pc" hidden><div class="inner"><div class="win" id="win">
+      <div class="wbar"><span class="l" aria-hidden="true"><i></i><i></i><i></i></span><span>Sidekick</span><span class="r">Direct · encrypted · yours</span></div>
+      <div class="wbody" id="pc-main"></div>
+      <div id="pc-over"></div>
+      <div class="wnot" id="pc-notices" aria-live="polite"></div>
+    </div></div></div>
+  </div>
+  <aside class="side" aria-label="Play the other devices">
+    <h2>Play the other devices</h2>
+    <p>Everything inside the screen works. These buttons are your other devices.</p>
+    <button type="button" class="sim" data-act="simFiles"><span id="ic-a"></span><span id="sim-files">MacBook Pro sends 4 files</span></button>
+    <button type="button" class="sim" data-act="simLink"><span id="ic-b"></span>Pixel 9 sends a link</button>
+    <button type="button" class="sim" data-act="simNote"><span id="ic-c"></span>Pixel 9 sends a note</button>
+    <button type="button" class="sim" data-act="simPing"><span id="ic-d"></span><span id="sim-ping">MacBook Pro pings you</span></button>
+    <button type="button" class="sim" data-act="simOffline"><span id="ic-e"></span>Pixel 9 goes out of reach</button>
+    <button type="button" class="sim" data-act="simError"><span id="ic-f"></span>A send fails</button>
+    <button type="button" class="sim" data-act="simFresh"><span id="ic-g"></span>First launch (nothing paired)</button>
+    <button type="button" class="sim quiet" data-act="reset">Start over</button>
+  </aside>
+</div>
+
+<script>
+/*MEDIA*/
+(function(){
+/* ---------- icons (Lucide, as in the Figma icon set) ---------- */
+const I={
+ devices:'<path d="M18 8V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h8"/><path d="M10 19v-3.96 3.15"/><path d="M7 19h5"/><rect width="6" height="10" x="16" y="12" rx="2"/>',
+ chat:'<rect x="3" y="3" width="18" height="18" rx="4"/><path d="M7.5 8.5h9M7.5 12h9M7.5 15.5h6"/>',
+ send:'<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m17 8-5-5-5 5"/><path d="M12 3v12"/>',
+ remote:'<path d="m9 10 3-3 3 3"/><path d="M12 13V7"/><rect width="20" height="14" x="2" y="3" rx="2"/><path d="M12 17v4"/><path d="M8 21h8"/>',
+ settings:'<path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/>',
+ file:'<path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M16 13H8M16 17H8M10 9H8"/>',
+ photo:'<rect width="18" height="18" x="3" y="3" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.09-3.09a2 2 0 0 0-2.82 0L6 21"/>',
+ link:'<path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>',
+ paste:'<rect width="8" height="4" x="8" y="2" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="M12 11h4M12 16h4M8 11h.01M8 16h.01"/>',
+ phone:'<rect width="14" height="20" x="5" y="2" rx="2"/><path d="M12 18h.01"/>',
+ tablet:'<rect width="16" height="20" x="4" y="2" rx="2"/><path d="M12 18h.01"/>',
+ laptop:'<path d="M20 16V7a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v9m16 0H4m16 0 1.28 2.55a1 1 0 0 1-.9 1.45H3.62a1 1 0 0 1-.9-1.45L4 16"/>',
+ monitor:'<rect width="20" height="14" x="2" y="3" rx="2"/><path d="M8 21h8M12 17v4"/>',
+ folder:'<path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/>',
+ search:'<circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>',
+ more:'<circle cx="12" cy="12" r="1.3" fill="currentColor"/><circle cx="19" cy="12" r="1.3" fill="currentColor"/><circle cx="5" cy="12" r="1.3" fill="currentColor"/>',
+ down:'<path d="m6 9 6 6 6-6"/>', right:'<path d="m9 18 6-6-6-6"/>', back:'<path d="m15 18-6-6 6-6"/>',
+ close:'<path d="M18 6 6 18M6 6l12 12"/>', check:'<path d="M20 6 9 17l-5-5"/>', plus:'<path d="M5 12h14M12 5v14"/>',
+ download:'<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/><path d="M12 15V3"/>',
+ star:'<path d="M11.525 2.295a.53.53 0 0 1 .95 0l2.31 4.679a2.123 2.123 0 0 0 1.595 1.16l5.166.756a.53.53 0 0 1 .294.904l-3.736 3.638a2.123 2.123 0 0 0-.611 1.878l.882 5.14a.53.53 0 0 1-.771.56l-4.618-2.428a2.122 2.122 0 0 0-1.973 0L6.396 21.01a.53.53 0 0 1-.77-.56l.881-5.139a2.122 2.122 0 0 0-.611-1.879L2.16 9.795a.53.53 0 0 1 .294-.906l5.165-.755a2.122 2.122 0 0 0 1.597-1.16z"/>',
+ ping:'<path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/>',
+ keyboard:'<path d="M10 8h.01M12 12h.01M14 8h.01M16 12h.01M18 8h.01M6 8h.01M7 16h10M8 12h.01"/><rect width="20" height="16" x="2" y="4" rx="2"/>',
+ lock:'<rect width="18" height="11" x="3" y="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>',
+ wifi:'<path d="M12 20h.01M2 8.82a15 15 0 0 1 20 0M5 12.859a10 10 0 0 1 14 0M8.5 16.429a5 5 0 0 1 7 0"/>',
+ up:'<path d="m5 12 7-7 7 7"/><path d="M12 19V5"/>',
+ alert:'<circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/>',
+ refresh:'<path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/>'
+};
+const ic=(n,s=20,c='currentColor',w=2)=>`<svg class="ic" width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="${c}" stroke-width="${w}" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${I[n]}</svg>`;
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const now=()=>{const d=new Date();return d.getHours()+':'+String(d.getMinutes()).padStart(2,'0')};
+const fmt=b=>b>=1e9?(b/1e9).toFixed(1)+' GB':b>=1e6?(b/1e6).toFixed(1)+' MB':b>=1e3?Math.round(b/1e3)+' KB':b+' B';
+const kindOf=n=>/\.(heic|jpe?g|png|gif|webp)$/i.test(n)?'photo':/\.(mov|mp4|m4v)$/i.test(n)?'video':'file';
+const isLink=t=>/^(https?:\/\/|www\.)\S+$/i.test(t.trim())||/^[a-z0-9-]+(\.[a-z0-9-]+)+\/\S*$/i.test(t.trim());
+const site=u=>{try{const x=new URL(/^https?:/i.test(u)?u:'https://'+u);return{host:x.hostname.replace(/^www\./,''),path:(x.pathname+x.search).replace(/\/$/,'')}}catch(e){return{host:u,path:''}}};
+let uid=1;const nid=()=>'i'+(uid++);
+
+/* ---------- data ---------- */
+const PHOTOS=[['IMG_1842.heic',8.2e6,'beach'],['IMG_1843.heic',7.8e6,'coast'],['Coast walk.mov',109.6e6,'video']];
+const REQ=[['IMG_1842.heic',8.2e6],['IMG_1843.heic',7.8e6],['Coast walk.mov',109.6e6],['Weekend plans.pdf',2.4e6]];
+function fresh(){
+  const D={
+    pixel:{name:'Pixel 9',kind:'phone',color:'var(--blue)',reach:true,via:'Same Wi-Fi',paired:true,fav:true,control:false},
+    mbp:{name:'MacBook Pro',kind:'laptop',color:'var(--green)',reach:true,via:'Same Wi-Fi',paired:true,fav:true,control:true},
+    ipad:{name:'iPad mini',kind:'tablet',color:'var(--orange)',reach:true,via:'Same Wi-Fi',paired:true,fav:false,control:false},
+    mba:{name:'MacBook Air',kind:'laptop',color:'var(--faint)',reach:false,via:'',seen:'2 h',paired:true,fav:false,control:true},
+    studio:{name:'Studio PC',kind:'monitor',color:'var(--orange)',reach:true,via:'Same Wi-Fi',paired:false,fav:false,control:true,self:'pc'},
+    iphone:{name:'iPhone 16',kind:'phone',color:'var(--blue)',reach:true,via:'Same Wi-Fi',paired:true,fav:false,control:false,self:'phone'},
+    tab:{name:'Galaxy Tab S9',kind:'tablet',color:'var(--faint)',reach:true,via:'Same Wi-Fi',paired:false,fav:false,control:false}
+  };
+  const H={};
+  for(const v of ['phone','pc']){
+    H[v+':pixel']=[{id:nid(),t:'file',from:'them',name:'Travel checklist.pdf',size:2.4e6,state:'done',day:'Tuesday',when:'9:14'},
+                   {id:nid(),t:'note',from:'me',text:'Door code 4417',day:'Today',when:'9:14'},
+                   {id:nid(),t:'link',from:'them',url:'https://www.bbcgoodfood.com/recipes/lemon-drizzle-cake',day:'Today',when:'10:02'}];
+    H[v+':mbp']=[{id:nid(),t:'note',from:'me',text:'Door code 4417',day:'Today',when:'9:14'},
+                 {id:nid(),t:'req',from:'them',files:REQ.slice(),status:'waiting',p:0,day:'Today',when:'10:14'}];
+    H[v+':ipad']=[{id:nid(),t:'note',from:'me',text:'Pick up the charger',day:'Tuesday',when:'18:02'}];
+    H[v+':mba']=[{id:nid(),t:'file',from:'me',name:'Travel checklist.pdf',size:2.4e6,state:'done',day:'Tuesday',when:'9:14'}];
+    H[v+':iphone']=[{id:nid(),t:'file',from:'me',name:'Holiday.mov',size:45.3e6,state:'done',day:'Today',when:'10:12'}];
+  }
+  return {view:'phone',D,H,
+    phone:{tab:'devices',chat:'pixel',filter:'all',q:null,draft:'',stack:[],sheet:null,pop:null,sel:[],sending:null,ping:null,remote:'mbp',connect:null,browse:null},
+    pc:{tab:'devices',chat:'pixel',filter:'all',q:null,draft:'',sheet:null,pop:null,sel:[],sending:null,ping:null,remote:'studioX',connect:null,browse:{dev:'pixel',path:[],q:''},sec:0},
+    set:{phone:{name:'iPhone 16',quick:'fav',bt:true,keep:true,shots:false,sound:true,save:'Files › Sidekick',always:{}},
+         pc:{name:'Studio PC',quick:'fav',bt:true,keep:true,shots:false,sound:true,save:'Downloads › Sidekick',always:{}}}};
+}
+let S=fresh();
+S.pc.remote='mbp';
+const V=()=>S[S.view];
+const devsFor=v=>Object.keys(S.D).filter(k=>S.D[k].self!==v);
+const hist=(v,k)=>(S.H[v+':'+k]||(S.H[v+':'+k]=[]));
+
+/* ---------- small renderers ---------- */
+function dev(k,s=48,o={}){const d=S.D[k];const col=d.reach||!d.paired?d.color:'var(--faint)';
+  return `<span class="dev" style="width:${s}px;height:${s}px;border-radius:${Math.round(s*.3)}px;${o.bg?'background:'+o.bg:''}">${ic(d.kind,Math.round(s*.46),col)}</span>`}
+const statusTxt=k=>{const d=S.D[k];return d.reach?`${d.via} · encrypted`:`Not reachable · open Sidekick on this device`};
+const rowStatus=k=>{const d=S.D[k];if(!d.paired)return `<span class="st off">${esc(d.via)}</span>`;return d.reach?`<span class="st">${esc(d.via)} · ready</span>`:`<span class="st off">Not reachable · open Sidekick</span>`};
+function lastOf(v,k){const h=hist(v,k);const m=h[h.length-1];if(!m)return['Nothing sent yet',''];
+  const who=m.from==='me'?'You sent ':'Received ';
+  let s=m.t==='note'?(m.from==='me'?'You sent ':'')+m.text:m.t==='link'?(m.from==='me'?'You sent ':'')+site(m.url).host:m.t==='file'?who+m.name:m.t==='photos'?who+m.items.length+' photos':m.status==='waiting'?'Wants to send you '+m.files.length+' files':m.status==='declined'?'You declined '+m.files.length+' files':'Receiving '+m.files.length+' files';
+  return[s,m.day==='Today'?m.when:m.day.slice(0,3)]}
+
+function itemHTML(v,k,m){
+  const d=S.D[k];const nw=m.fresh?' new':'';m.fresh=false;
+  const foot=`<span class="foot">${m.from==='me'?'You sent':'From '+esc(d.name)} · ${esc(m.when)}</span>`;
+  const more=`<button type="button" class="rb" aria-label="More for this item" data-act="itemMenu" data-id="${m.id}">${ic('more',18)}</button>`;
+  const who=m.from==='me'?'me':'them';
+  if(m.t==='note')return `<div class="it ${who}${nw}"><div class="ic-card"><div class="note">${esc(m.text)}</div><div class="acts"><button type="button" class="pill" data-act="copy" data-id="${m.id}">Copy</button>${more}</div></div>${foot}</div>`;
+  if(m.t==='link'){const s=site(m.url);return `<div class="it ${who}${nw}"><div class="ic-card"><div><div class="site">${esc(s.host)}</div><div class="path">${esc(s.path)}</div></div><div class="acts"><button type="button" class="pill" data-act="openLink" data-id="${m.id}">Open link</button><button type="button" class="pill" data-act="copy" data-id="${m.id}">Copy link</button>${more}</div></div>${foot}</div>`}
+  if(m.t==='file'){
+    const sending=m.state==='sending';
+    const saved=m.from==='me'?(sending?`<span data-pt="${m.id}">${Math.round(m.p*100)}%</span> · sending`:'Delivered ✓'):`Saved to ${esc(S.set[v].save)}`;
+    const bar=sending?`<div class="bar" style="background:#00000022"><i data-p="${m.id}" style="width:${m.p*100}%;background:var(--onwhite)"></i></div>`:'';
+    return `<div class="it ${who}${nw}"><div class="ic-card"><div class="row1">${ic(kindOf(m.name)==='file'?'file':'photo',24)}<div style="min-width:0"><div class="nm">${esc(m.name)}</div><div class="sz">${fmt(m.size)}</div></div></div><div class="saved">${saved}</div>${bar}${sending?'':`<div class="acts"><button type="button" class="pill" data-act="openFile" data-id="${m.id}">Open</button><button type="button" class="pill" data-act="showFolder" data-id="${m.id}">Show in folder</button>${more}</div>`}</div>${foot}</div>`}
+  if(m.t==='photos'){
+    const n=m.items.filter(x=>x[2]!=='video').length,vd=m.items.length-n;
+    return `<div class="it ${who}${nw}"><div class="ic-card"><div class="thumbs">${m.items.map(x=>`<img src="${MEDIA[x[2]]}" alt="${esc(x[0])}">`).join('')}</div><div><div class="nm" style="font-weight:500">${n} photo${n>1?'s':''}${vd?', '+vd+' video':''}</div><div class="saved" style="margin-top:6px">${m.from==='me'?'Delivered ✓':'Saved to Photos'}</div></div><div class="acts"><button type="button" class="pill" data-act="openPhotos" data-id="${m.id}">Open photos</button>${more}</div></div>${foot}</div>`}
+  if(m.t==='req'){
+    const total=m.files.reduce((a,f)=>a+f[1],0),n=m.files.length;const names=m.files.map(f=>esc(f[0])).join(' · ');
+    if(m.status==='waiting')return `<div class="it them wide${nw}"><div class="req"><span class="k">Waiting for you</span><span class="t">${esc(d.name)} wants to send you ${n} files · ${fmt(total)}</span><span class="names">${names}</span><div style="display:flex;gap:8px;margin-top:4px"><button type="button" class="pill o" style="border-color:#ffc56b55;color:#ffe2ad" data-act="decline" data-v="${v}" data-k="${k}" data-id="${m.id}">Decline</button><button type="button" class="pill a" data-act="accept" data-v="${v}" data-k="${k}" data-id="${m.id}">Accept</button></div></div>${foot}</div>`;
+    if(m.status==='receiving')return `<div class="it them wide"><div class="req plain"><span class="k">Receiving files</span><span class="t">${esc(d.name)} wants to send you ${n} files · ${fmt(total)}</span><span class="names">${names}</span><span class="names" data-pt2="${m.id}">${fmt(total*m.p)} of ${fmt(total)} · ${Math.round(m.p*100)}%</span><div class="bar"><i data-p="${m.id}" style="width:${m.p*100}%"></i></div></div>${foot}</div>`;
+    if(m.status==='declined')return `<div class="it them wide"><div class="req plain"><span class="k">Transfer declined</span><span class="t">${esc(d.name)} wants to send you ${n} files · ${fmt(total)}</span><span class="names">${names}</span></div>${foot}</div>`;
+  }
+  return '';
+}
+function feedHTML(v,k){
+  const st=S[v];const d=S.D[k];
+  let list=hist(v,k);
+  const F={all:()=>true,files:m=>m.t==='file'||m.t==='req',photos:m=>m.t==='photos',links:m=>m.t==='link',notes:m=>m.t==='note'};
+  list=list.filter(F[st.filter]);
+  if(st.q){const q=st.q.toLowerCase();list=list.filter(m=>JSON.stringify([m.text,m.url,m.name,m.files,m.items]).toLowerCase().includes(q))}
+  let h='';
+  if(!d.reach&&d.paired)h+=`<div class="empty" style="background:var(--raised)"><b>${esc(d.name)} isn't reachable</b><span>Keep both devices on the same Wi-Fi and open Sidekick. Your sent items are still here.</span><div style="margin-top:12px"><button type="button" class="pill w sm" data-act="tryAgain" data-k="${k}">Try again</button></div></div>`;
+  if(!hist(v,k).length)return h+`<div class="empty"><b>Nothing here yet.</b><span>Send ${esc(d.name)} a file, a photo or a link and it'll show up here.</span></div>`;
+  if(!list.length){const w={files:'files',photos:'photos',links:'links',notes:'notes'}[st.filter];
+    return h+(st.q?`<div class="empty"><b>Nothing matches “${esc(st.q)}”</b><span>Try a file name, a link or a word from a note.</span></div>`:`<div class="empty"><b>No ${w} here yet.</b><span>Anything you send between these devices will appear here.</span></div>`)}
+  let day='';
+  for(const m of list){if(m.day!==day){day=m.day;h+=`<div class="day">${esc(day)}</div>`}h+=itemHTML(v,k,m)}
+  return h;
+}
+function mbar(v,k){const typing=S[v].draft.trim();const d=S.D[k];
+  return `<div class="mbar${typing?' typing':''}"><button type="button" class="rb" aria-label="Add files, photos or a link" data-act="attach">${ic('plus',22)}</button><label class="sr" for="msg-${v}">Write a note or paste a link</label><input id="msg-${v}" data-compose="${v}" autocomplete="off" placeholder="${v==='pc'?'Write a note or paste a link, or drop files here':'Write a note or paste a link'}" value="${esc(S[v].draft)}"><button type="button" class="sendf" data-act="composeBtn" data-v="${v}" aria-label="${typing?'Send':'Send files'}"><span class="a">${ic('send',20)}</span><span class="b">${ic('up',20,'currentColor',2.6)}</span><span class="l">Send files</span></button></div>`}
+function chatHead(v){const st=S[v],k=st.chat,d=S.D[k];
+  const top=`<div class="h1row"><h1 class="h1">Chat</h1><button type="button" class="rb" aria-label="Search this device's history" data-act="search">${ic('search',20)}</button><button type="button" class="rb" aria-label="Device options" data-act="devOptions">${ic('more',20)}</button></div>`;
+  const pick=`<button type="button" class="devpick" data-act="devPicker">${dev(k,52)}<span class="t"><b>${esc(d.name)}</b><span class="st${d.reach?'':' off'}">${esc(statusTxt(k))}</span></span>${ic('down',22)}</button>`;
+  const q=st.q!==null?`<label style="display:flex;align-items:center;gap:10px;height:46px;padding:0 6px 0 16px;border-radius:23px;background:var(--raised);flex:none">${ic('search',18,'var(--faint)')}<span class="sr">Search</span><input id="q-${v}" data-q="${v}" value="${esc(st.q)}" placeholder="Search file names, links and notes" style="flex:1;min-width:0;border:0;outline:0;background:transparent;font-size:15px"><button type="button" class="rb s" aria-label="Close search" data-act="closeSearch">${ic('close',18)}</button></label>`:'';
+  const chips=`<div class="chips" role="group" aria-label="Show">${[['all','All'],['files','Files'],['photos','Photos'],['links','Links'],['notes','Notes']].map(([f,t])=>`<button type="button" class="chip" aria-pressed="${st.filter===f}" data-act="filter" data-f="${f}">${t}</button>`).join('')}</div>`;
+  return {top,pick,q,chips};
+}
+
+/* ---------- notices ---------- */
+function notice(title,sub,o={}){
+  const box=document.getElementById(S.view==='phone'?'ph-notices':'pc-notices');if(S.view==='phone')noticePlace();
+  const ms=o.long?9000:5000;const el=document.createElement('div');el.className='notice';
+  el.innerHTML=`<div class="t">${esc(title)}${sub?'<small>'+esc(sub)+'</small>':''}</div><button type="button" class="x" aria-label="Close">${ic('close',18)}</button><span class="life"><i style="animation-duration:${ms}ms"></i></span>`;
+  const kill=()=>{el.classList.add('out');setTimeout(()=>el.remove(),260)};
+  el.querySelector('.x').onclick=kill;let t=setTimeout(kill,ms);
+  el.onpointerenter=()=>{clearTimeout(t);el.querySelector('.life i').style.animationPlayState='paused'};
+  el.onpointerleave=()=>{t=setTimeout(kill,2500)};
+  box.appendChild(el);while(box.children.length>3)box.firstChild.remove();
+}
+
+/* ---------- transfers ---------- */
+const jobs=[];
+function job(o,bytes,done,tick){o.p=0;jobs.push({o,step:Math.min(.12,Math.max(.012,14e6/Math.max(bytes,1)/10)),done,tick})}
+setInterval(()=>{for(let i=jobs.length-1;i>=0;i--){const j=jobs[i];if(j.o.cancel){jobs.splice(i,1);continue}
+  j.o.p=Math.min(1,j.o.p+j.step*(.7+Math.random()*.6));
+  document.querySelectorAll(`[data-p="${j.o.id}"]`).forEach(e=>e.style.width=(j.o.p*100)+'%');
+  document.querySelectorAll(`[data-pt="${j.o.id}"]`).forEach(e=>e.textContent=Math.round(j.o.p*100)+'%');
+  document.querySelectorAll(`[data-pt2="${j.o.id}"]`).forEach(e=>{const t=j.o.files.reduce((a,f)=>a+f[1],0);e.textContent=`${fmt(t*j.o.p)} of ${fmt(t)} · ${Math.round(j.o.p*100)}%`});
+  if(j.tick)j.tick();if(j.o.p>=1){jobs.splice(i,1);j.done()}}},100);
+
+function accept(v,k,id){const m=hist(v,k).find(x=>x.id===id);if(!m||m.status!=='waiting')return;
+  m.status='receiving';const total=m.files.reduce((a,f)=>a+f[1],0);
+  job(m,total,()=>{const h=hist(v,k);const i=h.indexOf(m);const ph=m.files.filter(f=>kindOf(f[0])!=='file').map(f=>[f[0],f[1],PHOTOS.find(p=>p[0]===f[0])?.[2]||'beach']);const fl=m.files.filter(f=>kindOf(f[0])==='file');
+    const add=[];if(ph.length)add.push({id:nid(),t:'photos',from:'them',items:ph,day:m.day,when:m.when});fl.forEach(f=>add.push({id:nid(),t:'file',from:'them',name:f[0],size:f[1],state:'done',day:m.day,when:m.when}));
+    h.splice(i,1,...add);render();if(S.view===v)notice(`Received ${m.files.length} files from ${S.D[k].name}`,`Saved to ${S.set[v].save}`)});
+  render()}
+function decline(v,k,id){const m=hist(v,k).find(x=>x.id===id);if(m)m.status='declined';render()}
+function waiting(v){const out=[];devsFor(v).forEach(k=>hist(v,k).forEach(m=>{if(m.t==='req'&&m.status==='waiting')out.push({k,m})}));return out}
+function sendItems(v,k,list){const d=S.D[k];
+  if(!d.reach){S[v].pop={t:'error',k};render();return}
+  const h=hist(v,k);
+  list.forEach(f=>{if(f.note){h.push(isLink(f.note)?{id:nid(),t:'link',from:'me',url:f.note,day:'Today',when:now(),fresh:true}:{id:nid(),t:'note',from:'me',text:f.note,day:'Today',when:now(),fresh:true});return}
+    if(f.photos){h.push({id:nid(),t:'photos',from:'me',items:f.photos,day:'Today',when:now(),fresh:true});return}
+    const m={id:nid(),t:'file',from:'me',name:f.name,size:f.size,state:'sending',p:0,day:'Today',when:now(),fresh:true};h.push(m);
+    job(m,f.size,()=>{m.state='done';render()})});
+  stick=true;render()}
+
+/* ---------- phone screens ---------- */
+let stick=true,lastKey='';
+function phDevices(){const P=S.phone;
+  const paired=devsFor('phone').filter(k=>S.D[k].paired);
+  if(!paired.length)return `<div class="scr" data-key="devices"><h1 class="h1">Devices</h1><div style="margin-top:6px;padding:22px 20px;border-radius:24px;background:var(--panel);display:flex;flex-direction:column;gap:12px;align-items:flex-start"><span class="dev" style="width:52px;height:52px">${ic('laptop',24,'var(--green)')}</span><b style="font-size:28px;letter-spacing:-.02em">Better together.</b><span class="sub">Send files, keep notes and control your computer — all over your Wi-Fi.</span><button type="button" class="pill w" data-act="connect">Connect a device</button></div><p class="sub" style="margin-top:8px">No account. No cloud.<br>Your devices talk directly.</p></div>`;
+  let h=`<div class="h1row"><h1 class="h1">Devices</h1><button type="button" class="pill" data-act="connect">+ Connect</button></div><p class="sub">Your devices, a little closer.</p>`;
+  waiting('phone').forEach(({k,m})=>{h+=`<div class="needs"><span class="k">Needs you</span><div style="display:flex;align-items:center;gap:14px">${dev(k,48,{bg:'#00000033'})}<div style="flex:1;min-width:0"><div style="font-size:16px">${esc(S.D[k].name)}</div><div style="font-size:13.5px;color:#ffe2adb3">Wants to send you ${m.files.length} files</div></div><button type="button" class="pill a" data-act="viewReq" data-k="${k}" data-id="${m.id}">View</button></div></div>`});
+  const row=k=>{const d=S.D[k];let r;
+    if(!d.paired)r=`<button type="button" class="pill o sm" data-act="pair" data-k="${k}">Pair</button>`;
+    else if(!d.reach)r=`<button type="button" class="pill o" data-act="tryAgain" data-k="${k}" id="try-${k}">Try again</button>`;
+    else r=`<button type="button" class="pill w" data-act="sendTo" data-k="${k}">Send</button>`;
+    return `<div class="drow"><button type="button" class="main" data-act="${d.paired?'openChat':'pair'}" data-k="${k}">${dev(k,48)}<span style="min-width:0"><b>${esc(d.name)}</b>${rowStatus(k)}</span></button>${r}</div>`};
+  const ks=devsFor('phone');const fav=ks.filter(k=>S.D[k].paired&&S.D[k].fav),pa=ks.filter(k=>S.D[k].paired&&!S.D[k].fav),nb=ks.filter(k=>!S.D[k].paired);
+  if(fav.length)h+=`<div class="lbl">${ic('star',20)}Favorites</div><div class="card">${fav.map(row).join('')}</div>`;
+  if(pa.length)h+=`<div class="lbl">Paired</div><div class="card">${pa.map(row).join('')}</div>`;
+  if(nb.length)h+=`<div class="lbl">Nearby</div>${nb.map(k=>`<div class="nearby">${row(k)}</div>`).join('')}<p class="sub" style="font-size:12.5px">Only devices on your Wi-Fi can find you.</p>`;
+  return `<div class="scr" data-key="devices">${h}</div>`;
+}
+function phChat(){const P=S.phone,k=P.chat;const c=chatHead('phone');
+  return `<div class="chat" data-key="chat:${k}">${c.top}${c.pick}${c.q}${c.chips}<div class="feed" id="feed-phone">${feedHTML('phone',k)}</div>${mbar('phone',k)}</div>`}
+function phSend(){const P=S.phone;
+  const tiles=[['Files','file','pickFiles'],['Photos & videos','photo','pickPhotos'],['Text or link','link','textSheet'],['Paste','paste','pasteSel']];
+  let h=`<h1 class="h1">Send</h1><p class="sub">What would you like to send?</p><div class="tiles">${tiles.map(([t,i,a])=>`<button type="button" class="tile" data-act="${a}" data-target="send">${ic(i,22)}${esc(t)}</button>`).join('')}</div>`;
+  const tot=P.sel.reduce((a,f)=>a+(f.size||0),0);
+  if(P.sel.length)h+=`<div class="card" style="padding:16px;display:flex;flex-direction:column;gap:10px"><div style="display:flex;align-items:center;justify-content:space-between"><span class="sub" style="font-size:13px">${P.sel.length} item${P.sel.length>1?'s':''}${tot?' · '+fmt(tot):''}</span><button type="button" class="pill o sm" data-act="clearSel">Clear</button></div>${P.sel.map((f,i)=>`<div class="selrow">${ic(f.note?(isLink(f.note)?'link':'chat'):f.photos?'photo':'file',22)}<div class="t"><b>${esc(f.name)}</b><small>${f.size?fmt(f.size):(f.note&&isLink(f.note)?'Link':'Note')}</small></div><button type="button" class="rb s" aria-label="Remove ${esc(f.name)}" data-act="unsel" data-i="${i}">${ic('close',18)}</button></div>`).join('')}</div>`;
+  else h+=`<div class="card" style="padding:16px"><b style="font-weight:500">Nothing selected yet</b><p class="sub" style="font-size:13px;margin-top:4px">Choose files, photos, or a link above.</p></div>`;
+  h+=`<div class="lbl">Send to</div><div class="card">${devsFor('phone').filter(k=>S.D[k].paired).sort((a,b)=>S.D[b].reach-S.D[a].reach).map(k=>`<div class="drow">${dev(k,44)}<div style="flex:1;min-width:0"><b style="font-weight:500;font-size:16px">${esc(S.D[k].name)}</b><span class="st${S.D[k].reach?'':' off'}" style="display:block">${S.D[k].reach?esc(S.D[k].via)+' · ready':'Not reachable'}</span></div><button type="button" class="pill w" data-act="sendSel" data-k="${k}" ${P.sel.length?'':'disabled'}>Send</button></div>`).join('')}</div>`;
+  return `<div class="scr" data-key="send">${h}</div>`}
+function phRemote(){const P=S.phone,k=P.remote,d=S.D[k];
+  const pick=`<button type="button" class="devpick card" style="padding:12px 16px" data-act="remotePick">${dev(k,44)}<span class="t"><b style="font-size:16px;font-weight:500">${esc(d.name)}</b><span class="st${d.reach?'':' off'}">${esc(statusTxt(k))}</span></span>${ic('down',22)}</button>`;
+  if(!d.control)return `<div class="scr" data-key="remote"><h1 class="h1">Remote</h1><p class="sub">A little more room to move.</p>${pick}<div class="card" style="padding:18px;display:flex;flex-direction:column;gap:10px;align-items:flex-start">${ic(d.kind,22)}<b style="font-size:17px">${d.kind==='phone'&&/iPhone/.test(d.name)?'iPhones can\'t be controlled':'Phones and tablets can\'t be controlled'}</b><span class="sub" style="font-size:13.5px">You can still send files and links, browse shared files, or ping this ${d.kind}. Choose a computer to use the touchpad.</span><button type="button" class="pill w" data-act="remotePick">Choose a computer</button></div></div>`;
+  return `<div class="scr" data-key="remote" style="overflow:hidden"><h1 class="h1">Remote</h1><p class="sub">A little more room to move.</p>${pick}<div class="pad" id="ph-pad" role="application" aria-label="Touchpad for ${esc(d.name)}"><span class="ptr" style="left:62%;top:42%"></span><span class="trail" id="ph-trail"></span><span class="hint">Move one finger · scroll with two</span></div><div style="display:flex;gap:8px;flex:none">${['Left click','Right click'].map(t=>`<button type="button" class="pill" style="flex:1;height:44px" data-act="click" data-w="${t}">${t}</button>`).join('')}<button type="button" class="pill" style="flex:1;height:44px" data-act="kbSheet">Keyboard</button></div><div class="lbl" style="margin:0">Shortcuts</div><div style="display:flex;gap:8px;flex:none">${['Start','Alt+Tab','Desktop','Lock'].map(t=>`<button type="button" class="pill o sm" data-act="key" data-w="${t}">${t}</button>`).join('')}</div><p class="sub" style="font-size:12.5px;flex:none">Keep Sidekick open on your computer.</p></div>`}
+function phSettings(){const s=S.set.phone;
+  const sw=(key,lab)=>`<button type="button" class="sw" role="switch" aria-checked="${!!s[key]}" aria-label="${lab}" data-act="toggle" data-key="${key}"></button>`;
+  const q=[['off','Everyone asks'],['fav','Favorites'],['on','No one asks']];
+  return `<div class="scr" data-key="settings"><h1 class="h1">Settings</h1>
+  <div class="card" style="padding:16px;display:flex;flex-direction:column;gap:14px"><div style="display:flex;align-items:center;gap:14px">${dev('iphone',48)}<div><b style="font-size:19px;font-weight:600">${esc(s.name)}</b><span class="st" style="display:block">Visible to nearby devices</span></div></div><button type="button" class="pill o sm" style="align-self:flex-start" data-act="rename">Rename</button></div>
+  <div class="lbl">Receiving</div><div class="card" style="padding:6px 0"><div class="setrow" style="min-height:44px"><span class="t">Quick save</span></div>${q.map(([k,t])=>`<button type="button" class="setrow" role="radio" aria-checked="${s.quick===k}" data-act="setQuick" data-q="${k}"><span class="t">${t}</span>${s.quick===k?ic('check',20):''}</button>`).join('')}<button type="button" class="setrow" data-act="saveTo"><span class="t">Save to</span><span class="v">${esc(s.save)}${ic('right',18)}</span></button></div>
+  <div class="lbl">Connections</div><div class="card" style="padding:4px 0"><div class="setrow"><span class="t">Bluetooth</span>${sw('bt','Bluetooth')}</div><div class="setrow"><span class="t">Keep running in the background</span>${sw('keep','Keep running in the background')}</div><div class="setrow"><span class="t">Send screenshots to computers</span>${sw('shots','Send screenshots to computers')}</div></div>
+  <div class="lbl">Sound</div><div class="card" style="padding:4px 0"><div class="setrow"><span class="t">Play a sound when files arrive</span>${sw('sound','Play a sound when files arrive')}</div></div>
+  <div class="lbl">Privacy</div><div class="card" style="padding:4px 0"><div class="setrow"><span class="t">Direct, encrypted connections</span>${ic('lock',18,'var(--muted)')}</div></div>
+  <p class="sub" style="font-size:12.5px">Sidekick 4.0 · No account. No cloud. Nothing leaves your devices.</p></div>`}
+function connectBody(c,v){
+  const segs=[['nearby','Nearby'],['qr','QR code'],['code','Code']].map(([k,t])=>`<button type="button" role="tab" aria-selected="${c.mode===k}" data-act="cmode" data-m="${k}">${t}</button>`).join('');
+  let b='';
+  if(c.mode==='nearby'){const nb=devsFor(v).filter(k=>!S.D[k].paired);
+    b=`<div class="card" style="padding:18px"><b style="font-size:17px;font-weight:600">Ready to connect</b><p class="sub" style="font-size:13.5px;margin-top:6px">Only nearby devices running Sidekick appear here.</p></div>${nb.length?nb.map(k=>`<div class="nearby"><div class="drow">${dev(k,44)}<div style="flex:1;min-width:0"><b style="font-weight:500;font-size:15.5px">${esc(S.D[k].name)}</b><span class="st off" style="display:block">${esc(S.D[k].via)}</span></div><button type="button" class="pill o sm" data-act="pair" data-k="${k}">Pair</button></div></div>`).join(''):`<div class="empty"><span>Looking for devices on this Wi-Fi…</span></div>`}<button type="button" class="pill o blk" style="justify-content:flex-start" data-act="refresh">Refresh</button>`}
+  else if(c.mode==='qr')b=`<div style="background:var(--white);border-radius:24px;padding:22px;display:flex;flex-direction:column;align-items:center;gap:12px;color:var(--onwhite)">${qr()}<span style="text-align:center;font-size:13.5px">Open Sidekick on your other device<br>and scan this code.</span></div>${v==='phone'?`<button type="button" class="pill o blk" style="justify-content:flex-start" data-act="scanSheet">Scan a code instead</button>`:''}<span class="sub" style="font-size:13px">Or enter this code on your other device</span><div class="codebox">${'847291'.split('').map(x=>`<span>${x}</span>`).join('')}</div>`;
+  else{const tg=S.D[c.target||(v==='phone'?'studio':'tab')];
+    b=`<div class="card" style="padding:18px"><b style="font-size:17px;font-weight:600">Enter their code</b><p class="sub" style="font-size:13.5px;margin-top:6px">Find the six-digit code in Sidekick on ${esc(tg?tg.name:'your other device')}.</p></div><div class="codebox" id="codebox">${[0,1,2,3,4,5].map(i=>`<span class="${i===c.code.length?'cur':''}">${esc(c.code[i]||'')}</span>`).join('')}<label class="sr" for="code-in">Six-digit code</label><input id="code-in" inputmode="numeric" maxlength="6" autocomplete="one-time-code" data-code value="${esc(c.code)}"></div><button type="button" class="pill w blk" data-act="doConnect" ${c.code.length===6?'':'disabled'}>Connect</button><span class="sub" style="font-size:12.5px">For this emulator, any six digits work.</span>`}
+  return `<div class="seg" role="tablist" aria-label="Ways to connect">${segs}</div>${b}<p class="sub" style="font-size:12.5px;margin-top:auto">Your devices connect directly.<br>Nothing is sent to the cloud.</p>`}
+function qr(){let s=190,n=25,c=s/n,o='';let seed=11;const r=()=>(seed=(seed*16807)%2147483647)/2147483647;
+  const f=(x,y)=>`<rect x="${x*c}" y="${y*c}" width="${7*c}" height="${7*c}" fill="#141414"/><rect x="${(x+1)*c}" y="${(y+1)*c}" width="${5*c}" height="${5*c}" fill="#f0f0f0"/><rect x="${(x+2)*c}" y="${(y+2)*c}" width="${3*c}" height="${3*c}" fill="#141414"/>`;
+  for(let y=0;y<n;y++)for(let x=0;x<n;x++){if((x<8&&y<8)||(x>16&&y<8)||(x<8&&y>16))continue;if(r()<.5)o+=`<rect x="${(x*c).toFixed(1)}" y="${(y*c).toFixed(1)}" width="${c.toFixed(1)}" height="${c.toFixed(1)}" fill="#141414"/>`}
+  return `<svg width="${s}" height="${s}" viewBox="0 0 ${s} ${s}" role="img" aria-label="Pairing QR code">${f(0,0)}${f(18,0)}${f(0,18)}${o}</svg>`}
+const FS={'':[['Camera','dir','42 items'],['Documents','dir','8 items'],['Weekend plans.pdf',2.4e6,'Today'],['Shopping list.txt',4e3,'Yesterday'],['IMG_2401.heic',8.2e6,'Yesterday']],
+  'Camera':[['IMG_2398.heic',7.1e6,'Mon'],['IMG_2399.heic',6.6e6,'Mon'],['Clip.mov',61e6,'Sun']],'Documents':[['Travel checklist.pdf',2.4e6,'Tue'],['Lease.pdf',820e3,'Oct']]};
+function browseBody(v){const b=S[v].browse;const d=S.D[b.dev];const key=b.path.join('/');
+  const L=(FS[key]||(FS[key]=[])).filter(x=>!b.q||x[0].toLowerCase().includes(b.q.toLowerCase()));
+  const crumbs=[d.name,'Files','Downloads'].concat(b.path).join(' › ');
+  const rows=L.length?L.map(([n,s,w])=>s==='dir'?`<button type="button" class="drow" style="width:100%;border:0;background:none;text-align:left" data-act="openDir" data-v="${v}" data-n="${esc(n)}">${ic('folder',22)}<span style="flex:1;min-width:0"><b style="display:block;font-weight:500">${esc(n)}</b><span class="sub" style="font-size:12.5px">Folder · ${esc(w)}</span></span>${ic('right',18,'var(--faint)')}</button>`:`<div class="drow">${ic(kindOf(n)==='file'?'file':'photo',22)}<span style="flex:1;min-width:0"><b style="display:block;font-weight:500;overflow-wrap:anywhere">${esc(n)}</b><span class="sub" style="font-size:12.5px">${fmt(s)} · ${esc(w)}</span></span><button type="button" class="rb s ghost" aria-label="Download ${esc(n)}" data-act="download" data-n="${esc(n)}">${ic('download',20)}</button></div>`).join(''):`<div class="drow sub">This folder is empty</div>`;
+  return {d,crumbs,rows,count:L.length}}
+
+function phStack(){const P=S.phone,top=P.stack[P.stack.length-1];
+  if(top==='connect')return `<div class="full anim" data-key="connect"><div class="h1row"><button type="button" class="rb" aria-label="Back" data-act="pop">${ic('back',20)}</button><h1 class="h1">Connect a device</h1></div><p class="sub">Keep both devices on the same Wi-Fi.</p>${connectBody(P.connect,'phone')}</div>`;
+  if(top==='browse'){const b=browseBody('phone');
+    return `<div class="full anim" data-key="browse" style="padding-bottom:100px"><div class="h1row"><button type="button" class="rb" aria-label="Back" data-act="${P.browse.path.length?'up':'pop'}" data-v="phone">${ic('back',20)}</button><h1 class="h1">Browse files</h1></div><div style="display:flex;align-items:center;gap:12px">${dev(P.browse.dev,40)}<b style="font-weight:500;font-size:16px">${esc(b.d.name)}</b></div><span class="sub" style="font-size:12.5px">${esc(b.crumbs)}</span><label style="display:flex;align-items:center;gap:10px;height:46px;padding:0 16px;border-radius:23px;background:var(--raised)">${ic('search',18,'var(--faint)')}<span class="sr">Search files</span><input id="bq-phone" data-bq="phone" value="${esc(P.browse.q)}" placeholder="Search files" style="flex:1;min-width:0;border:0;outline:0;background:transparent;font-size:15px"></label><span class="sub" style="font-size:12.5px">${b.count} items</span><div class="card">${b.rows}</div></div><div class="bar2"><button type="button" class="pill" data-act="downloadAll">Download all</button><button type="button" class="pill w" data-act="uploadHere">Upload here</button></div>`}
+  return ''}
+function sendingView(s,v){const d=S.D[s.to];const tot=s.items.reduce((a,f)=>a+(f.size||2e3),0);const r=80,C=2*Math.PI*r;const done=s.state==='done';
+  return `<div class="h1row"><button type="button" class="rb" aria-label="Back" data-act="${done?'closeSending':'hideSending'}">${ic('back',20)}</button><h1 class="h1">Sending</h1></div><div style="display:flex;align-items:center;gap:14px">${dev(s.to,48)}<div><b style="font-size:19px;font-weight:600">${esc(d.name)}</b><span class="st" style="display:block">${esc(statusTxt(s.to))}</span></div></div>
+  <div class="ring"><svg width="210" height="210" viewBox="0 0 210 210" aria-hidden="true"><circle cx="105" cy="105" r="${r}" fill="none" stroke="#262626" stroke-width="10"/><circle id="ring-${v}" cx="105" cy="105" r="${r}" fill="none" stroke="${done?'var(--ok)':'#f0f0f0'}" stroke-width="10" stroke-linecap="round" stroke-dasharray="${(C*s.p).toFixed(1)} ${C.toFixed(1)}" transform="rotate(-90 105 105)"/></svg><div>${done?ic('check',56,'var(--ok)',2.6)+'<span class="sub" style="margin-top:6px">Sent</span>':`<b data-pt="${s.id}">${Math.round(s.p*100)}%</b><span class="sub" style="font-size:12.5px" id="eta-${v}">${s.p>.9?'Less than a second left':'About 2 seconds left'}</span>`}</div></div>
+  <div style="text-align:center;font-size:15px" id="of-${v}">${fmt(tot*s.p)} of ${fmt(tot)} · 12 MB/s</div>
+  <div class="card" style="padding:16px;display:flex;flex-direction:column;gap:14px">${s.items.map(f=>`<div><div>${esc(f.name)}</div><div class="sub" style="font-size:12.5px;margin:4px 0 8px">${f.size?fmt(f.size):'Note'}${done?' · sent ✓':''}</div><div class="bar" style="height:3px"><i data-p="${s.id}" style="width:${done?100:s.p*100}%;background:var(--white)"></i></div></div>`).join('')}</div>
+  ${done?`<button type="button" class="pill w lg blk" data-act="closeSending">Done</button>`:`<button type="button" class="pill o lg blk" style="justify-content:flex-start" data-act="stopSending">Stop</button>`}`}
+function pingView(v){const k=S[v].ping;const d=S.D[k];
+  return `<div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:22px"><div class="pingrings"><i></i><i></i><i></i>${dev(k,64)}</div><b style="font-size:28px;text-align:center;line-height:1.15;letter-spacing:-.02em">${esc(d.name)} is looking<br>for this ${v==='phone'?'phone':'computer'}</b><span class="sub" style="text-align:center">Here you are. Tap below to stop the sound.</span></div><button type="button" class="pill w lg blk" data-act="foundIt">Found it!</button>`}
+
+/* ---------- sheets (phone) / dialogs (computer) ---------- */
+function sheetBody(sh,v){const st=S[v],s=S.set[v];
+  const opt=(t,act,extra='',cls='')=>`<button type="button" class="opt ${cls}" data-act="${act}" ${extra}>${t}</button>`;
+  const cancel=opt('Cancel','closeSheet');
+  switch(sh.t){
+  case 'req':{const k=sh.k,m=hist(v,k).find(x=>x.id===sh.id);if(!m)return '';const d=S.D[k];const tot=m.files.reduce((a,f)=>a+f[1],0);
+    return `<div class="needs" style="flex-direction:row;align-items:center">${dev(k,48,{bg:'#00000033'})}<div><div style="color:var(--amber);font-size:16px">${esc(d.name)} wants to send you ${m.files.length} files</div><div style="font-size:12.5px;color:#ffe2adb3;margin-top:4px">${fmt(tot)} · ${esc(d.via)} · encrypted</div></div></div>${m.files.map(([n,z])=>`<div style="display:flex;align-items:center;gap:12px;padding:6px 0">${ic(kindOf(n)==='file'?'file':'photo',22)}<span style="flex:1">${esc(n)}</span><span class="sub" style="font-size:12.5px">${fmt(z)}</span></div>`).join('')}<p class="sub" style="font-size:13.5px">Photos and videos go straight to Photos. The rest goes to ${esc(s.save)}.</p><button type="button" class="opt" style="background:none;padding:0" data-act="alwaysT" data-k="${k}">${s.always[k]?ic('check',20):'<span style="width:20px;height:20px;border-radius:6px;border:2px solid var(--line)"></span>'} Always accept from ${esc(d.name)}</button><div style="display:flex;gap:10px"><button type="button" class="pill o lg" style="flex:1;justify-content:flex-start" data-act="decline" data-v="${v}" data-k="${k}" data-id="${m.id}">Decline</button><button type="button" class="pill a lg" style="flex:1;justify-content:flex-start" data-act="accept" data-v="${v}" data-k="${k}" data-id="${m.id}">Accept</button></div>`}
+  case 'attach':return `<h3>Choose what to send</h3>${opt(ic('file',20)+'Files','pickFiles','data-target="chat"')}${opt(ic('photo',20)+'Photos & videos','pickPhotos','data-target="chat"')}${opt(ic('paste',20)+'Paste','pasteChat')}`;
+  case 'files':return `<h3>Choose files</h3><p class="sub2">Trail photos.zip · 45.3 MB<br>Weekend plans.pdf · 2.4 MB</p>${opt('Add 2 files','addFiles','data-target="'+sh.target+'"','w')}${cancel}`;
+  case 'photos':return `<h3>Choose photos and videos</h3><p class="sub2">3 selected · 125.6 MB</p><div class="thumbs">${PHOTOS.map(p=>`<img src="${MEDIA[p[2]]}" alt="${p[0]}" style="flex:1;width:auto;height:96px">`).join('')}</div>${opt('Send 3 items','addPhotos','data-target="'+sh.target+'"','w')}${cancel}`;
+  case 'paste':return `<h3>Ready to send</h3><div class="ic-card" style="background:var(--white);color:var(--onwhite)"><div><div class="site">bbcgoodfood.com</div><div class="path" style="color:#555">/recipes/lemon-drizzle-cake</div></div></div><p class="sub2">You copied this · 9:14</p>${opt('Send link','sendPasted','','w')}${cancel}`;
+  case 'text':return `<h3>Send a note or link</h3><label style="display:block;padding:12px 16px;border-radius:20px;background:var(--raised)"><span class="sr">Note or link</span><textarea id="text-in" rows="3" placeholder="bbcgoodfood.com/recipes/lemon-drizzle-cake" style="width:100%;border:0;outline:0;background:transparent;resize:none;font-size:15px"></textarea></label>${opt('Add to selection','addText','','w')}${cancel}`;
+  case 'menu':{const m=hist(v,st.chat).find(x=>x.id===sh.id);if(!m)return '';
+    const title=m.t==='note'?m.text:m.t==='link'?site(m.url).host:m.t==='file'?m.name:m.t==='photos'?`${m.items.length} items`:'Transfer';
+    const sub=m.t==='note'?'Note':m.t==='link'?site(m.url).path:m.t==='file'?fmt(m.size):'Saved to Photos';
+    const noFolder=m.t==='note'||m.t==='link';
+    return `<h3>${esc(title)}</h3><p class="sub2">${esc(sub)}</p>${opt('Open','menuOpen','data-id="'+m.id+'"')}${opt('Copy','copy','data-id="'+m.id+'"')}${opt('Show in folder','showFolder','data-id="'+m.id+'"'+(noFolder?' disabled':''))}${opt('Send again','sendAgain','data-id="'+m.id+'"')}${opt('Remove from this list','removeItem','data-id="'+m.id+'"')}${cancel}<p class="foot2">Removing only changes this list. It never deletes the file.</p>`}
+  case 'copied':return `<h3>Copied</h3><p class="sub2">The item is ready to paste.</p>${opt('Done','closeSheet')}`;
+  case 'note':return `<h3 class="sub2" style="font-size:13px;margin:0">Note</h3><div style="font-size:20px">${esc(sh.text)}</div>${opt('Copy','copyText','data-text="'+esc(sh.text)+'"')}${opt('Done','closeSheet')}`;
+  case 'filePreview':return `<h3 class="sub2" style="font-size:13px;margin:0">File preview</h3><b style="font-size:18px">${esc(sh.name)}</b><p class="sub2">${v==='phone'?'Files':'Finder'} › Downloads › Sidekick</p>${opt('Show in folder','showFolderN','data-n="'+esc(sh.name)+'"')}${opt('Done','closeSheet')}`;
+  case 'folder':return `<h3>Show in ${v==='phone'?'Files':'Finder'}</h3><p class="sub2">${v==='phone'?'Files':'Finder'} › ${esc(s.save)}</p><b>${esc(sh.name)}</b>${opt('Open','closeSheet')}${opt('Done','closeSheet')}`;
+  case 'viewer':{const it=sh.items[sh.i];return `<h3>Photos</h3><p class="sub2">${sh.items.length} items · Saved to Photos</p><div class="viewer"><img src="${MEDIA[it[2]]}" alt="${esc(it[0])}"></div><div style="display:flex;align-items:center;gap:8px"><button type="button" class="rb s" aria-label="Previous" data-act="vprev">${ic('back',18)}</button><span class="sub" style="flex:1;text-align:center;font-size:13px">${esc(it[0])}${it[2]==='video'?' · video':''} · ${sh.i+1} of ${sh.items.length}</span><button type="button" class="rb s" aria-label="Next" data-act="vnext">${ic('right',18)}</button></div>${opt('Done','closeSheet')}`}
+  case 'devOptions':{const d=S.D[st.chat];return `<h3>This device's history</h3><p class="sub2">Files, photos, links and notes — only between your devices.</p>${opt('Browse files','browse')}${opt('Ping','pingOut')}${d.control?opt('Remote','remoteOf'):''}${opt(d.fav?'Remove from Favorites':'Add to Favorites','favT')}${opt('Clear this list','clearHist')}${cancel}`}
+  case 'devPicker':return `<h3>Your devices</h3><p class="sub2">A separate history for each of your own devices.</p>${devsFor(v).filter(k=>S.D[k].paired).map(k=>opt(esc(S.D[k].name),'pickChat','data-k="'+k+'"',k===st.chat?'w':'')).join('')}${cancel}`;
+  case 'search':return `<h3>Search ${esc(S.D[st.chat].name)}</h3><p class="sub2">Search file names, links and notes in this device's history.</p>${['PDF','4417','bbcgoodfood.com','charger'].map(t=>opt('Search '+esc(t),'searchFor','data-q="'+esc(t)+'"')).join('')}${opt('Type something else','searchType')}${cancel}`;
+  case 'rename':return `<h3>Rename this device</h3><p class="sub2">This name is only visible to paired devices.</p><label style="display:flex;align-items:center;height:48px;padding:0 16px;border-radius:24px;background:var(--raised)"><span class="sr">Name</span><input id="rename-in" value="${esc(s.name)}" style="flex:1;border:0;outline:0;background:transparent;font-size:15px"></label>${opt('Save name','saveName','','w')}${cancel}`;
+  case 'saveTo':{const o=v==='phone'?['Files › Sidekick','Files › Downloads','iCloud Drive › Sidekick']:['Downloads › Sidekick','Desktop','Documents › Sidekick'];return `<h3>Save incoming files</h3><p class="sub2">Photos and videos always go straight to Photos.</p>${o.map(x=>opt(esc(x)+(s.save===x?' ✓':''),'setSave','data-s="'+esc(x)+'"',s.save===x?'w':'')).join('')}${opt('Done','closeSheet')}`}
+  case 'scan':return `<h3>Scan a code</h3><p class="sub2">Point your camera at the code on your other device.</p>${opt('Use sample code','useSample','','w')}${opt('Enter code instead','enterCode')}${cancel}`;
+  case 'kb':{const d=S.D[st.remote];return `<h3>Type on ${esc(d.name)}</h3><p class="sub2">Your keyboard sends text directly to your computer.</p><label style="display:flex;align-items:center;height:48px;padding:0 16px;border-radius:24px;background:var(--raised)"><span class="sr">Text</span><input id="kb-in" placeholder="Hello from my phone" style="flex:1;border:0;outline:0;background:transparent;font-size:15px"></label>${opt('Send text','kbSend','','w')}${opt('Done','closeSheet')}`}
+  case 'remotePick':return `<h3>Choose a device</h3><p class="sub2">Computers can be controlled. iPhones can't.</p>${devsFor(v).filter(k=>S.D[k].paired||k==='studio').map(k=>opt(esc(S.D[k].name)+(S.D[k].control?'':' · can\'t be controlled'),'setRemote','data-k="'+k+'"',k===st.remote?'w':'')).join('')}${cancel}`;
+  case 'downloaded':return `<h3>Downloaded</h3><p class="sub2">${esc(sh.name)} · Saved to ${esc(s.save)}.</p>${opt('Done','closeSheet','','w')}`;
+  }return ''}
+
+/* ---------- render ---------- */
+function noticePlace(){const P=S.phone,box=document.getElementById('ph-notices'),full=!!(P.stack.length||P.sending||P.ping);box.classList.toggle('low',full);box.classList.toggle('onchat',!full&&P.tab==='chat')}
+function phRender(){
+  const P=S.phone;let h;noticePlace();
+  if(P.stack.length)h=phStack();
+  else h={devices:phDevices,chat:phChat,send:phSend,remote:phRemote,settings:phSettings}[P.tab]();
+  const main=document.getElementById('ph-main');const key=P.stack.length?'s:'+P.stack.join('/'):'t:'+P.tab;
+  main.innerHTML=h;
+  if(key!==lastKey){const sc=main.querySelector('.scr,.chat');if(sc)sc.classList.add('enter');lastKey=key;stick=true}
+  else main.querySelectorAll('.full').forEach(e=>e.classList.remove('anim'));
+  document.getElementById('dock').classList.toggle('away',P.stack.length>0);
+  dockState();
+  let o='';
+  if(P.sending)o+=`<div class="full rise" style="z-index:35">${sendingView(P.sending,'phone')}</div>`;
+  if(P.ping)o+=`<div class="full rise" style="z-index:45;padding-bottom:34px">${pingView('phone')}</div>`;
+  if(P.sheet)o+=`<div class="back" data-act="closeSheet"></div><div class="sheet${P.sheet.t==='req'?' grab':''}" role="dialog" aria-modal="true">${P.sheet.t==='req'?'<span class="gr"></span>':''}${sheetBody(P.sheet,'phone')}</div>`;
+  if(P.pop)o+=popHTML(P.pop,'phone');
+  const ov=document.getElementById('ph-over');const sig=[P.sending&&P.sending.id,P.ping,P.sheet&&P.sheet.t+P.sheet.id,P.pop&&P.pop.t].join('|');
+  ov.innerHTML=o;if(ov.dataset.sig===sig)ov.querySelectorAll('.full,.sheet,.back,.pop').forEach(e=>e.style.animation='none');ov.dataset.sig=sig;
+  const feed=document.getElementById('feed-phone');if(feed&&stick)feed.scrollTop=feed.scrollHeight;
+}
+function popHTML(p,v){
+  if(p.t==='error'){const d=S.D[p.k||'mba'];return `<div class="pop"><div class="dlg" role="alertdialog" aria-modal="true"><h3 style="font-size:20px">Couldn't send your files</h3><p class="sub" style="font-size:14px">${esc(d.name)} stopped responding. Your files are safe on this device.</p><ol><li>Wake up ${esc(d.name)}.</li><li>Connect both devices to the same Wi-Fi.</li><li>Open Sidekick and try again.</li></ol><button type="button" class="pill w" style="align-self:flex-start" data-act="closePop">Close</button></div></div>`}
+  if(p.t==='pinging'){const d=S.D[p.k];return `<div class="pop"><div class="dlg" role="dialog" aria-modal="true"><h3 style="font-size:20px">${esc(d.name)} is ringing</h3><p class="sub" style="font-size:14px">Keep listening. You can stop the sound on ${esc(d.name)} with “Found it!”.</p><button type="button" class="pill w" style="align-self:flex-start" data-act="closePop">Done</button></div></div>`}
+  return ''}
+function dockState(){const P=S.phone;const d=document.getElementById('dock');
+  if(!d.children.length)d.innerHTML=[['devices','Devices'],['chat','Chat'],['send','Send'],['remote','Remote'],['settings','Settings']].map(([k,t])=>`<button type="button" class="dk" data-act="tab" data-t="${k}" aria-label="${t}">${ic(k,24)}<span>${t}</span></button>`).join('');
+  d.querySelectorAll('.dk').forEach(b=>{const on=b.dataset.t===P.tab;b.classList.toggle('on',on);on?b.setAttribute('aria-current','page'):b.removeAttribute('aria-current')})}
+
+function pcRender(){const W=S.pc;
+  const rail=`<nav class="rail" aria-label="Sections"><span class="logo">sk</span>${[['devices','Devices'],['files','Files'],['remote','Remote'],['settings','Settings']].map(([k,t])=>`<button type="button" aria-current="${W.tab===k}" data-act="wtab" data-t="${k}"><span class="c">${ic(k==='files'?'file':k,22)}</span>${t}</button>`).join('')}</nav>`;
+  const ks=devsFor('pc');
+  const list=(act,cur)=>{let h=`<div class="h1row"><h2>Devices</h2><button type="button" class="pill sm" data-act="connect">+ Connect</button></div>`;
+    if(!ks.some(k=>S.D[k].paired))return h+`<div class="empty"><b>Better together.</b><span>Pair a device to start.</span></div>`;
+    waiting('pc').forEach(({k,m})=>{h+=`<div class="needs" style="gap:8px"><span class="k">Needs you</span><div style="font-size:15.5px">${esc(S.D[k].name)} wants to send you ${m.files.length} files</div><div style="display:flex;align-items:center;justify-content:space-between"><span style="font-size:13px;color:#ffe2adb3">${fmt(m.files.reduce((a,f)=>a+f[1],0))}</span><button type="button" class="pill a" data-act="viewReq" data-k="${k}" data-id="${m.id}">View</button></div></div>`});
+    const row=k=>{const [l,t]=lastOf('pc',k);return `<button type="button" class="wrow" aria-current="${k===cur}" data-act="${act}" data-k="${k}">${dev(k,44)}<span class="t"><b>${esc(S.D[k].name)}<em>${esc(t)}</em></b><small>${S.D[k].reach?esc(l):'Not reachable · open Sidekick'}</small></span></button>`};
+    const fav=ks.filter(k=>S.D[k].paired&&S.D[k].fav),pa=ks.filter(k=>S.D[k].paired&&!S.D[k].fav),nb=ks.filter(k=>!S.D[k].paired);
+    if(fav.length)h+=`<div class="lbl">Favorites</div>`+fav.map(row).join('');
+    if(pa.length)h+=`<div class="lbl">Paired</div>`+pa.map(row).join('');
+    if(nb.length)h+=`<div class="lbl">Nearby devices</div>`+nb.map(k=>`<button type="button" class="pill o blk" style="justify-content:flex-start;height:46px" data-act="pair" data-k="${k}">Pair ${esc(S.D[k].name)}</button>`).join('');
+    return h};
+  let col='',main='';
+  if(W.connect){col=list('wchat',W.chat);main=`<div class="wmain" style="overflow-y:auto"><div class="h1row"><button type="button" class="rb s" aria-label="Back" data-act="closeConnect">${ic('back',18)}</button><h1 class="h1">Connect a device</h1></div><p class="sub">Keep both devices on the same Wi-Fi.</p><div style="max-width:440px;display:flex;flex-direction:column;gap:14px;flex:1">${connectBody(W.connect,'pc')}</div></div>`}
+  else if(W.sending){col=list('wchat',W.chat);main=`<div class="wmain" style="overflow-y:auto"><div style="max-width:440px;display:flex;flex-direction:column;gap:14px;width:100%;margin:0 auto">${sendingView(W.sending,'pc')}</div></div>`}
+  else if(W.tab==='devices'){const c=chatHead('pc');col=list('wchat',W.chat);
+    main=`<div class="wmain" id="wchat"><div class="drop">Drop to send to ${esc(S.D[W.chat].name)}</div>${c.top}${c.pick}${c.q}${c.chips}<div class="feed" id="feed-pc">${feedHTML('pc',W.chat)}</div>${mbar('pc',W.chat)}</div>`}
+  else if(W.tab==='files'){col=list('wbrowse',W.browse.dev);const b=browseBody('pc');
+    main=`<div class="wmain"><div class="h1row"><button type="button" class="rb s" aria-label="Up one folder" data-act="up" data-v="pc" ${W.browse.path.length?'':'disabled'}>${ic('back',18)}</button><h1 class="h1" style="font-size:24px">${esc(b.d.name)}</h1><button type="button" class="pill w" data-act="uploadHere">Upload here</button></div><span class="sub" style="font-size:12.5px">${esc(b.crumbs)}</span><label style="display:flex;align-items:center;gap:10px;height:44px;padding:0 16px;border-radius:22px;background:var(--raised);max-width:420px">${ic('search',18,'var(--faint)')}<span class="sr">Search files</span><input id="bq-pc" data-bq="pc" value="${esc(W.browse.q)}" placeholder="Search files" style="flex:1;min-width:0;border:0;outline:0;background:transparent;font-size:15px"></label><div style="flex:1;min-height:0;overflow-y:auto">${S.D[W.browse.dev].reach?b.rows:`<div class="empty"><b>Can't reach ${esc(b.d.name)}</b><span>Open Sidekick on it and keep both devices on the same Wi-Fi.</span></div>`}</div><button type="button" class="pill" style="align-self:flex-start" data-act="downloadAll">Download all</button></div>`}
+  else if(W.tab==='remote'){col=`<div class="h1row"><h2>Remote</h2></div><p class="sub" style="font-size:13px">Pick a device to control</p>`+ks.filter(k=>S.D[k].paired).map(k=>{const d=S.D[k];return `<button type="button" class="wrow" aria-current="${k===W.remote}" data-act="setRemote" data-k="${k}">${dev(k,44)}<span class="t"><b>${esc(d.name)}</b><small>${!d.control?(/iPhone/.test(d.name)?'iPhones can\'t be controlled':'Can\'t be controlled'):d.reach?(k===W.remote?'Connected · ':'Ready · ')+d.via:'Not reachable'}</small></span></button>`}).join('');
+    const d=S.D[W.remote];
+    main=`<div class="wmain"><div class="h1row">${dev(W.remote,48)}<div style="flex:1"><b style="font-size:20px;font-weight:600">${esc(d.name)}</b><span class="st${d.reach?'':' off'}" style="display:block">${d.reach?'Connected · '+esc(d.via)+' · encrypted':'Not reachable'}</span></div><button type="button" class="pill o" data-act="remotePick">Change device</button></div><div class="pad" id="pc-pad" role="application" aria-label="Touchpad for ${esc(d.name)}" style="background-color:var(--bg)"><span class="ptr" style="left:50%;top:45%"></span><span class="trail" id="pc-trail"></span><span class="hint">Drag here to move the pointer on ${esc(d.name)} · click to click</span></div><div style="display:flex;gap:10px">${['Left click','Right click'].map(t=>`<button type="button" class="pill" style="flex:1;height:46px" data-act="click" data-w="${t}">${t}</button>`).join('')}<button type="button" class="pill" style="flex:1;height:46px" data-act="kbFocus">Keyboard</button></div><div class="mbar" style="box-shadow:none;background:var(--raised)"><span class="rb" style="background:var(--white);color:var(--onwhite)" aria-hidden="true">${ic('keyboard',20)}</span><label class="sr" for="kb-pc">Type on ${esc(d.name)}</label><input id="kb-pc" data-kb="pc" placeholder="Type on ${esc(d.name)}…"><button type="button" class="pill w" data-act="kbSendPc">Send text</button></div><div style="display:flex;gap:8px">${['Start','Alt+Tab','Desktop','Lock'].map(t=>`<button type="button" class="pill o sm" data-act="key" data-w="${t}">${t}</button>`).join('')}</div></div>`}
+  else if(W.tab==='settings'){const s=S.set.pc;const secs=['This device','Receiving','Connections','Sound','Privacy'];
+    col=`<div class="h1row"><h2>Settings</h2></div>`+secs.map((t,i)=>`<button type="button" class="wrow" aria-current="${W.sec===i}" data-act="wsec" data-n="${i}" style="justify-content:space-between"><span class="t"><b>${t}</b></span>${ic('right',18,'var(--faint)')}</button>`).join('');
+    const sw=(key,lab)=>`<button type="button" class="sw" role="switch" aria-checked="${!!s[key]}" aria-label="${lab}" data-act="wtoggle" data-key="${key}"></button>`;
+    const q=[['off','Everyone asks'],['fav','Favorites'],['on','No one asks']];
+    main=`<div class="wmain" style="overflow-y:auto" id="wset"><h1 class="h1" style="flex:none">Make yourself at home.</h1><p class="sub">Just your devices. Set up the little things once.</p><div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start">
+      <div style="display:flex;flex-direction:column;gap:16px"><div id="s0" style="padding:16px;border-radius:22px;background:var(--raised);display:flex;flex-direction:column;gap:12px"><div style="display:flex;align-items:center;gap:14px">${dev('studio',48,{bg:'var(--btn)'})}<div><b style="font-size:18px;font-weight:600">${esc(s.name)}</b><span class="st" style="display:block">Visible to nearby devices</span></div></div><button type="button" class="pill o sm" style="align-self:flex-start" data-act="rename">Rename</button></div>
+      <div id="s1" style="padding:6px 0;border-radius:22px;background:var(--raised)"><div class="setrow" style="color:var(--muted);font-size:13px;min-height:36px">Receiving</div><div class="setrow" style="min-height:40px">Quick save</div>${q.map(([k,t])=>`<button type="button" class="setrow" role="radio" aria-checked="${s.quick===k}" data-act="setQuick" data-q="${k}"><span class="t">${t}</span>${s.quick===k?ic('check',20):''}</button>`).join('')}<button type="button" class="setrow" data-act="saveTo"><span class="t">Save to</span><span class="v">${esc(s.save)}${ic('right',18)}</span></button></div></div>
+      <div style="display:flex;flex-direction:column;gap:16px"><div id="s2" style="padding:6px 0;border-radius:22px;background:var(--raised)"><div class="setrow" style="color:var(--muted);font-size:13px;min-height:36px">Connections</div><div class="setrow"><span class="t">Bluetooth</span>${sw('bt','Bluetooth')}</div><div class="setrow"><span class="t">Open at login, in the menu bar</span>${sw('keep','Open at login')}</div><div class="setrow"><span class="t">Show phone notifications</span>${sw('shots','Show phone notifications')}</div></div>
+      <div id="s3" style="padding:6px 0;border-radius:22px;background:var(--raised)"><div class="setrow" style="color:var(--muted);font-size:13px;min-height:36px">Sound</div><div class="setrow"><span class="t">Play a sound when files arrive</span>${sw('sound','Play a sound when files arrive')}</div></div>
+      <div id="s4" style="padding:6px 0 12px;border-radius:22px;background:var(--raised)"><div class="setrow" style="color:var(--muted);font-size:13px;min-height:36px">Privacy</div><div class="setrow" style="min-height:30px"><span class="t">Direct, encrypted connections</span>${ic('lock',18,'var(--muted)')}</div><p class="sub" style="font-size:12.5px;padding:0 16px">No account. No cloud. Nothing is tracked.</p></div></div></div></div>`}
+  document.getElementById('pc-main').innerHTML=rail+`<div class="col">${col}</div>`+main;
+  let o='';
+  if(W.sheet)o+=`<div class="pop" data-act="closeSheetBg"><div class="dlg" role="dialog" aria-modal="true" data-stop>${sheetBody(W.sheet,'pc')}</div></div>`;
+  if(W.ping)o+=`<div class="pop"><div class="dlg" role="dialog" aria-modal="true" style="align-items:center;text-align:center">${pingView('pc')}</div></div>`;
+  if(W.pop)o+=popHTML(W.pop,'pc');
+  const ov=document.getElementById('pc-over');const sig=[W.sheet&&W.sheet.t+W.sheet.id,W.ping,W.pop&&W.pop.t].join('|');
+  ov.innerHTML=o;if(ov.dataset.sig===sig)ov.querySelectorAll('.pop,.dlg').forEach(e=>e.style.animation='none');ov.dataset.sig=sig;
+  const feed=document.getElementById('feed-pc');if(feed&&stick)feed.scrollTop=feed.scrollHeight;
+}
+function render(){
+  const ae=document.activeElement,aid=ae&&ae.id,ss=ae&&ae.selectionStart,se=ae&&ae.selectionEnd;
+  const keep={};document.querySelectorAll('.scr,.full,.feed,#wset,.col').forEach(e=>{const k=e.dataset.key||e.id||e.className;keep[k]=e.scrollTop});
+  if(S.view==='phone')phRender();else pcRender();
+  document.querySelectorAll('.scr,.full,.feed,#wset,.col').forEach(e=>{const k=e.dataset.key||e.id||e.className;if(k in keep&&!(stick&&e.classList.contains('feed'))){e.scrollTop=keep[k];if(e.classList)e.classList.remove('enter')}});
+  if(aid){const el=document.getElementById(aid);if(el&&el!==document.activeElement){el.focus({preventScroll:true});try{if(ss!=null)el.setSelectionRange(ss,se)}catch(e){}}}
+  stick=false;setupPads();
+}
+
+/* ---------- touchpads ---------- */
+function setupPads(){['ph-pad','pc-pad'].forEach(id=>{const pad=document.getElementById(id);if(!pad||pad.dataset.ok)return;pad.dataset.ok=1;
+  const ptr=pad.querySelector('.ptr');let down=null,moved=0;
+  const pos=e=>{const r=pad.getBoundingClientRect();return[(e.clientX-r.left)/r.width*100,(e.clientY-r.top)/r.height*100]};
+  pad.addEventListener('pointerdown',e=>{down=pos(e);moved=0;pad.setPointerCapture(e.pointerId)});
+  pad.addEventListener('pointermove',e=>{if(!down)return;const p=pos(e);moved++;ptr.style.left=Math.max(3,Math.min(97,p[0]))+'%';ptr.style.top=Math.max(3,Math.min(97,p[1]))+'%'});
+  pad.addEventListener('pointerup',()=>{if(down&&moved<3){ptr.classList.add('click');setTimeout(()=>ptr.classList.remove('click'),180);trail('Click')}down=null})})}
+function trail(t){const el=document.getElementById(S.view==='phone'?'ph-trail':'pc-trail');if(!el)return;el.textContent=t;clearTimeout(el._t);el._t=setTimeout(()=>el.textContent='',1400)}
+
+/* ---------- actions ---------- */
+const find=(v,id)=>hist(v,S[v].chat).find(x=>x.id===id);
+const close=()=>{V().sheet=null};
+function startSend(v,k,items){const st=S[v];const d=S.D[k];if(!d.reach){st.pop={t:'error',k};render();return}
+  const s={id:nid(),to:k,items:items.slice(),p:0,state:'going'};st.sending=s;const tot=items.reduce((a,f)=>a+(f.size||2e3),0);
+  job(s,Math.max(tot,30e6),()=>{s.state='done';sendItemsQuiet(v,k,items);st.sel=[];if(st.sending===s)render();else notice('Sent to '+d.name,items.length+' item'+(items.length>1?'s':''))},
+    ()=>{const r=document.getElementById('ring-'+v);if(r){const C=2*Math.PI*80;r.setAttribute('stroke-dasharray',(C*s.p).toFixed(1)+' '+C.toFixed(1))}const o=document.getElementById('of-'+v);if(o)o.textContent=`${fmt(tot*s.p)} of ${fmt(tot)} · 12 MB/s`;const e=document.getElementById('eta-'+v);if(e)e.textContent=s.p>.9?'Less than a second left':'About '+Math.max(1,Math.ceil((1-s.p)*3))+' seconds left'});
+  render()}
+function sendItemsQuiet(v,k,items){const h=hist(v,k);items.forEach(f=>{if(f.note)h.push(isLink(f.note)?{id:nid(),t:'link',from:'me',url:f.note,day:'Today',when:now()}:{id:nid(),t:'note',from:'me',text:f.note,day:'Today',when:now()});else if(f.photos)h.push({id:nid(),t:'photos',from:'me',items:f.photos,day:'Today',when:now()});else h.push({id:nid(),t:'file',from:'me',name:f.name,size:f.size,state:'done',day:'Today',when:now()})})}
+function sendText(v,t){t=t.trim();if(!t)return;const k=S[v].chat;if(!S.D[k].reach){S[v].pop={t:'error',k};render();return}
+  S[v].draft='';sendItems(v,k,[{note:t}])}
+const SAMPLE_FILES=[{name:'Trail photos.zip',size:45.3e6},{name:'Weekend plans.pdf',size:2.4e6}];
+const A={
+  view(e){S.view=e.dataset.v;['phone','pc'].forEach(x=>{document.getElementById('v-'+x).setAttribute('aria-pressed',S.view===x);document.getElementById('fit-'+x).hidden=S.view!==x});labels();fit();stick=true;render()},
+  tab(e){const P=S.phone;if(P.tab===e.dataset.t){const sc=document.querySelector('#ph-main .scr');if(sc)sc.scrollTo({top:0,behavior:'smooth'});return}P.tab=e.dataset.t;P.sheet=null;render()},
+  wtab(e){const W=S.pc;W.tab=e.dataset.t;W.connect=null;W.sheet=null;stick=true;render()},
+  openChat(e){const st=V();st.chat=e.dataset.k;st.filter='all';st.q=null;if(S.view==='phone')S.phone.tab='chat';else S.pc.tab='devices';stick=true;render()},
+  wchat(e){S.pc.chat=e.dataset.k;S.pc.filter='all';S.pc.q=null;S.pc.tab='devices';S.pc.connect=null;stick=true;render()},
+  pickChat(e){const st=V();st.chat=e.dataset.k;st.filter='all';st.q=null;st.sheet=null;stick=true;render()},
+  filter(e){V().filter=e.dataset.f;stick=true;render()},
+  search(){V().sheet={t:'search'};render()},
+  searchFor(e){V().q=e.dataset.q;V().filter='all';close();stick=true;render()},
+  searchType(){V().q='';close();render();const i=document.getElementById('q-'+S.view);if(i)i.focus()},
+  closeSearch(){V().q=null;stick=true;render()},
+  devOptions(){V().sheet={t:'devOptions'};render()},
+  devPicker(){V().sheet={t:'devPicker'};render()},
+  viewReq(e){V().sheet={t:'req',k:e.dataset.k,id:e.dataset.id};render()},
+  accept(e){const v=e.dataset.v,k=e.dataset.k;S[v].sheet=null;accept(v,k,e.dataset.id);if(v==='phone'){S.phone.tab='chat';S.phone.chat=k;S.phone.stack=[]}else{S.pc.tab='devices';S.pc.chat=k}S[v].filter='all';stick=true;render()},
+  decline(e){const v=e.dataset.v;S[v].sheet=null;decline(v,e.dataset.k,e.dataset.id);notice('Declined',S.D[e.dataset.k].name+' was told no')},
+  alwaysT(e){const a=S.set[S.view].always;a[e.dataset.k]=!a[e.dataset.k];render()},
+  closeSheet(){close();render()},
+  closeSheetBg(e,ev){if(ev.target.closest('[data-stop]'))return;close();render()},
+  closePop(){V().pop=null;render()},
+  sendTo(e){S.phone.tab='send';render();if(!S.phone.sel.length)notice('Pick what to send','Then tap Send next to '+S.D[e.dataset.k].name)},
+  tryAgain(e){const k=e.dataset.k;const b=document.getElementById('try-'+k);if(b){b.disabled=true;b.textContent='Looking…'}
+    setTimeout(()=>{if(k==='pixel'&&!S.D.pixel.reach){S.D.pixel.reach=true;render();notice('Pixel 9 is back','Same Wi-Fi · encrypted');return}render();notice(`Can't reach ${S.D[k].name}`,'Open Sidekick on it and keep both on the same Wi-Fi.')},1500)},
+  connect(){V().connect={mode:'nearby',code:'',target:null};if(S.view==='phone')S.phone.stack=['connect'];render()},
+  closeConnect(){S.pc.connect=null;render()},
+  pop(){S.phone.stack.pop();render()},
+  cmode(e){const c=V().connect;c.mode=e.dataset.m;c.code='';render();if(c.mode==='code')setTimeout(()=>{const i=document.getElementById('code-in');if(i)i.focus()},40)},
+  pair(e){const st=V();st.connect={mode:'code',code:'',target:e.dataset.k};if(S.view==='phone')st.stack=['connect'];render();setTimeout(()=>{const i=document.getElementById('code-in');if(i)i.focus()},300)},
+  refresh(e){e.textContent='Looking…';setTimeout(()=>{render();notice('Up to date','Only devices on your Wi-Fi appear here')},900)},
+  doConnect(){const st=V();const c=st.connect;const k=c.target||(S.view==='phone'?'studio':'tab');const d=S.D[k];d.paired=true;d.reach=true;
+    st.connect=null;if(S.view==='phone'){st.stack=[];st.tab='chat'}else st.tab='devices';st.chat=k;st.filter='all';render();notice('Paired with '+d.name,'Everything between you is encrypted')},
+  scanSheet(){V().sheet={t:'scan'};render()},
+  useSample(){const st=V();st.sheet=null;st.connect.code='847291';st.connect.target=st.connect.target||'studio';A.doConnect()},
+  enterCode(){const st=V();st.sheet=null;st.connect.mode='code';render()},
+  browse(){const st=V();const k=st.chat;st.sheet=null;if(!S.D[k].reach){st.pop={t:'error',k};render();return}if(S.view==='phone'){st.browse={dev:k,path:[],q:''};st.stack=['browse']}else{st.tab='files';st.browse={dev:k,path:[],q:''}}render()},
+  wbrowse(e){S.pc.browse={dev:e.dataset.k,path:[],q:''};render()},
+  openDir(e){const b=V().browse;b.path.push(e.dataset.n);b.q='';render()},
+  up(){const b=V().browse;b.path.pop();b.q='';render()},
+  download(e){V().sheet={t:'downloaded',name:e.dataset.n};render()},
+  downloadAll(){V().sheet={t:'downloaded',name:'Everything in this folder'};render()},
+  uploadHere(){V().sheet={t:'files',target:'upload'};render()},
+  pingOut(){const st=V();const k=st.chat;st.sheet=null;if(!S.D[k].reach){st.pop={t:'error',k};render();return}st.pop={t:'pinging',k};render()},
+  remoteOf(){const st=V();st.remote=st.chat;st.sheet=null;if(S.view==='phone')st.tab='remote';else st.tab='remote';render()},
+  favT(){const d=S.D[V().chat];d.fav=!d.fav;close();render();notice(d.fav?'Added to Favorites':'Removed from Favorites',d.name)},
+  clearHist(){S.H[S.view+':'+V().chat]=[];close();render()},
+  attach(){V().sheet={t:'attach'};render()},
+  composeBtn(e){const v=e.dataset.v;if(S[v].draft.trim()){sendText(v,S[v].draft);const i=document.getElementById('msg-'+v);if(i)i.focus()}else{S[v].sheet={t:'files',target:'chat'};render()}},
+  pickFiles(e){V().sheet={t:'files',target:e.dataset.target||'chat'};render()},
+  pickPhotos(e){V().sheet={t:'photos',target:e.dataset.target||'chat'};render()},
+  pasteChat(){V().sheet={t:'paste'};render()},
+  sendPasted(){close();sendItems(S.view,V().chat,[{note:'https://www.bbcgoodfood.com/recipes/lemon-drizzle-cake'}])},
+  addFiles(e){const st=V();const t=e.dataset.target;close();
+    if(t==='send'){st.sel.push(...SAMPLE_FILES.map(f=>({...f})));render()}
+    else if(t==='upload'){const b=st.browse;const key=b.path.join('/');(FS[key]||(FS[key]=[])).unshift(['Trail photos.zip',45.3e6,'Just now'],['Weekend plans.pdf',2.4e6,'Just now']);render();notice('Uploaded 2 files','to '+S.D[b.dev].name)}
+    else startSend(S.view,st.chat,SAMPLE_FILES)},
+  addPhotos(e){const st=V();close();const item={name:'2 photos, 1 video',size:125.6e6,photos:PHOTOS.slice()};if(e.dataset.target==='send'){st.sel.push(item);render()}else startSend(S.view,st.chat,[item])},
+  textSheet(){V().sheet={t:'text'};render();setTimeout(()=>{const t=document.getElementById('text-in');if(t)t.focus()},300)},
+  addText(){const t=(document.getElementById('text-in').value||'').trim()||'bbcgoodfood.com/recipes/lemon-drizzle-cake';V().sel.push({name:t.length>34?t.slice(0,34)+'…':t,note:t});close();render()},
+  pasteSel(){V().sel.push({name:'bbcgoodfood.com',note:'https://www.bbcgoodfood.com/recipes/lemon-drizzle-cake'});render();notice('Pasted','The link waits in your selection')},
+  unsel(e){V().sel.splice(+e.dataset.i,1);render()},
+  clearSel(){V().sel=[];render()},
+  sendSel(e){const st=V();startSend(S.view,e.dataset.k,st.sel)},
+  hideSending(){const st=V();const s=st.sending;st.sending=null;render();if(s&&s.state==='going')notice('Still sending in the background','to '+S.D[s.to].name)},
+  closeSending(){const st=V();const s=st.sending;st.sending=null;if(s){st.chat=s.to;st.filter='all';if(S.view==='phone')st.tab='chat';else st.tab='devices'}stick=true;render()},
+  stopSending(){const st=V();if(st.sending)st.sending.cancel=true;st.sending=null;render();notice('Stopped','Nothing half-sent was kept')},
+  itemMenu(e){V().sheet={t:'menu',id:e.dataset.id};render()},
+  menuOpen(e){const m=find(S.view,e.dataset.id);if(!m)return;if(m.t==='note')V().sheet={t:'note',text:m.text};else if(m.t==='link'){close();openURL(m.url)}else if(m.t==='photos')V().sheet={t:'viewer',items:m.items,i:0};else V().sheet={t:'filePreview',name:m.name};render()},
+  openFile(e){const m=find(S.view,e.dataset.id);V().sheet={t:'filePreview',name:m.name};render()},
+  openPhotos(e){const m=find(S.view,e.dataset.id);V().sheet={t:'viewer',items:m.items,i:0};render()},
+  vprev(){const sh=V().sheet;sh.i=(sh.i+sh.items.length-1)%sh.items.length;render()},
+  vnext(){const sh=V().sheet;sh.i=(sh.i+1)%sh.items.length;render()},
+  showFolder(e){const m=find(S.view,e.dataset.id);V().sheet={t:'folder',name:m?(m.name||'2 photos, 1 video'):''};render()},
+  showFolderN(e){V().sheet={t:'folder',name:e.dataset.n};render()},
+  copy(e){const m=find(S.view,e.dataset.id);const t=m?(m.text||m.url||m.name||''):'';try{navigator.clipboard.writeText(t).catch(()=>{})}catch(x){}V().sheet={t:'copied'};render()},
+  copyText(e){try{navigator.clipboard.writeText(e.dataset.text).catch(()=>{})}catch(x){}V().sheet={t:'copied'};render()},
+  openLink(e){const m=find(S.view,e.dataset.id);if(m)openURL(m.url)},
+  sendAgain(e){const m=find(S.view,e.dataset.id);close();if(!m)return;const it=m.t==='note'?{note:m.text}:m.t==='link'?{note:m.url}:m.t==='photos'?{name:'Photos',size:125.6e6,photos:m.items}:{name:m.name,size:m.size};
+    if(m.t==='note'||m.t==='link'){sendItems(S.view,V().chat,[it])}else startSend(S.view,V().chat,[it])},
+  removeItem(e){const h=hist(S.view,V().chat);const i=h.findIndex(x=>x.id===e.dataset.id);if(i>=0)h.splice(i,1);close();render();notice('Removed from this list','The file itself wasn\'t touched')},
+  remotePick(){V().sheet={t:'remotePick'};render()},
+  setRemote(e){const st=V();st.remote=e.dataset.k;st.sheet=null;render();const d=S.D[e.dataset.k];if(S.view==='pc'&&!d.control)notice(/iPhone/.test(d.name)?'iPhones can\'t be controlled':'This device can\'t be controlled','Choose a computer to use the touchpad')},
+  click(e){e.classList.remove('flash');void e.offsetWidth;e.classList.add('flash');trail(e.dataset.w)},
+  key(e){e.classList.remove('flash');void e.offsetWidth;e.classList.add('flash');trail('Pressed '+e.dataset.w);notice('Sent to '+S.D[V().remote].name,'Your shortcut was sent directly')},
+  kbSheet(){S.phone.sheet={t:'kb'};render();setTimeout(()=>{const i=document.getElementById('kb-in');if(i)i.focus()},300)},
+  kbSend(){const t=document.getElementById('kb-in').value;close();render();if(t){trail('Typed “'+t.slice(-24)+'”');notice('Sent to '+S.D[S.phone.remote].name,'“'+t+'”')}},
+  kbFocus(){const i=document.getElementById('kb-pc');if(i)i.focus()},
+  kbSendPc(){const i=document.getElementById('kb-pc');if(i&&i.value){trail('Typed “'+i.value.slice(-24)+'”');i.value=''}},
+  toggle(e){const s=S.set.phone;s[e.dataset.key]=!s[e.dataset.key];render()},
+  wtoggle(e){const s=S.set.pc;s[e.dataset.key]=!s[e.dataset.key];render()},
+  setQuick(e){S.set[S.view].quick=e.dataset.q;render()},
+  saveTo(){V().sheet={t:'saveTo'};render()},
+  setSave(e){S.set[S.view].save=e.dataset.s;render()},
+  rename(){V().sheet={t:'rename'};render();setTimeout(()=>{const i=document.getElementById('rename-in');if(i){i.focus();i.select()}},300)},
+  saveName(){const v=(document.getElementById('rename-in').value||'').trim();if(!v)return;S.set[S.view].name=v;close();render();notice('Renamed','Your devices now see “'+v+'”')},
+  wsec(e){S.pc.sec=+e.dataset.n;render();const t=document.getElementById('s'+e.dataset.n),box=document.getElementById('wset');if(t&&box)box.scrollTo({top:t.offsetTop-box.offsetTop-10,behavior:'smooth'})},
+  foundIt(){V().ping=null;render();notice('Found it','The sound stopped on both devices')},
+  /* the other devices */
+  simFiles(){const v=S.view;const k=v==='phone'?'mbp':'pixel';const d=S.D[k];
+    const m={id:nid(),t:'req',from:'them',files:REQ.slice(),status:'waiting',p:0,day:'Today',when:now(),fresh:true};hist(v,k).push(m);stick=true;
+    const s=S.set[v];if(s.quick==='on'||(s.quick==='fav'&&d.fav&&false)||s.always[k]){accept(v,k,m.id);notice(d.name+' is sending 4 files','You said it can send without asking');return}
+    if(v==='phone'&&!(S.phone.tab==='chat'&&S.phone.chat===k))S.phone.sheet={t:'req',k,id:m.id};render()},
+  simLink(){const v=S.view;hist(v,'pixel').push({id:nid(),t:'link',from:'them',url:'https://www.theguardian.com/travel/2026/nov/12/best-winter-breaks',day:'Today',when:now(),fresh:true});stick=true;render();notice('Pixel 9 sent a link','theguardian.com')},
+  simNote(){const v=S.view;hist(v,'pixel').push({id:nid(),t:'note',from:'them',text:'Pick up the charger',day:'Today',when:now(),fresh:true});stick=true;render();notice('Pixel 9 sent a note','Pick up the charger')},
+  simPing(){const v=S.view;V().ping=v==='phone'?'mbp':'pixel';render()},
+  simOffline(){S.D.pixel.reach=!S.D.pixel.reach;render();notice(S.D.pixel.reach?'Pixel 9 is back':'Pixel 9 is out of reach',S.D.pixel.reach?'Same Wi-Fi · encrypted':'Its chat says how to reconnect')},
+  simError(){V().pop={t:'error',k:'mba'};render()},
+  simFresh(){const v=S.view;Object.values(S.D).forEach(d=>{if(!d.self)d.paired=false});V().stack=[];if(v==='phone')S.phone.tab='devices';else S.pc.tab='devices';render()},
+  reset(){jobs.length=0;const v=S.view;S=fresh();S.view=v;S.pc.remote='mbp';lastKey='';stick=true;document.getElementById('ph-notices').innerHTML='';document.getElementById('pc-notices').innerHTML='';render();notice('Started over','Everything is back to how it was')}
+};
+function openURL(u){const a=document.createElement('a');a.href=/^https?:/.test(u)?u:'https://'+u;a.target='_blank';a.rel='noopener';document.body.appendChild(a);a.click();a.remove()}
+function labels(){const p=S.view==='phone';document.getElementById('sim-files').textContent=p?'MacBook Pro sends 4 files':'Pixel 9 sends 4 files';document.getElementById('sim-ping').textContent=p?'MacBook Pro pings this phone':'Pixel 9 pings this computer'}
+document.addEventListener('click',ev=>{const el=ev.target.closest('[data-act]');if(!el||el.disabled)return;const f=A[el.dataset.act];if(f)f(el,ev)});
+document.addEventListener('input',ev=>{const t=ev.target;
+  if(t.dataset.compose){const v=t.dataset.compose;S[v].draft=t.value;const bar=t.closest('.mbar'),on=!!t.value.trim();bar.classList.toggle('typing',on);bar.querySelector('.sendf').setAttribute('aria-label',on?'Send':'Send files')}
+  else if(t.dataset.q){S[t.dataset.q].q=t.value;render()}
+  else if(t.dataset.bq){S[t.dataset.bq].browse.q=t.value;render()}
+  else if(t.hasAttribute('data-code')){const c=V().connect;c.code=t.value.replace(/\D/g,'').slice(0,6);render();if(c.code.length===6)setTimeout(()=>{if(V().connect&&V().connect.code.length===6)A.doConnect()},350)}
+  else if(t.dataset.kb){if(t.value)trail('Typing “'+t.value.slice(-24)+'”')}});
+document.addEventListener('keydown',ev=>{const t=ev.target;
+  if(t.dataset&&t.dataset.compose&&ev.key==='Enter'){ev.preventDefault();sendText(t.dataset.compose,t.value)}
+  if(t.id==='kb-pc'&&ev.key==='Enter'){ev.preventDefault();A.kbSendPc()}
+  if(t.id==='kb-in'&&ev.key==='Enter'){ev.preventDefault();A.kbSend()}
+  if(t.id==='rename-in'&&ev.key==='Enter')A.saveName();
+  if(ev.key==='Escape'){const st=V();if(st.sheet){st.sheet=null;render()}else if(st.pop){st.pop=null;render()}}});
+let dragN=0;
+document.addEventListener('dragenter',ev=>{const m=ev.target.closest&&ev.target.closest('#wchat');if(m){dragN++;m.classList.add('dragging')}});
+document.addEventListener('dragleave',ev=>{const m=ev.target.closest&&ev.target.closest('#wchat');if(m&&--dragN<=0){dragN=0;m.classList.remove('dragging')}});
+document.addEventListener('dragover',ev=>{if(ev.target.closest&&ev.target.closest('#wchat'))ev.preventDefault()});
+document.addEventListener('drop',ev=>{const m=ev.target.closest&&ev.target.closest('#wchat');if(!m)return;ev.preventDefault();dragN=0;m.classList.remove('dragging');const fs=[...(ev.dataTransfer.files||[])].map(f=>({name:f.name,size:f.size||1}));if(fs.length)startSend('pc',S.pc.chat,fs)});
+function fit(){const st=document.querySelector('.stage');const avW=Math.max(260,st.clientWidth);const avH=Math.max(480,window.innerHeight-86);
+  [['fit-phone',414,868],['fit-pc',1280,800]].forEach(([id,w,h])=>{const f=document.getElementById(id);if(f.hidden)return;const s=Math.max(id==='fit-phone'?.55:.2,Math.min(1,avW/w,id==='fit-phone'?avH/h:9));f.style.width=w*s+'px';f.style.height=h*s+'px';f.firstElementChild.style.transform=`scale(${s})`})}
+window.addEventListener('resize',fit);
+document.getElementById('st-r').innerHTML=ic('wifi',17,'currentColor',2.4)+'<span class="batt"><i></i></span>';
+['a','b','c','d','e','f','g'].forEach((x,i)=>{document.getElementById('ic-'+x).innerHTML=ic(['send','link','chat','ping','wifi','alert','devices'][i],18,'var(--amber)')});
+labels();render();fit();setTimeout(fit,60);
+})();
+</script>
