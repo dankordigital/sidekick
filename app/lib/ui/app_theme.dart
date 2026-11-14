@@ -4,8 +4,54 @@ import 'package:material_ui/material_ui.dart';
 import '../core/host.dart';
 import '../core/models.dart';
 
-/// Material You, Sidekick style: the colors come from the wallpaper or the
-/// chosen theme; shapes are soft and generous, headlines bold.
+/// Sidekick 4.0's one look (the owner's Figma "Foundations", as in
+/// design/emulator): a #121212 page, #1c1c1c panels, #262626 raised cards,
+/// white pill buttons with dark text, colour only where it means something.
+/// Dark only.
+ColorScheme sidekick4Scheme() => const ColorScheme(
+  brightness: Brightness.dark,
+  primary: Color(0xFFF0F0F0),
+  onPrimary: Color(0xFF141414),
+  primaryContainer: Color(0xFF2E2E2E),
+  onPrimaryContainer: Color(0xFFF2F2F2),
+  secondary: Color(0xFFA1A1A6),
+  onSecondary: Color(0xFF141414),
+  secondaryContainer: Color(0xFFF0F0F0),
+  onSecondaryContainer: Color(0xFF141414),
+  tertiary: Color(0xFF5B9DFF),
+  onTertiary: Color(0xFF0A1A33),
+  tertiaryContainer: Color(0xFF2F2410),
+  onTertiaryContainer: Color(0xFFFFC56B),
+  error: Color(0xFFFF6B5E),
+  onError: Color(0xFF1A0503),
+  errorContainer: Color(0xFF3A1512),
+  onErrorContainer: Color(0xFFFFD9D4),
+  surface: Color(0xFF121212),
+  onSurface: Color(0xFFF2F2F2),
+  onSurfaceVariant: Color(0xFFA1A1A6),
+  surfaceContainerLowest: Color(0xFF0A0A0A),
+  surfaceContainerLow: Color(0xFF1C1C1C),
+  surfaceContainer: Color(0xFF1C1C1C),
+  surfaceContainerHigh: Color(0xFF262626),
+  surfaceContainerHighest: Color(0xFF2E2E2E),
+  outline: Color(0xFF5A5A5E),
+  outlineVariant: Color(0xFF2E2E2E),
+  inverseSurface: Color(0xFFF0F0F0),
+  onInverseSurface: Color(0xFF141414),
+  inversePrimary: Color(0xFF141414),
+  shadow: Color(0xFF000000),
+  scrim: Color(0xFF000000),
+  surfaceTint: Color(0x00000000),
+);
+
+/// 4.0's colours that aren't part of a Material scheme: amber for "needs
+/// you", green for "connected".
+const sidekickAmber = Color(0xFFFFC56B);
+const sidekickAmberBg = Color(0xFF2F2410);
+const sidekickOk = Color(0xFF45D07E);
+
+/// Sidekick's shapes and type on top of a [scheme]: pill buttons, 22 px
+/// cards, bold headlines, no shadows.
 ThemeData sidekickTheme(ColorScheme scheme) {
   final base = ThemeData(
     colorScheme: scheme,
@@ -27,6 +73,7 @@ ThemeData sidekickTheme(ColorScheme scheme) {
   TextStyle? bold(TextStyle? s, FontWeight w, [double spacing = 0]) =>
       s?.copyWith(fontWeight: w, letterSpacing: spacing);
   final round16 = RoundedRectangleBorder(borderRadius: BorderRadius.circular(16));
+  const pill = StadiumBorder();
   const buttonSize = Size(0, 44);
   const buttonPadding = EdgeInsets.symmetric(horizontal: 20);
   // Built from the theme's styles so they keep the platform's font.
@@ -51,19 +98,38 @@ ThemeData sidekickTheme(ColorScheme scheme) {
       color: scheme.surfaceContainerLow,
       elevation: 0,
       margin: EdgeInsets.zero,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
+    ),
+    elevatedButtonTheme: ElevatedButtonThemeData(
+      style: ElevatedButton.styleFrom(
+        minimumSize: buttonSize,
+        padding: buttonPadding,
+        textStyle: buttonText,
+        shape: pill,
+        elevation: 0,
+      ),
     ),
     listTileTheme: ListTileThemeData(shape: round16, iconColor: scheme.onSurfaceVariant),
     filledButtonTheme: FilledButtonThemeData(
-      style: FilledButton.styleFrom(minimumSize: buttonSize, padding: buttonPadding, textStyle: buttonText),
+      style: FilledButton.styleFrom(
+        minimumSize: buttonSize,
+        padding: buttonPadding,
+        textStyle: buttonText,
+        shape: pill,
+      ),
     ),
     outlinedButtonTheme: OutlinedButtonThemeData(
-      style: OutlinedButton.styleFrom(minimumSize: buttonSize, padding: buttonPadding, textStyle: buttonText),
+      style: OutlinedButton.styleFrom(
+        minimumSize: buttonSize,
+        padding: buttonPadding,
+        textStyle: buttonText,
+        shape: pill,
+      ),
     ),
     textButtonTheme: TextButtonThemeData(
-      style: TextButton.styleFrom(minimumSize: const Size(0, 40), textStyle: buttonText),
+      style: TextButton.styleFrom(minimumSize: const Size(0, 40), textStyle: buttonText, shape: pill),
     ),
-    chipTheme: ChipThemeData(shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
+    chipTheme: const ChipThemeData(shape: StadiumBorder(), side: BorderSide.none),
     inputDecorationTheme: InputDecorationTheme(
       border: field(scheme.outline),
       enabledBorder: field(scheme.outlineVariant),
@@ -76,8 +142,15 @@ ThemeData sidekickTheme(ColorScheme scheme) {
         (states) => states.contains(WidgetState.selected) ? const Icon(Icons.check) : null,
       ),
     ),
-    dialogTheme: DialogThemeData(shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28))),
-    bottomSheetTheme: const BottomSheetThemeData(showDragHandle: true),
+    dialogTheme: DialogThemeData(
+      backgroundColor: scheme.surfaceContainerLow,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(26)),
+    ),
+    bottomSheetTheme: BottomSheetThemeData(
+      showDragHandle: true,
+      backgroundColor: scheme.surfaceContainerLow,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(30))),
+    ),
     snackBarTheme: SnackBarThemeData(
       behavior: SnackBarBehavior.floating,
       shape: round16,

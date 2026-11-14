@@ -153,7 +153,8 @@ class SidekickApp extends StatelessWidget {
     if (custom != null) return _themes[key] = customThemeData(custom);
     // Settings → Theme → Nothing: its own colors, whatever the color choice.
     if (state.nothingLook) return _themes[key] = nothingTheme(sidekickTheme(nothingScheme(brightness)));
-    final material = sidekickTheme(_scheme(dynamic, brightness));
+    // Sidekick 4.0: one look, dark, whatever the colour or light/dark choice.
+    final material = sidekickTheme(sidekick4Scheme());
     return _themes[key] = _glass ? glassTheme(material) : material;
   }
 
@@ -162,33 +163,7 @@ class SidekickApp extends StatelessWidget {
       ? customThemeIsGlass(state.customTheme!)
       : state.liquidGlass && liquidGlassAvailable;
 
-  ColorScheme _scheme(ColorScheme? dynamic, Brightness brightness) {
-    final choice = state.themeColor;
-    ColorScheme scheme;
-    if (choice == 'system' && dynamic != null) {
-      scheme = dynamic;
-    } else {
-      // No OS colors (iOS, older Android): Sidekick purple, like the website.
-      final (_, seed) = themeColors[choice] ?? themeColors['purple']!;
-      scheme = ColorScheme.fromSeed(
-        seedColor: seed,
-        brightness: brightness,
-        dynamicSchemeVariant: choice == 'mono' ? DynamicSchemeVariant.monochrome : DynamicSchemeVariant.tonalSpot,
-      );
-    }
-    // Pure black would leave nothing for glass to show.
-    if (brightness == Brightness.dark && state.pureBlack && !_glass) {
-      scheme = scheme.copyWith(
-        surface: Colors.black,
-        surfaceContainerLowest: Colors.black,
-        surfaceContainerLow: const Color(0xFF0B0B0B),
-        surfaceContainer: const Color(0xFF121212),
-        surfaceContainerHigh: const Color(0xFF1A1A1A),
-        surfaceContainerHighest: const Color(0xFF232323),
-      );
-    }
-    return scheme;
-  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -214,7 +189,8 @@ class SidekickApp extends StatelessWidget {
         builder: (context) => MaterialApp(
           title: 'Sidekick',
           debugShowCheckedModeBanner: false,
-          themeMode: state.themeMode,
+          // The 4.0 look is dark only; the older looks still follow the choice.
+          themeMode: state.nothingLook || state.customLook || _glass ? state.themeMode : ThemeMode.dark,
           theme: _themeFor(lightDynamic, Brightness.light),
           darkTheme: _themeFor(darkDynamic, Brightness.dark),
           builder: (context, child) {
