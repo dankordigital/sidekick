@@ -544,6 +544,15 @@ release. Keep this file for how things work now, not for history.
   `NSSupportsLiveActivities` is on in Info.plist. When adding objects to
   the .pbxproj by hand, use IDs nothing else has (2.7.0's first push reused
   the app icon's and Xcode called the project damaged).
+- **Verification codes only** (the owner's call, 14 Nov 2026; not built
+  yet): the computer should get **verification codes** from the phone's
+  notifications (one-time codes like "Your code is 482913") with a **Copy
+  code** button, **not the text of every message from anybody**. When this
+  is built, `NotificationRelay` / `_relayNotification` send only what looks
+  like a code (the code and the app's name, never the rest of the message),
+  the computer shows "Copy code 482913", the setting's wording says so, and
+  both privacy policies change to match. Until then the section below is how
+  it works now.
 - **Phone notifications on computers** (2.15.0, Android only: iOS lets
   no app see others' notifications; Settings → Show notifications on
   computers, pref `relayNotifications`, off by default): `NotificationRelay`

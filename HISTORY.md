@@ -5,6 +5,50 @@ a new session. Newest first. For how things work, read `CLAUDE.md` (the
 detailed developer notes; every release is in `VERSIONS.md`) and
 `ARCHITECTURE.md` (the big picture).
 
+## Where we are and what's next (14 November 2026, before /clear)
+
+**Done (13–14 Nov, design only; the Flutter app hasn't changed yet):**
+- One look only: Nothing and Liquid Glass are being scrapped (CLAUDE.md).
+- The new look, designed three ways: the Design canvas
+  (https://claude.ai/artifact/N5YczZk3EXsqbULx56Qfxf), Claude's clickable
+  prototype (https://claude.ai/artifact/PT9J7jBD417cBNMAwiBaQL), and, the
+  one that counts, **the owner's Figma design** (`design/figma/`: the
+  Prototype page, 183 screens, and Styles & Components: Foundations tokens,
+  components, icons, photos) made clickable as the **Sidekick emulator**
+  (https://claude.ai/artifact/Rbd3YL2REDeDKtCK5z3px5, `design/emulator/`).
+- Decisions made along the way: the phone's floating dock (Devices · Chat ·
+  Send · Remote · Settings; selected tab a white pill with its name); **no
+  attention dots or badges**; **Chat is not a messaging app** but one place
+  per device for files, photos, links and notes (filters, search, item
+  cards with ⋯ menus); the message bar's Send files turns into a round Send
+  button while typing; verification codes only from phone notifications
+  (CLAUDE.md).
+- Figma AI prompts (`design/figma-ai-prompt.md`, `figma-ai-prompt-chat.md`,
+  screenshots in `design/reference/`).
+- Logo: lots tried and dropped (letter marks; a split circle too close to
+  SumUp's; overlapping squares too close to copyui's; planets; blobs).
+  **Five candidates** in `design/logo-ideas/` (Hinge, Embrace, Lock, Bloom,
+  Pair), each also with "Sidekick" beside it (`lockups/`). **The owner hasn't
+  picked one.** Claude's pick: Pair (two colours, bigger step, so it isn't a
+  pause icon).
+
+**Next:**
+1. The owner picks the logo (or a mix). Then: finish it, run a trademark
+   check (Google Lens, WIPO Global Brand Database), and make every icon from
+   it (`app/tool/make_icons.py`: app icons on all four platforms, tray icons,
+   website favicon and touch icon) and the website's wordmark.
+2. Build the Figma design into the Flutter app, screen by screen, using the
+   emulator and `design/figma/` as the reference and the Foundations tokens
+   as the theme: the dock, the Chat tab (it needs a stored per-device
+   history of everything sent and received), Devices, Send, Remote,
+   Settings, Connect, sheets and notices. Remove the Nothing and Liquid
+   Glass looks while doing it (CLAUDE.md lists what to take out). Then
+   rebuild the website's live demo (`app/tool/build_preview.sh`).
+3. Verification codes only (CLAUDE.md, "Verification codes only"): change
+   the phone-notification relay, the computer's notification, the setting
+   and both privacy policies.
+4. Release as usual once CI is green.
+
 ## 14 November 2026
 
 - **Sidekick emulator from the owner's Figma design**
