@@ -106,7 +106,7 @@ object WidgetLinks {
 
     fun from(intent: Intent?) {
         val data = intent?.data ?: return
-        if (data.scheme == "sidekick" && data.host in setOf("open", "send", "ping")) pending = data.toString()
+        if (data.scheme == "sidekick" && (data.host ?: "") in setOf("open", "send", "ping")) pending = data.toString()
     }
 
     fun take(): String? = pending.also { pending = null }
