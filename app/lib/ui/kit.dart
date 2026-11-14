@@ -307,8 +307,11 @@ class _KPillState extends State<KPill> {
                 borderRadius: BorderRadius.circular(h / 2),
                 border: border == null ? null : Border.all(color: border),
               ),
+              // Stretched (full width, or beside another in a row): the
+              // label sits in the middle.
               child: Row(
                 mainAxisSize: MainAxisSize.min,
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   if (widget.icon != null) ...[Icon(widget.icon, size: 18, color: fg), const SizedBox(width: 8)],
                   Text(

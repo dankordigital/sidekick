@@ -231,7 +231,7 @@ class _SendingScreenState extends State<SendingScreen> {
       SendPhase.sending => (
         '${(value * 100).floor()}%',
         switch (send.remaining) {
-          final r? when r.inSeconds > 0 => 'About ${formatTimeLeft(r)}',
+          final r? when r.inSeconds > 0 => _aboutLeft(r),
           _ => 'Sending…',
         },
       ),
@@ -245,6 +245,7 @@ class _SendingScreenState extends State<SendingScreen> {
       padding: const EdgeInsets.symmetric(horizontal: 20),
       child: Column(
         mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           if (switch (big) {
                 '✓' => Icons.check_rounded,
@@ -274,6 +275,14 @@ class _SendingScreenState extends State<SendingScreen> {
         ],
       ),
     );
+  }
+
+  /// "About 2 seconds left", "About 3 minutes left" (the design's words).
+  static String _aboutLeft(Duration r) {
+    if (r.inSeconds < 60) return 'About ${r.inSeconds} ${r.inSeconds == 1 ? 'second' : 'seconds'} left';
+    final m = (r.inSeconds / 60).ceil();
+    if (m < 60) return 'About $m ${m == 1 ? 'minute' : 'minutes'} left';
+    return 'About ${r.inHours} h ${r.inMinutes.remainder(60)} min left';
   }
 
   /// "30.5 of 47.7 MB · 12 MB/s", or what happened.
