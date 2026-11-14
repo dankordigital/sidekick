@@ -60,7 +60,9 @@ Dark, calm and flat, like a well-made Apple app. Not futuristic, not
   shadow, 8 pt padding. Five tabs: **Devices · Chat · Send · Remote ·
   Settings**. The selected tab is a **white pill (48 pt tall) with its icon
   and its name**; every other tab is **only its icon** in grey, in a 48 pt
-  circle. A small amber badge on Devices counts requests waiting.
+  circle. **No badges, dots or counters on the dock** when something needs
+  attention: the amber "Needs you" card and the device shown in amber already
+  say it.
 - **The message bar**: shaped exactly like the dock (same radius, colour,
   border and shadow). Inside: a round "+" button (files, photos, a link,
   paste), the field "Message Pixel 9", and a white **"Send files"** pill

@@ -7,6 +7,10 @@ detailed developer notes; every release is in `VERSIONS.md`) and
 
 ## 14 November 2026
 
+- **No attention dots** (the owner's call): no badges, dots or counters
+  on the dock or icons when something needs you; the amber "Needs you"
+  card and the amber device already show it. Taken out of the prototype,
+  the Figma prompt and its screenshots; written into CLAUDE.md.
 - **A prompt for Figma AI** (`design/figma-ai-prompt.md`, one prompt):
   how the new look works (colours, colour only for meaning, white pills,
   the dock and the dock-shaped message bar, the logo), every phone and

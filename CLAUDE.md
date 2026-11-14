@@ -673,7 +673,9 @@ release. Keep this file for how things work now, not for history.
   means something, the phone's floating rounded dock (Devices · Chat · Send ·
   Remote · Settings; the selected tab a white pill with icon and name, the
   others icons only), a Chat tab per device with a rounded message bar and
-  Send files. Until that's built, the two sections below describe code that
+  Send files. **No attention dots, badges or counters** (on the dock, tabs
+  or icons; the owner's call): the amber "Needs you" card and the device in
+  amber already show it. Until that's built, the two sections below describe code that
   is still there; when removing them, take out the Theme dropdown entries,
   the prefs (`look` = `nothing` / glass falls back to the regular look), the
   alternate app icons and tray icons, and the screenshot renders. Don't add
