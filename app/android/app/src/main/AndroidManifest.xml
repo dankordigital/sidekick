@@ -80,9 +80,9 @@
               />
         </activity>
 
-        <!-- The launcher icon: two entries for MainActivity, one turned on.
-             The usual icon, or "sk." in dots for Settings → Theme → Nothing
-             (MainActivity.setAppIcon switches them). -->
+        <!-- The launcher icon: one entry per app icon (Settings → App icon),
+             one turned on. LauncherDefault is Dusk (MainActivity.setAppIcon
+             switches them; icons from tool/make_icons.py). -->
         <activity-alias
             android:name=".LauncherDefault"
             android:targetActivity=".MainActivity"
@@ -95,9 +95,75 @@
             </intent-filter>
         </activity-alias>
         <activity-alias
-            android:name=".LauncherNothing"
+            android:name=".LauncherInk"
             android:targetActivity=".MainActivity"
-            android:icon="@mipmap/ic_launcher_nothing"
+            android:icon="@mipmap/ic_launcher_ink"
+            android:enabled="false"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN"/>
+                <category android:name="android.intent.category.LAUNCHER"/>
+            </intent-filter>
+        </activity-alias>
+        <activity-alias
+            android:name=".LauncherPaper"
+            android:targetActivity=".MainActivity"
+            android:icon="@mipmap/ic_launcher_paper"
+            android:enabled="false"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN"/>
+                <category android:name="android.intent.category.LAUNCHER"/>
+            </intent-filter>
+        </activity-alias>
+        <activity-alias
+            android:name=".LauncherSky"
+            android:targetActivity=".MainActivity"
+            android:icon="@mipmap/ic_launcher_sky"
+            android:enabled="false"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN"/>
+                <category android:name="android.intent.category.LAUNCHER"/>
+            </intent-filter>
+        </activity-alias>
+        <activity-alias
+            android:name=".LauncherAmber"
+            android:targetActivity=".MainActivity"
+            android:icon="@mipmap/ic_launcher_amber"
+            android:enabled="false"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN"/>
+                <category android:name="android.intent.category.LAUNCHER"/>
+            </intent-filter>
+        </activity-alias>
+        <activity-alias
+            android:name=".LauncherMint"
+            android:targetActivity=".MainActivity"
+            android:icon="@mipmap/ic_launcher_mint"
+            android:enabled="false"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN"/>
+                <category android:name="android.intent.category.LAUNCHER"/>
+            </intent-filter>
+        </activity-alias>
+        <activity-alias
+            android:name=".LauncherSignal"
+            android:targetActivity=".MainActivity"
+            android:icon="@mipmap/ic_launcher_signal"
+            android:enabled="false"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN"/>
+                <category android:name="android.intent.category.LAUNCHER"/>
+            </intent-filter>
+        </activity-alias>
+        <activity-alias
+            android:name=".LauncherChrome"
+            android:targetActivity=".MainActivity"
+            android:icon="@mipmap/ic_launcher_chrome"
             android:enabled="false"
             android:exported="true">
             <intent-filter>

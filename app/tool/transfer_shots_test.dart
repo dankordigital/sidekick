@@ -58,7 +58,8 @@ void main() {
     await tester.runAsync(_loadFonts);
     final out = Directory('build/screenshots')..createSync(recursive: true);
     final key = GlobalKey();
-    final theme = ThemeData(colorSchemeSeed: const Color(0xFF6750A4), fontFamily: 'Roboto');
+    // The app's one look (4.0).
+    final theme = sidekickTheme(sidekick4Scheme());
 
     Future<void> frame(String name) async {
       final boundary = key.currentContext!.findRenderObject()! as RenderRepaintBoundary;

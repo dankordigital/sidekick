@@ -169,7 +169,7 @@ class MainActivity : FlutterActivity() {
                             result.success(null)
                         }
                         "setAppIcon" -> {
-                            setAppIcon(call.argument<Boolean>("nothing") == true)
+                            setAppIcon(call.argument<String>("name") ?: "dusk")
                             result.success(null)
                         }
                         "input" -> {
@@ -186,30 +186,28 @@ class MainActivity : FlutterActivity() {
             }
     }
 
-    /** Settings → Theme → Nothing: the launcher shows the "sk." icon. Two
-     *  launcher entries point at this activity (AndroidManifest.xml); the
-     *  new one is turned on before the old one is off, so there's always one. */
-    private fun setAppIcon(nothing: Boolean) {
+    /** Settings → App icon: one launcher entry per icon points at this
+     *  activity (AndroidManifest.xml); the chosen one is turned on before the
+     *  others are off, so there's always one. "dusk" is LauncherDefault. */
+    private fun setAppIcon(name: String) {
         val prefix = MainActivity::class.java.name.substringBeforeLast('.')
-        fun set(alias: String, on: Boolean, onByDefault: Boolean) {
-            val name = ComponentName(this, "$prefix.$alias")
-            val now = packageManager.getComponentEnabledSetting(name)
+        val icons = listOf("ink", "paper", "sky", "amber", "mint", "signal", "chrome", "dusk")
+        val chosen = if (name in icons) name else "dusk"
+        fun alias(icon: String) = if (icon == "dusk") "LauncherDefault" else "Launcher" + icon.replaceFirstChar { it.uppercase() }
+        fun set(icon: String, on: Boolean) {
+            val component = ComponentName(this, "$prefix.${alias(icon)}")
+            val now = packageManager.getComponentEnabledSetting(component)
             val isOn = now == PackageManager.COMPONENT_ENABLED_STATE_ENABLED ||
-                (now == PackageManager.COMPONENT_ENABLED_STATE_DEFAULT && onByDefault)
+                (now == PackageManager.COMPONENT_ENABLED_STATE_DEFAULT && icon == "dusk")
             if (isOn == on) return
             packageManager.setComponentEnabledSetting(
-                name,
+                component,
                 if (on) PackageManager.COMPONENT_ENABLED_STATE_ENABLED else PackageManager.COMPONENT_ENABLED_STATE_DISABLED,
                 PackageManager.DONT_KILL_APP,
             )
         }
-        if (nothing) {
-            set("LauncherNothing", true, onByDefault = false)
-            set("LauncherDefault", false, onByDefault = true)
-        } else {
-            set("LauncherDefault", true, onByDefault = true)
-            set("LauncherNothing", false, onByDefault = false)
-        }
+        set(chosen, true)
+        for (icon in icons) if (icon != chosen) set(icon, false)
     }
 
     /** Back on the last screen sends Sidekick to the background (still

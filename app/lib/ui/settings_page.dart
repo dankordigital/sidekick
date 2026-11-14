@@ -5,7 +5,9 @@ import '../app_state.dart';
 import '../platform/android.dart';
 import '../core/bluetooth.dart';
 import '../core/models.dart';
+import '../platform/app_icon.dart';
 import '../platform/autoload.dart';
+import 'kit.dart';
 import 'permissions.dart';
 import 'widgets.dart';
 
@@ -55,342 +57,327 @@ class _SettingsPageState extends State<SettingsPage> {
     setState(() => _receiveDir = dir);
   }
 
+  Future<void> _rename() async {
+    _name.text = state.name;
+    final name = await showDialog<String>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Rename this device'),
+        content: TextField(
+          controller: _name,
+          autofocus: true,
+          maxLength: 40,
+          decoration: const InputDecoration(helperText: 'What your other devices see'),
+          onSubmitted: (v) => Navigator.pop(context, v),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
+          FilledButton(onPressed: () => Navigator.pop(context, _name.text), child: const Text('Save')),
+        ],
+      ),
+    );
+    if (name != null && name.trim().isNotEmpty) state.setName(name.trim());
+  }
+
+  /// "Files › Sidekick" rather than a long path.
+  String get _saveTo {
+    final dir = _receiveDir;
+    if (dir == null) return '…';
+    if (hostIsIOS) return 'Files › Sidekick';
+    final parts = dir.split(RegExp(r'[\\/]')).where((p) => p.isNotEmpty).toList();
+    return parts.length < 2 ? dir : '${parts[parts.length - 2]} › ${parts.last}';
+  }
+
   @override
   Widget build(BuildContext context) {
     return ListenableBuilder(
       listenable: state,
       builder: (context, _) {
         final perms = state.permissions;
-        return PageFrame(
-          title: 'Settings',
-          subtitle: state.appVersion.isEmpty ? null : 'Sidekick ${state.appVersion}',
-          // One readable column, the title lined up with it.
-          maxWidth: 760,
-          child: Center(
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 760),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  const SectionLabel('This device', icon: Icons.smartphone_rounded),
-                  _Group(
-                    children: [
-                      Padding(
-                        padding: const EdgeInsets.all(16),
-                        child: TextField(
-                          controller: _name,
-                          maxLength: 40,
-                          decoration: const InputDecoration(
-                            labelText: 'Device name',
-                            prefixIcon: Icon(Icons.badge_outlined),
-                            helperText: 'What your other devices see',
-                          ),
-                          onSubmitted: state.setName,
-                          onTapOutside: (_) => state.setName(_name.text),
-                        ),
-                      ),
-                      ListTile(
-                        leading: const IconTile(Icons.download_rounded, tone: TileTone.primary),
-                        title: const Text('Save received files to'),
-                        subtitle: Text(_receiveDir ?? '…'),
-                        trailing: IconButton.filledTonal(
-                          tooltip: 'Change',
-                          onPressed: _pickReceiveDir,
-                          icon: const Icon(Icons.edit_rounded),
-                        ),
-                      ),
-                      if (AutoLoad.supported)
-                        SwitchListTile(
-                          secondary: const IconTile(Icons.rocket_launch_outlined, tone: TileTone.primary),
-                          title: const Text('Auto-load'),
-                          subtitle: const Text('Start Sidekick in the tray when you log in'),
-                          value: state.autoLoad,
-                          onChanged: state.setAutoLoad,
-                        ),
-                      // Like LocalSend's Quick save: which devices' files come
-                      // in without Accept ("Always accept from …" makes a favourite).
-                      LayoutBuilder(
-                        builder: (context, constraints) {
-                          final why = Text(switch (state.quickSave) {
-                            QuickSave.off => 'Accept or decline each time',
-                            QuickSave.favourites =>
-                              state.alwaysAccept.isEmpty
-                                  ? 'Devices you always accept from skip the question'
-                                  : '${state.paired.where((d) => state.alwaysAccept.contains(d.id)).map((d) => d.name).join(', ')} skip the question',
-                            QuickSave.on => 'Files from paired devices come in without asking',
-                          });
-                          final choice = DropdownButton<QuickSave>(
-                            value: state.quickSave,
-                            underline: const SizedBox.shrink(),
-                            borderRadius: BorderRadius.circular(16),
-                            onChanged: (v) => state.setQuickSave(v!),
-                            items: const [
-                              DropdownMenuItem(value: QuickSave.off, child: Text('Off')),
-                              DropdownMenuItem(value: QuickSave.favourites, child: Text('Favourites')),
-                              DropdownMenuItem(value: QuickSave.on, child: Text('On')),
-                            ],
-                          );
-                          // Big text on a phone: the choice under the words,
-                          // not squeezing them into a column one word wide.
-                          final narrow = constraints.maxWidth < 360 * MediaQuery.textScalerOf(context).scale(16) / 16;
-                          return ListTile(
-                            leading: const IconTile(Icons.front_hand_outlined, tone: TileTone.tertiary),
-                            title: const Text('Quick save'),
-                            subtitle: narrow
-                                ? Column(crossAxisAlignment: CrossAxisAlignment.start, children: [why, choice])
-                                : why,
-                            trailing: narrow ? null : choice,
-                          );
-                        },
-                      ),
-                      // One switch for every sound Sidekick makes.
-                      SwitchListTile(
-                        secondary: IconTile(state.sound ? Icons.volume_up_rounded : Icons.volume_off_rounded),
-                        title: const Text('Sound'),
-                        subtitle: Text(state.sound ? 'Sound enabled' : 'Sound disabled'),
-                        value: state.sound,
-                        onChanged: state.setSound,
-                      ),
-                    ],
-                  ),
-                  if (hostIsAndroid) ...[
-                    const SectionLabel('Android permissions', icon: Icons.shield_outlined),
-                    _Group(children: _androidPermissions()),
-                    const SectionLabel('In the background', icon: Icons.bolt_rounded),
-                    _Group(
-                      children: [
-                        SwitchListTile(
-                          secondary: const IconTile(Icons.bolt_rounded, tone: TileTone.tertiary),
-                          title: const Text('Keep running in the background'),
-                          subtitle: const Text(
-                            'Even after you swipe Sidekick away, and from the moment the phone starts. '
-                            'Shows a small notification.',
-                          ),
-                          value: state.keepRunning,
-                          onChanged: state.setKeepRunning,
-                        ),
-                        if (state.keepRunning) const _AndroidBatteryRow(),
-                      ],
-                    ),
-                  ],
-                  if (hostIsMacOS) ...[
-                    const SectionLabel('Mac permissions', icon: Icons.shield_outlined),
-                    _Group(children: [const MacAccessibilityRow()]),
-                  ],
-                  if (AppState.bluetoothSupported) ...[
-                    const SectionLabel('Bluetooth', icon: Icons.bluetooth_rounded),
-                    _Group(
-                      children: [
-                        // Off by default: Sidekick uses Wi-Fi. Turning it on is
-                        // when the system asks for permission.
-                        SwitchListTile(
-                          secondary: const IconTile(Icons.bluetooth_rounded, tone: TileTone.primary),
-                          title: const Text('Bluetooth'),
-                          subtitle: Text(
-                            state.bluetoothOn
-                                ? 'Used only when a device has no Wi-Fi'
-                                : 'Off. Sidekick uses Wi-Fi only',
-                          ),
-                          value: state.bluetoothOn,
-                          onChanged: state.setBluetooth,
-                        ),
-                        if (state.bluetooth case final bt?) ...[
-                          ListTile(
-                            leading: const IconTile(Icons.bluetooth_rounded, tone: TileTone.primary),
-                            title: const Text('Connect without Wi-Fi'),
-                            subtitle: Text(switch (bt.status) {
-                              _ when bt.problem != null => bt.problem!,
-                              BluetoothStatus.on => 'On. Used when your devices aren\'t on the same Wi-Fi.',
-                              BluetoothStatus.off => 'Bluetooth is off. Turn it on to connect without Wi-Fi.',
-                              BluetoothStatus.unauthorized => "Sidekick isn't allowed to use Bluetooth.",
-                              BluetoothStatus.unsupported =>
-                                "This device's Bluetooth is too old for Sidekick (it needs 4.0 or newer).",
-                              BluetoothStatus.starting => 'Starting…',
-                            }),
-                            trailing: switch (bt.status) {
-                              _ when bt.problem != null => const Icon(Icons.error_outline, color: Colors.orange),
-                              BluetoothStatus.on => const Icon(Icons.check_circle, color: Colors.green),
-                              BluetoothStatus.unauthorized => FilledButton.tonal(
-                                onPressed: bt.requestPermission,
-                                child: const Text('Allow'),
-                              ),
-                              _ => null,
-                            },
-                          ),
-                          ExpansionTile(
-                            leading: const IconTile(Icons.troubleshoot_rounded),
-                            title: const Text('Details'),
-                            subtitle: Text(
-                              [
-                                bt.advertising ? 'Visible to other devices' : 'Not visible to other devices',
-                                if (bt.scanning) 'scanning…',
-                              ].join(' · '),
-                            ),
-                            childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-                            expandedCrossAxisAlignment: CrossAxisAlignment.start,
+        return ListView(
+          padding: const EdgeInsets.fromLTRB(20, 18, 20, 32),
+          children: [
+            Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 680),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    const KTitle('Settings'),
+                    const SizedBox(height: 18),
+                    // This device: its name, and Rename.
+                    KPanel(
+                      padding: const EdgeInsets.all(16),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
                             children: [
-                              Align(
-                                alignment: Alignment.centerLeft,
-                                child: FilledButton.tonalIcon(
-                                  onPressed: bt.scanning || !bt.canScan ? null : state.scanBluetoothNow,
-                                  icon: const Icon(Icons.bluetooth_searching),
-                                  label: Text(bt.scanning ? 'Searching…' : 'Search now'),
+                              KDeviceTile(platform: state.me.platform, color: K.deviceColor(state.id)),
+                              const SizedBox(width: 14),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      state.name,
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w500, color: K.text),
+                                    ),
+                                    const SizedBox(height: 2),
+                                    const Text(
+                                      'Visible to nearby devices',
+                                      style: TextStyle(fontSize: 12.5, color: K.ok),
+                                    ),
+                                  ],
                                 ),
                               ),
-                              const SizedBox(height: 12),
-                              Text('Seen over Bluetooth', style: Theme.of(context).textTheme.titleSmall),
-                              if (state.bluetoothSightings.isEmpty) const Text('Nothing yet'),
-                              for (final s in state.bluetoothSightings)
-                                Text('${s.info.name} (${s.info.platform.name}), ${_ago(s.seen)}'),
-                              const SizedBox(height: 12),
-                              Text('Bluetooth log', style: Theme.of(context).textTheme.titleSmall),
-                              const SizedBox(height: 4),
-                              SelectableText(
-                                bt.log.isEmpty ? 'Nothing yet' : bt.log.reversed.take(25).join('\n'),
-                                style: const TextStyle(fontFamily: 'monospace', fontSize: 12),
-                              ),
                             ],
                           ),
+                          const SizedBox(height: 14),
+                          KPill('Rename', style: KPillStyle.outline, onPressed: _rename),
                         ],
-                      ],
+                      ),
+                    ),
+                    _label('Receiving'),
+                    KPanel(
+                      padding: const EdgeInsets.symmetric(vertical: 6),
+                      child: Column(
+                        children: [
+                          const _Row(title: 'Quick save', header: true),
+                          for (final (value, label) in [
+                            (QuickSave.off, 'Everyone asks'),
+                            (QuickSave.favourites, 'Favorites'),
+                            (QuickSave.on, 'No one asks'),
+                          ])
+                            _Row(
+                              title: label,
+                              selected: state.quickSave == value,
+                              onTap: () => state.setQuickSave(value),
+                              trailing: AnimatedOpacity(
+                                opacity: state.quickSave == value ? 1 : 0,
+                                duration: const Duration(milliseconds: 200),
+                                child: const Icon(Icons.check_rounded, size: 24, color: K.text),
+                              ),
+                            ),
+                          _Row(
+                            title: 'Save to',
+                            onTap: _pickReceiveDir,
+                            trailing: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                ConstrainedBox(
+                                  constraints: const BoxConstraints(maxWidth: 180),
+                                  child: Text(
+                                    _saveTo,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: const TextStyle(fontSize: 14, color: K.muted),
+                                  ),
+                                ),
+                                const SizedBox(width: 6),
+                                const Icon(Icons.chevron_right_rounded, color: K.text),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    _label('Connections'),
+                    KPanel(
+                      padding: const EdgeInsets.symmetric(vertical: 6),
+                      child: Column(
+                        children: [
+                          if (AppState.bluetoothSupported)
+                            _Switch(
+                              'Bluetooth',
+                              state.bluetoothOn,
+                              state.setBluetooth,
+                              detail: state.bluetoothOn ? 'Used only when a device has no Wi-Fi' : null,
+                            ),
+                          if (hostIsAndroid || hostIsIOS)
+                            _Switch('Keep running in the background', state.keepRunning, state.setKeepRunning),
+                          if (hostIsAndroid && state.keepRunning) const _AndroidBatteryRow(),
+                          if (AutoLoad.supported)
+                            _Switch(
+                              'Open when you log in',
+                              state.autoLoad,
+                              state.setAutoLoad,
+                              detail: 'Straight to the ${hostIsMacOS ? 'menu bar' : 'tray'}',
+                            ),
+                          if (!hostIsComputer)
+                            _Switch('Send screenshots to computers', state.sendScreenshots, state.setSendScreenshots),
+                          if (hostIsAndroid)
+                            _Switch(
+                              'Show notifications on computers',
+                              state.relayNotifications,
+                              state.setRelayNotifications,
+                            ),
+                          if (state.bluetoothOn) ?_bluetoothDetails(),
+                        ],
+                      ),
+                    ),
+                    _label('App icon'),
+                    KPanel(
+                      padding: const EdgeInsets.all(14),
+                      child: Wrap(
+                        spacing: 10,
+                        runSpacing: 12,
+                        children: [
+                          for (final icon in AppIcon.choices)
+                            _IconChoice(
+                              name: icon,
+                              selected: state.appIcon == icon,
+                              onTap: () => state.setAppIcon(icon),
+                            ),
+                        ],
+                      ),
+                    ),
+                    _label('Sound'),
+                    KPanel(
+                      padding: const EdgeInsets.symmetric(vertical: 6),
+                      child: _Switch('Play sounds', state.sound, state.setSound),
+                    ),
+                    if (hostIsAndroid || hostIsMacOS) ...[
+                      _label('Permissions'),
+                      KPanel(
+                        padding: const EdgeInsets.symmetric(vertical: 6),
+                        child: Column(children: hostIsAndroid ? _androidPermissions() : [const MacAccessibilityRow()]),
+                      ),
+                    ],
+                    _label('Paired devices can'),
+                    KPanel(
+                      padding: const EdgeInsets.symmetric(vertical: 6),
+                      child: Column(
+                        children: [
+                          _Switch(
+                            'Browse and download files',
+                            perms.files,
+                            (v) => state.setPermissions(perms.copyWith(files: v)),
+                          ),
+                          // iOS never lets another device control an iPhone.
+                          if (!hostIsIOS)
+                            _Switch(
+                              'Control mouse and keyboard',
+                              perms.input,
+                              (v) => state.setPermissions(perms.copyWith(input: v)),
+                            ),
+                        ],
+                      ),
+                    ),
+                    if (state.paired.isNotEmpty) ...[
+                      _label('Security codes'),
+                      KPanel(
+                        padding: const EdgeInsets.symmetric(vertical: 6),
+                        child: Column(
+                          children: [
+                            for (final d in state.paired)
+                              _Row(
+                                title: d.name,
+                                onTap: () => _showSecurityCode(d),
+                                trailing: const Icon(Icons.chevron_right_rounded, color: K.text),
+                              ),
+                          ],
+                        ),
+                      ),
+                    ],
+                    _label('Privacy'),
+                    KPanel(
+                      padding: const EdgeInsets.all(18),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const KSub('End-to-end encrypted.\nNo account, cloud or tracking.'),
+                          const SizedBox(height: 10),
+                          KSub(
+                            state.secrets.secure
+                                ? 'Pairing keys stay on this device, in ${switch (hostOS) {
+                                    'ios' => 'the Keychain',
+                                    'macos' => 'a file only your Mac account can read',
+                                    'android' => 'the Android Keystore',
+                                    'windows' => 'Windows-protected storage',
+                                    _ => 'the system keyring',
+                                  }}.'
+                                : "Pairing keys are kept in Sidekick's settings: this device's secure storage "
+                                      "didn't work.",
+                            size: 12.5,
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 18),
+                    Center(
+                      child: Text(
+                        [
+                          state.appVersion.isEmpty ? 'Sidekick' : 'Sidekick ${state.appVersion}',
+                          'ID ${state.id.substring(0, state.id.length.clamp(0, 8))}',
+                          'port ${state.me.port}',
+                        ].join(' · '),
+                        style: const TextStyle(fontSize: 12, color: K.faint),
+                      ),
                     ),
                   ],
-                  if (hostIsIOS) ...[
-                    const SectionLabel('iPhone', icon: Icons.phone_iphone_rounded),
-                    _Group(
-                      children: [
-                        SwitchListTile(
-                          secondary: const IconTile(Icons.bolt_rounded, tone: TileTone.tertiary),
-                          title: const Text('Keep running in the background'),
-                          subtitle: const Text(
-                            'So your computer can reach this iPhone while you use other apps. '
-                            'Uses a little more battery.',
-                          ),
-                          value: state.keepRunning,
-                          onChanged: state.setKeepRunning,
-                        ),
-                      ],
-                    ),
-                  ],
-                  // Phones pass these on to paired computers by themselves.
-                  if (!hostIsComputer) ...[
-                    const SectionLabel('On your computers', icon: Icons.computer_rounded),
-                    _Group(
-                      children: [
-                        if (hostIsAndroid)
-                          SwitchListTile(
-                            secondary: const IconTile(Icons.notifications_outlined),
-                            title: const Text('Show notifications on computers'),
-                            subtitle: const Text('Your phone\'s notifications appear on your Mac or PC'),
-                            value: state.relayNotifications,
-                            onChanged: state.setRelayNotifications,
-                          ),
-                        SwitchListTile(
-                          secondary: const IconTile(Icons.screenshot_outlined),
-                          title: const Text('Send screenshots to computers'),
-                          subtitle: Text(
-                            hostIsIOS
-                                ? 'New screenshots go to your Mac or PC while Sidekick runs'
-                                : 'New screenshots go to your Mac or PC',
-                          ),
-                          value: state.sendScreenshots,
-                          onChanged: state.setSendScreenshots,
-                        ),
-                      ],
-                    ),
-                  ],
-                  const SectionLabel('What paired devices can do here', icon: Icons.tune_rounded),
-                  _Group(
-                    children: [
-                      SwitchListTile(
-                        secondary: const IconTile(Icons.folder_open_rounded, tone: TileTone.primary),
-                        title: const Text('Browse and download files'),
-                        subtitle: Text(hostIsIOS ? "Sidekick's folder in the Files app" : 'Any folder on this device'),
-                        value: perms.files,
-                        onChanged: (v) => state.setPermissions(perms.copyWith(files: v)),
-                      ),
-                      // iOS never lets another device control an iPhone, so the
-                      // switch only exists elsewhere.
-                      if (!hostIsIOS) ...[
-                        SwitchListTile(
-                          secondary: const IconTile(Icons.mouse_rounded),
-                          title: const Text('Control mouse and keyboard'),
-                          subtitle: const Text('Use this device remotely'),
-                          value: perms.input,
-                          onChanged: (v) => state.setPermissions(perms.copyWith(input: v)),
-                        ),
-                      ],
-                    ],
-                  ),
-                  const SectionLabel('Paired devices', icon: Icons.link_rounded),
-                  _Group(
-                    children: [
-                      if (state.paired.isEmpty)
-                        const ListTile(
-                          leading: IconTile(Icons.link_off_rounded),
-                          title: Text('No paired devices yet'),
-                          subtitle: Text('Pair one on the Devices tab: open Sidekick on it, then tap Pair.'),
-                        ),
-                      for (final d in state.paired)
-                        ListTile(
-                          leading: IconTile(platformIcon(d.platform), tone: TileTone.primary),
-                          title: Text(d.name),
-                          subtitle: const Text('Tap for its security code'),
-                          onTap: () => _showSecurityCode(d),
-                          trailing: IconButton(
-                            tooltip: 'Unpair',
-                            onPressed: () => state.unpair(d.id),
-                            icon: const Icon(Icons.link_off_rounded),
-                          ),
-                        ),
-                    ],
-                  ),
-                  const SectionLabel('Security', icon: Icons.lock_outline_rounded),
-                  _Group(
-                    children: [
-                      const ListTile(
-                        leading: IconTile(Icons.lock_rounded, tone: TileTone.primary),
-                        title: Text('Everything is encrypted'),
-                        subtitle: Text('Only your paired devices can read what you send, over Wi-Fi or Bluetooth'),
-                      ),
-                      ListTile(
-                        leading: IconTile(
-                          state.secrets.secure ? Icons.key_rounded : Icons.key_off_rounded,
-                          tone: state.secrets.secure ? TileTone.secondary : TileTone.error,
-                        ),
-                        title: Text(
-                          state.secrets.secure
-                              ? 'Keys are kept in ${switch (hostOS) {
-                                  'ios' => 'the Keychain',
-                                  'macos' => 'a file only your Mac account can read',
-                                  'android' => 'the Android Keystore',
-                                  'windows' => 'Windows-protected storage',
-                                  _ => 'the system keyring',
-                                }}'
-                              : "Pairing keys are kept in Sidekick's settings: this device's secure storage didn't work",
-                        ),
-                        subtitle: const Text('They never leave this device'),
-                      ),
-                    ],
-                  ),
-                  const SectionLabel('About', icon: Icons.info_outline_rounded),
-                  _Group(
-                    children: [
-                      ListTile(
-                        leading: const IconTile(Icons.info_outline_rounded),
-                        title: Text(state.appVersion.isEmpty ? 'Sidekick' : 'Sidekick ${state.appVersion}'),
-                        subtitle: Text(
-                          'Device ID ${state.id.substring(0, state.id.length.clamp(0, 8))} · port ${state.me.port}',
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
+                ),
               ),
             ),
-          ),
+          ],
         );
       },
+    );
+  }
+
+  Widget _label(String text) => Padding(padding: const EdgeInsets.fromLTRB(0, 22, 0, 10), child: KLabel(text));
+
+  /// Bluetooth's state, a search button and its log, folded away.
+  Widget? _bluetoothDetails() {
+    final bt = state.bluetooth;
+    if (bt == null) return null;
+    return Theme(
+      data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+      child: ExpansionTile(
+        title: const Text('Bluetooth details', style: TextStyle(fontSize: 15.5, color: K.text)),
+        subtitle: Text(switch (bt.status) {
+          _ when bt.problem != null => bt.problem!,
+          BluetoothStatus.on => bt.advertising ? 'On · visible to other devices' : 'On',
+          BluetoothStatus.off => 'Bluetooth is off on this device',
+          BluetoothStatus.unauthorized => "Sidekick isn't allowed to use Bluetooth",
+          BluetoothStatus.unsupported => "This device's Bluetooth is too old (needs 4.0 or newer)",
+          BluetoothStatus.starting => 'Starting…',
+        }, style: const TextStyle(fontSize: 12.5, color: K.muted)),
+        tilePadding: const EdgeInsets.symmetric(horizontal: 16),
+        childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+        expandedCrossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              if (bt.status == BluetoothStatus.unauthorized)
+                KPill('Allow', small: true, onPressed: bt.requestPermission),
+              KPill(
+                bt.scanning ? 'Searching…' : 'Search now',
+                small: true,
+                style: KPillStyle.dark,
+                onPressed: bt.scanning || !bt.canScan ? null : state.scanBluetoothNow,
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          const KLabel('Seen over Bluetooth'),
+          const SizedBox(height: 4),
+          if (state.bluetoothSightings.isEmpty) const KSub('Nothing yet', size: 13),
+          for (final s in state.bluetoothSightings)
+            KSub('${s.info.name} (${s.info.platform.name}), ${_ago(s.seen)}', size: 13),
+          const SizedBox(height: 12),
+          const KLabel('Bluetooth log'),
+          const SizedBox(height: 4),
+          SelectableText(
+            bt.log.isEmpty ? 'Nothing yet' : bt.log.reversed.take(25).join('\n'),
+            style: const TextStyle(fontFamily: 'monospace', fontSize: 12, color: K.muted),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -479,16 +466,115 @@ class _AndroidBatteryRowState extends State<_AndroidBatteryRow> {
   }
 }
 
-class _Group extends StatelessWidget {
-  const _Group({required this.children});
-  final List<Widget> children;
+/// A settings row: the whole row is the target, at least 52 px tall.
+class _Row extends StatelessWidget {
+  const _Row({required this.title, this.detail, this.trailing, this.onTap, this.selected = false, this.header = false});
+  final String title;
+  final String? detail;
+  final Widget? trailing;
+  final VoidCallback? onTap;
+  final bool selected;
+
+  /// A heading inside the panel ("Quick save").
+  final bool header;
 
   @override
-  Widget build(BuildContext context) => Entrance(
-    child: Card.filled(
-      clipBehavior: Clip.antiAlias,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-      child: Column(children: children),
+  Widget build(BuildContext context) => Semantics(
+    button: onTap != null,
+    selected: selected,
+    child: InkWell(
+      onTap: onTap,
+      child: ConstrainedBox(
+        constraints: BoxConstraints(minHeight: header ? 44 : 56),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          child: Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(title, style: TextStyle(fontSize: 15.5, color: K.text)),
+                    if (detail != null) ...[
+                      const SizedBox(height: 2),
+                      Text(detail!, style: const TextStyle(fontSize: 12.5, color: K.muted)),
+                    ],
+                  ],
+                ),
+              ),
+              if (trailing != null) ...[const SizedBox(width: 12), trailing!],
+            ],
+          ),
+        ),
+      ),
+    ),
+  );
+}
+
+/// One app icon to choose: the icon with its name, a white ring when it's
+/// the one in use.
+class _IconChoice extends StatelessWidget {
+  const _IconChoice({required this.name, required this.selected, required this.onTap});
+  final String name;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final reduce = MediaQuery.disableAnimationsOf(context);
+    return Semantics(
+      button: true,
+      selected: selected,
+      label: '${AppIcon.label(name)} icon',
+      excludeSemantics: true,
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: onTap,
+        child: SizedBox(
+          width: 66,
+          child: Column(
+            children: [
+              AnimatedContainer(
+                duration: reduce ? Duration.zero : const Duration(milliseconds: 250),
+                curve: const Cubic(0.34, 1.4, 0.64, 1),
+                padding: const EdgeInsets.all(3),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(18),
+                  border: Border.all(color: selected ? K.white : Colors.transparent, width: 2),
+                ),
+                child: AnimatedScale(
+                  scale: selected ? 1 : 0.92,
+                  duration: reduce ? Duration.zero : const Duration(milliseconds: 300),
+                  curve: const Cubic(0.34, 1.4, 0.64, 1),
+                  child: Image.asset(AppIcon.asset(name), width: 52, height: 52),
+                ),
+              ),
+              const SizedBox(height: 6),
+              Text(AppIcon.label(name), style: TextStyle(fontSize: 12, color: selected ? K.text : K.muted)),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// A row with a switch; tapping anywhere on it flips the switch.
+class _Switch extends StatelessWidget {
+  const _Switch(this.title, this.value, this.onChanged, {this.detail});
+  final String title;
+  final bool value;
+  final ValueChanged<bool> onChanged;
+  final String? detail;
+
+  @override
+  Widget build(BuildContext context) => MergeSemantics(
+    child: _Row(
+      title: title,
+      detail: detail,
+      onTap: () => onChanged(!value),
+      trailing: Switch(value: value, onChanged: onChanged),
     ),
   );
 }

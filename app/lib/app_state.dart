@@ -263,8 +263,9 @@ class AppState extends ChangeNotifier {
   /// Made themes are gone with 4.0 (kept false for the code that still asks).
   bool customLook = false;
 
-  /// Whether the app's icon is the Nothing one.
-  bool get nothingIcon => nothingLook;
+  /// Settings → App icon: one of [AppIcon.choices] (pref `appIcon`; Dusk,
+  /// the app's own icon, by default).
+  String appIcon = AppIcon.standard;
 
   /// Liquid Glass is on.
   bool get _glassOn => liquidGlass;
@@ -779,8 +780,9 @@ class AppState extends ChangeNotifier {
     await _checkWifi();
     _presenceTimer = Timer.periodic(const Duration(seconds: 10), (_) => _checkPresence());
     unawaited(_checkPresence());
-    // Settings → Theme → Nothing changes the app's icon (and puts it back).
-    unawaited(AppIcon.apply(nothing: nothingIcon));
+    // Settings → App icon (asks the system only when it differs).
+    appIcon = AppIcon.choices.contains(_prefs.getString('appIcon')) ? _prefs.getString('appIcon')! : AppIcon.standard;
+    unawaited(AppIcon.apply(appIcon));
     notifyListeners();
   }
 
@@ -2369,6 +2371,14 @@ class AppState extends ChangeNotifier {
     }
   }
 
+  void setAppIcon(String value) {
+    if (!AppIcon.choices.contains(value) || value == appIcon) return;
+    appIcon = value;
+    _prefs.setString('appIcon', value);
+    unawaited(AppIcon.apply(value));
+    notifyListeners();
+  }
+
   void setPureBlack(bool value) {
     pureBlack = value;
     _prefs.setBool('pureBlack', value);
@@ -2380,7 +2390,6 @@ class AppState extends ChangeNotifier {
     if (value) nothingLook = false;
     customLook = false;
     _prefs.setString('look', value ? 'glass' : 'material');
-    unawaited(AppIcon.apply(nothing: nothingIcon));
     if (value) _watchGlass();
     notifyListeners();
   }
@@ -2390,8 +2399,6 @@ class AppState extends ChangeNotifier {
     if (value) liquidGlass = false;
     customLook = false;
     _prefs.setString('look', value ? 'nothing' : 'material');
-    // The app's icon follows: "sk." in dots, or the usual one.
-    unawaited(AppIcon.apply(nothing: nothingIcon));
     notifyListeners();
   }
 

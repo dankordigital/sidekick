@@ -139,10 +139,16 @@ ThemeData sidekickTheme(ColorScheme scheme) {
       errorBorder: field(scheme.error),
       focusedErrorBorder: field(scheme.error, 2),
     ),
+    // The design's switches: green when on, a white thumb, no outline.
     switchTheme: SwitchThemeData(
-      thumbIcon: WidgetStateProperty.resolveWith(
-        (states) => states.contains(WidgetState.selected) ? const Icon(Icons.check) : null,
+      thumbColor: WidgetStateProperty.resolveWith(
+        (states) => states.contains(WidgetState.selected) ? Colors.white : const Color(0xFFD0D0D0),
       ),
+      trackColor: WidgetStateProperty.resolveWith(
+        (states) => states.contains(WidgetState.selected) ? sidekickOk : const Color(0xFF3A3A3A),
+      ),
+      trackOutlineColor: const WidgetStatePropertyAll(Colors.transparent),
+      thumbIcon: const WidgetStatePropertyAll(null),
     ),
     dialogTheme: DialogThemeData(
       backgroundColor: scheme.surfaceContainerLow,

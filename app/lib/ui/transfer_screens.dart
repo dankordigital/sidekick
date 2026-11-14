@@ -108,6 +108,7 @@ class _SendingScreenState extends State<SendingScreen> {
     final how = _state?.connectionLabel(d.id);
     final hiding = send.phase == SendPhase.sending && !send.reconnecting;
     return Scaffold(
+      backgroundColor: K.page,
       body: SafeArea(
         child: Center(
           child: ConstrainedBox(
@@ -245,15 +246,24 @@ class _SendingScreenState extends State<SendingScreen> {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text(
-            big,
-            style: TextStyle(
-              fontSize: big.length > 4 ? 26 : 38,
-              fontWeight: FontWeight.w700,
-              color: K.text,
-              fontFeatures: const [FontFeature.tabularFigures()],
+          if (switch (big) {
+                '✓' => Icons.check_rounded,
+                '✕' => Icons.close_rounded,
+                '!' => Icons.priority_high_rounded,
+                _ => null,
+              }
+              case final icon?)
+            Icon(icon, size: 52, color: _ringColor)
+          else
+            Text(
+              big,
+              style: TextStyle(
+                fontSize: big.length > 4 ? 26 : 38,
+                fontWeight: FontWeight.w700,
+                color: K.text,
+                fontFeatures: const [FontFeature.tabularFigures()],
+              ),
             ),
-          ),
           const SizedBox(height: 4),
           Text(
             small,

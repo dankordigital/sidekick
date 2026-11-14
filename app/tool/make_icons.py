@@ -297,113 +297,145 @@ def tray() -> None:
         im.save(folder / "ic_stat_sidekick.png", optimize=True)
 
 
-# ---------------------------------------------------------------- Nothing look
-# Settings → Theme → Nothing switches the app icon (iPhone: an alternate
-# icon; Android: a launcher alias; Mac: the Dock icon while running;
-# Windows: the window and tray icons). The icon is "sk." in dots, white on
-# black, the full stop in Nothing red (the same drawing as DotLogo in
-# lib/ui/nothing.dart).
+# ------------------------------------------------------- 4.0: the "sk" icons
 
-SK_DOTS = ["......X...", "......X...", ".XXXX.X..X", "X.....X.X.", ".XXX..XX..", "....X.X.X.", "XXXX..X..X"]
-NOTHING_RED = (215, 25, 33)
+# The eight icons people choose from (Settings → App icon), from the owner's
+# design/logo-sk/: the same letters on new backgrounds. Dusk is the default
+# (the app's own icon everywhere); the others are alternates.
+SK_ICONS = ["ink", "paper", "sky", "amber", "mint", "signal", "chrome", "dusk"]
+SK_DEFAULT = "dusk"
 
 
-def dot_logo(canvas: Image.Image, box: tuple, *, color=(255, 255, 255), red=True, frac=0.64) -> None:
-    """Draws "sk." (12 dots wide, 7 high) centred in `box` (x, y, w, h)."""
-    x, y, w, h = box
-    cols = 12 if red else 10
-    step = min(w * frac / cols, h * frac / 7)
-    left = x + (w - step * cols) / 2
-    top = y + (h - step * 7) / 2
-    d = ImageDraw.Draw(canvas)
-    for r, row in enumerate(SK_DOTS):
-        for c, ch in enumerate(row):
-            if ch == "X":
-                cx, cy, rad = left + (c + 0.5) * step, top + (r + 0.5) * step, step * 0.44
-                d.ellipse((cx - rad, cy - rad, cx + rad, cy + rad), fill=color + (255,))
-    if red:
-        cx, cy, rad = left + 11.5 * step, top + 6.5 * step, step * 0.5
-        d.ellipse((cx - rad, cy - rad, cx + rad, cy + rad), fill=NOTHING_RED + (255,))
+def sk_full_bleed(name: str) -> np.ndarray:
+    """The icon's square, corners filled in from the edge (1024², RGB): the
+    systems round it themselves."""
+    src = ROOT / "design/logo-sk" / f"{SK_ICONS.index(name) + 1}-{name}.png"
+    a = np.asarray(Image.open(src).convert("RGBA"), float)
+    ys, xs = np.nonzero(a[:, :, 3] > 250)
+    a = a[ys.min() : ys.max() + 1, xs.min() : xs.max() + 1]
+    rgb, alpha = a[:, :, :3].copy(), a[:, :, 3]
+    last = None
+    for y in range(rgb.shape[0]):
+        solid = np.nonzero(alpha[y] > 250)[0]
+        if len(solid) == 0:
+            if last is not None:
+                rgb[y] = rgb[last]
+            continue
+        rgb[y, : solid[0]] = rgb[y, solid[0]]
+        rgb[y, solid[-1] + 1 :] = rgb[y, solid[-1]]
+        last = y
+    im = Image.fromarray(rgb.astype(np.uint8), "RGB").resize((1024, 1024), Image.LANCZOS)
+    return np.asarray(im)
 
 
-def dot_tile(size: int, *, radius_frac: float = 0.0, inset_frac: float = 0.0, full_bleed: bool = False) -> Image.Image:
-    """White "sk." on a black tile, drawn at 4x and scaled down smoothly."""
-    s = size * 4
-    canvas = Image.new("RGBA", (s, s), (0, 0, 0, 0))
+def sk_tile(name: str, size: int, *, radius_frac: float = 0.0, inset_frac: float = 0.0) -> Image.Image:
+    """Rounded (Mac, Windows, legacy Android) or full-bleed (radius 0)."""
+    s = 1024
+    full = Image.fromarray(sk_full_bleed(name), "RGB").convert("RGBA")
+    if radius_frac == 0 and inset_frac == 0:
+        return full.resize((size, size), Image.LANCZOS)
     inset = round(s * inset_frac)
-    box = (inset, inset, s - 2 * inset, s - 2 * inset)
-    d = ImageDraw.Draw(canvas)
-    if full_bleed:
-        d.rectangle((0, 0, s, s), fill=(0, 0, 0, 255))
-    else:
-        r = round(box[2] * radius_frac)
-        d.rounded_rectangle((box[0], box[1], box[0] + box[2] - 1, box[1] + box[3] - 1), r, fill=(0, 0, 0, 255))
-    dot_logo(canvas, box)
-    return canvas.resize((size, size), Image.LANCZOS)
-
-
-def nothing() -> None:
-    # iPhone: the alternate icon (ASSETCATALOG_COMPILER_ALTERNATE_APPICON_NAMES).
-    folder = APP / "ios/Runner/Assets.xcassets/AppIcon-Nothing.appiconset"
-    folder.mkdir(parents=True, exist_ok=True)
-    dot_tile(1024, full_bleed=True).convert("RGB").save(folder / "icon-1024.png", optimize=True)
-    (folder / "Contents.json").write_text(
-        json.dumps(
-            {
-                "images": [{"filename": "icon-1024.png", "idiom": "universal", "platform": "ios", "size": "1024x1024"}],
-                "info": {"author": "xcode", "version": 1},
-            },
-            indent=2,
-        )
-        + "\n"
+    w = s - 2 * inset
+    big = s * 2
+    shape = Image.new("L", (big, big), 0)
+    ImageDraw.Draw(shape).rounded_rectangle(
+        (inset * 2, inset * 2, (inset + w) * 2 - 1, (inset + w) * 2 - 1), radius=round(w * 2 * radius_frac), fill=255
     )
-    # Android: the launcher alias's icons (legacy and adaptive).
+    shape = shape.resize((s, s), Image.LANCZOS)
+    out = Image.new("RGBA", (s, s), (0, 0, 0, 0))
+    out.paste(full.resize((w, w), Image.LANCZOS), (inset, inset))
+    out.putalpha(ImageChops.multiply(out.getchannel("A"), shape))
+    return out.resize((size, size), Image.LANCZOS)
+
+
+def sk_icons() -> None:
     res = APP / "android/app/src/main/res"
-    for name, k in {"mdpi": 1, "hdpi": 1.5, "xhdpi": 2, "xxhdpi": 3, "xxxhdpi": 4}.items():
-        out = res / f"mipmap-{name}"
-        out.mkdir(parents=True, exist_ok=True)
-        dot_tile(round(48 * k), radius_frac=0.22).save(out / "ic_launcher_nothing.png", optimize=True)
-        px = round(108 * k)
-        fg = Image.new("RGBA", (px * 4, px * 4), (0, 0, 0, 0))
-        dot_logo(fg, (0, 0, px * 4, px * 4), frac=0.64 * 66 / 108)
-        fg.resize((px, px), Image.LANCZOS).save(out / "ic_launcher_nothing_foreground.png", optimize=True)
-    (res / "mipmap-anydpi-v26/ic_launcher_nothing.xml").write_text(
-        '<?xml version="1.0" encoding="utf-8"?>\n'
-        '<adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">\n'
-        '    <background android:drawable="@color/ic_launcher_nothing_background" />\n'
-        '    <foreground android:drawable="@mipmap/ic_launcher_nothing_foreground" />\n'
-        '    <monochrome android:drawable="@mipmap/ic_launcher_nothing_foreground" />\n'
-        "</adaptive-icon>\n"
-    )
-    # Mac (the Dock, while running) and Windows (window and taskbar), as
-    # app assets; plus the default Windows icon, to switch back.
     icons = APP / "assets/icons"
-    icons.mkdir(parents=True, exist_ok=True)
-    dot_tile(512, radius_frac=0.225, inset_frac=0.1).save(icons / "nothing_dock.png", optimize=True)
-    write_ico(icons / "nothing.ico", [dot_tile(s, radius_frac=0.2) for s in (16, 20, 24, 32, 40, 48, 64, 128, 256)])
-    shutil.copyfile(APP / "windows/runner/resources/app_icon.ico", icons / "default.ico")
-    # The tray (Windows) and the menu bar (Mac: a black template, no red).
-    tray = APP / "assets/tray"
-    write_ico(tray / "tray_nothing.ico", [dot_tile(s, radius_frac=0.2) for s in (16, 20, 24, 32, 40, 48)])
-    template = Image.new("RGBA", (176, 176), (0, 0, 0, 0))
-    dot_logo(template, (0, 0, 176, 176), color=(0, 0, 0), red=False, frac=0.95)
-    template.resize((44, 44), Image.LANCZOS).save(tray / "tray_mac_nothing.png", optimize=True)
+    shutil.rmtree(icons, ignore_errors=True)
+    icons.mkdir(parents=True)
+    # Old looks' icons, gone with them.
+    shutil.rmtree(APP / "ios/Runner/Assets.xcassets/AppIcon-Nothing.appiconset", ignore_errors=True)
+    for f in res.glob("mipmap-*/ic_launcher_nothing*"):
+        f.unlink()
+    for f in res.glob("mipmap-*/ic_launcher_foreground.png"):
+        f.unlink()
+    (APP / "assets/tray/tray_nothing.ico").unlink(missing_ok=True)
+    (APP / "assets/tray/tray_mac_nothing.png").unlink(missing_ok=True)
+    (res / "values/colors.xml").unlink(missing_ok=True)
+
+    for name in SK_ICONS:
+        default = name == SK_DEFAULT
+        suffix = "" if default else f"_{name}"
+        # In-app choices (Settings → App icon).
+        sk_tile(name, 168, radius_frac=0.225).save(icons / f"choice-{name}.png", optimize=True)
+        # Mac: the Dock while running; Windows: the window and taskbar.
+        sk_tile(name, 512, radius_frac=0.225, inset_frac=0.1).save(icons / f"dock-{name}.png", optimize=True)
+        write_ico(icons / f"{name}.ico", [sk_tile(name, px, radius_frac=0.2) for px in (16, 20, 24, 32, 40, 48, 64, 128, 256)])
+        # Android: legacy (rounded) and adaptive (the art as the background,
+        # the tile in the 72 dp middle and its edges carried out to 108 dp).
+        for density, k in {"mdpi": 1, "hdpi": 1.5, "xhdpi": 2, "xxhdpi": 3, "xxxhdpi": 4}.items():
+            out = res / f"mipmap-{density}"
+            out.mkdir(parents=True, exist_ok=True)
+            sk_tile(name, round(48 * k), radius_frac=0.22).save(out / f"ic_launcher{suffix}.png", optimize=True)
+            px = round(108 * k)
+            inner = round(px * 72 / 108)
+            tile_px = np.asarray(Image.fromarray(sk_full_bleed(name), "RGB").resize((inner, inner), Image.LANCZOS))
+            pad = (px - inner) // 2
+            bg = np.pad(tile_px, ((pad, px - inner - pad), (pad, px - inner - pad), (0, 0)), mode="edge")
+            Image.fromarray(bg, "RGB").save(out / f"ic_launcher{suffix}_background.png", optimize=True)
+        (res / "mipmap-anydpi-v26").mkdir(exist_ok=True)
+        (res / f"mipmap-anydpi-v26/ic_launcher{suffix}.xml").write_text(
+            '<?xml version="1.0" encoding="utf-8"?>\n'
+            '<adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">\n'
+            f'    <background android:drawable="@mipmap/ic_launcher{suffix}_background" />\n'
+            '    <foreground android:drawable="@android:color/transparent" />\n'
+            "</adaptive-icon>\n"
+        )
+        # iPhone: the alternates as their own icon sets.
+        if not default:
+            folder = APP / f"ios/Runner/Assets.xcassets/AppIcon-{name.capitalize()}.appiconset"
+            shutil.rmtree(folder, ignore_errors=True)
+            folder.mkdir(parents=True)
+            sk_tile(name, 1024).convert("RGB").save(folder / "icon-1024.png", optimize=True)
+            (folder / "Contents.json").write_text(
+                json.dumps(
+                    {
+                        "images": [
+                            {"filename": "icon-1024.png", "idiom": "universal", "platform": "ios", "size": "1024x1024"}
+                        ],
+                        "info": {"author": "xcode", "version": 1},
+                    },
+                    indent=2,
+                )
+                + "\n"
+            )
+    # The default, as the apps' own icons.
+    shutil.copyfile(icons / f"{SK_DEFAULT}.ico", APP / "windows/runner/resources/app_icon.ico")
+    appiconset(
+        APP / "ios/Runner/Assets.xcassets/AppIcon.appiconset",
+        lambda px: sk_tile(SK_DEFAULT, px).convert("RGB"),
+    )
+    appiconset(
+        APP / "macos/Runner/Assets.xcassets/AppIcon.appiconset",
+        lambda px: sk_tile(SK_DEFAULT, px, radius_frac=0.225, inset_frac=0.1),
+    )
+    # macOS / iOS 26: the Icon Composer file, the art as one plain layer
+    # (the system rounds it).
+    spec = {
+        "groups": [{"layers": [{"glass": False, "image-name": "sk.png", "name": "sk"}], "shadow": {"kind": "none", "opacity": 0.5}}],
+        "supported-platforms": {"circles": ["watchOS"], "squares": "shared"},
+    }
+    for platform in ("ios", "macos"):
+        folder = APP / platform / "Runner/AppIcon.icon"
+        shutil.rmtree(folder, ignore_errors=True)
+        (folder / "Assets").mkdir(parents=True)
+        sk_tile(SK_DEFAULT, 1024).save(folder / "Assets/sk.png", optimize=True)
+        (folder / "icon.json").write_text(json.dumps(spec, indent=2) + "\n")
 
 
 if __name__ == "__main__":
-    import sys
-
-    if sys.argv[1:] == ["nothing"]:  # only the Nothing look's icons
-        nothing()
-        print("Nothing icons written.")
-        raise SystemExit
     tray()
-    windows()
-    android()
-    macos()
-    ios()
-    icon_composer()
     website()
     in_app()
-    nothing()  # after windows(): it copies the default .ico
+    sk_icons()
     print("Icons written.")

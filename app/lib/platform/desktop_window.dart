@@ -51,22 +51,15 @@ class DesktopWindow with WindowListener, TrayListener {
   /// button itself and shows the pop-up without taking the focus.
   static const _mac = MethodChannel('sidekick/macos');
 
-  /// Settings → Theme → Nothing: "sk." in dots for the tray / menu-bar icon,
-  /// the window (Windows) and the Dock (Mac, while running).
-  bool _nothingIcons = false;
+  String get _trayIcon => Host.isWindows ? 'assets/tray/tray.ico' : 'assets/tray/tray_mac.png';
 
-  String get _trayIcon => Host.isWindows
-      ? (_nothingIcons ? 'assets/tray/tray_nothing.ico' : 'assets/tray/tray.ico')
-      : (_nothingIcons ? 'assets/tray/tray_mac_nothing.png' : 'assets/tray/tray_mac.png');
-
-  Future<void> setNothingIcons(bool on) async {
-    _nothingIcons = on;
-    await trayManager.setIcon(_trayIcon, isTemplate: Host.isMacOS);
+  /// Settings → App icon: the window and taskbar (Windows), the Dock while
+  /// running (Mac; null puts the app's own back). The tray stays as it is.
+  Future<void> setAppIcon(String name, {required bool standard}) async {
     if (Host.isWindows) {
-      // The .exe's own icon can't change; the window's and taskbar's can.
-      await windowManager.setIcon(on ? 'assets/icons/nothing.ico' : 'assets/icons/default.ico');
+      await windowManager.setIcon('assets/icons/$name.ico');
     } else if (Host.isMacOS) {
-      final png = on ? (await rootBundle.load('assets/icons/nothing_dock.png')).buffer.asUint8List() : null;
+      final png = standard ? null : (await rootBundle.load('assets/icons/dock-$name.png')).buffer.asUint8List();
       await _mac.invokeMethod('setDockIcon', {'png': png});
     }
   }
