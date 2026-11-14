@@ -17,9 +17,6 @@ import 'devices_page.dart';
 import 'direct_wifi.dart';
 import 'ping.dart';
 import 'files_page.dart';
-import 'glass.dart';
-import 'nothing.dart';
-import 'nothing_screens.dart';
 import 'notices.dart';
 import 'qr_pairing.dart';
 import 'remote_page.dart';
@@ -116,11 +113,7 @@ class _ShellState extends State<Shell> {
     if (DesktopWindow.supported && DesktopWindow.instance.show(offer)) return;
     // Phones in the background: a notification too; the card waits in the app.
     OfferNotifications.show(offer);
-    if (isNothing(context)) {
-      showNothingIncoming(context, state, offer);
-    } else {
-      showIncomingOffer(context, offer, state: state, sounds: state.sound);
-    }
+    showIncomingOffer(context, offer, state: state, sounds: state.sound);
   }
 
   void _showSend(OutgoingSend send) {
@@ -175,13 +168,9 @@ class _ShellState extends State<Shell> {
 
   @override
   Widget build(BuildContext context) {
-    final nothing = isNothing(context);
     final pages = [
-      // The Nothing look has its own Devices home (nothing_screens.dart).
-      nothing ? NothingDevicesPage(state: state, onOpen: _go) : DevicesPage(state: state, onOpen: _go),
-      // The Nothing look's second tab is Send (LocalSend-style); Browse
-      // files opens from it full screen.
-      nothing ? NothingSendPage(state: state) : FilesPage(state: state, onGoToDevices: () => _go(0)),
+      DevicesPage(state: state, onOpen: _go),
+      FilesPage(state: state, onGoToDevices: () => _go(0)),
       RemotePage(state: state, onGoToDevices: () => _go(0)),
       SettingsPage(state: state),
     ];
@@ -227,72 +216,27 @@ class _ShellState extends State<Shell> {
       ),
     );
 
-    final glass = isGlass(context);
-    // The Nothing look: dotted tab icons with their names on phones; on
-    // computers a side bar, and Receive at the right of Devices and Send.
-    if (nothing) {
-      final receive = wide && _index <= 1 && MediaQuery.sizeOf(context).width >= 1100;
-      return Scaffold(
-        body: wide
-            ? Row(
-                children: [
-                  NothingSideBar(index: _index, onTap: _go, state: state),
-                  Expanded(child: body),
-                  if (receive) NothingReceivePanel(state: state),
-                ],
-              )
-            : SafeArea(bottom: false, child: body),
-        bottomNavigationBar: wide ? null : NothingTabBar(index: _index, onTap: _go),
-      );
-    }
     if (!wide) {
-      final bar = NavigationBar(
-        selectedIndex: _index,
-        onDestinationSelected: _go,
-        destinations: [
-          for (final d in _destinations)
-            NavigationDestination(icon: Icon(d.icon), selectedIcon: Icon(d.selected), label: d.label),
-        ],
-      );
-      // Sidekick 4.0: the floating dock (the old looks keep their bars).
-      if (!glass) {
-        return Scaffold(
-          body: SafeArea(bottom: false, child: body),
-          bottomNavigationBar: SafeArea(
-            minimum: const EdgeInsets.fromLTRB(16, 6, 16, 12),
-            child: FloatingDock(
-              index: _index,
-              onTap: _go,
-              items: [for (final d in _destinations) DockItem(icon: d.icon, selectedIcon: d.selected, label: d.label)],
-            ),
-          ),
-        );
-      }
+      // Sidekick 4.0: the floating dock.
       return Scaffold(
-        // Like the default bar, the content stops above it (16 px clear of
-        // it with Liquid Glass): nothing hides behind the glass.
-        body: SafeArea(
-          bottom: !glass,
-          child: glass ? Padding(padding: const EdgeInsets.only(bottom: 16), child: body) : body,
+        body: SafeArea(bottom: false, child: body),
+        bottomNavigationBar: SafeArea(
+          minimum: const EdgeInsets.fromLTRB(16, 6, 16, 12),
+          child: FloatingDock(
+            index: _index,
+            onTap: _go,
+            items: [for (final d in _destinations) DockItem(icon: d.icon, selectedIcon: d.selected, label: d.label)],
+          ),
         ),
-        // Liquid Glass: Sidekick's own tab bar on the glass (on iOS 26 Apple's
-        // UIGlassEffect, drawn underneath; touches stay in Flutter). Apple's
-        // UITabBar embedded as a platform view crashed when tapped (2.17.4).
-        bottomNavigationBar: glass
-            ? SafeArea(
-                minimum: const EdgeInsets.fromLTRB(16, 0, 16, 10),
-                child: GlassPanel(radius: 34, opacity: 0.42, child: bar),
-              )
-            : bar,
       );
     }
 
     return Scaffold(
-      backgroundColor: glass ? Colors.transparent : scheme.surfaceContainer,
+      backgroundColor: scheme.surfaceContainer,
       body: Row(
         children: [
           NavigationRail(
-            backgroundColor: glass ? Colors.transparent : scheme.surfaceContainer,
+            backgroundColor: scheme.surfaceContainer,
             selectedIndex: _index,
             onDestinationSelected: _go,
             labelType: NavigationRailLabelType.all,
@@ -315,14 +259,10 @@ class _ShellState extends State<Shell> {
           Expanded(
             child: Padding(
               padding: const EdgeInsets.fromLTRB(0, 8, 8, 8),
-              child: glass
-                  // Only the soft backdrop is behind it, so no live blur: a
-                  // window-sized blur made scrolling slow.
-                  ? GlassPanel(opacity: 0.4, blur: 0, child: body)
-                  : ClipRRect(
-                      borderRadius: BorderRadius.circular(28),
-                      child: ColoredBox(color: scheme.surface, child: body),
-                    ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(28),
+                child: ColoredBox(color: scheme.surface, child: body),
+              ),
             ),
           ),
         ],

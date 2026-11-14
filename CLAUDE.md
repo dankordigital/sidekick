@@ -663,7 +663,8 @@ release. Keep this file for how things work now, not for history.
   alternate app icons and tray icons, and the screenshot renders. Don't add
   features to either.
 - **4.0: people choose their app icon** (the owner's call, 14 Nov 2026; not
-  built yet, comes with the 4.0 build): Settings → App icon, a row of the
+  built yet, comes with the 4.0 build): Settings → App icon (**only in
+  Settings, never in the first-time setup**, the owner's call), a row of the
   eight "sk" icons in `design/logo-sk/` (Ink, Paper, Sky, Amber, Mint,
   Signal, Chrome, Dusk: the same letters on new backgrounds; 1024 px PNGs,
   `board.png` shows them all). **Dusk is the default** and the website's
@@ -672,6 +673,10 @@ release. Keep this file for how things work now, not for history.
   Mac `setDockIcon`, Windows `windowManager.setIcon`; tray icons stay
   monochrome) with one alternate per icon instead of Nothing's one, made by
   `make_icons.py`. The .exe's own icon can't change on Windows.
+- **4.0: home-screen widgets on Android and iPhone** (the owner's call, 14
+  Nov 2026; not built yet): small (last file received / Ready to receive)
+  and medium (up to 3 devices with status and Send / Ping), in the 4.0 look.
+  Plan: `design/4.0-build-plan.md` step 9b.
 - **Liquid Glass** (2.14.0, the owner's call: Material is the default
   everywhere): on iOS and macOS 26+ (`liquidGlassAvailable`, from
   `appleOsMajor`), Settings → Theme has a "Theme" dropdown: Default /

@@ -4,7 +4,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:sidekick/app_state.dart';
 import 'package:sidekick/ui/app_theme.dart';
-import 'package:sidekick/ui/nothing.dart';
 
 /// WCAG contrast between two opaque colors (1 to 21).
 double contrast(Color a, Color b) {
@@ -19,7 +18,6 @@ void main() {
   final schemes = <String, ColorScheme>{
     for (final MapEntry(key: name, value: (_, seed)) in themeColors.entries)
       for (final b in Brightness.values) '$name ${b.name}': ColorScheme.fromSeed(seedColor: seed, brightness: b),
-    for (final b in Brightness.values) 'nothing ${b.name}': nothingScheme(b),
     'sidekick 4.0': sidekick4Scheme(),
   };
 

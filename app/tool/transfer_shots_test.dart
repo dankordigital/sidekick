@@ -19,11 +19,9 @@ import 'package:sidekick/core/server.dart';
 import 'package:sidekick/core/client.dart';
 import 'package:sidekick/ui/app_theme.dart';
 import 'package:sidekick/ui/corner_popup.dart';
-import 'package:sidekick/ui/glass.dart';
 import 'package:sidekick/ui/notices.dart';
 import 'package:sidekick/ui/widgets.dart';
 import 'package:sidekick/core/text_message.dart';
-import 'package:sidekick/ui/nothing.dart';
 import 'package:sidekick/ui/text_messages.dart';
 import 'package:sidekick/ui/transfer_screens.dart';
 
@@ -103,24 +101,6 @@ void main() {
       );
       await shot('send_${phase.name}${reconnecting ? '_reconnecting' : ''}');
     }
-
-    // The Nothing look's own sending screen, while sending.
-    final nothing = nothingTheme(ThemeData(colorScheme: nothingScheme(Brightness.dark), fontFamily: 'Roboto'));
-    final sending = OutgoingSend(device: mac, names: ['IMG_2041.HEIC', 'IMG_2042.HEIC', 'Trip.mov'], total: 47100000)
-      ..phase = SendPhase.sending
-      ..done = 29000000
-      ..current = 2;
-    await tester.pumpWidget(
-      RepaintBoundary(
-        key: key,
-        child: MaterialApp(
-          theme: nothing,
-          debugShowCheckedModeBanner: false,
-          home: SendingScreen(send: sending),
-        ),
-      ),
-    );
-    await shot('send_nothing');
 
     // Also dark mode with the black-and-white theme: icons on the theme's
     // gradient must stay visible there.
@@ -210,12 +190,7 @@ void main() {
             fontFamily: 'Roboto',
           ),
         );
-    final looks = [
-      (base(Brightness.light), ''),
-      (base(Brightness.dark), '_dark'),
-      (nothingTheme(ThemeData(colorScheme: nothingScheme(Brightness.light), fontFamily: 'Roboto')), '_nothing'),
-      (glassTheme(base(Brightness.light)), '_glass'),
-    ];
+    final looks = [(base(Brightness.light), ''), (base(Brightness.dark), '_dark')];
     for (final (theme, look) in looks) {
       for (final (size, where) in [(const Size(390, 844), ''), (const Size(1000, 640), '_mac')]) {
         tester.view.physicalSize = size;
@@ -226,7 +201,7 @@ void main() {
             child: MaterialApp(
               theme: theme,
               debugShowCheckedModeBanner: false,
-              builder: (context, child) => NoticeArea(child: isGlass(context) ? GlassBackdrop(child: child!) : child!),
+              builder: (context, child) => NoticeArea(child: child!),
               home: Builder(
                 builder: (context) => Scaffold(
                   body: Center(
@@ -304,16 +279,18 @@ void main() {
       });
     }
 
+    // Sidekick 4.0's one look.
     final themes = [
-      (ThemeData(colorSchemeSeed: const Color(0xFF6750A4), fontFamily: 'Roboto'), ''),
-      (ThemeData(colorSchemeSeed: const Color(0xFF6750A4), brightness: Brightness.dark, fontFamily: 'Roboto'), '_dark'),
-      (nothingTheme(ThemeData(colorScheme: nothingScheme(Brightness.light), fontFamily: 'Roboto')), '_nothing'),
+      (
+        sidekickTheme(sidekick4Scheme())
+            .copyWith(textTheme: Typography.material2021().white.apply(fontFamily: 'Roboto')),
+        '',
+      ),
     ];
     // A computer's window too (the buttons sit side by side there).
     final runs = [
       for (final (theme, look) in themes) (theme, look, const Size(390, 844), ''),
       (themes[0].$1, '', const Size(1000, 640), '_mac'),
-      (themes[2].$1, '_nothing', const Size(1000, 640), '_mac'),
     ];
     for (final (theme, look, size, where) in runs) {
       tester.view.physicalSize = size;

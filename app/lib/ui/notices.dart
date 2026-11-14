@@ -10,8 +10,6 @@ import 'dart:async';
 
 import 'package:material_ui/material_ui.dart';
 
-import 'nothing.dart';
-
 /// The longest a notice stays up.
 const maxNoticeDuration = Duration(seconds: 10);
 
@@ -194,7 +192,7 @@ class _NoticeCardState extends State<NoticeCard> with TickerProviderStateMixin {
       color: snack.contentTextStyle?.color ?? scheme.onInverseSurface,
     );
     // The Nothing look's inverse primary is a grey: its text color reads better.
-    final accent = snack.actionTextColor ?? (isNothing(context) ? scheme.onInverseSurface : scheme.inversePrimary);
+    final accent = snack.actionTextColor ?? scheme.inversePrimary;
     final shape = snack.shape ?? RoundedRectangleBorder(borderRadius: BorderRadius.circular(16));
     final reduce = MediaQuery.maybeDisableAnimationsOf(context) ?? false;
     final n = widget.notice;

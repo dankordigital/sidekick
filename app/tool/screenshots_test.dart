@@ -1,4 +1,3 @@
-import 'dart:async';
 // Renders every tab to PNG so the UI can be checked without a Windows
 // machine. Not part of the normal test run:
 //
@@ -28,8 +27,6 @@ import 'package:sidekick/main.dart';
 import 'package:sidekick/platform/files.dart';
 import 'package:sidekick/platform/desktop_window.dart';
 import 'package:sidekick/platform/input.dart';
-import 'package:sidekick/ui/nothing.dart';
-import 'package:sidekick/ui/nothing_screens.dart';
 import 'package:sidekick/ui/startup.dart';
 import 'package:sidekick/ui/tray_panel.dart';
 import 'package:sidekick/ui/widgets.dart';
@@ -197,20 +194,23 @@ void main() {
     await tester.tap(find.text('Devices').last);
     await shot('6-devices-dark');
 
-    // Phone layout.
+    // Phone layout. The 4.0 dock shows only the selected tab's name: the
+    // others are found by their label, as a screen reader finds them.
+    Finder tab(String name) =>
+        find.text(name).evaluate().isNotEmpty ? find.text(name).last : find.bySemanticsLabel(name).last;
     state.setThemeMode(ThemeMode.light);
     debugForceMobile = true;
     tester.view.physicalSize = const Size(412, 915);
-    for (final (tab, name) in [
+    for (final (tab_, name) in [
       ('Devices', 'devices'),
       ('Files', 'files'),
       ('Remote', 'remote'),
       ('Settings', 'settings'),
     ]) {
-      await tester.tap(find.text(tab).last);
+      await tester.tap(tab(tab_));
       await shot('phone-$name', waitForData: name == 'files' || name == 'remote');
     }
-    await tester.tap(find.text('Devices').last);
+    await tester.tap(tab('Devices'));
     await settle();
     await tester.tap(find.text('Connect device'));
     await settle();
@@ -230,7 +230,7 @@ void main() {
 
     // iPhone Settings: iOS never allows remote control, so no such switch.
     debugHostPlatform = DevicePlatform.ios;
-    await tester.tap(find.text('Settings').last);
+    await tester.tap(tab('Settings'));
     await settle();
     final list = find.byType(Scrollable).first;
     await tester.dragUntilVisible(find.text('What paired devices can do here'), list, const Offset(0, -200));
@@ -243,111 +243,7 @@ void main() {
     await tester.tap(find.textContaining('security code'));
     await shot('iphone-security-code');
     await tester.tap(find.text('Done'));
-    await tester.dragUntilVisible(find.text('Pure black in dark mode'), list, const Offset(0, -200));
-    await shot('iphone-settings-theme');
-    state.setThemeColor('teal');
-    state.setThemeMode(ThemeMode.dark);
-    state.setPureBlack(true);
-    await shot('iphone-settings-theme-teal-dark');
 
-    // Liquid Glass (offered on iOS/macOS 26+): the Theme dropdown, then the app.
-    debugGlassAvailable = true;
-    state.setThemeColor('purple');
-    state.setPureBlack(false);
-    state.setThemeMode(ThemeMode.light);
-    await settle();
-    await tester.dragUntilVisible(
-      find.text('Liquid Glass').hitTestable().evaluate().isEmpty ? find.text('Default') : find.text('Liquid Glass'),
-      list,
-      const Offset(0, 200),
-    );
-    await shot('iphone-settings-theme-dropdown');
-    state.setLiquidGlass(true);
-    await tester.tap(find.text('Devices').last);
-    await shot('glass-iphone-devices');
-    await tester.tap(find.text('Settings').last);
-    await shot('glass-iphone-settings');
-    state.setThemeMode(ThemeMode.dark);
-    await tester.tap(find.text('Devices').last);
-    await shot('glass-iphone-devices-dark');
-    debugHostPlatform = DevicePlatform.macos;
-    debugForceMobile = false;
-    tester.view.physicalSize = const Size(1280, 840);
-    state.setThemeMode(ThemeMode.light);
-    await shot('glass-mac-devices');
-    state.setThemeMode(ThemeMode.dark);
-    await shot('glass-mac-devices-dark');
-    state.setLiquidGlass(false);
-    debugGlassAvailable = false;
-    debugForceMobile = true;
-    tester.view.physicalSize = const Size(412, 915);
-    debugHostPlatform = null;
-
-    // Nothing (Settings → Theme → Nothing, every platform): the paper look.
-    // Tabs are found by their names (in mono capitals).
-    Finder tab(String name) => find.text(name.toUpperCase()).last;
-    final picked = await tester.runAsync(() => Directory.systemTemp.createTemp('sidekick_picked')) as Directory;
-    sendSelection.value = [
-      for (final (name, size) in [('IMG_2041.HEIC', 3200000), ('IMG_2042.HEIC', 2900000), ('Trip.mov', 41000000)])
-        File(p.join(picked.path, name))..writeAsBytesSync(Uint8List(size)),
-    ];
-    TransferOffer offer() => TransferOffer(
-      id: 'nothing',
-      from: TrustedPeer(
-        id: 'p9',
-        name: 'Pixel 9',
-        platform: DevicePlatform.android,
-        token: 't',
-        fingerprint: 'f',
-        key: 'k',
-      ),
-      files: const [
-        OfferedFile('IMG_2041.HEIC', 3200000),
-        OfferedFile('IMG_2042.HEIC', 2900000),
-        OfferedFile('Trip.mov', 41000000),
-      ],
-    );
-    state.setNothingLook(true);
-    // In reach again (seen devices expire), so the rows are green and Browse opens.
-    await tester.runAsync(() => state.addByAddress('127.0.0.1:${phone.port}'));
-    for (final dark in [false, true]) {
-      final suffix = dark ? '-dark' : '';
-      state.setThemeMode(dark ? ThemeMode.dark : ThemeMode.light);
-      await settle();
-      await tester.tap(tab('Devices'));
-      await shot('nothing-phone-devices$suffix');
-      await tester.tap(find.text('Pixel 9').first);
-      await shot('nothing-phone-device$suffix');
-      await tester.tap(find.byTooltip('Back'));
-      await settle();
-      await tester.tap(tab('Send'));
-      await shot('nothing-phone-send$suffix');
-      await tester.tap(find.text('Browse files'));
-      await settle();
-      await loaded();
-      await tester.tap(find.text('Home').first);
-      await shot('nothing-phone-browse$suffix', waitForData: true);
-      await tester.tap(find.byTooltip('Close'));
-      await settle();
-      unawaited(showNothingIncoming(tester.element(find.byType(Scaffold).first), state, offer()));
-      await shot('nothing-phone-incoming$suffix');
-      await tester.tap(find.text('DECLINE'));
-      await settle();
-    }
-    await tester.tap(tab('Settings'));
-    await shot('nothing-phone-settings-dark');
-    debugForceMobile = false;
-    tester.view.physicalSize = const Size(1280, 840);
-    await settle();
-    await tester.tap(find.text('Send').last);
-    await shot('nothing-mac-send-dark');
-    await tester.tap(find.text('Devices').last);
-    await shot('nothing-mac-devices-dark');
-    state.setThemeMode(ThemeMode.light);
-    await tester.tap(find.text('Send').last);
-    await shot('nothing-mac-send');
-    sendSelection.value = const [];
-    state.setNothingLook(false);
     state.setThemeMode(ThemeMode.light);
     debugForceMobile = true;
     tester.view.physicalSize = const Size(412, 915);
@@ -393,10 +289,6 @@ void main() {
     tester.view.devicePixelRatio = 2;
     for (final (name, theme) in [
       ('tray-panel', ThemeData(colorSchemeSeed: const Color(0xFF6750A4), fontFamily: 'Roboto')),
-      (
-        'tray-panel-nothing',
-        nothingTheme(ThemeData(colorScheme: nothingScheme(Brightness.dark), fontFamily: 'Roboto')),
-      ),
     ]) {
       await tester.pumpWidget(
         RepaintBoundary(

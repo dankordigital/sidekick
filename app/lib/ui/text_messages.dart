@@ -11,7 +11,6 @@ import '../core/text_message.dart';
 import '../platform/desktop_window.dart';
 import '../platform/notifications.dart';
 import '../platform/sound.dart';
-import 'nothing.dart';
 import 'widgets.dart';
 
 /// Text or a link arrived: always ask, Copy or (for a link) Open, even from
@@ -104,10 +103,8 @@ class _ReceivedTextDialogState extends State<ReceivedTextDialog> {
     final onlyLink = isOnlyLink(message.text);
     final copyLabel = _copied ? 'Copied' : (onlyLink ? 'Copy link' : 'Copy text');
     final copyIcon = _copied ? Icons.check_rounded : Icons.copy_rounded;
-    final nothing = isNothing(context);
-    final scheme = Theme.of(context).colorScheme;
-    final body = nothing ? _nothingBody(link, onlyLink) : _body(link, onlyLink);
-    final buttons = nothing ? _nothingButtons(link, copyLabel, copyIcon) : _buttons(link, copyLabel, copyIcon);
+    final body = _body(link, onlyLink);
+    final buttons = _buttons(link, copyLabel, copyIcon);
     return CallbackShortcuts(
       bindings: {
         const SingleActivator(LogicalKeyboardKey.enter): link != null ? _open : _copy,
@@ -116,10 +113,7 @@ class _ReceivedTextDialogState extends State<ReceivedTextDialog> {
       child: Focus(
         autofocus: true,
         child: Dialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(nothing ? 24 : 28),
-            side: nothing ? BorderSide(color: scheme.outlineVariant) : BorderSide.none,
-          ),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(26)),
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 440),
             child: Padding(
@@ -128,18 +122,13 @@ class _ReceivedTextDialogState extends State<ReceivedTextDialog> {
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  _header(onlyLink, nothing),
+                  _header(onlyLink),
                   Padding(
                     padding: const EdgeInsets.only(right: 8),
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        SizedBox(height: nothing ? 14 : 16),
-                        body,
-                        const SizedBox(height: 20),
-                        buttons,
-                      ],
+                      children: [const SizedBox(height: 16), body, const SizedBox(height: 20), buttons],
                     ),
                   ),
                 ],
@@ -152,20 +141,17 @@ class _ReceivedTextDialogState extends State<ReceivedTextDialog> {
   }
 
   /// The link or note icon on the left, who sent it, and ✕ in the corner.
-  Widget _header(bool onlyLink, bool nothing) {
+  Widget _header(bool onlyLink) {
     final scheme = Theme.of(context).colorScheme;
     final icon = onlyLink ? Icons.link_rounded : Icons.notes_rounded;
     return Row(
       children: [
-        if (nothing)
-          NothingRing(icon, size: 40)
-        else
-          Container(
-            width: 44,
-            height: 44,
-            decoration: BoxDecoration(color: scheme.primaryContainer, borderRadius: BorderRadius.circular(14)),
-            child: Icon(icon, size: 22, color: scheme.onPrimaryContainer),
-          ),
+        Container(
+          width: 44,
+          height: 44,
+          decoration: BoxDecoration(color: scheme.primaryContainer, borderRadius: BorderRadius.circular(14)),
+          child: Icon(icon, size: 22, color: scheme.onPrimaryContainer),
+        ),
         const SizedBox(width: 14),
         Expanded(
           child: Semantics(
@@ -329,29 +315,6 @@ class _ReceivedTextDialogState extends State<ReceivedTextDialog> {
       );
     },
   );
-
-  Widget _nothingBody(Uri? link, bool onlyLink) => Column(
-    mainAxisSize: MainAxisSize.min,
-    crossAxisAlignment: CrossAxisAlignment.stretch,
-    children: [
-      const NothingHair(),
-      const SizedBox(height: 16),
-      if (!onlyLink) _note(framed: false),
-      if (!onlyLink && link != null) ...[const SizedBox(height: 16), const NothingHair(), const SizedBox(height: 14)],
-      if (link != null) _linkTile(link, framed: false),
-      const SizedBox(height: 16),
-      const NothingHair(),
-    ],
-  );
-
-  /// One red action: Open link, or Copy for a note.
-  Widget _nothingButtons(Uri? link, String copyLabel, IconData copyIcon) {
-    final copy = NothingButton(label: copyLabel, icon: copyIcon, red: link == null, height: 50, onPressed: _copy);
-    final open = link == null
-        ? null
-        : NothingButton(label: 'Open link', icon: Icons.north_east_rounded, height: 50, onPressed: _open);
-    return _layout(main: open ?? copy, second: open == null ? null : copy);
-  }
 }
 
 /// Asks what text or link to send to [d] (the clipboard's text one tap away

@@ -12,7 +12,6 @@ import 'platform/desktop_window.dart';
 import 'platform/sound.dart';
 import 'ui/app_theme.dart';
 import 'ui/corner_popup.dart';
-import 'ui/glass.dart';
 import 'ui/notices.dart';
 import 'ui/shell.dart';
 import 'ui/startup.dart';
@@ -146,8 +145,6 @@ class SidekickApp extends StatelessWidget {
   /// Liquid Glass is gone with 4.0's one look.
   bool get _glass => false;
 
-
-
   @override
   Widget build(BuildContext context) {
     // On Windows, DynamicColorBuilder builds the palette from the user's
@@ -176,8 +173,6 @@ class SidekickApp extends StatelessWidget {
           theme: _themeFor(lightDynamic, Brightness.light),
           darkTheme: _themeFor(darkDynamic, Brightness.dark),
           builder: (context, child) {
-            // Liquid Glass: the colored backdrop sits under every screen.
-            if (_glass) child = GlassBackdrop(child: child ?? const SizedBox());
             // Short notices ("Sent …", "Paired with …") over every screen.
             child = NoticeArea(child: child ?? const SizedBox());
             return DesktopWindow.supported ? _withCornerPopup(context, child) : child;

@@ -1,6 +1,6 @@
 import 'package:material_ui/material_ui.dart';
 
-import 'nothing.dart';
+import 'app_theme.dart';
 import 'widgets.dart';
 
 /// The intro, played once: the first time Sidekick opens, before setup.
@@ -116,12 +116,12 @@ class LoadingApp extends StatelessWidget {
   Widget build(BuildContext context) {
     ThemeData theme(Brightness b) {
       final base = ThemeData(
-        colorScheme: nothing ? nothingScheme(b) : ColorScheme.fromSeed(seedColor: seed, brightness: b),
+        colorScheme: sidekick4Scheme(),
         useMaterial3: true,
         // ignore: deprecated_member_use
         progressIndicatorTheme: const ProgressIndicatorThemeData(year2023: false),
       );
-      return nothing ? nothingTheme(base) : base;
+      return base;
     }
 
     return MaterialApp(

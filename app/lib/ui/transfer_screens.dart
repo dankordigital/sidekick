@@ -8,8 +8,6 @@ import '../app_state.dart';
 import '../core/server.dart';
 import '../platform/sound.dart';
 import 'widgets.dart';
-import 'nothing.dart';
-import 'nothing_screens.dart' show NothingSendView;
 
 // ------------------------------------------------------------------ sender
 
@@ -116,17 +114,6 @@ class _SendingScreenState extends State<SendingScreen> {
       SendPhase.noAnswer => ('No answer', 'Nobody accepted on ${d.name} in time. Nothing was sent.'),
       SendPhase.failed => ("Couldn't send", send.error ?? 'Something went wrong'),
     };
-    // The Nothing look draws it its own way (nothing_screens.dart).
-    if (isNothing(context)) {
-      final (action, onAction) = _action;
-      return NothingSendView(
-        send: send,
-        onBack: _leave,
-        action: action,
-        onAction: onAction,
-        onStop: action == 'Hide' ? _cancel : null,
-      );
-    }
     return Scaffold(
       body: SafeArea(
         child: Center(
