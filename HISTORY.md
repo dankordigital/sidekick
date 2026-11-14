@@ -7,6 +7,10 @@ detailed developer notes; every release is in `VERSIONS.md`) and
 
 ## 14 November 2026
 
+- **Prototype: Send files becomes Send while typing**: typing in the
+  message bar shrinks the white "Send files" pill into a round send button
+  with an up arrow (it sends the text); sending or erasing brings "Send
+  files" back. Also in both Figma prompts.
 - **Chat isn't a messaging app** (follow-up Figma prompt,
   `design/figma-ai-prompt-chat.md`): Figma AI read the Chat tab as a chat
   with a person. It's one place per device for everything sent between

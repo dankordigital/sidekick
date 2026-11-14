@@ -66,7 +66,10 @@ Dark, calm and flat, like a well-made Apple app. Not futuristic, not
 - **The message bar**: shaped exactly like the dock (same radius, colour,
   border and shadow). Inside: a round "+" button (files, photos, a link,
   paste), the field "Message Pixel 9", and a white **"Send files"** pill
-  with an upload icon. There is no drag-and-drop box anywhere.
+  with an upload icon. **While something is typed** the "Send files" pill
+  shrinks into a round white send button with an up arrow (the words slide
+  away, ~300 ms); it sends what was typed. Once the text is sent or erased,
+  it grows back into "Send files". There is no drag-and-drop box anywhere.
 - **The logo**: a bold lowercase "sk" in an Apple-like typeface; the s sits
   slightly over the k's stem with a thin gap cut around the s. White on
   `#121212`.

@@ -48,7 +48,8 @@ self", Telegram's Saved Messages, or an AirDrop history, not WhatsApp.
 **The bar at the bottom** stays exactly as designed (fully rounded, shaped
 like the dock): a round **+** (Files, Photos & videos, Paste), the field
 **"Write a note or paste a link"** (a pasted link becomes a link card), and
-the white **Send files** pill. On the computer, files dropped anywhere on
+the white **Send files** pill, which turns into a round send button
+with an up arrow while something is typed, and back once it's sent or erased. On the computer, files dropped anywhere on
 this panel are sent too; there's still no drop box.
 
 **Also add:**
