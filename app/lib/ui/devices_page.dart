@@ -430,8 +430,8 @@ class _PairedCardState extends State<_PairedCard> {
               tooltip: 'More options',
               icon: const Icon(Icons.more_vert_rounded),
               onSelected: (v) => switch (v) {
-                'files' => _open(1),
-                'remote' => _open(2),
+                'files' => _open(2),
+                'remote' => _open(3),
                 'ping' => _ping(),
                 'text' => askAndSendText(context, state, device),
                 _ => _confirmUnpair(),

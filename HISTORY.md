@@ -51,6 +51,7 @@ detailed developer notes; every release is in `VERSIONS.md`) and
 
 ## 14 November 2026
 
+- **4.0, step 3b: the Chat tab** (`ui/chat_page.dart`): per-device cards (files, links, notes, 6-digit codes with Copy code), hold for actions (✕ to close), the message bar whose Send files turns into Send while typing. Dock has 5 tabs (Devices · Chat · Files · Remote · Settings). Analyze clean, tests and sizes_test pass.
 - **4.0, step 3a: the Chat history** (`core/history.dart`): every file, photo, link and note sent or received is kept per device (500 each, `history.json`), with 6-digit code detection; AppState records it. 114 tests pass.
 - **4.0, step 1b-ii: the Nothing and Liquid Glass looks are deleted** (3,000+ lines), with every branch that used them. Analyze clean, 109 tests, sizes_test, screenshots_test and transfer_shots_test pass. Also planned: home-screen widgets on Android and iPhone (step 9b) and the app-icon choice only in Settings.
 - **4.0, step 1b-i: one look only.** Old looks can't come back (saved choices ignored, Settings and the welcome no longer offer them); Make theme deleted. Analyze clean, 111 tests, sizes_test passes.

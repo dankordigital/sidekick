@@ -520,6 +520,11 @@ class AppState extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Chat → hold → Remove from this list: only the list, never the file.
+  void removeFromHistory(HistoryItem item) {
+    if (history.remove(item.device, item.id)) notifyListeners();
+  }
+
   static Future<AppState> load() async {
     final state = AppState._(await SharedPreferences.getInstance());
     state._restore();

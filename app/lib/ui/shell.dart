@@ -13,6 +13,7 @@ import '../platform/gallery.dart';
 import '../platform/live_activity.dart';
 import '../platform/notifications.dart';
 import '../platform/sound.dart';
+import 'chat_page.dart';
 import 'devices_page.dart';
 import 'direct_wifi.dart';
 import 'ping.dart';
@@ -44,6 +45,7 @@ class _ShellState extends State<Shell> {
   /// The tray panel's Settings is tab 3.
   List<({IconData icon, IconData selected, String label})> get _destinations => [
     (icon: Icons.devices_outlined, selected: Icons.devices, label: 'Devices'),
+    (icon: Icons.chat_bubble_outline_rounded, selected: Icons.chat_bubble_rounded, label: 'Chat'),
     (icon: Icons.folder_outlined, selected: Icons.folder, label: 'Files'),
     (icon: Icons.mouse_outlined, selected: Icons.mouse, label: 'Remote'),
     (icon: Icons.settings_outlined, selected: Icons.settings, label: 'Settings'),
@@ -170,6 +172,7 @@ class _ShellState extends State<Shell> {
   Widget build(BuildContext context) {
     final pages = [
       DevicesPage(state: state, onOpen: _go),
+      ChatPage(state: state, onGoToDevices: () => _go(0)),
       FilesPage(state: state, onGoToDevices: () => _go(0)),
       RemotePage(state: state, onGoToDevices: () => _go(0)),
       SettingsPage(state: state),

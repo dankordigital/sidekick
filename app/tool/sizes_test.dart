@@ -128,7 +128,7 @@ void main() {
 
     final tabs = look == 'nothing'
         ? ['DEVICES', 'SEND', 'REMOTE', 'SETTINGS']
-        : ['Devices', 'Files', 'Remote', 'Settings'];
+        : ['Devices', 'Chat', 'Files', 'Remote', 'Settings'];
     for (final (w, h, kind) in [
       (360.0, 740.0, 'phone'),
       (430.0, 932.0, 'phone'),

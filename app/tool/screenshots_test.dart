@@ -20,6 +20,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sidekick/app_state.dart';
 import 'package:sidekick/core/client.dart';
 import 'package:sidekick/core/crypto.dart';
+import 'package:sidekick/core/history.dart';
 import 'package:sidekick/core/models.dart';
 import 'package:sidekick/core/server.dart';
 import 'package:sidekick/core/trust.dart';
@@ -107,6 +108,45 @@ void main() {
       final pin = phone.events.where((e) => e is PairRequested).cast<PairRequested>().first;
       await state.requestPairing(target);
       await state.confirmPairing(target, (await pin).request.pin);
+      // What the two shared, for the Chat tab.
+      final now = DateTime.now();
+      for (final item in [
+        HistoryItem.file(
+          device: phoneId,
+          fromMe: false,
+          name: 'Travel checklist.pdf',
+          size: 2400000,
+          path: p.join(home.path, 'Travel checklist.pdf'),
+          at: now.subtract(const Duration(hours: 3)),
+        ),
+        HistoryItem.text(
+          device: phoneId,
+          fromMe: true,
+          text: 'Door code 4417',
+          at: now.subtract(const Duration(hours: 2)),
+        ),
+        HistoryItem.file(
+          device: phoneId,
+          fromMe: false,
+          name: 'Beach day.jpg',
+          size: 4800000,
+          at: now.subtract(const Duration(minutes: 50)),
+        ),
+        HistoryItem.text(
+          device: phoneId,
+          fromMe: false,
+          text: 'https://www.bbcgoodfood.com/recipes/lemon-drizzle-cake',
+          at: now.subtract(const Duration(minutes: 20)),
+        ),
+        HistoryItem.text(
+          device: phoneId,
+          fromMe: false,
+          text: 'Your Google verification code is 482913',
+          at: now.subtract(const Duration(minutes: 2)),
+        ),
+      ]) {
+        state.history.add(item);
+      }
     });
 
     final boundary = GlobalKey();
@@ -203,6 +243,7 @@ void main() {
     tester.view.physicalSize = const Size(412, 915);
     for (final (tab_, name) in [
       ('Devices', 'devices'),
+      ('Chat', 'chat'),
       ('Files', 'files'),
       ('Remote', 'remote'),
       ('Settings', 'settings'),

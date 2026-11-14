@@ -34,12 +34,22 @@ class FloatingDock extends StatelessWidget {
         ),
         child: Padding(
           padding: const EdgeInsets.all(8),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              for (var i = 0; i < items.length; i++)
-                _DockButton(item: items[i], selected: i == index, onTap: () => onTap(i)),
-            ],
+          // Spread across the bar; on a narrow phone with big text, the
+          // whole row shrinks a little instead of running off the edge.
+          child: LayoutBuilder(
+            builder: (context, box) => FittedBox(
+              fit: BoxFit.scaleDown,
+              child: ConstrainedBox(
+                constraints: BoxConstraints(minWidth: box.maxWidth),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    for (var i = 0; i < items.length; i++)
+                      _DockButton(item: items[i], selected: i == index, onTap: () => onTap(i)),
+                  ],
+                ),
+              ),
+            ),
           ),
         ),
       ),
@@ -87,8 +97,8 @@ class _DockButtonState extends State<_DockButton> {
             duration: open,
             curve: spring,
             height: 48,
-            constraints: const BoxConstraints(minWidth: 48),
-            padding: EdgeInsets.symmetric(horizontal: widget.selected ? 22 : 12),
+            constraints: const BoxConstraints(minWidth: 46),
+            padding: EdgeInsets.symmetric(horizontal: widget.selected ? 18 : 11),
             decoration: BoxDecoration(
               color: widget.selected ? scheme.secondaryContainer : Colors.transparent,
               borderRadius: BorderRadius.circular(24),
