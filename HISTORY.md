@@ -51,6 +51,7 @@ detailed developer notes; every release is in `VERSIONS.md`) and
 
 ## 14 November 2026
 
+- **4.0 is next, by plan** (`design/4.0-build-plan.md`): the owner asked for 4.0 (the app like the prototypes, smooth motion, released with screenshots). It starts when the usage limit resets (a scheduled check-in in this session), phase by phase, each phase green and pushed; the plan's boxes are the progress record.
 - **The emails are in the 4.0 look** (`wishlist.php` `email_shell`, used by the welcome email and np7dpanel's announcements): dark card, the new header (Dusk "sk" + wordmark), "Got your **email!**", chips, a white "Try the demo" pill beside "Cancel my sign-up", the Dusk icon in the signature, "Made with ♥ in Poland". The plain-text part links the demo too. Checked with a real local sign-up (outbox) and a rendered announcement.
 - **A new "sk" logo** (`design/logo-sk/`, the owner: same letters, new
   background and colours): eight icons from `3.png`'s letters (Ink, Paper,
