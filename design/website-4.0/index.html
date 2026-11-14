@@ -160,6 +160,28 @@ section .wrap>p.lead{margin:16px 0 0;max-width:36em;color:var(--muted);font-size
 .f.wide .two{display:grid;grid-template-columns:1fr 1fr;gap:18px;align-items:center}
 @media (max-width:760px){.f.wide .two{grid-template-columns:1fr}}
 
+/* moving with the scroll and the pointer */
+.top::after{content:"";position:absolute;left:0;right:0;bottom:-1px;height:2px;background:linear-gradient(90deg,var(--blue),var(--green),var(--amber),var(--orange));transform-origin:0 50%;transform:scaleX(var(--sp,0))}
+.f,.step,.plat{--mx:50%;--my:-300px;background-image:radial-gradient(420px circle at var(--mx) var(--my),#ffffff12,transparent 62%);transform:perspective(1000px) rotateX(var(--rx,0deg)) rotateY(var(--ry,0deg)) translateY(var(--ty,0px));transition:transform .35s cubic-bezier(.22,1,.36,1),border-color .3s}
+.step:hover,.plat:hover{border-color:#ffffff33}
+.plat:hover{--ty:-4px}
+.plat>span:first-child{transition:transform .35s cubic-bezier(.22,1,.36,1)}
+.plat:hover>span:first-child{transform:translateY(-3px) scale(1.08)}
+.f .tile{transition:transform .35s cubic-bezier(.22,1,.36,1),background .3s}
+.f:hover .tile{transform:scale(1.08) rotate(-4deg);background:#323232}
+.rv{opacity:0;transform:translateY(28px)}
+.rv.in{opacity:1;transform:none;transition:opacity .7s ease,transform .8s cubic-bezier(.22,1,.36,1);transition-delay:var(--d,0ms)}
+.f.rv.in,.step.rv.in,.plat.rv.in{transition:opacity .7s ease var(--d,0ms),transform .8s cubic-bezier(.22,1,.36,1) var(--d,0ms)}
+.phone{transform:perspective(1200px) rotateX(var(--prx,0deg)) rotateY(var(--pry,0deg)) translateY(var(--py,0px));transition:transform .5s cubic-bezier(.22,1,.36,1)}
+.pad i{transition:left .18s ease-out,top .18s ease-out}
+.ringer{gap:6px}
+.f:hover .ringer .ic{animation:wob .5s ease-in-out infinite}
+@keyframes wob{25%{transform:rotate(-16deg)}75%{transform:rotate(16deg)}}
+.code6 span.typed{animation:pop .3s cubic-bezier(.22,1,.36,1)}
+#pairedChip.pop{animation:pop .4s cubic-bezier(.22,1,.36,1)}
+@keyframes pop{0%{transform:scale(.6);opacity:0}100%{transform:none;opacity:1}}
+.facts span{animation:none}
+
 /* FREE: holographic chrome in pastels, a shine sweeping across, tilting toward the pointer */
 .free{padding-block:56px 40px}
 .free .wrap{display:flex;flex-direction:column;align-items:center;text-align:center}
@@ -263,17 +285,17 @@ footer a:hover{color:var(--text)}
   <h2><span class="gl">Everything between your devices, <span class="k" style="--c:var(--green)">in one place.</span></span></h2>
   <p class="lead">Each device you pair gets its own chat: the files, photos, links and notes you sent each other, with what you can do with them a hold away.</p>
   <div class="grid">
-    <article class="f wide"><div class="two">
+    <article class="f wide" id="sendCard"><div class="two">
       <div style="display:flex;flex-direction:column;gap:14px"><span class="tile" data-i="send"></span><h3>Send files both ways</h3><p>Pick files on one device and they arrive on the other. The receiver taps Accept, or lets favourite devices send without asking. If the connection drops, the transfer picks up where it stopped.</p></div>
       <div class="bit" style="display:flex;flex-direction:column;gap:8px">
-        <div class="mini" style="background:var(--amberbg);border:1px solid var(--amberline);color:#ffe2ad;flex-direction:column;align-items:stretch;gap:4px"><span style="color:var(--amber);font-size:12px;font-weight:600">Receiving files</span><span>Pixel 9 is sending you 4 files · 182 MB</span><div class="bar"><i></i></div></div>
+        <div class="mini" style="background:var(--amberbg);border:1px solid var(--amberline);color:#ffe2ad;flex-direction:column;align-items:stretch;gap:4px"><span style="color:var(--amber);font-size:12px;font-weight:600" id="sendState">Receiving files</span><span>Pixel 9 is sending you 4 files · <span id="sendPct">64%</span></span><div class="bar"><i id="sendBar"></i></div></div>
         <div class="mini"><span data-i="file" data-s="18"></span><div class="t">Travel checklist.pdf<small>2.4 MB · Saved to Downloads</small></div></div>
       </div>
     </div></article>
     <article class="f"><span class="tile" data-i="copy"></span><h3>Codes from your phone</h3><p>A sign-in code arrives on your Android phone and shows up on your computer, ready to paste. Only the code is sent, never your messages.</p><div class="bit"><span class="chip" style="font-family:var(--mono);letter-spacing:.1em">482 913</span> <span class="chip">Copy code</span></div></article>
-    <article class="f"><span class="tile" data-i="remote"></span><h3>Your phone is a touchpad</h3><p>Move the pointer, click, scroll, type and press shortcuts on your computer from the couch.</p><div class="bit pad" aria-hidden="true"><i></i></div></article>
+    <article class="f"><span class="tile" data-i="remote"></span><h3>Your phone is a touchpad</h3><p>Move the pointer, click, scroll, type and press shortcuts on your computer from the couch.</p><div class="bit pad" aria-hidden="true"><i id="padDot"></i></div></article>
     <article class="f"><span class="tile" data-i="link"></span><h3>Links and notes</h3><p>Paste a link or write a note in the chat and it's on the other device. Hold it there to copy it or send it again.</p><div class="bit mini"><span data-i="link" data-s="18"></span><div class="t"><b style="font-weight:700">bbcgoodfood.com</b><small>/recipes/lemon-drizzle-cake</small></div></div></article>
-    <article class="f"><span class="tile" data-i="ping"></span><h3>Find your phone</h3><p>Ping rings it at full volume, even on silent, until you tap Found it.</p><div class="bit"><span class="chip am">iPhone 16 is ringing</span></div></article>
+    <article class="f"><span class="tile" data-i="ping"></span><h3>Find your phone</h3><p>Ping rings it at full volume, even on silent, until you tap Found it.</p><div class="bit"><span class="chip am ringer"><span data-i="ping" data-s="14"></span>iPhone 16 is ringing</span></div></article>
     <article class="f"><span class="tile" data-i="folder"></span><h3>Browse the other device</h3><p>Open your computer's folders from your phone, or the other way round, and copy what you need.</p><div class="bit mini"><span data-i="folder" data-s="18"></span><div class="t">Documents<small>48 items</small></div></div></article>
     <article class="f"><span class="tile" data-i="wifi"></span><h3>No Wi-Fi? Still works</h3><p>The two devices make a direct Wi-Fi link between them. iPhones and Macs use Apple's own, like AirDrop.</p><div class="bit"><span class="chip ok">Direct Wi-Fi · encrypted</span></div></article>
     <article class="f"><span class="tile" data-i="lock"></span><h3>Stays between your devices</h3><p>Everything is encrypted end to end. No account, no servers, no tracking. Only devices you paired can connect.</p><div class="bit"><span class="chip">No account</span> <span class="chip">No servers</span></div></article>
@@ -292,8 +314,8 @@ footer a:hover{color:var(--text)}
   <h2><span class="gl">Connected in <span class="k" style="--c:var(--amber)">three steps.</span></span></h2>
   <div class="steps">
     <div class="step"><span class="n">Step 1</span><h3>Open Sidekick on both</h3><p>Each device lists the other under Nearby when they're on the same Wi-Fi.</p><div class="mini"><span class="dev" style="width:34px;height:34px;border-radius:10px" data-i="phone" data-s="17" data-c="#4fcf86"></span><div class="t">Pixel 9<small>Nearby · tap Pair</small></div></div></div>
-    <div class="step"><span class="n">Step 2</span><h3>Type the 6-digit code</h3><p>The other device shows a code. Type it, or scan its QR code with your phone.</p><div class="code6" aria-label="Example code 8 4 7 2 9 1"><span>8</span><span>4</span><span>7</span><span>2</span><span>9</span><span>1</span></div></div>
-    <div class="step"><span class="n">Step 3</span><h3>That's it</h3><p>They remember each other from now on and connect by themselves, on any network they share.</p><div><span class="chip ok"><span data-i="check" data-s="14"></span>Paired · encrypted</span></div></div>
+    <div class="step"><span class="n">Step 2</span><h3>Type the 6-digit code</h3><p>The other device shows a code. Type it, or scan its QR code with your phone.</p><div class="code6" id="code6" aria-label="Example code 8 4 7 2 9 1"><span>8</span><span>4</span><span>7</span><span>2</span><span>9</span><span>1</span></div></div>
+    <div class="step"><span class="n">Step 3</span><h3>That's it</h3><p>They remember each other from now on and connect by themselves, on any network they share.</p><div><span class="chip ok" id="pairedChip"><span data-i="check" data-s="14"></span>Paired · encrypted</span></div></div>
   </div>
 </div></section>
 
@@ -461,6 +483,48 @@ document.querySelectorAll('[data-go]').forEach(b=>b.onclick=()=>go[b.dataset.go]
 const word=document.getElementById('freeWord'),tilt=word.querySelector('.free-tilt');
 if(!matchMedia('(prefers-reduced-motion: reduce)').matches)addEventListener('pointermove',e=>{const r=word.getBoundingClientRect();if(r.bottom<0||r.top>innerHeight)return;
   const x=(e.clientX-(r.left+r.width/2))/innerWidth,y=(e.clientY-(r.top+r.height/2))/innerHeight;tilt.style.setProperty('--ry',(x*18).toFixed(2)+'deg');tilt.style.setProperty('--rx',(-y*14).toFixed(2)+'deg')},{passive:true});
+
+/* scroll and pointer: progress line, reveals, phone tilt and parallax, card spotlights, the send bar, the pad, the code */
+const RM=matchMedia('(prefers-reduced-motion: reduce)').matches,HOVER=matchMedia('(hover: hover) and (pointer: fine)').matches;
+const top=document.querySelector('.top'),phone=document.getElementById('phone');
+const sendCard=document.getElementById('sendCard'),sendBar=document.getElementById('sendBar'),sendPct=document.getElementById('sendPct'),sendState=document.getElementById('sendState');
+function onScroll(){const h=document.documentElement.scrollHeight-innerHeight;top.style.setProperty('--sp',h>0?(scrollY/h).toFixed(4):0);
+  if(RM)return;
+  phone.style.setProperty('--py',Math.min(80,scrollY*.12).toFixed(1)+'px');
+  const r=sendCard.getBoundingClientRect();const p=Math.min(1,Math.max(0,(innerHeight*.95-r.top)/(innerHeight*.55)));
+  sendBar.style.width=(p*100).toFixed(1)+'%';sendPct.textContent=Math.round(p*100)+'%';
+  const done=p>=1;sendState.textContent=done?'Received ✓':'Receiving files';sendBar.style.background=done?'var(--ok)':'';sendState.style.color=done?'var(--ok)':''}
+addEventListener('scroll',onScroll,{passive:true});onScroll();
+if(!RM){
+  /* reveal what's below the first screen as it scrolls in */
+  const groups=[...document.querySelectorAll('.grid,.steps,.plats,.qa')];const heads=[...document.querySelectorAll('section .wrap>h2,section .wrap>.label,section .wrap>p.lead,.free-word,.ticks,form.join')];
+  const els=[...heads,...groups.flatMap(g=>[...g.children].map((c,i)=>(c.style.setProperty('--d',(i%3)*90+'ms'),c)))].filter(e=>e.getBoundingClientRect().top>innerHeight);
+  els.forEach(e=>e.classList.add('rv'));
+  const io=new IntersectionObserver(es=>es.forEach(en=>{if(en.isIntersecting){const t=en.target;t.classList.add('in');io.unobserve(t);setTimeout(()=>t.classList.remove('rv','in'),1100+(parseInt(t.style.getPropertyValue('--d'))||0));if(en.target.id==='code6'||en.target.contains(document.getElementById('code6')))typeCode()}}),{rootMargin:'0px 0px -8% 0px'});
+  els.forEach(e=>io.observe(e));
+  /* the code types itself in once its step shows */
+  const code=document.getElementById('code6'),digits=[...code.children].map(s=>s.textContent),chip=document.getElementById('pairedChip');let typed=false;
+  function typeCode(){if(typed)return;typed=true;[...code.children].forEach(s=>s.textContent='');digits.forEach((d,i)=>setTimeout(()=>{const s=code.children[i];s.textContent=d;s.classList.add('typed');s.style.borderColor=i===5?'':'#ffffff55'},500+i*160));
+    setTimeout(()=>{[...code.children].forEach(s=>s.style.borderColor='');chip.classList.add('pop')},500+6*160+200)}
+  const stepIO=new IntersectionObserver(es=>{if(es[0].isIntersecting){typeCode();stepIO.disconnect()}},{rootMargin:'0px 0px -15% 0px'});
+  if(code.getBoundingClientRect().top>innerHeight)stepIO.observe(code);
+}
+if(!RM&&HOVER){
+  /* the hero phone leans toward the pointer */
+  const hero=document.querySelector('.hero');
+  hero.addEventListener('pointermove',e=>{const r=phone.getBoundingClientRect();const x=(e.clientX-(r.left+r.width/2))/innerWidth,y=(e.clientY-(r.top+r.height/2))/innerHeight;
+    phone.style.setProperty('--pry',(x*10).toFixed(2)+'deg');phone.style.setProperty('--prx',(-y*8).toFixed(2)+'deg')});
+  hero.addEventListener('pointerleave',()=>{phone.style.setProperty('--pry','0deg');phone.style.setProperty('--prx','0deg')});
+  /* cards: a soft light under the pointer and a slight tilt */
+  document.querySelectorAll('.f,.step,.plat').forEach(c=>{
+    c.addEventListener('pointermove',e=>{const r=c.getBoundingClientRect(),x=e.clientX-r.left,y=e.clientY-r.top;c.style.setProperty('--mx',x+'px');c.style.setProperty('--my',y+'px');
+      c.style.setProperty('--ry',((x/r.width-.5)*5).toFixed(2)+'deg');c.style.setProperty('--rx',(-(y/r.height-.5)*5).toFixed(2)+'deg')});
+    c.addEventListener('pointerleave',()=>{c.style.setProperty('--my','-300px');c.style.setProperty('--rx','0deg');c.style.setProperty('--ry','0deg')})});
+  /* the touchpad card: its pointer follows yours */
+  const pad=document.querySelector('.pad'),dot=document.getElementById('padDot'),padCard=pad.closest('.f');
+  padCard.addEventListener('pointermove',e=>{const r=padCard.getBoundingClientRect();dot.style.left=(8+84*(e.clientX-r.left)/r.width).toFixed(1)+'%';dot.style.top=(12+76*(e.clientY-r.top)/r.height).toFixed(1)+'%'});
+  padCard.addEventListener('pointerdown',()=>{dot.animate([{boxShadow:'0 0 0 10px #ffffff22'},{boxShadow:'0 0 0 22px #ffffff00'}],{duration:400})});
+}
 
 /* wishlist (prototype: nothing is sent) */
 const f=document.getElementById('join');

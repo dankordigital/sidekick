@@ -71,6 +71,16 @@ detailed developer notes; every release is in `VERSIONS.md`) and
   has one **keyword in an app colour**, glossy too: "as one." blue, "in one
   place." green, "three steps." amber, "every device" orange, "know." blue,
   "try it." green.
+  Then **motion with the scroll and the pointer**: a thin line in the app
+  colours under the top bar shows how far down you are; sections and cards
+  rise in as they scroll into view (only what starts below the first
+  screen); the hero phone leans toward the pointer and drifts with the
+  scroll; cards get a soft light under the pointer and tilt slightly, their
+  icon tile turns; the Send files card's bar fills as you scroll (Received ✓
+  in green when full); the touchpad card's dot follows your pointer and
+  ripples on click; the Ping chip's bell wobbles on hover; the pairing code
+  types itself in, then "Paired" pops. Reduced motion turns it all off;
+  pointer effects only with a mouse.
 - **Emulator: hold for actions, 6-digit codes, one notice at a time** (the
   owner): only a **6-digit code** gets the big **Copy code** button
   (`codeOf`: "482913", "482 913", "G-482913 is your Google code", "Kod BLIK
