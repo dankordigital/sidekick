@@ -5,6 +5,14 @@ a new session. Newest first. For how things work, read `CLAUDE.md` (the
 detailed developer notes; every release is in `VERSIONS.md`) and
 `ARCHITECTURE.md` (the big picture).
 
+## 14 November 2026
+
+- **A prompt for Figma AI** (`design/figma-ai-prompt.md`): describes the
+  new look and every screen of the concept and prototype (colours, dock,
+  Chat with the dock-shaped message bar, sheets, computer window, logo), plus
+  follow-ups to make it clickable, add real states, and let it improve the
+  design on a separate page.
+
 ## 13 November 2026
 
 - **One look only** (the owner's call): Nothing and Liquid Glass will be
