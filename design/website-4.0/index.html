@@ -49,7 +49,7 @@ body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset
 .top nav{display:flex;gap:4px;margin-left:auto}
 .top nav a{padding:8px 14px;border-radius:18px;text-decoration:none;color:var(--muted);font-weight:500;font-size:15px}
 .top nav a:hover{color:var(--text);background:var(--panel)}
-@media (max-width:720px){.top nav{display:none}.motion{margin-left:auto}}
+@media (max-width:720px){.top nav{display:none}.top .pill{margin-left:auto}}
 
 /* hero */
 .hero .wrap{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,560px);gap:48px;align-items:center;padding-block:72px 40px}
@@ -319,19 +319,12 @@ html.calm #glow{display:none}
 html.calm .rv{transform:none;filter:none}
 html.calm .hero .label,html.calm .hero h1,html.calm .hero .lead,html.calm .hero .ctas,html.calm .hero .facts,html.calm .demo{animation-name:fadein}
 html.calm .pill,html.calm .try{translate:none!important}
-.motion{display:inline-flex;align-items:center;gap:8px;height:36px;padding:0 12px 0 14px;border-radius:18px;border:1px solid var(--line);background:transparent;color:var(--muted);font-weight:500;font-size:13.5px;transition:color .25s,border-color .25s,background .25s}
-.motion:hover{color:var(--text);border-color:#ffffff40}
-.motion .sw{position:relative;width:30px;height:18px;border-radius:9px;background:#3a3a3c;transition:background .3s}
-.motion .sw::after{content:"";position:absolute;top:2px;left:2px;width:14px;height:14px;border-radius:50%;background:#fff;transition:transform .35s cubic-bezier(.34,1.56,.64,1)}
-.motion[aria-pressed=true] .sw{background:var(--ok)}
-.motion[aria-pressed=true] .sw::after{transform:translateX(12px)}
-@media (max-width:720px){.motion .t{display:none}}
+
 </style>
 
 <header class="top"><div class="wrap">
   <a class="brand" href="#top"><span class="sk">sk</span>Sidekick</a>
   <nav aria-label="Sections"><a href="#what">What it does</a><a href="#pair">Pairing</a><a href="#devices">Devices</a><a href="#questions">Questions</a></nav>
-  <button type="button" class="motion" id="motionBtn" aria-pressed="true"><span class="t">Motion</span><span class="sw" aria-hidden="true"></span></button>
   <a class="pill w" href="#wishlist">Join the wishlist</a>
 </div></header>
 
@@ -563,11 +556,8 @@ const go={
 document.querySelectorAll('[data-go]').forEach(b=>b.onclick=()=>go[b.dataset.go]());
 
 /* scroll and pointer: progress line, reveals, phone tilt and parallax, card spotlights, the send bar, the pad, the code */
-/* Motion: full unless the device asks for reduced motion; the switch in the top bar changes it (remembered) */
-let CALM=matchMedia('(prefers-reduced-motion: reduce)').matches;try{const m=localStorage.getItem('sk-motion');if(m)CALM=m==='calm'}catch(x){}
-const motionBtn=document.getElementById('motionBtn');
-function setMotion(calm){CALM=calm;document.documentElement.classList.toggle('calm',calm);motionBtn.setAttribute('aria-pressed',String(!calm));motionBtn.title=calm?'Motion: calm. Turn on all motion':'Motion: full. Turn it down'}
-setMotion(CALM);motionBtn.onclick=()=>{setMotion(!CALM);try{localStorage.setItem('sk-motion',CALM?'calm':'full')}catch(x){}};
+/* full motion for everyone (the owner's call) */
+const CALM=false;
 const RM=false,HOVER=matchMedia('(hover: hover) and (pointer: fine)').matches;
 const top=document.querySelector('.top'),phone=document.getElementById('phone');
 const sendCard=document.getElementById('sendCard'),sendBar=document.getElementById('sendBar'),sendPct=document.getElementById('sendPct'),sendState=document.getElementById('sendState');

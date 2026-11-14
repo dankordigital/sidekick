@@ -103,6 +103,8 @@ detailed developer notes; every release is in `VERSIONS.md`) and
   still animate; only tilting, following the pointer, the glow and the
   magnetic pull stop. A **Motion** switch in the top bar turns full motion
   on or off (remembered, `sk-motion`).
+  Then the owner ("THAT'S FIRE"): **full motion for everyone by default, no
+  switch** (`CALM=false`; the calm styles stay in the CSS, unused).
 - **Emulator: hold for actions, 6-digit codes, one notice at a time** (the
   owner): only a **6-digit code** gets the big **Copy code** button
   (`codeOf`: "482913", "482 913", "G-482913 is your Google code", "Kod BLIK
