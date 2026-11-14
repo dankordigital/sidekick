@@ -65,6 +65,11 @@ detailed developer notes; every release is in `VERSIONS.md`) and
   became **Ring this phone** (the Ping screen with Found it!), and a **Free**
   section with the old site's holographic FREE (pastel chrome, moving shine,
   tilts toward the pointer) sits after What Sidekick does.
+  Then **glossy headings**: every heading is chrome (white to grey, lit from
+  above, per line) with a slow sheen passing through every 9 s, and each
+  has one **keyword in an app colour**, glossy too: "as one." blue, "in one
+  place." green, "three steps." amber, "every device" orange, "know." blue,
+  "try it." green.
 - **Emulator: hold for actions, 6-digit codes, one notice at a time** (the
   owner): only a **6-digit code** gets the big **Copy code** button
   (`codeOf`: "482913", "482 913", "G-482913 is your Google code", "Kod BLIK

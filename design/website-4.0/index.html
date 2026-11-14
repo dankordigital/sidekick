@@ -11,7 +11,7 @@
   --page:#121212;--panel:#1c1c1c;--raised:#262626;--btn:#2e2e2e;
   --text:#f2f2f2;--muted:#a1a1a6;--faint:#8a8a8f;--line:#ffffff1f;--hair:#ffffff12;
   --white:#f0f0f0;--onwhite:#141414;
-  --ok:#45d07e;--amber:#ffc56b;--amberbg:#2f2410;--amberline:#ffc56b40;--blue:#5b9dff;
+  --ok:#45d07e;--green:#4fcf86;--orange:#ffb84d;--amber:#ffc56b;--amberbg:#2f2410;--amberline:#ffc56b40;--blue:#5b9dff;
   --sans:Inter,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
   --mono:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
   --wrap:1180px;
@@ -31,6 +31,13 @@ a{color:inherit}
 .pill.w{background:var(--white);color:var(--onwhite)}
 .pill.o{background:transparent;border:1px solid var(--line)}
 .pill.lg{height:52px;border-radius:26px;padding:0 26px;font-size:16px}
+/* glossy headings: a light-from-above chrome, a slow sheen passing through; keywords in the app's colours */
+.gl{background-image:linear-gradient(105deg,transparent 42%,#ffffff99 50%,transparent 58%),linear-gradient(180deg,#ffffff 0%,#ececec 48%,#a7a7ab 100%);
+  background-size:300% 100%,100% 100%;-webkit-box-decoration-break:clone;box-decoration-break:clone;background-position:160% 0,0 0;-webkit-background-clip:text;background-clip:text;color:transparent;animation:sheen 9s ease-in-out infinite}
+.gl .k{background-image:linear-gradient(105deg,transparent 42%,#ffffffb3 50%,transparent 58%),linear-gradient(180deg,color-mix(in srgb,var(--c) 45%,#fff) 0%,var(--c) 52%,color-mix(in srgb,var(--c) 70%,#000) 100%);
+  background-size:300% 100%,100% 100%;background-position:160% 0,0 0;-webkit-background-clip:text;background-clip:text;color:transparent;animation:sheen 9s ease-in-out infinite;-webkit-box-decoration-break:clone;box-decoration-break:clone}
+@keyframes sheen{0%,55%{background-position:160% 0,0 0}85%,100%{background-position:-60% 0,0 0}}
+@supports not ((background-clip:text) or (-webkit-background-clip:text)){.gl{color:var(--text)}.gl .k{color:var(--c)}}
 .label{font:500 12px/1 var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
 
 /* top bar */
@@ -47,7 +54,7 @@ body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset
 /* hero */
 .hero .wrap{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,560px);gap:48px;align-items:center;padding-block:72px 40px}
 .hero h1{margin:16px 0 0;font-size:clamp(42px,5.4vw,76px);line-height:.98;letter-spacing:-.045em;font-weight:800;text-wrap:balance}
-.hero h1 span{color:var(--muted)}
+
 .hero p.lead{margin:22px 0 0;max-width:30em;font-size:19px;color:var(--muted)}
 .hero .ctas{display:flex;gap:10px;flex-wrap:wrap;margin-top:30px}
 .facts{display:flex;gap:18px;flex-wrap:wrap;margin-top:28px;color:var(--muted);font-size:14px}
@@ -225,7 +232,7 @@ footer a:hover{color:var(--text)}
 <section class="hero" style="padding:0"><div class="wrap">
   <div>
     <span class="label">Sidekick 4.0 · coming soon</span>
-    <h1>Your phone and computer, <span>as one.</span></h1>
+    <h1><span class="gl">Your phone and computer, <span class="k" style="--c:var(--blue)">as one.</span></span></h1>
     <p class="lead">Send files both ways, keep everything you shared with each device in one place, and use your phone as your computer's touchpad. Encrypted, with no account and no servers.</p>
     <div class="ctas"><a class="pill w lg" href="#wishlist">Join the wishlist</a><a class="pill o lg" href="#what">See what it does</a></div>
     <div class="facts"><span data-i="check"></span></div>
@@ -253,7 +260,7 @@ footer a:hover{color:var(--text)}
 
 <section id="what"><div class="wrap">
   <span class="label">What Sidekick does</span>
-  <h2>Everything between your devices, in one place.</h2>
+  <h2><span class="gl">Everything between your devices, <span class="k" style="--c:var(--green)">in one place.</span></span></h2>
   <p class="lead">Each device you pair gets its own chat: the files, photos, links and notes you sent each other, with what you can do with them a hold away.</p>
   <div class="grid">
     <article class="f wide"><div class="two">
@@ -282,7 +289,7 @@ footer a:hover{color:var(--text)}
 
 <section id="pair"><div class="wrap">
   <span class="label">Pairing</span>
-  <h2>Connected in three steps.</h2>
+  <h2><span class="gl">Connected in <span class="k" style="--c:var(--amber)">three steps.</span></span></h2>
   <div class="steps">
     <div class="step"><span class="n">Step 1</span><h3>Open Sidekick on both</h3><p>Each device lists the other under Nearby when they're on the same Wi-Fi.</p><div class="mini"><span class="dev" style="width:34px;height:34px;border-radius:10px" data-i="phone" data-s="17" data-c="#4fcf86"></span><div class="t">Pixel 9<small>Nearby · tap Pair</small></div></div></div>
     <div class="step"><span class="n">Step 2</span><h3>Type the 6-digit code</h3><p>The other device shows a code. Type it, or scan its QR code with your phone.</p><div class="code6" aria-label="Example code 8 4 7 2 9 1"><span>8</span><span>4</span><span>7</span><span>2</span><span>9</span><span>1</span></div></div>
@@ -292,7 +299,7 @@ footer a:hover{color:var(--text)}
 
 <section id="devices"><div class="wrap">
   <span class="label">Devices</span>
-  <h2>On every device you use.</h2>
+  <h2><span class="gl">On <span class="k" style="--c:var(--orange)">every device</span> you use.</span></h2>
   <p class="lead">One app for Windows, Mac, Android and iPhone, free with every feature.</p>
   <div class="plats">
     <a class="plat" href="#wishlist"><span data-i="monitor" data-s="26"></span><div><b>Windows</b><small style="display:block">10 and 11</small></div><span class="soon">Coming soon</span></a>
@@ -304,7 +311,7 @@ footer a:hover{color:var(--text)}
 
 <section id="questions"><div class="wrap">
   <span class="label">Questions</span>
-  <h2>Good to know.</h2>
+  <h2><span class="gl">Good to <span class="k" style="--c:var(--blue)">know.</span></span></h2>
   <div class="qa">
     <details><summary>Is Sidekick free?<span data-i="down"></span></summary><p>Yes, with every feature, on every device. There's no account and no subscription.</p></details>
     <details><summary>Do I need an account or the internet?<span data-i="down"></span></summary><p>No. Your devices talk to each other directly, on your own Wi-Fi or a direct Wi-Fi link between the two. Nothing goes through our servers, because there aren't any.</p></details>
@@ -318,7 +325,7 @@ footer a:hover{color:var(--text)}
 
 <section class="wish" id="wishlist"><div class="wrap">
   <span class="label">The wishlist</span>
-  <h2>Be the first to try it.</h2>
+  <h2><span class="gl">Be the first to <span class="k" style="--c:var(--green)">try it.</span></span></h2>
   <p class="lead">Leave your email and we'll write once, the day Sidekick comes out.</p>
   <form class="join" id="join" novalidate>
     <label for="email" style="position:absolute;left:-9999px">Email</label>
