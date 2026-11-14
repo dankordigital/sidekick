@@ -8,267 +8,414 @@
 <title>Try Sidekick in your browser</title>
 <link rel="icon" type="image/png" sizes="64x64" href="/website/favicon.png">
 <link rel="apple-touch-icon" href="/website/apple-touch-icon.png">
-<meta name="description" content="Try Sidekick: send a file from a phone to a computer and back, and use the phone as the computer's touchpad.">
-<meta name="theme-color" content="#121212">
+<meta name="description" content="Try Sidekick 4.0: send files between a phone and a computer, and use the phone as the computer's touchpad.">
+<meta name="theme-color" content="#0a0a0a">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap">
 <style>
-/* The demo: a computer and a phone, paired. Two things to try: sending files (both ways) and Remote
-   (the phone is the computer's touchpad and keyboard). Self-contained: no app download, works anywhere. */
+/* The 4.0 design's own styles (design/emulator), so every card, sheet, button and the dock look exactly like it. */
+
+/* Layout: a test bench. The device (phone or computer window, scaled to fit) beside a panel that plays the other devices.
+   Tokens are the owner's Figma "Foundations" exactly. One committed dark look. */
 :root{
-  --page:#0d0d0d;--bg:#121212;--panel:#1c1c1c;--raised:#262626;--btn:#2e2e2e;
-  --text:#f2f2f2;--muted:#a1a1a6;--faint:#8a8a8f;--line:#ffffff1f;--hair:#ffffff12;
-  --white:#f0f0f0;--onwhite:#141414;--ok:#45d07e;--amber:#ffc56b;--amberbg:#2f2410;--amberline:#ffc56b40;--blue:#5b9dff;--green:#4fcf86;--orange:#ffb84d;--red:#ff6b5e;
-  --sans:Inter,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;--mono:"JetBrains Mono",ui-monospace,Menlo,Consolas,monospace;
+  --page:#0a0a0a;
+  --bg:#121212;--panel:#1c1c1c;--raised:#262626;--btn:#2e2e2e;
+  --text:#f2f2f2;--muted:#a1a1a6;--faint:#8a8a8f;
+  --ok:#45d07e;--amber:#ffc56b;--amberbg:#2f2410;--amberline:#ffc56b40;
+  --blue:#5b9dff;--green:#4fcf86;--orange:#ffb84d;
+  --white:#f0f0f0;--onwhite:#141414;--hair:#ffffff14;--line:#ffffff26;
+  --red:#ff6b5e;
+  --font:Inter,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
   color-scheme:dark;
 }
 *{box-sizing:border-box}
-[hidden]{display:none!important}
-html,body{margin:0}
-body{background:var(--page);color:var(--text);font:15px/1.45 var(--sans);-webkit-font-smoothing:antialiased;overflow-x:hidden;min-height:100vh;
-  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:0 calc(24px + env(safe-area-inset-bottom,0px))}
-button,input{font:inherit;color:inherit}
-button{cursor:pointer}
-:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+/* ---------- shared pieces ---------- */
 .ic{display:block;flex:none}
-.pill{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:42px;padding:0 18px;border-radius:21px;border:0;font-weight:600;font-size:14.5px;white-space:nowrap;background:var(--btn);color:var(--text);text-decoration:none;transition:background .2s,scale .3s cubic-bezier(.34,1.56,.64,1),opacity .2s}
-.pill:active{scale:.95}
+.pill{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:40px;padding:0 16px;border-radius:20px;border:0;font-weight:600;font-size:14px;white-space:nowrap;background:var(--btn);color:var(--text);transition:transform .12s,background .15s}
+.pill:active{transform:scale(.96)}
 .pill.w{background:var(--white);color:var(--onwhite)}
 .pill.o{background:transparent;border:1px solid var(--line)}
-.pill:disabled{opacity:.4;cursor:default}
+.pill.a{background:var(--amber);color:#241800}
+.pill.ao{background:transparent;border:1px solid #ffc56b66;color:var(--amberink,#ffe2ad)}
+.pill.sm{height:34px;padding:0 13px;font-size:13.5px}
+.pill.lg{height:50px;border-radius:25px;font-size:15px}
+.pill.blk{width:100%}
+.rb{display:grid;place-items:center;width:44px;height:44px;flex:none;border-radius:50%;border:0;background:var(--btn);color:var(--text)}
+.rb.s{width:36px;height:36px}
+.rb.ghost{background:transparent;color:var(--muted)}
+.dev{position:relative;flex:none;display:grid;place-items:center;background:var(--raised);border-radius:14px}
+.h1row{display:flex;align-items:center;gap:10px}
+.h1{margin:0;font-size:30px;font-weight:700;letter-spacing:-.02em;flex:none}
+.h1row .h1{flex:1}
+.sub{margin:0;color:var(--muted);font-size:14px}
+.lbl{color:var(--muted);font-size:12.5px;font-weight:600;display:flex;align-items:center;gap:8px;margin:6px 2px 0}
+.card{background:var(--panel);border-radius:22px}
+.st{font-size:12.5px;font-weight:500;color:var(--ok)}
+.st.off{color:var(--faint)}
+.chips{display:flex;gap:8px;flex:none;overflow-x:auto;scrollbar-width:none}
+.chips::-webkit-scrollbar{display:none}
+.chip{height:40px;padding:0 15px;border-radius:20px;border:0;background:var(--raised);color:var(--text);font-weight:500;font-size:14.5px;flex:none}
+.chip[aria-pressed=true]{background:var(--white);color:var(--onwhite);font-weight:600}
+.day{align-self:center;color:var(--muted);font-size:13px;font-weight:500}
+.sw{position:relative;width:48px;height:28px;flex:none;border-radius:14px;border:0;padding:0;background:#3a3a3c;transition:background .2s}
+.sw:after{content:"";position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:#fff;transition:transform .2s cubic-bezier(.22,1,.36,1)}
+.sw[aria-checked=true]{background:var(--ok)}
+.sw[aria-checked=true]:after{transform:translateX(20px)}
+.seg{display:flex;padding:5px;border-radius:26px;background:var(--panel);flex:none}
+.seg button{flex:1;height:40px;border-radius:20px;border:0;background:transparent;color:var(--muted);font-weight:500;font-size:14.5px}
+.seg button[aria-selected=true]{background:var(--white);color:var(--onwhite);font-weight:600}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 
-/* top */
-.top{display:flex;align-items:center;gap:16px;flex-wrap:wrap;max-width:1240px;margin:0 auto;padding-top:calc(16px + env(safe-area-inset-top,0px));padding-bottom:10px}
-.top a.home{display:flex;align-items:center;gap:12px;text-decoration:none;color:var(--muted);font-size:14px}
-.top a.home img{display:block;height:15px;width:auto}
-.seg{display:flex;gap:4px;padding:4px;border-radius:24px;background:var(--panel);border:1px solid var(--line);margin-left:auto}
-.seg button{display:flex;align-items:center;gap:8px;height:38px;padding:0 16px;border-radius:19px;border:0;background:transparent;color:var(--muted);font-weight:600;font-size:14px;transition:background .25s,color .25s}
-.seg button[aria-selected=true]{background:var(--white);color:var(--onwhite)}
-.top .join{margin-left:4px}
-.hint{max-width:1240px;margin:6px auto 14px;display:flex;align-items:center;gap:10px;color:var(--muted);font-size:14.5px;min-height:24px}
+/* item cards (the device history) */
+.items{display:flex;flex-direction:column;gap:6px}
+.it{display:flex;flex-direction:column;gap:6px;max-width:86%}
+.it.me{align-self:flex-end;align-items:flex-end}
+.it.them{align-self:flex-start}
+.it.wide{max-width:100%;align-self:stretch}
+.it .foot{color:var(--faint);font-size:12px;padding:0 2px}
+.ic-card{padding:16px;border-radius:22px;background:var(--raised);display:flex;flex-direction:column;gap:10px;min-width:240px}
+.me .ic-card{background:var(--white);color:var(--onwhite)}
+.ic-card .row1{display:flex;gap:12px;align-items:flex-start}
+.ic-card .nm{font-weight:600;font-size:15.5px;overflow-wrap:anywhere}
+.ic-card .sz{font-size:13px;color:var(--muted);margin-top:2px}
+.me .ic-card .sz,.me .ic-card .saved{color:#555}
+.ic-card .saved{font-size:13px;color:var(--text)}
+.ic-card .acts{display:flex;gap:8px;flex-wrap:wrap}
+.ic-card .acts .pill{height:36px;padding:0 14px;font-size:14px;background:#ffffff12}
+.me .ic-card .acts .pill{background:#2a2a2a;color:#f2f2f2}
+.ic-card .acts .rb{width:36px;height:36px;background:#ffffff12}
+.me .ic-card .acts .rb{background:#2a2a2a;color:#f2f2f2}
+.note{font-size:16px}
+.otp{font:600 30px/1.1 ui-monospace,'JetBrains Mono',monospace;letter-spacing:.14em}
+.ic-card .acts .pill.cc{background:var(--white);color:var(--onwhite);gap:8px;height:40px;padding:0 18px;font-weight:600}
+[data-hold]{cursor:default;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;transition:transform .18s cubic-bezier(.22,1,.36,1)}
+[data-hold].held,.pill.held{transform:scale(.96)}
+.thumbs{display:flex;gap:6px}
+.thumbs img{width:88px;height:88px;object-fit:cover;border-radius:12px;display:block}
+.site{font-size:19px;font-weight:700}
+.path{font-size:12.5px;color:var(--muted);overflow-wrap:anywhere}
+.req{border-radius:22px;padding:16px;display:flex;flex-direction:column;gap:8px;background:var(--amberbg);border:1px solid var(--amberline);color:#ffe2ad}
+.req .k{color:var(--amber);font-size:12.5px;font-weight:600}
+.req .t{color:var(--amber);font-size:15.5px}
+.req .names{font-size:12.5px;color:#ffe2adb3}
+.req.plain{background:var(--raised);border-color:transparent;color:var(--text)}
+.req.plain .k{color:var(--muted)}
+.req.plain .t{color:var(--text)}
+.req.plain .names{color:var(--muted)}
+.bar{height:4px;border-radius:2px;background:#ffffff1f;overflow:hidden}
+.bar>i{display:block;height:100%;border-radius:2px;background:var(--amber)}
+.empty{padding:18px;border-radius:22px;background:var(--panel)}
+.empty b{display:block;font-size:17px;margin-bottom:6px}
+.empty span{color:var(--muted);font-size:13.5px}
+.it.new{animation:pop .3s cubic-bezier(.22,1,.36,1)}
+@keyframes pop{from{opacity:0;transform:translateY(8px)}}
+
+/* message bar */
+.mbar{display:flex;align-items:center;gap:8px;padding:7px;border-radius:32px;background:var(--panel);border:1px solid #ffffff1f;box-shadow:0 10px 30px #00000080;flex:none}
+.mbar .rb{width:46px;height:46px}
+.mbar input{flex:1;min-width:0;height:46px;border:0;outline:0;background:transparent;font-size:15px;padding:0 4px}
+.mbar input::placeholder{color:var(--faint)}
+.sendf{position:relative;display:inline-flex;align-items:center;height:46px;min-width:46px;padding:0 18px 0 44px;flex:none;border-radius:23px;border:0;background:var(--white);color:var(--onwhite);font-weight:600;font-size:14.5px;overflow:hidden;transition:padding .32s cubic-bezier(.22,1,.36,1)}
+.sendf .a,.sendf .b{position:absolute;left:13px;top:13px;transition:transform .32s cubic-bezier(.22,1,.36,1),opacity .2s}
+.sendf .b{opacity:0;transform:translateY(10px) scale(.6)}
+.sendf .l{display:inline-block;max-width:90px;white-space:nowrap;overflow:hidden;transition:max-width .32s cubic-bezier(.22,1,.36,1),opacity .2s}
+.mbar.typing .sendf{padding:0 0 0 46px}
+.mbar.typing .sendf .a{opacity:0;transform:translateY(-10px) scale(.6)}
+.mbar.typing .sendf .b{opacity:1;transform:none}
+.mbar.typing .sendf .l{max-width:0;opacity:0}
+
+/* ---------- phone ---------- */
+.bezel{width:414px;height:868px;padding:12px;border-radius:60px;background:#2a2a2a;box-shadow:inset 0 0 0 2px #3a3a3a,0 30px 80px #000c}
+.ph{position:relative;width:390px;height:844px;border-radius:48px;overflow:hidden;background:var(--bg)}
+.status{position:absolute;left:0;right:0;top:0;height:50px;display:flex;align-items:center;justify-content:space-between;padding:6px 30px 0 32px;font-weight:600;font-size:15px;z-index:70;pointer-events:none}
+.status .r{display:flex;gap:6px;align-items:center}
+.batt{width:24px;height:12px;border-radius:3px;border:1.5px solid #f2f2f2aa;padding:1.5px}.batt i{display:block;height:100%;width:80%;background:#f2f2f2;border-radius:1px}
+.scr{position:absolute;inset:0;display:flex;flex-direction:column;gap:12px;padding:62px 24px 112px;overflow-y:auto;scrollbar-width:none}
+.scr::-webkit-scrollbar{display:none}
+.scr.enter{animation:enter .26s cubic-bezier(.22,1,.36,1)}
+.scr.push{animation:push .32s cubic-bezier(.22,1,.36,1)}
+@keyframes enter{from{opacity:0;transform:translateY(6px)}}
+@keyframes push{from{transform:translateX(36px);opacity:.3}}
+.chat{position:absolute;inset:0;display:flex;flex-direction:column;gap:12px;padding:62px 24px 98px}
+.chat .feed{flex:1;min-height:0;overflow-y:auto;display:flex;flex-direction:column;gap:14px;scrollbar-width:none;padding-bottom:6px}
+.chat .feed::-webkit-scrollbar{display:none}
+.chat .feed>:first-child{margin-top:0}
+.devpick{display:flex;align-items:center;gap:14px;border:0;background:none;padding:0;text-align:left;width:100%}
+.devpick.card{background:var(--panel)}
+.devpick .t{flex:1;min-width:0}
+.devpick b{display:block;font-size:20px;font-weight:600}
+.dock{position:absolute;left:16px;right:16px;bottom:22px;z-index:20;display:flex;align-items:center;justify-content:space-between;padding:8px;border-radius:34px;background:var(--panel);border:1px solid #ffffff1f;box-shadow:0 10px 30px #00000080;transition:transform .3s cubic-bezier(.22,1,.36,1),opacity .2s}
+.dock.away{transform:translateY(140%);opacity:0;pointer-events:none}
+.dk{display:flex;align-items:center;height:48px;min-width:48px;padding:0 12px;border-radius:24px;border:0;background:transparent;color:var(--text);transition:background .3s,padding .3s}
+.dk span{max-width:0;overflow:hidden;white-space:nowrap;font-weight:600;font-size:15px;transition:max-width .35s cubic-bezier(.22,1,.36,1),margin .35s}
+.dk.on{background:var(--white);color:var(--onwhite);padding:0 26px}
+.dk.on span{max-width:96px;margin-left:10px}
+.drow{display:flex;align-items:center;gap:14px;padding:14px}
+.drow+.drow{padding-top:6px}
+.drow .main{flex:1;min-width:0;display:flex;align-items:center;gap:14px;border:0;background:none;padding:0;text-align:left}
+.drow .main b{display:block;font-size:16px;font-weight:500}
+.drow .st{display:block;margin-top:2px}
+.nearby{border:1.5px dashed var(--line);border-radius:22px}
+.needs{display:flex;flex-direction:column;gap:12px;padding:16px;border-radius:22px;background:var(--amberbg);border:1px solid var(--amberline)}
+.needs .k{color:var(--amber);font-weight:600;font-size:14px}
+.tiles{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.tile{display:flex;flex-direction:column;align-items:flex-start;gap:16px;padding:18px 16px;border-radius:22px;border:0;background:var(--panel);font-size:15px;text-align:left}
+.selrow{display:flex;align-items:center;gap:12px;padding:12px;border-radius:16px;background:var(--raised)}
+.selrow .t{flex:1;min-width:0}
+.selrow b{display:block;font-weight:500;overflow-wrap:anywhere}
+.selrow small{color:var(--muted);font-size:12px}
+.pad{position:relative;flex:1;min-height:200px;border-radius:24px;background:var(--panel);background-image:radial-gradient(#ffffff17 1px,transparent 1.4px);background-size:22px 22px;touch-action:none;cursor:crosshair;overflow:hidden}
+.pad .ptr{position:absolute;width:12px;height:12px;margin:-6px 0 0 -6px;border-radius:50%;background:#fff;transition:box-shadow .15s}
+.pad .ptr.click{box-shadow:0 0 0 14px #ffffff33}
+.pad .hint{position:absolute;left:0;right:0;bottom:14px;text-align:center;color:var(--faint);font-size:12.5px;pointer-events:none}
+.pad .trail{position:absolute;left:16px;top:14px;color:var(--muted);font-size:12.5px;font-weight:600;pointer-events:none}
+.flash{animation:flash .3s}
+@keyframes flash{50%{background:var(--white);color:var(--onwhite)}}
+.setrow{display:flex;align-items:center;gap:12px;min-height:52px;padding:0 16px;border:0;background:none;width:100%;text-align:left;font-size:15px}
+.setrow .t{flex:1}
+.setrow .v{color:var(--muted);display:flex;align-items:center;gap:6px}
+.ring{position:relative;align-self:center;width:210px;height:210px}
+.ring>div{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.ring b{font-size:40px;font-weight:700;letter-spacing:-.02em}
+.codebox{display:flex;gap:8px;position:relative;justify-content:space-between}
+.codebox span{flex:1;height:54px;border-radius:14px;background:var(--panel);border:1px solid #ffffff1f;display:grid;place-items:center;font-size:22px;font-weight:600}
+.codebox span.cur{border:2px solid var(--white)}
+.codebox input{position:absolute;inset:0;opacity:0;width:100%;height:100%;font-size:16px}
+.codebox.bad{animation:shake .35s}
+@keyframes shake{25%{transform:translateX(-8px)}75%{transform:translateX(8px)}}
+.pingrings{position:relative;width:250px;height:250px;display:grid;place-items:center}
+.pingrings i{position:absolute;inset:0;border-radius:50%;border:2px solid #ffc56b66;animation:ring 2.6s ease-out infinite}
+.pingrings i:nth-child(2){animation-delay:.85s}.pingrings i:nth-child(3){animation-delay:1.7s}
+@keyframes ring{0%{transform:scale(.45);opacity:1}100%{transform:scale(1.15);opacity:0}}
+.bar2{position:absolute;left:16px;right:16px;bottom:22px;z-index:31;display:flex;gap:8px;padding:7px;border-radius:32px;background:var(--panel);border:1px solid #ffffff1f;box-shadow:0 10px 30px #00000080}
+.bar2 .pill{flex:1;height:48px;border-radius:24px;justify-content:flex-start;padding:0 18px}
+.full{position:absolute;inset:0;z-index:30;background:var(--bg);display:flex;flex-direction:column;gap:14px;padding:62px 24px 30px;overflow-y:auto;scrollbar-width:none}
+.full::-webkit-scrollbar{display:none}
+.full.anim{animation:push .32s cubic-bezier(.22,1,.36,1)}
+.full.rise{animation:up .34s cubic-bezier(.22,1,.36,1)}
+
+/* sheets, dialogs and notices */
+.back{position:absolute;inset:0;z-index:40;background:#000c;animation:fade .2s}
+@keyframes fade{from{opacity:0}}
+.sheet{position:absolute;left:8px;right:8px;bottom:8px;z-index:41;display:flex;flex-direction:column;gap:10px;padding:20px 18px 20px;border-radius:30px;background:var(--panel);animation:up .32s cubic-bezier(.22,1,.36,1);max-height:88%;overflow-y:auto}
+.sheet.grab{padding-top:12px}
+.sheet .gr{align-self:flex-start;width:36px;height:4px;border-radius:2px;background:#ffffff33;margin:4px 0 8px}
+@keyframes up{from{transform:translateY(100%)}}
+.shead{display:flex;align-items:flex-start;gap:12px}.shead>div{flex:1;min-width:0;display:flex;flex-direction:column;gap:8px;overflow-wrap:anywhere}.shead .sub2{margin:0!important}
+.sheet{touch-action:pan-x}.sheet.drag{animation:none;transition:none}.sheet.snap{transition:transform .25s cubic-bezier(.22,1,.36,1)}.sheet.gone{transform:translateY(110%)!important;transition:transform .2s ease-in}
+.sheet h3,.dlg h3{margin:0;font-size:17px;font-weight:600}
+.sheet .sub2,.dlg .sub2{margin:-4px 0 2px;color:var(--muted);font-size:13px}
+.opt{display:flex;align-items:center;gap:12px;width:100%;min-height:46px;padding:0 16px;border-radius:23px;border:0;background:var(--raised);text-align:left;font-weight:500;font-size:14.5px}
+.opt.w{background:var(--white);color:var(--onwhite);font-weight:600}
+.opt[disabled]{color:var(--faint);opacity:1}
+.foot2{color:var(--faint);font-size:12px;margin-top:2px}
+.viewer img{width:100%;border-radius:16px;display:block}
+.notices{position:absolute;left:12px;right:12px;bottom:100px;z-index:50;display:flex;flex-direction:column;gap:8px;pointer-events:none}
+.notices.low{bottom:96px}
+.notices.onchat{bottom:168px}
+.notice{pointer-events:auto;position:relative;overflow:hidden;display:flex;align-items:center;gap:12px;padding:14px 12px 16px 16px;border-radius:20px;background:var(--panel);border:1px solid #ffffff1f;box-shadow:0 10px 30px #00000080;animation:up2 .3s cubic-bezier(.22,1,.36,1);font-size:14.5px}
+.notice .t{flex:1;min-width:0}
+.notice small{display:block;color:var(--text);font-size:14px}
+.notice .x{width:40px;height:40px;border-radius:50%;border:0;background:var(--btn);display:grid;place-items:center;flex:none}
+.notice .life{position:absolute;left:16px;right:70px;bottom:7px;height:2px;border-radius:1px;background:#ffffff26;overflow:hidden}
+.notice .life i{display:block;height:100%;background:#ffffff99;animation:life linear forwards}
+.notice{touch-action:none}
+.notice.out{opacity:0;transform:translateY(8px);transition:.25s}
+.notice.drag{transition:none}
+.notice.gone{opacity:0;transform:translateY(120%)!important;transition:.22s}
+@keyframes up2{from{opacity:0;transform:translateY(12px)}}
+@keyframes life{from{width:100%}to{width:0}}
+.pop{position:absolute;inset:0;z-index:60;display:grid;place-items:center;padding:20px;background:#000c;animation:fade .2s}
+.dlg{width:100%;max-width:420px;display:flex;flex-direction:column;gap:12px;padding:22px;border-radius:26px;background:var(--panel);animation:pop .25s}
+.dlg ol{margin:0;padding-left:20px;line-height:1.5}
+
+/* ---------- computer ---------- */
+.win{width:1280px;height:800px;border-radius:14px;overflow:hidden;background:var(--bg);box-shadow:0 0 0 1px #ffffff1f,0 30px 80px #000c;display:flex;flex-direction:column;position:relative}
+.wbar{height:38px;flex:none;display:flex;align-items:center;gap:16px;padding:0 14px;font-size:13px;color:var(--muted)}
+.wbar .l{display:flex;gap:8px}.wbar .l i{width:12px;height:12px;border-radius:50%;background:#3a3a3c;display:block}
+.wbar .r{margin-left:auto}
+.wbody{flex:1;min-height:0;display:flex;gap:12px;padding:0 12px 12px}
+.rail{width:64px;flex:none;display:flex;flex-direction:column;align-items:center;gap:6px;padding:14px 0;border-radius:22px;background:var(--panel)}
+.rail .logo{font-weight:800;font-size:29px;letter-spacing:-.07em;margin-bottom:14px;line-height:1}
+.rail button{display:flex;flex-direction:column;align-items:center;gap:5px;border:0;background:none;color:var(--muted);font-size:10.5px;padding:6px 0;width:60px}
+.rail button .c{width:42px;height:42px;border-radius:50%;display:grid;place-items:center;color:var(--text)}
+.rail button[aria-current=true] .c{background:var(--white);color:var(--onwhite)}
+.rail button[aria-current=true]{color:var(--text)}
+.col{width:300px;flex:none;display:flex;flex-direction:column;gap:10px;padding:16px 14px;border-radius:22px;background:var(--panel);overflow-y:auto;scrollbar-width:none}
+.col::-webkit-scrollbar{display:none}
+.col h2{margin:0;font-size:20px;font-weight:600;flex:1}
+.wrow{display:flex;align-items:center;gap:12px;padding:10px;border-radius:16px;border:0;background:none;text-align:left;width:100%}
+.wrow:hover{background:#ffffff08}
+.wrow[aria-current=true]{background:var(--raised)}
+.wrow .t{flex:1;min-width:0}
+.wrow b{display:flex;font-weight:500;font-size:14.5px}
+.wrow b em{margin-left:auto;font-style:normal;color:var(--faint);font-size:12px;font-weight:400}
+.wrow small{display:block;color:var(--muted);font-size:12.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.wmain{flex:1;min-width:0;display:flex;flex-direction:column;gap:14px;padding:20px 24px;border-radius:22px;background:var(--panel);position:relative;overflow:hidden}
+.wmain .feed{flex:1;min-height:0;overflow-y:auto;display:flex;flex-direction:column;gap:14px;scrollbar-width:none}
+.wmain .feed::-webkit-scrollbar{display:none}
+.wmain .it{max-width:62%}
+.wmain .it.wide{max-width:560px;align-self:flex-start}
+.drop{position:absolute;inset:8px;border-radius:20px;border:2px dashed var(--white);background:#121212e6;display:none;place-items:center;z-index:5;font-size:20px;font-weight:600;pointer-events:none}
+.wmain.dragging .drop{display:grid}
+.wnot{position:absolute;right:24px;bottom:24px;width:380px;z-index:50;display:flex;flex-direction:column;gap:8px;pointer-events:none}
+@media (prefers-reduced-motion:reduce){*,*:before,*:after{animation:none!important;transition:none!important}}
+
+</style>
+<style>
+/* The demo page: a MacBook and an iPhone, paired, side by side (stacked on phones, the computer pinned on top).
+   Two things to try: sending files both ways, and Remote (the phone is the computer's touchpad and keyboard). */
+[hidden]{display:none!important}
+html,body{margin:0;height:auto}
+body{background:var(--page);color:var(--text);font:14px/1.35 var(--font);-webkit-font-smoothing:antialiased;overflow-x:hidden;min-height:100vh;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:0 calc(24px + env(safe-area-inset-bottom,0px))}
+.ptop{display:flex;align-items:center;gap:14px;flex-wrap:wrap;max-width:1300px;margin:0 auto;padding-top:calc(16px + env(safe-area-inset-top,0px));padding-bottom:8px}
+.ptop a.home{display:flex;align-items:center;gap:12px;text-decoration:none;color:var(--muted);font-size:14px}
+.ptop a.home img{display:block;height:15px;width:auto}
+.modes{display:flex;gap:4px;padding:4px;border-radius:24px;background:var(--panel);border:1px solid var(--line);margin-left:auto}
+.modes button{display:flex;align-items:center;gap:8px;height:38px;padding:0 16px;border-radius:19px;border:0;background:transparent;color:var(--muted);font-weight:600;font-size:14px;transition:background .25s,color .25s}
+.modes button[aria-selected=true]{background:var(--white);color:var(--onwhite)}
+.hint{max-width:1300px;margin:4px auto 14px;display:flex;align-items:center;gap:10px;color:var(--muted);font-size:14.5px;min-height:24px}
 .hint b{color:var(--text);font-weight:600}
-.hint .step{display:inline-grid;place-items:center;width:24px;height:24px;border-radius:50%;background:var(--raised);font:600 12px var(--mono);color:var(--text);flex:none}
-@media (max-width:720px){.seg{margin-left:0;order:3;width:100%}.seg button{flex:1;justify-content:center}.top .join{margin-left:auto}}
-
-/* the two devices */
-.stage{display:flex;justify-content:center;align-items:flex-start;gap:28px;max-width:1240px;margin:0 auto}
+.hint .n{display:inline-grid;place-items:center;width:24px;height:24px;border-radius:50%;background:var(--raised);font-weight:600;font-size:12px;color:var(--text);flex:none}
+@media (max-width:720px){.modes{margin-left:0;order:3;width:100%}.modes button{flex:1;justify-content:center}.ptop .join{margin-left:auto}}
+@media (max-width:520px){.ptop .join{height:36px;padding:0 14px;font-size:13px}.ptop a.home span{display:none}.hint{font-size:13.5px}}
+.stage2{display:flex;justify-content:center;align-items:flex-start;gap:28px;max-width:1300px;margin:0 auto}
 .fit{position:relative;flex:none}
 .fit>.inner{position:absolute;left:0;top:0;transform-origin:0 0}
-@media (max-width:860px){.stage{flex-direction:column;align-items:center;gap:14px}
+@media (max-width:860px){.stage2{flex-direction:column;align-items:center;gap:14px}
   #fit-mac{position:sticky;top:env(safe-area-inset-top,0px);z-index:10;padding-top:6px;box-sizing:content-box;background:var(--page)}}
-@media (max-width:520px){.top .join{height:36px;padding:0 14px;font-size:13px}.top a.home span{display:none}.hint{font-size:13.5px}}
+.foot{max-width:1300px;margin:22px auto 0;display:flex;gap:10px;flex-wrap:wrap;justify-content:center;color:var(--muted);font-size:14px;text-align:center}
+.foot a{color:var(--text)}
+a.pill{text-decoration:none}
 
-/* computer: 860 x 540 screen in a thin frame */
-.mac{width:900px;height:600px;padding:20px 20px 40px;border-radius:26px;background:#1d1d1f;box-shadow:inset 0 0 0 2px #2c2c2e,0 30px 80px #000c;position:relative}
-.mac::after{content:"";position:absolute;left:50%;bottom:16px;width:70px;height:6px;margin-left:-35px;border-radius:3px;background:#2c2c2e}
-.screen{position:relative;width:860px;height:540px;border-radius:10px;overflow:hidden;background:radial-gradient(120% 90% at 20% 0%,#23344f 0%,#141a26 45%,#0e0f13 100%);cursor:default;user-select:none;-webkit-user-select:none}
-.menubar{position:absolute;left:0;right:0;top:0;height:26px;display:flex;align-items:center;gap:18px;padding:0 14px;background:#0f1117cc;backdrop-filter:blur(10px);font-size:12.5px;font-weight:500;color:#e8e8ea;z-index:3}
-.menubar .r{margin-left:auto;display:flex;align-items:center;gap:14px;color:#cfd0d4}
-.menubar .sk{display:flex;align-items:center;gap:6px}
-.menubar .sk i{width:7px;height:7px;border-radius:50%;background:var(--ok);display:block}
-.win{position:absolute;border-radius:12px;background:#17181c;border:1px solid #ffffff1a;box-shadow:0 18px 50px #0009;overflow:hidden;display:flex;flex-direction:column}
-.win .tb{height:30px;flex:none;display:flex;align-items:center;gap:7px;padding:0 11px;background:#1d1e23;border-bottom:1px solid #ffffff10;font-size:12px;color:var(--muted)}
-.win .tb i{width:11px;height:11px;border-radius:50%;background:#3a3a3d;display:block}
-.win .tb span{margin-left:8px;font-weight:600;color:#d9d9dc}
-/* Sidekick's window on the computer */
-#skwin{left:28px;top:44px;width:470px;height:400px}
-#skwin .body{flex:1;min-height:0;display:flex}
-#skwin .side{width:150px;flex:none;padding:12px 10px;border-right:1px solid #ffffff10;display:flex;flex-direction:column;gap:6px}
-#skwin .side b{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--faint);font-weight:600;margin:2px 4px 4px}
-.drow{display:flex;align-items:center;gap:9px;padding:8px;border-radius:10px;background:#ffffff0c;font-size:12.5px}
-.drow small{display:block;color:var(--ok);font-size:10.5px}
-.dv{display:grid;place-items:center;width:30px;height:30px;border-radius:9px;background:var(--raised);flex:none}
-#skwin .main{flex:1;min-width:0;display:flex;flex-direction:column;padding:12px 14px;gap:10px}
-#skwin .main h4{margin:0;font-size:15px;font-weight:700;display:flex;align-items:center;gap:8px}
-#skwin .main h4 .pill{margin-left:auto;height:30px;padding:0 12px;font-size:12px}
-.feed{flex:1;min-height:0;overflow:auto;display:flex;flex-direction:column;gap:8px;scrollbar-width:none}
-.feed::-webkit-scrollbar{display:none}
-.row{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:12px;background:var(--raised);font-size:12.5px;animation:pop .35s cubic-bezier(.22,1,.36,1)}
-.row .t{flex:1;min-width:0}
-.row .t b{display:block;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.row .t small{color:var(--muted);font-size:11px}
-.row.me{background:var(--white);color:var(--onwhite)}
-.row.me small{color:#555}
-.empty{color:var(--faint);font-size:12.5px;padding:8px 2px}
-@keyframes pop{from{opacity:0;transform:translateY(8px) scale(.98)}}
-/* the menu of files on the computer */
-.cmenu{position:absolute;right:14px;top:72px;width:230px;padding:6px;border-radius:12px;background:#24252b;border:1px solid #ffffff1f;box-shadow:0 14px 40px #000a;z-index:4;animation:pop .2s}
-.cmenu button{display:flex;align-items:center;gap:9px;width:100%;padding:8px;border-radius:8px;border:0;background:transparent;text-align:left;font-size:12.5px;color:var(--text)}
-.cmenu button:hover,.cmenu button.hot{background:#ffffff14}
-.cmenu small{color:var(--muted);font-size:11px;margin-left:auto}
-/* the corner pop-up when a file arrives (Sidekick in the tray) */
-.corner{position:absolute;right:14px;bottom:62px;width:300px;padding:14px;border-radius:16px;background:#1f2026;border:1px solid #ffffff22;box-shadow:0 20px 50px #000b;z-index:5;display:flex;flex-direction:column;gap:10px;animation:rise .45s cubic-bezier(.22,1,.36,1)}
-@keyframes rise{from{opacity:0;transform:translateY(24px) scale(.96)}}
-.corner .h{display:flex;align-items:center;gap:10px}
-.corner .h .t{flex:1;min-width:0;font-size:12.5px}
-.corner .h b{display:block;font-size:13.5px}
-.corner .btns{display:flex;gap:8px}
-.corner .btns .pill{flex:1;height:34px;font-size:13px}
-.corner .bar{height:4px;border-radius:2px;background:#ffffff1f;overflow:hidden}
-.corner .bar i{display:block;height:100%;width:0;background:var(--amber);border-radius:2px;transition:width .12s linear}
-.corner .count{height:2px;border-radius:1px;background:#ffffff1a;overflow:hidden;margin:-4px -2px 0}
-.corner .count i{display:block;height:100%;background:#ffffff66;animation:count 12s linear forwards}
-@keyframes count{from{width:100%}to{width:0}}
-.corner.out{animation:out .3s ease forwards}
-@keyframes out{to{opacity:0;transform:translateY(14px)}}
-.ring{position:relative;width:34px;height:34px;flex:none}
-.ring svg{display:block}
-.ring .ic{position:absolute;inset:0;margin:auto}
-/* desktop things for Remote */
-#music{left:530px;top:44px;width:300px;height:120px}
+/* the MacBook: a 1280 x 800 desktop */
+.mac{width:1320px;height:870px;padding:20px 20px 50px;border-radius:30px;background:#1d1d1f;box-shadow:inset 0 0 0 2px #2c2c2e,0 30px 80px #000c;position:relative}
+.mac::after{content:"";position:absolute;left:50%;bottom:20px;width:90px;height:7px;margin-left:-45px;border-radius:4px;background:#2c2c2e}
+.screen{position:relative;width:1280px;height:800px;border-radius:10px;overflow:hidden;background:radial-gradient(120% 90% at 20% 0%,#23344f 0%,#141a26 45%,#0e0f13 100%);user-select:none;-webkit-user-select:none}
+.menubar{position:absolute;left:0;right:0;top:0;height:28px;display:flex;align-items:center;gap:20px;padding:0 16px;background:#0f1117cc;backdrop-filter:blur(10px);font-size:13px;font-weight:500;color:#e8e8ea;z-index:3}
+.menubar .r{margin-left:auto;display:flex;align-items:center;gap:16px;color:#cfd0d4}
+#skwin.win{position:absolute;left:22px;top:44px;width:900px;height:650px;z-index:2}
+#skwin .col{width:250px}
+#skwin .wmain{padding:16px 18px}
+#skwin .wmain .it{max-width:72%}
+.mwin{position:absolute;border-radius:14px;background:#17181c;border:1px solid #ffffff1a;box-shadow:0 18px 50px #0009;overflow:hidden;display:flex;flex-direction:column;transition:opacity .4s,filter .4s,border-color .3s;z-index:1}
+.mwin .tb{height:30px;flex:none;display:flex;align-items:center;gap:7px;padding:0 11px;background:#1d1e23;border-bottom:1px solid #ffffff10;font-size:12px;color:var(--muted)}
+.mwin .tb i{width:11px;height:11px;border-radius:50%;background:#3a3a3d;display:block}
+.mwin .tb span{margin-left:8px;font-weight:600;color:#d9d9dc}
+#music{left:944px;top:44px;width:316px;height:132px}
 #music .body{flex:1;display:flex;align-items:center;gap:14px;padding:12px 14px}
-.art{width:64px;height:64px;border-radius:10px;background:linear-gradient(135deg,#ffb84d,#ff6b5e 60%,#d6adf2);flex:none;transition:transform .4s cubic-bezier(.34,1.56,.64,1)}
+.art{width:70px;height:70px;border-radius:12px;background:linear-gradient(135deg,#ffb84d,#ff6b5e 60%,#d6adf2);flex:none}
 .playing .art{animation:breathe 1.6s ease-in-out infinite}
 @keyframes breathe{50%{transform:scale(1.05)}}
 #music .t{flex:1;min-width:0;font-size:12.5px}
-#music .t b{display:block;font-size:13.5px}
+#music .t b{display:block;font-size:14px}
 #music .t small{color:var(--muted)}
-.mbtn{display:grid;place-items:center;width:38px;height:38px;border-radius:50%;border:0;background:var(--white);color:var(--onwhite);flex:none}
+.mbtn{display:grid;place-items:center;width:40px;height:40px;border-radius:50%;border:0;background:var(--white);color:var(--onwhite);flex:none}
 .eq{display:flex;gap:2px;align-items:flex-end;height:12px;margin-top:6px}
 .eq i{width:3px;height:3px;background:var(--green);border-radius:1px;display:block}
 .playing .eq i{animation:eq .8s ease-in-out infinite}
 .eq i:nth-child(2){animation-delay:.15s}.eq i:nth-child(3){animation-delay:.3s}.eq i:nth-child(4){animation-delay:.45s}
 @keyframes eq{50%{height:12px}}
-#notes{left:530px;top:180px;width:300px;height:150px}
-#notes .body{flex:1;padding:10px 12px;font-size:13px;color:#e6e6e8;white-space:pre-wrap;overflow:hidden}
+#notes{left:944px;top:192px;width:316px;height:200px}
+#notes .body{flex:1;padding:12px 14px;font-size:13.5px;color:#e6e6e8;white-space:pre-wrap;overflow:hidden}
 #notes .caret{display:inline-block;width:1.5px;height:15px;background:var(--blue);vertical-align:-2px;animation:blink 1s steps(1) infinite}
 @keyframes blink{50%{opacity:0}}
-#doc{left:530px;top:346px;width:300px;height:118px}
-#doc .body{flex:1;overflow:hidden;position:relative}
-#doc .page{position:absolute;left:0;right:0;top:0;padding:10px 12px;font-size:11.5px;color:#cfcfd3;transition:transform .12s linear}
-#doc .page p{margin:0 0 8px}
-#doc .page b{color:#fff}
-.dock{position:absolute;left:50%;bottom:8px;transform:translateX(-50%);display:flex;gap:8px;padding:7px;border-radius:16px;background:#ffffff14;border:1px solid #ffffff1a;backdrop-filter:blur(12px);z-index:3}
-.dock button{width:40px;height:40px;border-radius:11px;border:0;display:grid;place-items:center;color:#fff;transition:transform .3s cubic-bezier(.34,1.56,.64,1)}
-.dock button.bounce{animation:bounce .7s cubic-bezier(.34,1.56,.64,1)}
+#recipe{left:944px;top:408px;width:316px;height:286px}
+#recipe .body{flex:1;overflow:hidden;position:relative}
+#recipe .page{position:absolute;left:0;right:0;top:0;padding:12px 14px;font-size:12.5px;color:#cfcfd3;transition:transform .12s linear}
+#recipe .page p{margin:0 0 9px}
+#recipe .page b{color:#fff}
+.mode-send .mwin{opacity:.35;filter:saturate(.4)}
+.macdock{position:absolute;left:50%;bottom:10px;transform:translateX(-50%);display:flex;gap:9px;padding:8px;border-radius:18px;background:#ffffff14;border:1px solid #ffffff1a;backdrop-filter:blur(12px);z-index:3}
+.macdock button{width:46px;height:46px;border-radius:12px;border:0;display:grid;place-items:center;color:#fff}
+.macdock button.bounce{animation:bounce .7s cubic-bezier(.34,1.56,.64,1)}
 @keyframes bounce{30%{transform:translateY(-16px)}60%{transform:translateY(0)}80%{transform:translateY(-5px)}}
-.hud{position:absolute;left:50%;top:50%;width:170px;padding:16px;margin:-60px 0 0 -85px;border-radius:18px;background:#1c1c1fdd;backdrop-filter:blur(14px);display:flex;flex-direction:column;align-items:center;gap:10px;z-index:6;animation:fadein .2s;font-size:12.5px;color:var(--muted)}
+.hud{position:absolute;left:50%;top:50%;width:190px;padding:18px;margin:-70px 0 0 -95px;border-radius:20px;background:#1c1c1fdd;backdrop-filter:blur(14px);display:flex;flex-direction:column;align-items:center;gap:10px;z-index:8;animation:fade .2s;font-size:13px;color:var(--muted)}
 .hud .vol{width:100%;height:6px;border-radius:3px;background:#ffffff22;overflow:hidden}
-.hud .vol i{display:block;height:100%;background:#fff;border-radius:3px;transition:width .2s}
-@keyframes fadein{from{opacity:0}}
-.cursor{position:absolute;left:0;top:0;width:22px;height:22px;pointer-events:none;z-index:9;transition:transform .05s linear;filter:drop-shadow(0 2px 3px #0008)}
-.click{position:absolute;width:40px;height:40px;margin:-20px 0 0 -20px;border-radius:50%;border:2px solid #fff;pointer-events:none;z-index:8;animation:clk .45s ease-out forwards}
+.hud .vol i{display:block;height:100%;background:#fff;border-radius:3px}
+.cursor{position:absolute;left:0;top:0;width:24px;height:24px;pointer-events:none;z-index:20;filter:drop-shadow(0 2px 3px #0008);transition:opacity .3s}
+.click{position:absolute;width:44px;height:44px;margin:-22px 0 0 -22px;border-radius:50%;border:2px solid #fff;pointer-events:none;z-index:19;animation:clk .45s ease-out forwards}
 @keyframes clk{from{transform:scale(.3);opacity:1}to{transform:scale(1.2);opacity:0}}
-.banner{position:absolute;left:50%;top:34px;transform:translateX(-50%);display:flex;align-items:center;gap:8px;padding:6px 12px;border-radius:14px;background:#2f2410ee;border:1px solid var(--amberline);color:#ffe2ad;font-size:12px;z-index:4;animation:fadein .3s}
-.banner i{width:7px;height:7px;border-radius:50%;background:var(--amber);display:block;animation:blink 1.4s infinite}
-.mode-send #music,.mode-send #notes,.mode-send #doc{opacity:.35;filter:saturate(.4)}
-.win{transition:opacity .4s,filter .4s}
-
-/* phone: 330 x 690 */
-.phone{width:350px;height:710px;padding:10px;border-radius:54px;background:#2a2a2a;box-shadow:inset 0 0 0 2px #3a3a3a,0 30px 80px #000c}
-.ph{position:relative;width:330px;height:690px;border-radius:45px;overflow:hidden;background:var(--bg);display:flex;flex-direction:column}
-.status{height:46px;flex:none;display:flex;align-items:center;justify-content:space-between;padding:6px 28px 0 32px;font-weight:600;font-size:14px}
-.status .r{display:flex;gap:6px;align-items:center}
-.batt{width:22px;height:11px;border-radius:3px;border:1.5px solid #f2f2f2aa;padding:1.5px}.batt i{display:block;height:100%;width:80%;background:#f2f2f2;border-radius:1px}
-.pview{flex:1;min-height:0;display:flex;flex-direction:column;gap:12px;padding:6px 18px 18px;animation:fadein .3s}
-.pview h3{margin:0;font-size:26px;font-weight:700;letter-spacing:-.02em}
-.to{display:flex;align-items:center;gap:11px;padding:11px;border-radius:18px;background:var(--panel)}
-.to b{display:block;font-size:15px;font-weight:600}
-.to small{display:block;color:var(--ok);font-size:12px}
-.lbl{color:var(--muted);font-size:12.5px;font-weight:600;margin:4px 2px -2px}
-.files{display:flex;flex-direction:column;gap:8px}
-.file{display:flex;align-items:center;gap:11px;padding:11px 12px;border-radius:16px;background:var(--panel);border:1.5px solid transparent;text-align:left;width:100%;transition:border-color .2s,background .2s,scale .3s cubic-bezier(.34,1.56,.64,1)}
-.file:active{scale:.98}
-.file .t{flex:1;min-width:0}
-.file .t b{display:block;font-weight:500;font-size:14px}
-.file .t small{color:var(--muted);font-size:12px}
-.file .tick{width:24px;height:24px;border-radius:50%;border:1.5px solid #ffffff40;display:grid;place-items:center;flex:none;transition:background .2s,border-color .2s}
-.file[aria-pressed=true]{border-color:var(--white);background:#232323}
-.file .tick .ic{opacity:0;transform:scale(.5);transition:opacity .2s,transform .3s cubic-bezier(.34,1.56,.64,1)}
-.file[aria-pressed=true] .tick .ic{opacity:1;transform:none}
-.file[aria-pressed=true] .tick{background:var(--white);border-color:var(--white);color:var(--onwhite)}
-.thumb{width:40px;height:40px;border-radius:10px;flex:none;display:grid;place-items:center;background:var(--raised)}
-.spacer{flex:1}
-.pview .pill.big{height:52px;border-radius:26px;font-size:16px}
-.card{padding:16px;border-radius:20px;background:var(--panel);display:flex;flex-direction:column;gap:10px}
-.card .k{font-size:12.5px;font-weight:600;color:var(--muted)}
-.card.amber{background:var(--amberbg);border:1px solid var(--amberline);color:#ffe2ad}
-.card.amber .k{color:var(--amber)}
-.card .bar{height:5px;border-radius:3px;background:#ffffff1f;overflow:hidden}
-.card .bar i{display:block;height:100%;width:0;background:var(--amber);border-radius:3px;transition:width .12s linear}
-.card .done{color:var(--ok);font-weight:600}
-.sheetback{position:absolute;inset:0;background:#000b;z-index:5;animation:fadein .2s}
-.sheet{position:absolute;left:8px;right:8px;bottom:8px;z-index:6;padding:12px 16px 18px;border-radius:30px;background:var(--panel);display:flex;flex-direction:column;gap:10px;animation:up .35s cubic-bezier(.22,1,.36,1)}
-.sheet .gr{align-self:center;width:36px;height:4px;border-radius:2px;background:#ffffff33}
-@keyframes up{from{transform:translateY(100%)}}
-.sheet .btns{display:flex;gap:8px}.sheet .btns .pill{flex:1;height:48px}
-.dockp{flex:none;margin:0 14px 14px;display:flex;justify-content:space-between;padding:6px;border-radius:30px;background:var(--panel);border:1px solid var(--line)}
-.dockp span{display:flex;align-items:center;height:42px;min-width:42px;padding:0 11px;border-radius:21px;color:var(--text)}
-.dockp span.on{background:var(--white);color:var(--onwhite);padding:0 18px;gap:8px;font-weight:600;font-size:14px}
-/* the touchpad */
-.pad{position:relative;flex:1;min-height:200px;border-radius:24px;background:var(--panel);background-image:radial-gradient(#ffffff17 1px,transparent 1.4px);background-size:22px 22px;touch-action:none;cursor:grab;overflow:hidden}
+.banner{position:absolute;left:50%;top:36px;transform:translateX(-50%);display:flex;align-items:center;gap:8px;padding:7px 14px;border-radius:16px;background:var(--amberbg);border:1px solid var(--amberline);color:#ffe2ad;font-size:13px;z-index:9;animation:fade .3s;white-space:nowrap}
+.banner i{width:8px;height:8px;border-radius:50%;background:var(--amber);display:block;animation:blink 1.4s infinite}
+.cmenu{position:absolute;right:22px;bottom:84px;width:280px;padding:6px;border-radius:16px;background:#262626;border:1px solid #ffffff22;box-shadow:0 14px 40px #000a;z-index:30;animation:pop .2s}
+.cmenu .h{padding:8px 10px 6px;color:var(--muted);font-size:12.5px;font-weight:600}
+.cmenu button{display:flex;align-items:center;gap:10px;width:100%;padding:10px;border-radius:10px;border:0;background:transparent;text-align:left;font-size:14px;color:var(--text)}
+.cmenu button:hover{background:#ffffff12}
+.cmenu small{color:var(--muted);font-size:12px;margin-left:auto}
+/* the phone */
+.ph .scr{padding-bottom:112px}
+.ph .chat .feed{padding-bottom:10px}
+.pad{cursor:grab}
 .pad:active{cursor:grabbing}
-.pad .tip{position:absolute;left:0;right:0;top:50%;transform:translateY(-50%);text-align:center;color:var(--faint);font-size:13px;pointer-events:none;transition:opacity .4s;padding:0 30px}
-.pad .touch{position:absolute;width:56px;height:56px;margin:-28px 0 0 -28px;border-radius:50%;background:#ffffff1c;border:1px solid #ffffff33;pointer-events:none;opacity:0;transition:opacity .2s}
-.pad .scroll{position:absolute;right:6px;top:12px;bottom:12px;width:30px;border-radius:15px;background:#ffffff0a;display:flex;align-items:center;justify-content:center;color:var(--faint);touch-action:none;cursor:ns-resize}
-.keys{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
-.key{height:46px;border-radius:15px;border:0;background:var(--panel);display:grid;place-items:center;color:var(--text);transition:background .2s,scale .3s cubic-bezier(.34,1.56,.64,1)}
-.key:active{scale:.92;background:var(--raised)}
-.kb{display:flex;align-items:center;gap:8px;padding:5px 5px 5px 14px;border-radius:24px;background:var(--panel);border:1px solid var(--line)}
-.kb input{flex:1;min-width:0;height:38px;border:0;outline:0;background:transparent;font-size:14px}
-.kb input::placeholder{color:var(--faint)}
-.kb .pill{height:38px;padding:0 14px;font-size:13px}
-.foot{max-width:1240px;margin:22px auto 0;display:flex;gap:10px;flex-wrap:wrap;align-items:center;justify-content:center;color:var(--muted);font-size:14px;text-align:center}
-.foot a{color:var(--text)}
-@media (prefers-reduced-motion:no-preference){.cursor{transition:transform .06s linear}}
+.pad .ptr{opacity:0;transition:opacity .2s}
+.pad.touching .ptr{opacity:1}
+.scrollstrip{position:absolute;right:8px;top:14px;bottom:14px;width:30px;border-radius:15px;background:#ffffff0a;display:flex;align-items:center;justify-content:center;color:var(--faint);touch-action:none;cursor:ns-resize}
+.kbrow{display:flex;align-items:center;gap:8px;padding:6px 6px 6px 16px;border-radius:26px;background:var(--panel);border:1px solid var(--line)}
+.kbrow input{flex:1;min-width:0;height:40px;border:0;outline:0;background:transparent;font-size:15px}
+.kbrow input::placeholder{color:var(--faint)}
+.dk[disabled]{opacity:.45;cursor:default}
+.tile{cursor:pointer}
+.tile:active{transform:scale(.97)}
+.waitring{animation:spin 1.6s linear infinite;transform-origin:105px 105px}
+@keyframes spin{to{transform:rotate(360deg)}}
 </style>
 </head>
 <body>
-<header class="top">
+<header class="ptop">
   <a class="home" href="/" aria-label="Back to Sidekick's home page"><img src="/website/wordmark.png" alt="Sidekick" width="148" height="15"><span>Demo</span></a>
-  <div class="seg" role="tablist" aria-label="What to try">
-    <button type="button" role="tab" id="t-send" aria-selected="true" data-mode="send"><span data-i="send" data-s="17"></span>Send files</button>
-    <button type="button" role="tab" id="t-remote" aria-selected="false" data-mode="remote"><span data-i="remote" data-s="17"></span>Remote control</button>
+  <div class="modes" role="tablist" aria-label="What to try">
+    <button type="button" role="tab" aria-selected="true" data-mode="send"><span data-i="send" data-s="17"></span>Send files</button>
+    <button type="button" role="tab" aria-selected="false" data-mode="remote"><span data-i="remote" data-s="17"></span>Remote control</button>
   </div>
   <a class="pill w join" href="/#wishlist">Join the wishlist</a>
 </header>
 <p class="hint" id="hint" aria-live="polite"></p>
 
-<div class="stage" id="stage">
+<div class="stage2" id="stage">
   <div class="fit" id="fit-mac"><div class="inner"><div class="mac"><div class="screen" id="screen">
-    <div class="menubar"><b>Finder</b><span>File</span><span>Edit</span><span>View</span><span class="r"><span class="sk"><i></i>Sidekick</span><span data-i="wifi" data-s="14"></span><span id="clock">9:41</span></span></div>
-    <section class="win" id="skwin" aria-label="Sidekick on the MacBook">
-      <div class="tb"><i></i><i></i><i></i><span>Sidekick</span></div>
-      <div class="body">
-        <div class="side"><b>Devices</b><div class="drow"><span class="dv" data-i="phone" data-s="16" data-c="#4fcf86"></span><div>iPhone 16<small>Same Wi-Fi · ready</small></div></div></div>
-        <div class="main"><h4>iPhone 16 <button type="button" class="pill w" id="macSend" data-hit><span data-i="send" data-s="14"></span>Send files</button></h4><div class="feed" id="macFeed"><div class="empty" id="macEmpty">Nothing shared yet. Send a file from the phone.</div></div></div>
+    <div class="menubar"><b>Sidekick</b><span>File</span><span>Edit</span><span>View</span><span>Window</span><span class="r"><span data-i="wifi" data-s="15"></span><span id="clock">9:41</span></span></div>
+    <div class="win" id="skwin">
+      <div class="wbar"><span class="l" aria-hidden="true"><i></i><i></i><i></i></span><span>Sidekick</span><span class="r">Direct · encrypted · yours</span></div>
+      <div class="wbody">
+        <nav class="rail" aria-label="Sidekick tabs"><div class="logo">sk</div>
+          <button type="button" aria-current="true"><span class="c" data-i="devices"></span>Devices</button>
+          <button type="button"><span class="c" data-i="folder"></span>Files</button>
+          <button type="button"><span class="c" data-i="remote"></span>Remote</button>
+          <button type="button"><span class="c" data-i="settings"></span>Settings</button></nav>
+        <div class="col" id="macCol"></div>
+        <div class="wmain" id="macMain"></div>
       </div>
-    </section>
-    <section class="win" id="music" aria-label="Music">
-      <div class="tb"><i></i><i></i><i></i><span>Music</span></div>
-      <div class="body"><div class="art"></div><div class="t"><b>Golden Hour</b><small>Lakeside Radio</small><div class="eq"><i></i><i></i><i></i><i></i></div></div><button type="button" class="mbtn" id="playBtn" data-hit aria-label="Play"><span data-i="play" data-s="16"></span></button></div>
-    </section>
-    <section class="win" id="notes" aria-label="Notes">
-      <div class="tb"><i></i><i></i><i></i><span>Notes</span></div>
-      <div class="body"><span id="typed">Shopping: milk, bread</span><span class="caret"></span></div>
-    </section>
-    <section class="win" id="doc" aria-label="Recipe">
-      <div class="tb"><i></i><i></i><i></i><span>Lemon drizzle cake.pdf</span></div>
-      <div class="body"><div class="page" id="docPage">
-        <p><b>Lemon drizzle cake</b></p><p>225 g butter, 225 g caster sugar, 4 eggs, 275 g self-raising flour, the zest of 1 lemon.</p>
-        <p><b>Method</b></p><p>1. Heat the oven to 180°C. Beat the butter and sugar until pale and creamy.</p><p>2. Add the eggs one at a time, then fold in the flour and the zest.</p>
-        <p>3. Pour into a lined loaf tin and bake for 45 to 50 minutes.</p><p><b>The drizzle</b></p><p>Mix the juice of 1½ lemons with 85 g caster sugar and spoon it over the warm cake.</p><p>Leave it in the tin until cool. Enjoy!</p>
-      </div></div>
-    </section>
-    <nav class="dock" aria-label="Dock">
-      <button type="button" style="background:#2e7cf6" data-hit data-bounce aria-label="Finder"><span data-i="folder" data-s="20"></span></button>
-      <button type="button" style="background:#ff6b5e" data-hit data-bounce aria-label="Music"><span data-i="music" data-s="20"></span></button>
-      <button type="button" style="background:#ffc56b;color:#241800" data-hit data-bounce aria-label="Notes"><span data-i="chat" data-s="20"></span></button>
-      <button type="button" style="background:#f0f0f0;color:#141414" data-hit data-bounce aria-label="Sidekick"><b style="font-size:15px;letter-spacing:-.06em">sk</b></button>
+      <div id="macOver"></div>
+      <div class="wnot" id="macNotes" aria-live="polite"></div>
+    </div>
+    <section class="mwin" id="music" aria-label="Music"><div class="tb"><i></i><i></i><i></i><span>Music</span></div>
+      <div class="body"><div class="art"></div><div class="t"><b>Golden Hour</b><small>Lakeside Radio</small><div class="eq"><i></i><i></i><i></i><i></i></div></div><button type="button" class="mbtn" id="playBtn" data-hit aria-label="Play"></button></div></section>
+    <section class="mwin" id="notes" aria-label="Notes"><div class="tb"><i></i><i></i><i></i><span>Notes</span></div><div class="body"><span id="typed">Shopping: milk, bread</span><span class="caret"></span></div></section>
+    <section class="mwin" id="recipe" aria-label="Recipe"><div class="tb"><i></i><i></i><i></i><span>Lemon drizzle cake.pdf</span></div><div class="body"><div class="page" id="recipePage">
+      <p><b>Lemon drizzle cake</b></p><p>225 g butter, 225 g caster sugar, 4 eggs, 275 g self-raising flour, the zest of 1 lemon.</p><p><b>Method</b></p>
+      <p>1. Heat the oven to 180°C. Beat the butter and sugar until pale and creamy.</p><p>2. Add the eggs one at a time, then fold in the flour and the zest.</p>
+      <p>3. Pour into a lined loaf tin and bake for 45 to 50 minutes.</p><p><b>The drizzle</b></p><p>Mix the juice of 1½ lemons with 85 g caster sugar and spoon it over the warm cake.</p><p>Leave it in the tin until cool. Enjoy!</p></div></div></section>
+    <nav class="macdock" aria-label="Dock">
+      <button type="button" style="background:#2e7cf6" data-hit data-bounce aria-label="Finder"><span data-i="folder" data-s="22"></span></button>
+      <button type="button" style="background:#ff6b5e" data-hit data-bounce data-music aria-label="Music"><span data-i="music" data-s="22"></span></button>
+      <button type="button" style="background:#ffc56b;color:#241800" data-hit data-bounce aria-label="Notes"><span data-i="chat" data-s="22"></span></button>
+      <button type="button" style="background:#f0f0f0;color:#141414" data-hit data-bounce aria-label="Sidekick"><b style="font-size:17px;letter-spacing:-.06em">sk</b></button>
     </nav>
-    <div id="macOver"></div>
     <svg class="cursor" id="cursor" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 3l14 8-6.2 1.6L10 19z" fill="#fff" stroke="#111" stroke-width="1.4" stroke-linejoin="round"/></svg>
   </div></div></div></div>
 
-  <div class="fit" id="fit-phone"><div class="inner"><div class="phone"><div class="ph" id="ph">
-    <div class="status" aria-hidden="true"><span id="pclock">9:41</span><span class="r"><span data-i="wifi" data-s="15"></span><span class="batt"><i></i></span></span></div>
-    <div id="pview" class="pview"></div>
-    <div class="dockp" aria-hidden="true"><span data-i="devices"></span><span data-i="chat"></span><span id="dk-send"></span><span id="dk-remote"></span><span data-i="settings"></span></div>
+  <div class="fit" id="fit-phone"><div class="inner"><div class="bezel"><div class="ph" id="ph">
+    <div class="status" aria-hidden="true"><span id="pclock">9:41</span><span class="r"><span data-i="wifi" data-s="17"></span><span class="batt"><i></i></span></span></div>
+    <div id="phMain"></div>
+    <nav class="dock" id="dock" aria-label="Tabs"></nav>
     <div id="phOver"></div>
+    <div class="notices" id="phNotes" aria-live="polite"></div>
   </div></div></div></div>
 </div>
-<p class="foot">This is a demo with sample files: nothing leaves your browser. <a href="/">Back to Sidekick</a> · <a href="/privacy.html">Privacy</a></p>
+<p class="foot">A demo of Sidekick 4.0 with sample files: nothing leaves your browser. <a href="/">Back to Sidekick</a> · <a href="/privacy.html">Privacy</a></p>
 
 <script>
 (()=>{
@@ -309,136 +456,182 @@ I.pause='<rect x="6" y="4.5" width="4" height="15" rx="1" fill="currentColor" st
 I.music='<path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/>';
 I.vdown='<path d="M11 5 6 9H2v6h4l5 4z"/><path d="M15.5 12h5"/>';
 I.vup='<path d="M11 5 6 9H2v6h4l5 4z"/><path d="M15.5 12h5M18 9.5v5"/>';
-I.space='<path d="M4 10v4h16v-4"/>';
 const $=s=>document.querySelector(s);
-const paint=root=>root.querySelectorAll('[data-i]').forEach(el=>{if(el.firstElementChild&&el.firstElementChild.tagName==='svg')return;el.insertAdjacentHTML('afterbegin',ic(el.dataset.i,+(el.dataset.s||20),el.dataset.c||'currentColor'))});
-paint(document);
+const paint=root=>root.querySelectorAll('[data-i]').forEach(el=>{if(el.querySelector(':scope>svg'))return;el.insertAdjacentHTML('afterbegin',ic(el.dataset.i,+(el.dataset.s||20),el.dataset.c||'currentColor'))});
+const fmt=b=>b>=1e9?(b/1e9).toFixed(1)+' GB':b>=1e6?(b/1e6).toFixed(1)+' MB':Math.max(1,Math.round(b/1e3))+' KB';
+const now=()=>{const d=new Date();return d.getHours()+':'+String(d.getMinutes()).padStart(2,'0')};
+const kindOf=n=>/\.(jpe?g|png|heic|gif|webp|mov|mp4)$/i.test(n)?'photo':'file';
 
-/* ---------- fitting both devices on any screen ---------- */
-const MAC=[900,600],PHONE=[350,710];
-function fit(){const stage=$('#stage'),W=Math.min(1240,document.body.clientWidth-2);const narrow=W<860;
-  let sm,sp;if(narrow){sm=Math.min(1,W/MAC[0]);sp=Math.max(.62,Math.min(1,W/PHONE[0],.95,(innerHeight-MAC[1]*sm-24)/PHONE[1]))}
-  else{const avH=Math.max(480,innerHeight-150);const s=Math.min(1,(W-28)/(MAC[0]+PHONE[0]),avH/PHONE[1]);sm=s;sp=s}
+/* ---------- fitting both devices ---------- */
+const MAC=[1320,870],PHONE=[414,868];
+function fit(){const W=Math.min(1300,document.body.clientWidth-2),narrow=W<860;let sm,sp;
+  if(narrow){sm=Math.min(1,W/MAC[0]);sp=Math.max(.6,Math.min(.95,W/PHONE[0],(innerHeight-MAC[1]*sm-24)/PHONE[1]))}
+  else{const s=Math.min(1,(W-28)/(MAC[0]+PHONE[0]),Math.max(420,innerHeight-130)/PHONE[1]);sm=s;sp=s}
   [['fit-mac',MAC,sm],['fit-phone',PHONE,sp]].forEach(([id,[w,h],s])=>{const f=document.getElementById(id);f.style.width=w*s+'px';f.style.height=h*s+'px';f.firstElementChild.style.transform=`scale(${s})`;f.dataset.s=s})}
-addEventListener('resize',fit);fit();
-
-/* ---------- sample files ---------- */
-const PFILES=[{n:'Boarding pass.pdf',sz:1.2,ic:'file',c:'#5b9dff'},{n:'Beach day.jpg',sz:4.8,ic:'photo',c:'#4fcf86'},{n:'Holiday video.mov',sz:86.4,ic:'photo',c:'#ffb84d'}];
-const MFILES=[{n:'Lemon drizzle cake.pdf',sz:0.4,ic:'file',c:'#ffc56b'},{n:'Presentation.key',sz:12.6,ic:'file',c:'#5b9dff'},{n:'Family photo.png',sz:6.2,ic:'photo',c:'#d6adf2'}];
-const mb=x=>x<1?Math.round(x*1000)+' KB':x.toFixed(1)+' MB';
+addEventListener('resize',fit);
 
 /* ---------- state ---------- */
-let mode='send',sel=new Set([0]),busy=false,cur={x:300,y:300},playing=false,vol=.5,docY=0;
+const PHONE_PICKS={photos:[{name:'Beach day.jpg',size:4.8e6},{name:'IMG_2041.heic',size:3.2e6},{name:'Coast walk.mov',size:41e6}],files:[{name:'Boarding pass.pdf',size:1.2e6},{name:'Weekend plans.pdf',size:2.4e6}]};
+const MAC_FILES=[{name:'Lemon drizzle cake.pdf',size:4e5},{name:'Family photo.png',size:6.2e6},{name:'Presentation.key',size:12.6e6}];
+let id=0;const nid=()=>'i'+(++id);
+const S={mode:'send',tab:'send',sel:[],out:null,req:null,phReq:null,macOut:null,
+  phFeed:[{id:nid(),t:'note',me:true,text:'Door code 4417',when:'9:14'}],
+  macFeed:[{id:nid(),t:'note',me:false,text:'Door code 4417',when:'9:14'}],
+  cur:{x:420,y:420},playing:false,vol:.5,docY:0};
 
-/* ---------- hints ---------- */
-function hint(n,html){$('#hint').innerHTML=(n?`<span class="step">${n}</span>`:'')+`<span>${html}</span>`}
-
-/* ---------- the phone ---------- */
-const pview=$('#pview'),phOver=$('#phOver');
-function dockp(){$('#dk-send').className=mode==='send'?'on':'';$('#dk-remote').className=mode==='remote'?'on':'';
-  $('#dk-send').innerHTML=ic('send',20)+(mode==='send'?'Send':'');$('#dk-remote').innerHTML=ic('remote',20)+(mode==='remote'?'Remote':'')}
-function phoneSend(){pview.innerHTML=`<h3>Send</h3>
-  <div class="to"><span class="dv" style="width:38px;height:38px;border-radius:12px">${ic('laptop',19,'#5b9dff')}</span><div style="flex:1"><b>MacBook Pro</b><small>Same Wi-Fi · encrypted</small></div></div>
-  <div class="lbl">Pick what to send</div>
-  <div class="files">${PFILES.map((f,i)=>`<button type="button" class="file" data-f="${i}" aria-pressed="${sel.has(i)}"><span class="thumb">${ic(f.ic,20,f.c)}</span><span class="t"><b>${f.n}</b><small>${mb(f.sz)}</small></span><span class="tick">${ic('check',14)}</span></button>`).join('')}</div>
-  <div class="spacer"></div>
-  <button type="button" class="pill w big" id="sendBtn" ${sel.size?'':'disabled'}>${ic('send',18)}Send ${sel.size||''} ${sel.size===1?'file':'files'} to MacBook Pro</button>`;
-  pview.querySelectorAll('.file').forEach(b=>b.onclick=()=>{const i=+b.dataset.f;sel.has(i)?sel.delete(i):sel.add(i);phoneSend()});
-  $('#sendBtn').onclick=()=>sendFromPhone()}
-function phoneRemote(){pview.innerHTML=`<h3>Remote</h3>
-  <div class="to"><span class="dv" style="width:38px;height:38px;border-radius:12px">${ic('laptop',19,'#5b9dff')}</span><div style="flex:1"><b>MacBook Pro</b><small>Connected · encrypted</small></div></div>
-  <div class="pad" id="pad"><span class="tip" id="padTip">Drag here to move the pointer.<br>Tap to click.</span><span class="touch" id="touch"></span><span class="scroll" id="scrollStrip" title="Scroll">${ic('down',14)}</span></div>
-  <div class="keys"><button type="button" class="key" data-k="play" aria-label="Play or pause">${ic('play',18)}</button><button type="button" class="key" data-k="vdown" aria-label="Volume down">${ic('vdown',20)}</button><button type="button" class="key" data-k="vup" aria-label="Volume up">${ic('vup',20)}</button><button type="button" class="key" data-k="space" aria-label="Space">${ic('space',20)}</button></div>
-  <form class="kb" id="kb"><label for="kbIn" style="position:absolute;left:-9999px">Type on the MacBook</label><input id="kbIn" placeholder="Type on MacBook Pro" autocomplete="off"><button class="pill w" type="submit">Enter</button></form>`;
-  setupPad()}
-function renderPhone(){dockp();mode==='send'?phoneSend():phoneRemote()}
+/* ---------- shared pieces ---------- */
+const dev=(kind,s,color,bg)=>`<span class="dev" style="width:${s}px;height:${s}px;border-radius:${Math.round(s*.3)}px;${bg?'background:'+bg:''}">${ic(kind,Math.round(s*.46),color)}</span>`;
+function itemHTML(m,other){const who=m.me?'me':'them',foot=`<span class="foot">${m.me?'You sent':'From '+other} · ${m.when}</span>`,nw=m.fresh?' new':'';m.fresh=false;
+  if(m.t==='note')return `<div class="it ${who}${nw}"><div class="ic-card"><div class="note">${esc(m.text)}</div></div>${foot}</div>`;
+  if(m.t==='recv'){const tot=m.files.reduce((a,f)=>a+f.size,0);return `<div class="it them wide${nw}"><div class="req plain"><span class="k">Receiving files</span><span class="t">${esc(other)} is sending you ${m.files.length===1?esc(m.files[0].name):m.files.length+' files'} · ${fmt(tot)}</span><span class="names">${m.files.map(f=>esc(f.name)).join(' · ')}</span><span class="names" data-pt2="${m.id}">${fmt(tot*m.p)} of ${fmt(tot)} · ${Math.round(m.p*100)}%</span><div class="bar"><i data-p="${m.id}" style="width:${m.p*100}%"></i></div></div>${foot}</div>`}
+  const f=m;const saved=m.me?(m.state==='going'?`<span data-pt="${m.id}">${Math.round(m.p*100)}%</span> · sending`:m.state==='wait'?'Waiting for an answer…':m.state==='no'?'Declined':'Delivered ✓'):(m.where||'Saved to Downloads');
+  return `<div class="it ${who}${nw}"><div class="ic-card"><div class="row1">${ic(kindOf(f.name),24)}<div style="min-width:0"><div class="nm">${esc(f.name)}</div><div class="sz">${fmt(f.size)}</div></div></div><div class="saved">${saved}</div>${m.me?'':`<div class="acts"><button type="button" class="pill">Open</button><button type="button" class="pill">Show in folder</button></div>`}</div>${foot}</div>`}
+function reqHTML(from,kind,color,files,where,ids){const tot=files.reduce((a,f)=>a+f.size,0);
+  return `<div class="needs" style="flex-direction:row;align-items:center">${dev(kind,48,color,'#00000033')}<div><div style="color:var(--amber);font-size:16px">${esc(from)} wants to send you ${files.length===1?'a file':files.length+' files'}</div><div style="font-size:12.5px;color:#ffe2adb3;margin-top:4px">${fmt(tot)} · Same Wi-Fi · encrypted</div></div></div>
+  ${files.map(f=>`<div style="display:flex;align-items:center;gap:12px;padding:6px 0">${ic(kindOf(f.name),22)}<span style="flex:1">${esc(f.name)}</span><span class="sub" style="font-size:12.5px">${fmt(f.size)}</span></div>`).join('')}
+  <p class="sub" style="font-size:13.5px;margin:0">${where}</p>
+  <div style="display:flex;gap:10px"><button type="button" class="pill o lg" style="flex:1;justify-content:flex-start" id="${ids}-no" data-hit>Decline</button><button type="button" class="pill a lg" style="flex:1;justify-content:flex-start" id="${ids}-yes" data-hit>Accept</button></div>`}
+/* notices: one at a time, like the app */
+function notice(box,title,sub){const el=document.createElement('div');el.className='notice';el.innerHTML=`<div class="t">${esc(title)}${sub?'<small>'+esc(sub)+'</small>':''}</div><button type="button" class="x" aria-label="Close">${ic('close',18)}</button><span class="life"><i style="animation-duration:4000ms"></i></span>`;
+  box.innerHTML='';box.appendChild(el);const kill=()=>{el.classList.add('out');setTimeout(()=>el.remove(),260)};el.querySelector('.x').onclick=kill;setTimeout(kill,4000)}
+function hint(n,html){$('#hint').innerHTML=(n?`<span class="n">${n}</span>`:'')+`<span>${html}</span>`}
 
 /* ---------- the computer ---------- */
-const macFeed=$('#macFeed'),macOver=$('#macOver'),screen=$('#screen');
-function addMac(f,me){$('#macEmpty')&&$('#macEmpty').remove();const r=document.createElement('div');r.className='row'+(me?' me':'');
-  r.innerHTML=`<span class="thumb" style="width:32px;height:32px;border-radius:9px;${me?'background:#e2e2e2':''}">${ic(f.ic,16,f.c)}</span><span class="t"><b>${f.n}</b><small>${me?'You sent · Delivered ✓':'From iPhone 16 · Saved to Downloads'}</small></span>`;macFeed.appendChild(r);macFeed.scrollTop=macFeed.scrollHeight}
+function macRender(){
+  const r=S.req;
+  $('#macCol').innerHTML=`<div style="display:flex;align-items:center;gap:8px"><h2>Devices</h2><button type="button" class="pill o sm">+ Connect</button></div>
+    ${r?`<div class="needs"><span class="k">Needs you</span><span style="color:#ffe2ad">iPhone 16 wants to send you ${r.files.length===1?'a file':r.files.length+' files'}</span><div style="display:flex;align-items:center;justify-content:space-between"><span style="font-size:12.5px;color:#ffe2adb3">${fmt(r.files.reduce((a,f)=>a+f.size,0))}</span><button type="button" class="pill a sm" data-hit id="macView">View</button></div></div>`:''}
+    <div class="lbl">${ic('star',14)}Favorites</div>
+    <button type="button" class="wrow" aria-current="true">${dev('phone',38,r?'var(--amber)':'#4fcf86',r?'var(--amberbg)':'')}<span class="t"><b>iPhone 16<em>${S.macFeed.length?S.macFeed[S.macFeed.length-1].when:''}</em></b><small style="${r?'color:var(--amber)':''}">${r?'Wants to send you files':lastOf(S.macFeed,'iPhone 16')}</small></span></button>
+    <div class="lbl">Paired</div>
+    <button type="button" class="wrow">${dev('tablet',38,'#ffb84d')}<span class="t"><b>iPad mini<em>Tue</em></b><small>You sent Pick up the charger</small></span></button>`;
+  $('#macMain').innerHTML=`<div class="h1row"><h1 class="h1" style="font-size:24px">Chat</h1><span class="rb s">${ic('search',18)}</span><span class="rb s">${ic('more',18)}</span></div>
+    <div class="devpick">${dev('phone',44,'#4fcf86')}<span class="t"><b style="font-size:18px">iPhone 16</b><span class="st">Same Wi-Fi · encrypted</span></span></div>
+    <div class="chips"><button type="button" class="chip" aria-pressed="true">All</button><button type="button" class="chip">Files</button><button type="button" class="chip">Photos</button><button type="button" class="chip">Links</button><button type="button" class="chip">Notes</button></div>
+    <div class="feed" id="macFeed"><span class="day">Today</span>${S.macFeed.map(m=>itemHTML(m,'iPhone 16')).join('')}</div>
+    <div class="mbar"><span class="rb">${ic('plus',20)}</span><input placeholder="Write a note or paste a link, or drop files here" aria-label="Note" tabindex="-1" readonly><button type="button" class="sendf" id="macSend" data-hit aria-label="Send files"><span class="a">${ic('send',18)}</span><span class="b">${ic('up',18)}</span><span class="l">Send files</span></button></div>`;
+  const f=$('#macFeed');f.scrollTop=f.scrollHeight;
+  $('#macSend').onclick=macMenu;const v=$('#macView');if(v)v.onclick=macDialog}
+const lastOf=(feed,who)=>{const m=feed[feed.length-1];if(!m)return 'Nothing sent yet';if(m.t==='note')return (m.me?'You sent ':'')+m.text;if(m.t==='recv')return 'Receiving files';return (m.me?'You sent ':'Received ')+m.name};
+function macDialog(){const r=S.req;if(!r)return;$('#macOver').innerHTML=`<div class="pop" id="macPop"><div class="dlg" role="dialog" aria-modal="true" aria-label="iPhone 16 wants to send you files">${reqHTML('iPhone 16','phone','#4fcf86',r.files,'Photos and videos go to Pictures › Sidekick. The rest goes to Downloads › Sidekick.','mreq')}</div></div>`;
+  $('#mreq-no').onclick=()=>answerPhoneSend(false);$('#mreq-yes').onclick=()=>answerPhoneSend(true)}
+function macMenu(){if(S.mode!=='send')setMode('send');if(S.macOut||S.phReq)return;const old=$('.cmenu');if(old){old.remove();return}
+  $('#skwin').insertAdjacentHTML('beforeend',`<div class="cmenu" role="menu"><div class="h">Send to iPhone 16</div>${MAC_FILES.map((f,i)=>`<button type="button" role="menuitem" data-m="${i}" data-hit>${ic(kindOf(f.name),18)}${esc(f.name)}<small>${fmt(f.size)}</small></button>`).join('')}</div>`);
+  document.querySelectorAll('.cmenu button').forEach(b=>b.onclick=()=>{$('.cmenu').remove();macSends(MAC_FILES[+b.dataset.m])});
+  hint(1,'Pick a file to send from the MacBook to the iPhone.')}
 
-/* ---------- sending: phone → computer ---------- */
-function sendFromPhone(){if(busy||!sel.size)return;busy=true;const files=[...sel].map(i=>PFILES[i]);const total=files.reduce((a,f)=>a+f.sz,0);
-  pview.querySelector('.spacer').insertAdjacentHTML('beforebegin',`<div class="card amber" id="pcard"><span class="k">Waiting for MacBook Pro</span><span>${files.length===1?files[0].n:files.length+' files'} · ${mb(total)}</span><div class="bar"><i id="pbar"></i></div></div>`);
-  $('#sendBtn').disabled=true;pview.querySelectorAll('.file').forEach(b=>b.disabled=true);
-  hint(2,'The MacBook asks first. Click <b>Accept</b> in the corner of its screen (or Decline).');
-  setTimeout(()=>{macOver.insertAdjacentHTML('beforeend',`<div class="corner" id="corner" role="alertdialog" aria-label="iPhone 16 wants to send files"><div class="count"><i></i></div><div class="h"><span class="dv" style="width:36px;height:36px;border-radius:11px">${ic('phone',18,'#4fcf86')}</span><div class="t"><b>iPhone 16</b>wants to send you ${files.length===1?files[0].n:files.length+' files'} · ${mb(total)}</div></div><div class="btns"><button type="button" class="pill" id="decline" data-hit>Decline</button><button type="button" class="pill w" id="accept" data-hit>Accept</button></div></div>`);
-    $('#decline').onclick=()=>answer(false);$('#accept').onclick=()=>answer(true)},600);
-  function answer(ok){const c=$('#corner');
-    if(!ok){c.classList.add('out');setTimeout(()=>c.remove(),300);$('#pcard').className='card';$('#pcard').innerHTML=`<span class="k">MacBook Pro said no</span><span>Nothing was sent.</span>`;hint(0,'Declined. Pick files and try again, or switch to <b>Remote control</b>.');setTimeout(reset,2200);return}
-    c.querySelector('.count').remove();c.querySelector('.btns').outerHTML=`<div class="bar"><i id="cbar"></i></div><span id="cpct" style="font-size:12px;color:var(--muted)">Receiving… 0%</span>`;
-    c.querySelector('.h .t').innerHTML=`<b>Receiving from iPhone 16</b>${files.length===1?files[0].n:files.length+' files'}`;
-    $('#pcard').querySelector('.k').textContent='Sending to MacBook Pro';
-    hint(3,'Sending… both devices show how far it is.');
-    let p=0;const step=Math.max(.025,Math.min(.12,8/total/10));const t=setInterval(()=>{p=Math.min(1,p+step*(.7+Math.random()*.6));const w=(p*100).toFixed(1)+'%';$('#cbar').style.width=w;$('#pbar').style.width=w;$('#cpct').textContent='Receiving… '+Math.round(p*100)+'%';
-      if(p>=1){clearInterval(t);$('#cbar').style.background=$('#pbar').style.background='var(--ok)';$('#cpct').innerHTML='<span style="color:var(--ok);font-weight:600">Received ✓</span> Saved to Downloads';
-        $('#pcard').className='card';$('#pcard').innerHTML=`<span class="k">Sent to MacBook Pro</span><span class="done">Delivered ✓</span>`;
-        files.forEach(f=>addMac(f,false));setTimeout(()=>{c.classList.add('out');setTimeout(()=>c.remove(),300)},1400);
-        hint(0,'Done! Now send one back: click <b>Send files</b> in Sidekick on the MacBook.');setTimeout(reset,2600)}},110)}
-  function reset(){busy=false;sel=new Set();if(mode==='send')phoneSend()}}
+/* ---------- the phone ---------- */
+function dockRender(){const tabs=[['devices','devices','Devices'],['chat','chat','Chat'],['send','send','Send'],['remote','remote','Remote'],['settings','settings','Settings']];
+  $('#dock').innerHTML=tabs.map(([k,i,t])=>`<button type="button" class="dk${S.tab===k?' on':''}" data-tab="${k}" ${['devices','settings'].includes(k)?'disabled':''} aria-label="${t}">${ic(i,22)}<span>${t}</span></button>`).join('');
+  $('#dock').querySelectorAll('.dk:not([disabled])').forEach(b=>b.onclick=()=>{S.tab=b.dataset.tab;if(b.dataset.tab==='remote')setMode('remote');else{if(S.mode!=='send')setMode('send',true);phRender()}})}
+function phRender(){dockRender();const P=$('#phMain');
+  if(S.out&&!S.out.hidden){P.innerHTML=`<div class="scr">${sendingHTML()}</div>`;
+    $('#phBack').onclick=()=>{if(S.out.state==='done'||S.out.state==='no')S.out=null;else S.out.hidden=true;S.tab='chat';phRender()};
+    const st=$('#phStop');if(st)st.onclick=()=>{S.out.cancel=true};return}
+  if(S.out&&S.out.hidden&&(S.out.state==='done'||S.out.state==='no')){if(S.out.state==='done')notice($('#phNotes'),'Sent to MacBook Pro',S.out.items.length+' item'+(S.out.items.length>1?'s':''));S.out=null}
+  if(S.tab==='send'){P.innerHTML=`<div class="scr"><h1 class="h1">Send</h1><p class="sub">What would you like to send?</p>
+    <div class="tiles"><button type="button" class="tile" data-pick="files">${ic('file',22)}Files</button><button type="button" class="tile" data-pick="photos">${ic('photo',22)}Photos &amp; videos</button><button type="button" class="tile" style="opacity:.5" disabled>${ic('link',22)}Text or link</button><button type="button" class="tile" style="opacity:.5" disabled>${ic('paste',22)}Paste</button></div>
+    ${S.sel.length?`<div class="card" style="padding:16px;display:flex;flex-direction:column;gap:10px"><div style="display:flex;align-items:center;justify-content:space-between"><span class="sub" style="font-size:13px">${S.sel.length} item${S.sel.length>1?'s':''} · ${fmt(S.sel.reduce((a,f)=>a+f.size,0))}</span><button type="button" class="pill o sm" id="clearSel">Clear</button></div>${S.sel.map((f,i)=>`<div class="selrow">${ic(kindOf(f.name),22)}<div class="t"><b>${esc(f.name)}</b><small>${fmt(f.size)}</small></div><button type="button" class="rb s" aria-label="Remove ${esc(f.name)}" data-un="${i}">${ic('close',18)}</button></div>`).join('')}</div>`:''}
+    <div class="lbl">Send to</div>
+    <div class="card"><div class="drow">${dev('laptop',44,'#5b9dff')}<span class="t" style="flex:1"><b style="display:block;font-size:16px;font-weight:500">MacBook Pro</b><span class="st">Same Wi-Fi · ready</span></span><button type="button" class="pill w sm" id="phSend" ${S.sel.length?'':'disabled'}>Send</button></div></div></div>`;
+    P.querySelectorAll('[data-pick]').forEach(b=>b.onclick=()=>{PHONE_PICKS[b.dataset.pick].forEach(f=>{if(!S.sel.find(x=>x.name===f.name))S.sel.push(f)});phRender();hint(2,'Now tap <b>Send</b> next to MacBook Pro.')});
+    P.querySelectorAll('[data-un]').forEach(b=>b.onclick=()=>{S.sel.splice(+b.dataset.un,1);phRender()});
+    const c=$('#clearSel');if(c)c.onclick=()=>{S.sel=[];phRender()};$('#phSend').onclick=phoneSends}
+  else if(S.tab==='chat'){P.innerHTML=`<div class="chat"><div class="h1row"><h1 class="h1">Chat</h1><span class="rb">${ic('search',20)}</span><span class="rb">${ic('more',20)}</span></div>
+    <div class="devpick">${dev('laptop',48,'#5b9dff')}<span class="t"><b>MacBook Pro</b><span class="st">Same Wi-Fi · encrypted</span></span>${ic('down',20)}</div>
+    <div class="chips"><button type="button" class="chip" aria-pressed="true">All</button><button type="button" class="chip">Files</button><button type="button" class="chip">Photos</button><button type="button" class="chip">Links</button><button type="button" class="chip">Notes</button></div>
+    <div class="feed" id="phFeed"><span class="day">Today</span>${S.phFeed.map(m=>itemHTML(m,'MacBook Pro')).join('')}</div>
+    <div class="mbar"><span class="rb">${ic('plus',20)}</span><input placeholder="Write a note or paste a link" aria-label="Note" tabindex="-1" readonly><button type="button" class="sendf" id="chatSend" aria-label="Send files"><span class="a">${ic('send',18)}</span><span class="b">${ic('up',18)}</span><span class="l">Send files</span></button></div></div>`;
+    const f=$('#phFeed');f.scrollTop=f.scrollHeight;$('#chatSend').onclick=()=>{S.tab='send';phRender()}}
+  else if(S.tab==='remote'){P.innerHTML=`<div class="scr" style="padding-bottom:106px"><h1 class="h1">Remote</h1><p class="sub">A little more room to move.</p>
+    <div class="devpick card" style="padding:12px">${dev('laptop',44,'#5b9dff')}<span class="t"><b style="font-size:16px">MacBook Pro</b><span class="st">Connected · Same Wi-Fi · encrypted</span></span>${ic('down',20)}</div>
+    <div class="pad" id="pad"><span class="ptr" id="ptr"></span><span class="hint" id="padHint">Move one finger · tap to click</span><span class="scrollstrip" id="strip" title="Scroll">${ic('down',14)}</span></div>
+    <div style="display:flex;gap:8px"><button type="button" class="pill" style="flex:1" id="lclick">Left click</button><button type="button" class="pill" style="flex:1" id="rclick">Right click</button><button type="button" class="pill" style="flex:1" id="kbBtn">Keyboard</button></div>
+    <div class="lbl">Shortcuts</div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap"><button type="button" class="pill o sm" data-k="play">${ic('play',14)}Play</button><button type="button" class="pill o sm" data-k="vdown">${ic('vdown',16)}</button><button type="button" class="pill o sm" data-k="vup">${ic('vup',16)}</button><button type="button" class="pill o sm" data-k="tab">⌘ Tab</button></div></div>`;
+    setupPad()}}
+function sendingHTML(){const o=S.out,tot=o.items.reduce((a,f)=>a+f.size,0),r=80,C=2*Math.PI*r,done=o.state==='done',no=o.state==='no',wait=o.state==='wait';
+  return `<div class="h1row"><button type="button" class="rb" aria-label="Back" id="phBack">${ic('back',20)}</button><h1 class="h1">Sending</h1></div>
+  <div style="display:flex;align-items:center;gap:14px">${dev('laptop',48,'#5b9dff')}<div><b style="font-size:19px;font-weight:600">MacBook Pro</b><span class="st" style="display:block">Same Wi-Fi · encrypted</span></div></div>
+  <div class="ring"><svg width="210" height="210" viewBox="0 0 210 210" aria-hidden="true"><circle cx="105" cy="105" r="${r}" fill="none" stroke="#262626" stroke-width="10"/>${wait?`<circle class="waitring" cx="105" cy="105" r="${r}" fill="none" stroke="#ffc56b" stroke-width="10" stroke-linecap="round" stroke-dasharray="${(C*.18).toFixed(1)} ${C.toFixed(1)}"/>`:`<circle id="ringArc" cx="105" cy="105" r="${r}" fill="none" stroke="${done?'var(--ok)':no?'var(--red)':'#f0f0f0'}" stroke-width="10" stroke-linecap="round" stroke-dasharray="${(C*(no?1:o.p)).toFixed(1)} ${C.toFixed(1)}" transform="rotate(-90 105 105)"/>`}</svg>
+  <div>${done?ic('check',56,'var(--ok)',2.6)+'<span class="sub" style="margin-top:6px">Sent</span>':no?ic('close',52,'var(--red)',2.6)+'<span class="sub" style="margin-top:6px">Declined</span>':wait?`<span class="sub" style="text-align:center;padding:0 30px">Waiting for MacBook Pro to accept</span>`:`<b id="phPct">${Math.round(o.p*100)}%</b><span class="sub" style="font-size:12.5px" id="phEta">About ${Math.max(1,Math.round((1-o.p)*4))} seconds left</span>`}</div></div>
+  <div style="text-align:center;font-size:15px" id="phOf">${no?'MacBook Pro said no. Nothing was sent.':`${fmt(tot*o.p)} of ${fmt(tot)}${o.state==='going'?' · 12 MB/s':''}`}</div>
+  <div class="card" style="padding:16px;display:flex;flex-direction:column;gap:14px">${o.items.map(f=>`<div><div>${esc(f.name)}</div><div class="sub" style="font-size:12.5px;margin:4px 0 8px">${fmt(f.size)}${done?' · sent ✓':''}</div><div class="bar" style="height:3px"><i class="phBar" style="width:${done?100:o.p*100}%;background:var(--white)"></i></div></div>`).join('')}</div>
+  ${o.state==='going'?'<button type="button" class="pill o lg" id="phStop" style="justify-content:flex-start">Stop</button>':''}`}
 
-/* ---------- sending: computer → phone ---------- */
-$('#macSend').onclick=()=>{if(busy)return;if($('.cmenu')){$('.cmenu').remove();return}
-  macOver.insertAdjacentHTML('beforeend',`<div class="cmenu" role="menu">${MFILES.map((f,i)=>`<button type="button" role="menuitem" data-m="${i}" data-hit>${ic(f.ic,16,f.c)}${f.n}<small>${mb(f.sz)}</small></button>`).join('')}</div>`);
-  macOver.querySelectorAll('.cmenu button').forEach(b=>b.onclick=()=>{$('.cmenu').remove();sendFromMac(MFILES[+b.dataset.m])});
-  hint(1,'Pick a file to send to the iPhone.')};
-function sendFromMac(f){if(busy)return;busy=true;if(mode!=='send'){setMode('send')}
-  const row=document.createElement('div');row.className='row me';row.innerHTML=`<span class="thumb" style="width:32px;height:32px;border-radius:9px;background:#e2e2e2">${ic(f.ic,16,f.c)}</span><span class="t"><b>${f.n}</b><small id="mstat">Waiting for iPhone 16…</small></span>`;$('#macEmpty')&&$('#macEmpty').remove();macFeed.appendChild(row);
-  hint(2,'Now the iPhone asks. Tap <b>Accept</b> on the phone.');
-  setTimeout(()=>{phOver.innerHTML=`<div class="sheetback"></div><div class="sheet" role="dialog" aria-label="MacBook Pro wants to send a file"><span class="gr"></span><div class="to" style="background:var(--raised)"><span class="dv" style="width:38px;height:38px;border-radius:12px">${ic('laptop',19,'#5b9dff')}</span><div style="flex:1"><b>MacBook Pro</b><span style="font-size:13px;color:var(--muted)">wants to send you a file</span></div></div><div class="to" style="background:var(--raised)"><span class="thumb">${ic(f.ic,20,f.c)}</span><div style="flex:1"><b style="font-weight:500;font-size:14px">${f.n}</b><span style="font-size:12px;color:var(--muted)">${mb(f.sz)}</span></div></div><div class="btns"><button type="button" class="pill" id="pdec">Decline</button><button type="button" class="pill w" id="pacc">Accept</button></div></div>`;
-    $('#pdec').onclick=()=>{phOver.innerHTML='';$('#mstat').textContent='iPhone 16 said no';hint(0,'Declined. Try again, or switch to <b>Remote control</b>.');busy=false};
-    $('#pacc').onclick=()=>{const sh=phOver.querySelector('.sheet');sh.querySelector('.btns').outerHTML=`<div class="card" style="background:var(--raised)"><span class="k" id="rk">Receiving… 0%</span><div class="bar"><i id="rbar" style="background:var(--amber)"></i></div></div>`;
-      hint(3,'Receiving on the iPhone…');let p=0;const t=setInterval(()=>{p=Math.min(1,p+.07+Math.random()*.06);$('#rbar').style.width=(p*100)+'%';$('#rk').textContent='Receiving… '+Math.round(p*100)+'%';$('#mstat').textContent='Sending… '+Math.round(p*100)+'%';
-        if(p>=1){clearInterval(t);$('#rbar').style.background='var(--ok)';$('#rk').innerHTML=`<span class="done">Received ✓</span> ${f.ic==='photo'?'Saved to Photos':'Saved to Files'}`;$('#mstat').textContent='You sent · Delivered ✓';
-          setTimeout(()=>{phOver.innerHTML='';busy=false},1500);hint(0,'Both ways work. Now try <b>Remote control</b> up top.')}},120)}},500)}
+/* ---------- phone → computer ---------- */
+function phoneSends(){if(!S.sel.length||S.out||S.req)return;S.out={items:S.sel.slice(),p:0,state:'wait'};S.sel=[];S.tab='send';phRender();
+  S.req={files:S.out.items};macRender();notice($('#macNotes'),'iPhone 16 wants to send you files','Click View, or the card in Devices');
+  setTimeout(macDialog,700);hint(3,'The MacBook asks first. Click <b>Accept</b> on its screen (or Decline).')}
+function answerPhoneSend(ok){const r=S.req;if(!r)return;$('#macOver').innerHTML='';S.req=null;
+  if(!ok){S.out.state='no';macRender();phRender();hint(0,'Declined: nothing was sent. Pick files and try again, or try <b>Remote control</b>.');return}
+  const m={id:nid(),t:'recv',files:r.files,p:0,when:now(),fresh:true};S.macFeed.push(m);macRender();S.out.state='going';phRender();hint(4,'Sending. Both devices show how far it is.');
+  const tot=r.files.reduce((a,f)=>a+f.size,0);const t=setInterval(()=>{if(S.out&&S.out.cancel){clearInterval(t);S.macFeed.splice(S.macFeed.indexOf(m),1);S.out=null;S.tab='send';macRender();phRender();notice($('#phNotes'),'Stopped','Nothing half-sent was kept');return}
+    const p=Math.min(1,m.p+.045+Math.random()*.03);m.p=p;S.out.p=p;
+    document.querySelectorAll(`[data-p="${m.id}"]`).forEach(e=>e.style.width=p*100+'%');document.querySelectorAll(`[data-pt2="${m.id}"]`).forEach(e=>e.textContent=`${fmt(tot*p)} of ${fmt(tot)} · ${Math.round(p*100)}%`);
+    const arc=$('#ringArc');if(arc){const C=2*Math.PI*80;arc.setAttribute('stroke-dasharray',`${(C*p).toFixed(1)} ${C.toFixed(1)}`)}const pc=$('#phPct');if(pc)pc.textContent=Math.round(p*100)+'%';
+    const of=$('#phOf');if(of)of.textContent=`${fmt(tot*p)} of ${fmt(tot)} · 12 MB/s`;const eta=$('#phEta');if(eta)eta.textContent=p>.85?'Less than a second left':`About ${Math.max(1,Math.round((1-p)*4))} seconds left`;
+    document.querySelectorAll('.phBar').forEach(e=>e.style.width=p*100+'%');
+    if(p>=1){clearInterval(t);const i=S.macFeed.indexOf(m);S.macFeed.splice(i,1,...r.files.map(f=>({id:nid(),t:'file',me:false,name:f.name,size:f.size,when:now(),fresh:true,where:kindOf(f.name)==='photo'?'Saved to Pictures › Sidekick':'Saved to Downloads › Sidekick'})));
+      S.phFeed.push(...r.files.map(f=>({id:nid(),t:'file',me:true,name:f.name,size:f.size,when:now(),state:'done'})));
+      S.out.state='done';macRender();phRender();notice($('#macNotes'),`Received ${r.files.length===1?r.files[0].name:r.files.length+' files'} from iPhone 16`,'Saved to Downloads › Sidekick');
+      hint(0,'Done! Now send one back: click <b>Send files</b> in Sidekick on the MacBook.')}},140)}
+
+/* ---------- computer → phone ---------- */
+function macSends(f){if(S.macOut||S.out)return;const m={id:nid(),t:'file',me:true,name:f.name,size:f.size,when:now(),state:'wait',p:0,fresh:true};S.macOut=m;S.macFeed.push(m);macRender();
+  S.phReq={files:[f]};hint(2,'Now the iPhone asks. Tap <b>Accept</b> on the phone.');
+  setTimeout(()=>{$('#phOver').innerHTML=`<div class="back"></div><div class="sheet grab" role="dialog" aria-modal="true" aria-label="MacBook Pro wants to send you a file"><span class="gr" style="align-self:center"></span>${reqHTML('MacBook Pro','laptop','#5b9dff',[f],kindOf(f.name)==='photo'?'Photos and videos go straight to Photos.':'It goes to Files › Sidekick.','preq')}</div>`;
+    $('#preq-no').onclick=()=>{$('#phOver').innerHTML='';S.phReq=null;m.state='no';S.macOut=null;macRender();hint(0,'Declined. Try again, or try <b>Remote control</b>.')};
+    $('#preq-yes').onclick=()=>{$('#phOver').innerHTML='';S.phReq=null;S.tab='chat';const r={id:nid(),t:'recv',files:[f],p:0,when:now(),fresh:true};S.phFeed.push(r);phRender();m.state='going';macRender();
+      hint(3,'Receiving on the iPhone…');const t=setInterval(()=>{const p=Math.min(1,r.p+.08+Math.random()*.05);r.p=p;m.p=p;
+        document.querySelectorAll(`[data-p="${r.id}"]`).forEach(e=>e.style.width=p*100+'%');document.querySelectorAll(`[data-pt2="${r.id}"]`).forEach(e=>e.textContent=`${fmt(f.size*p)} of ${fmt(f.size)} · ${Math.round(p*100)}%`);document.querySelectorAll(`[data-pt="${m.id}"]`).forEach(e=>e.textContent=Math.round(p*100)+'%');
+        if(p>=1){clearInterval(t);S.phFeed.splice(S.phFeed.indexOf(r),1,{id:nid(),t:'file',me:false,name:f.name,size:f.size,when:now(),fresh:true,where:kindOf(f.name)==='photo'?'Saved to Photos':'Saved to Files › Sidekick'});m.state='done';S.macOut=null;phRender();macRender();
+          notice($('#phNotes'),`Received ${f.name} from MacBook Pro`,kindOf(f.name)==='photo'?'Saved to Photos':'Saved to Files › Sidekick');hint(0,'Both ways work. Now try <b>Remote control</b> up top.')}},150)}},500)}
 
 /* ---------- Remote: the phone is the touchpad and keyboard ---------- */
-const cursorEl=$('#cursor');
-function placeCursor(){cursorEl.style.transform=`translate(${cur.x.toFixed(1)}px,${cur.y.toFixed(1)}px)`}placeCursor();
-function clickAt(){const s=+$('#fit-mac').dataset.s,r=screen.getBoundingClientRect();const x=r.left+(cur.x+3)*s,y=r.top+(cur.y+3)*s;
-  const ring=document.createElement('span');ring.className='click';ring.style.left=cur.x+3+'px';ring.style.top=cur.y+3+'px';screen.appendChild(ring);setTimeout(()=>ring.remove(),460);
+const cursorEl=$('#cursor'),screen=$('#screen');
+const place=()=>cursorEl.style.transform=`translate(${S.cur.x.toFixed(1)}px,${S.cur.y.toFixed(1)}px)`;place();
+function clickAt(){const s=+$('#fit-mac').dataset.s,r=screen.getBoundingClientRect(),x=r.left+(S.cur.x+3)*s,y=r.top+(S.cur.y+3)*s;
+  const ring=document.createElement('span');ring.className='click';ring.style.left=S.cur.x+3+'px';ring.style.top=S.cur.y+3+'px';screen.appendChild(ring);setTimeout(()=>ring.remove(),460);
   cursorEl.style.visibility='hidden';const el=document.elementFromPoint(x,y);cursorEl.style.visibility='';
   const hit=el&&el.closest('[data-hit]');if(hit){if(hit.dataset.bounce!==undefined){hit.classList.remove('bounce');void hit.offsetWidth;hit.classList.add('bounce')}hit.click()}
-  else if(el&&el.closest('#notes'))notesFocus()}
-function notesFocus(){$('#notes').style.borderColor='#5b9dff66';setTimeout(()=>$('#notes').style.borderColor='',600)}
-function setupPad(){const pad=$('#pad'),touch=$('#touch'),tip=$('#padTip'),strip=$('#scrollStrip');let last=null,moved=0,downAt=0;
-  const ps=()=>+$('#fit-phone').dataset.s||1;
-  pad.addEventListener('pointerdown',e=>{if(e.target.closest('#scrollStrip'))return;pad.setPointerCapture(e.pointerId);last={x:e.clientX,y:e.clientY};moved=0;downAt=Date.now();tip.style.opacity=0;const r=pad.getBoundingClientRect(),s=ps();touch.style.left=(e.clientX-r.left)/s+'px';touch.style.top=(e.clientY-r.top)/s+'px';touch.style.opacity=1});
-  pad.addEventListener('pointermove',e=>{if(!last)return;const s=ps(),dx=(e.clientX-last.x)/s,dy=(e.clientY-last.y)/s;last={x:e.clientX,y:e.clientY};moved+=Math.abs(dx)+Math.abs(dy);
-    const r=pad.getBoundingClientRect();touch.style.left=(e.clientX-r.left)/s+'px';touch.style.top=(e.clientY-r.top)/s+'px';
-    const k=1.9+Math.min(2,Math.hypot(dx,dy)/12);cur.x=Math.max(0,Math.min(845,cur.x+dx*k));cur.y=Math.max(0,Math.min(525,cur.y+dy*k));placeCursor()});
-  const up=()=>{if(!last)return;last=null;touch.style.opacity=0;if(moved<6&&Date.now()-downAt<350)clickAt()};
+  else if(el&&el.closest('#notes'))flash('#notes')}
+const flash=sel=>{const e=$(sel);e.style.borderColor='#5b9dff88';setTimeout(()=>e.style.borderColor='',600)};
+function setupPad(){const pad=$('#pad'),ptr=$('#ptr'),hintEl=$('#padHint'),strip=$('#strip');let last=null,moved=0,downAt=0;const ps=()=>+$('#fit-phone').dataset.s||1;
+  const at=e=>{const r=pad.getBoundingClientRect(),s=ps();ptr.style.left=(e.clientX-r.left)/s+'px';ptr.style.top=(e.clientY-r.top)/s+'px'};
+  pad.addEventListener('pointerdown',e=>{if(e.target.closest('#strip'))return;pad.setPointerCapture(e.pointerId);last={x:e.clientX,y:e.clientY};moved=0;downAt=Date.now();hintEl.style.opacity=0;pad.classList.add('touching');at(e);idle=false});
+  pad.addEventListener('pointermove',e=>{if(!last)return;const s=ps(),dx=(e.clientX-last.x)/s,dy=(e.clientY-last.y)/s;last={x:e.clientX,y:e.clientY};moved+=Math.abs(dx)+Math.abs(dy);at(e);
+    const k=2.4+Math.min(2.5,Math.hypot(dx,dy)/10);S.cur.x=Math.max(0,Math.min(1262,S.cur.x+dx*k));S.cur.y=Math.max(0,Math.min(782,S.cur.y+dy*k));place()});
+  const up=()=>{if(!last)return;last=null;pad.classList.remove('touching');if(moved<6&&Date.now()-downAt<350){ptr.classList.add('click');setTimeout(()=>ptr.classList.remove('click'),200);clickAt()}};
   pad.addEventListener('pointerup',up);pad.addEventListener('pointercancel',up);
-  let sy=null;strip.addEventListener('pointerdown',e=>{strip.setPointerCapture(e.pointerId);sy=e.clientY;tip.style.opacity=0});
-  strip.addEventListener('pointermove',e=>{if(sy===null)return;const d=(e.clientY-sy)/ps();sy=e.clientY;scrollDoc(d*1.6)});
+  let sy=null;strip.addEventListener('pointerdown',e=>{strip.setPointerCapture(e.pointerId);sy=e.clientY;hintEl.style.opacity=0;idle=false});
+  strip.addEventListener('pointermove',e=>{if(sy===null)return;const d=(e.clientY-sy)/ps();sy=e.clientY;scrollDoc(d*2)});
   strip.addEventListener('pointerup',()=>sy=null);strip.addEventListener('pointercancel',()=>sy=null);
-  pad.addEventListener('wheel',e=>{e.preventDefault();scrollDoc(e.deltaY*.4)},{passive:false});
-  pview.querySelectorAll('.key').forEach(k=>k.onclick=()=>key(k.dataset.k));
-  $('#kb').onsubmit=e=>{e.preventDefault();typeText('\n')};
-  $('#kbIn').addEventListener('input',e=>{const v=e.target.value;if(v)typeText(v);e.target.value=''})}
-function scrollDoc(d){const page=$('#docPage');const max=Math.max(0,page.scrollHeight-88);docY=Math.max(0,Math.min(max,docY+d));page.style.transform=`translateY(${-docY}px)`;$('#doc').style.borderColor='#ffffff40';clearTimeout(scrollDoc.t);scrollDoc.t=setTimeout(()=>$('#doc').style.borderColor='',500)}
-function typeText(t){const el=$('#typed');el.textContent=(el.textContent+t).slice(-140);notesFocus()}
-function hud(icon,label,level){const old=$('.hud');old&&old.remove();screen.insertAdjacentHTML('beforeend',`<div class="hud">${ic(icon,30,'#fff')}${level!=null?`<div class="vol"><i style="width:${level*100}%"></i></div>`:''}<span>${label}</span></div>`);clearTimeout(hud.t);hud.t=setTimeout(()=>{const h=$('.hud');h&&h.remove()},1100)}
-function setPlay(on){playing=on;$('#music').classList.toggle('playing',on);$('#playBtn').innerHTML=ic(on?'pause':'play',16);$('#playBtn').setAttribute('aria-label',on?'Pause':'Play')}
-$('#playBtn').onclick=()=>{setPlay(!playing);hud(playing?'play':'pause',playing?'Playing':'Paused')};
-function key(k){if(k==='play'){setPlay(!playing);hud(playing?'play':'pause',playing?'Playing':'Paused')}
-  if(k==='vup'){vol=Math.min(1,vol+.1);hud('vup','Volume',vol)}if(k==='vdown'){vol=Math.max(0,vol-.1);hud('vdown','Volume',vol)}if(k==='space'){typeText(' ')}}
-document.querySelectorAll('[data-bounce]').forEach(b=>b.addEventListener('click',()=>{if(b.getAttribute('aria-label')==='Music'){setPlay(!playing);hud(playing?'play':'pause',playing?'Playing':'Paused')}}));
-/* the cursor wanders a little on its own until you take over, so it's clear what moves */
-let idle=true,idleT=0;function wander(){if(!idle||mode!=='remote')return;idleT+=.02;cur.x=300+Math.cos(idleT)*60;cur.y=280+Math.sin(idleT*1.3)*40;placeCursor();requestAnimationFrame(wander)}
-document.addEventListener('pointerdown',e=>{if(e.target.closest('#pad,#scrollStrip,.key,#kb'))idle=false},true);
+  pad.addEventListener('wheel',e=>{e.preventDefault();scrollDoc(e.deltaY*.5)},{passive:false});
+  $('#lclick').onclick=()=>{idle=false;clickAt()};$('#rclick').onclick=()=>{idle=false;hud('more','Right click')};
+  $('#kbBtn').onclick=()=>{idle=false;$('#phOver').innerHTML=`<div class="back" id="kbBack"></div><div class="sheet"><h3>Type on MacBook Pro</h3><p class="sub2">Letters appear as you type.</p><form class="kbrow" id="kbForm"><label for="kbIn" style="position:absolute;left:-9999px">Type on MacBook Pro</label><input id="kbIn" autocomplete="off" placeholder="Type here"><button class="pill w sm" type="submit">Enter</button></form><button type="button" class="opt" id="kbDone">Done</button></div>`;
+    const inp=$('#kbIn');inp.focus({preventScroll:true});inp.addEventListener('input',()=>{if(inp.value){typeText(inp.value);inp.value=''}});
+    $('#kbForm').onsubmit=e=>{e.preventDefault();typeText('\n')};$('#kbDone').onclick=$('#kbBack').onclick=()=>$('#phOver').innerHTML=''};
+  document.querySelectorAll('[data-k]').forEach(b=>b.onclick=()=>{idle=false;key(b.dataset.k)})}
+function scrollDoc(d){const page=$('#recipePage'),max=Math.max(0,page.scrollHeight-240);S.docY=Math.max(0,Math.min(max,S.docY+d));page.style.transform=`translateY(${-S.docY}px)`;flash('#recipe')}
+function typeText(t){const el=$('#typed');el.textContent=(el.textContent+t).slice(-200);flash('#notes')}
+function hud(icon,label,level){const o=$('.hud');o&&o.remove();screen.insertAdjacentHTML('beforeend',`<div class="hud">${ic(icon,32,'#fff')}${level!=null?`<div class="vol"><i style="width:${level*100}%"></i></div>`:''}<span>${label}</span></div>`);clearTimeout(hud.t);hud.t=setTimeout(()=>{const h=$('.hud');h&&h.remove()},1100)}
+function setPlay(on){S.playing=on;$('#music').classList.toggle('playing',on);$('#playBtn').innerHTML=ic(on?'pause':'play',16);$('#playBtn').setAttribute('aria-label',on?'Pause':'Play')}
+const togglePlay=()=>{setPlay(!S.playing);hud(S.playing?'play':'pause',S.playing?'Playing':'Paused')};
+$('#playBtn').onclick=togglePlay;document.querySelector('[data-music]').addEventListener('click',togglePlay);
+function key(k){if(k==='play')togglePlay();if(k==='vup'){S.vol=Math.min(1,S.vol+.1);hud('vup','Volume',S.vol)}if(k==='vdown'){S.vol=Math.max(0,S.vol-.1);hud('vdown','Volume',S.vol)}if(k==='tab')hud('remote','Switching apps')}
+let idle=true,t0=0;function wander(){if(!idle||S.mode!=='remote')return;t0+=.018;S.cur.x=560+Math.cos(t0)*90;S.cur.y=420+Math.sin(t0*1.3)*60;place();requestAnimationFrame(wander)}
 
 /* ---------- modes ---------- */
-function setMode(m){mode=m;document.querySelectorAll('.seg button').forEach(b=>b.setAttribute('aria-selected',String(b.dataset.mode===m)));
-  screen.classList.toggle('mode-send',m==='send');cursorEl.style.opacity=m==='remote'?1:0;
-  const banner=$('.banner');banner&&banner.remove();
-  if(m==='remote'){screen.insertAdjacentHTML('beforeend','<div class="banner"><i></i>iPhone 16 is controlling this computer</div>');hint(1,'Drag on the phone\'s touchpad to move the pointer, tap to click. Try the <b>play</b> button, the <b>volume</b> keys, the <b>scroll</b> strip, or type into Notes.');idle=true;wander()}
-  else if(!busy)hint(1,'Pick a file on the phone, then tap <b>Send</b>. The MacBook asks before it accepts.');
-  renderPhone()}
-document.querySelectorAll('.seg button').forEach(b=>b.onclick=()=>setMode(b.dataset.mode));
-setMode(location.hash==='#remote'?'remote':'send');
-const tick=()=>{const d=new Date(),t=d.getHours()+':'+String(d.getMinutes()).padStart(2,'0');$('#clock').textContent=t;$('#pclock').textContent=t};tick();setInterval(tick,10000);
+function setMode(m,keepTab){S.mode=m;document.querySelectorAll('.modes button').forEach(b=>b.setAttribute('aria-selected',String(b.dataset.mode===m)));
+  screen.classList.toggle('mode-send',m==='send');cursorEl.style.opacity=m==='remote'?1:0;const bn=$('.banner');bn&&bn.remove();
+  if(m==='remote'){S.tab='remote';screen.insertAdjacentHTML('beforeend','<div class="banner"><i></i>iPhone 16 is controlling this computer</div>');
+    hint(1,'Drag on the phone\'s touchpad to move the pointer, tap to click. Try the <b>play</b> button on Music, <b>Shortcuts</b>, the <b>scroll</b> strip, or <b>Keyboard</b> to type into Notes.');idle=true;wander()}
+  else{if(!keepTab)S.tab='send';if(!S.out&&!S.req&&!S.macOut)hint(1,'On the phone, tap <b>Photos &amp; videos</b> or <b>Files</b>, then <b>Send</b>. The MacBook asks before it accepts.')}
+  phRender()}
+document.querySelectorAll('.modes button').forEach(b=>b.onclick=()=>setMode(b.dataset.mode));
+const tick=()=>{const t=now();$('#clock').textContent=t;$('#pclock').textContent=t};tick();setInterval(tick,10000);
+paint(document);setPlay(false);macRender();fit();setMode(location.hash==='#remote'?'remote':'send');setTimeout(fit,80);
 })();
 </script>
 </body>

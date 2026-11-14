@@ -51,6 +51,13 @@ detailed developer notes; every release is in `VERSIONS.md`) and
 
 ## 14 November 2026
 
+- **`preview.html` is the 4.0 design** (the owner: "make the newest design,
+  not the old one"): rebuilt from the emulator's own CSS and icons
+  (`design/preview/build.py`): a MacBook desktop with the 4.0 Sidekick window
+  and an iPhone with the 4.0 screens; sending both ways with the amber
+  request, the Sending ring and the chat's receiving card; Remote with the
+  touchpad, clicks, scroll, keyboard and shortcuts. (Renders of the current
+  app were tried first and dropped.)
 - **The 4.0 website is live in the repo** (`index.html`, from the prototype):
   the real wordmark (`website/wordmark.png`, white, from `2.png`), no
   PROTOTYPE badge, wishlist / released looks (`only-wish` / `only-released`,

@@ -306,19 +306,21 @@ release. Keep this file for how things work now, not for history.
   devices; every permission and why.
 - `website/hero.webp` / `hero.png` and `website/sounds/` are from the old
   page and unused by the 4.0 one.
-- **`preview.html`** (top of the repo; "Try the demo"; source
-  `design/preview/preview.src.html` + the emulator's icons): a small
-  self-contained demo, only **file sending (both ways) and Remote** (the
-  owner's call: the Flutter-in-the-browser preview never worked for them).
-  A MacBook screen and an iPhone side by side (stacked on phones, the
-  computer pinned on top). Send files: pick sample files on the phone →
-  the corner pop-up on the Mac asks → Accept / Decline → progress on both;
-  the Mac's Send files sends one back → the phone's Accept sheet. Remote
-  control: drag on the phone's touchpad moves the Mac's pointer, tap clicks
-  (play the music, dock icons bounce), the scroll strip scrolls the recipe,
-  the keys do play/pause and volume, typing goes into Notes. Nothing leaves
-  the browser. `website/app/` (the old Flutter build) is no longer used;
-  `app/lib/demo/` and `tool/build_preview.sh` still build it if wanted.
+- **`preview.html`** (top of the repo; "Try the demo"): a demo of **the 4.0
+  design** (the owner's call: the new look, not the current app), built by
+  `design/preview/build.py` from `design/preview/preview.src.html` plus the
+  emulator's CSS and icons (`design/emulator/`), so its cards, sheets, dock,
+  request dialog and sending ring are the 4.0 design's own. Only **file
+  sending (both ways) and Remote**. A MacBook desktop (the 4.0 Sidekick
+  window: rail, Devices with "Needs you", Chat with iPhone 16; Music, Notes
+  and a recipe beside it) and an iPhone (the 4.0 Send, Sending, Chat and
+  Remote screens with the dock), side by side; stacked on phones with the
+  computer pinned on top. Send: Photos & videos / Files on the phone → Send
+  → the Mac's amber request → Accept / Decline → progress on both; the
+  Mac's Send files sends one back → the phone's request sheet. Remote: the
+  touchpad moves the Mac's pointer, tap clicks, scroll strip, Left / Right
+  click, Keyboard types into Notes, Shortcuts (play, volume, ⌘Tab). Nothing
+  leaves the browser. `website/app/` (the old Flutter build) is unused.
 - `404.html` (top of the repo): the not-found page, for any missing
   address, so every link in it is absolute (`/…`). `.htaccess` makes the
   server show it for every wrong address, keeping the address and a real
