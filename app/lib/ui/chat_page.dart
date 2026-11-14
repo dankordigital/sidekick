@@ -44,7 +44,8 @@ class _ChatPageState extends State<ChatPage> {
   PairedDevice? get _device {
     final paired = state.paired;
     if (paired.isEmpty) return null;
-    return paired.where((d) => d.id == _deviceId).firstOrNull ??
+    // The one picked here, else the one last opened from Devices.
+    return paired.where((d) => d.id == (_deviceId ?? state.selectedId)).firstOrNull ??
         // The device most recently shared with, else the first.
         (paired.toList()..sort((a, b) {
               final ta = state.history.last(a.id)?.at, tb = state.history.last(b.id)?.at;
@@ -80,7 +81,14 @@ class _ChatPageState extends State<ChatPage> {
             if (d == null)
               Expanded(child: _NoDevices(onGoToDevices: widget.onGoToDevices))
             else ...[
-              _DevicePicker(state: state, device: d, onPick: (id) => setState(() => _deviceId = id)),
+              _DevicePicker(
+                state: state,
+                device: d,
+                onPick: (id) {
+                  setState(() => _deviceId = id);
+                  state.select(id);
+                },
+              ),
               const SizedBox(height: 12),
               _Chips(value: _filter, onChanged: (f) => setState(() => _filter = f)),
               const SizedBox(height: 8),

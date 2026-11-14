@@ -2,6 +2,7 @@ import 'package:material_ui/material_ui.dart';
 import 'package:flutter/services.dart';
 
 import '../app_state.dart';
+import '../core/history.dart';
 import '../core/errors.dart';
 import '../core/bluetooth.dart';
 import '../core/models.dart';
@@ -325,6 +326,18 @@ class _PairedCardState extends State<_PairedCard> {
   AppState get state => widget.state;
   PairedDevice get device => widget.device;
 
+  /// "You sent Door code 4417 · 9:14", from the history.
+  String? _lastShared(BuildContext context) {
+    final i = state.history.last(device.id);
+    if (i == null) return null;
+    final what = switch (i.kind) {
+      HistoryKind.note || HistoryKind.link => i.code != null ? 'a code' : i.text ?? '',
+      _ => i.name ?? '',
+    };
+    final when = TimeOfDay.fromDateTime(i.at).format(context);
+    return '${i.fromMe ? 'You sent' : 'Received'} $what · $when';
+  }
+
   void _open(int tab) {
     state.select(device.id);
     widget.onOpen(tab);
@@ -396,86 +409,101 @@ class _PairedCardState extends State<_PairedCard> {
     return MaybeDropTarget(
       onHover: (hovering) => setState(() => _dragging = hovering),
       onFiles: (files) => state.sendFiles(device, files),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 150),
-        padding: const EdgeInsets.fromLTRB(20, 14, 8, 14),
-        decoration: BoxDecoration(
-          color: _dragging ? scheme.secondaryContainer : scheme.surfaceContainerLow,
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: _dragging ? scheme.primary : Colors.transparent, width: 2),
-        ),
-        // Room for the name next to the button? With big text on a phone,
-        // the button goes on its own line under it, so the name isn't cut.
-        child: LayoutBuilder(
-          builder: (context, constraints) {
-            final stack = constraints.maxWidth < 280 * MediaQuery.textScalerOf(context).scale(16) / 16;
-            final Widget action = reset
-                ? FilledButton(
-                    onPressed: () => pairWith(context, state, state.forgetForRepair(device)),
-                    child: const Text('Pair again'),
-                  )
-                : findNearby
-                ? FilledButton.tonal(
-                    onPressed: () => askToTurnOnBluetooth(context, state, device.name),
-                    child: const Text('Find nearby'),
-                  )
-                // Not reachable: not a dead, greyed-out Send, but look for it.
-                : !online
-                ? FilledButton.tonal(
-                    onPressed: state.isFinding(device.id) ? null : () => state.findDevice(device),
-                    child: const Text('Try again'),
-                  )
-                : FilledButton(onPressed: _pickAndSend, child: const Text('Send'));
-            final Widget menu = PopupMenuButton<String>(
-              tooltip: 'More options',
-              icon: const Icon(Icons.more_vert_rounded),
-              onSelected: (v) => switch (v) {
-                'files' => _open(2),
-                'remote' => _open(3),
-                'ping' => _ping(),
-                'text' => askAndSendText(context, state, device),
-                _ => _confirmUnpair(),
-              },
-              itemBuilder: (_) => [
-                if (canBrowse) PopupMenuItem(value: 'files', enabled: online, child: const Text('Browse files')),
-                if (canControl) PopupMenuItem(value: 'remote', enabled: online, child: const Text('Remote control')),
-                PopupMenuItem(value: 'text', enabled: online, child: const Text('Send text or a link')),
-                PopupMenuItem(value: 'ping', enabled: online, child: const Text('Ping')),
-                const PopupMenuDivider(),
-                const PopupMenuItem(value: 'unpair', child: Text('Unpair')),
-              ],
-            );
-            final icon = Icon(platformIcon(device.platform), color: scheme.onSurfaceVariant);
-            final info = Expanded(
-              child: Column(
+      child: GestureDetector(
+        behavior: HitTestBehavior.translucent,
+        onTap: () => _open(1),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 150),
+          padding: const EdgeInsets.fromLTRB(20, 14, 8, 14),
+          decoration: BoxDecoration(
+            color: _dragging ? scheme.secondaryContainer : scheme.surfaceContainerLow,
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: _dragging ? scheme.primary : Colors.transparent, width: 2),
+          ),
+          // Room for the name next to the button? With big text on a phone,
+          // the button goes on its own line under it, so the name isn't cut.
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              final stack = constraints.maxWidth < 280 * MediaQuery.textScalerOf(context).scale(16) / 16;
+              final Widget action = reset
+                  ? FilledButton(
+                      onPressed: () => pairWith(context, state, state.forgetForRepair(device)),
+                      child: const Text('Pair again'),
+                    )
+                  : findNearby
+                  ? FilledButton.tonal(
+                      onPressed: () => askToTurnOnBluetooth(context, state, device.name),
+                      child: const Text('Find nearby'),
+                    )
+                  // Not reachable: not a dead, greyed-out Send, but look for it.
+                  : !online
+                  ? FilledButton.tonal(
+                      onPressed: state.isFinding(device.id) ? null : () => state.findDevice(device),
+                      child: const Text('Try again'),
+                    )
+                  : FilledButton(onPressed: _pickAndSend, child: const Text('Send'));
+              final Widget menu = PopupMenuButton<String>(
+                tooltip: 'More options',
+                icon: const Icon(Icons.more_vert_rounded),
+                onSelected: (v) => switch (v) {
+                  'files' => _open(2),
+                  'remote' => _open(3),
+                  'ping' => _ping(),
+                  'text' => askAndSendText(context, state, device),
+                  _ => _confirmUnpair(),
+                },
+                itemBuilder: (_) => [
+                  if (canBrowse) PopupMenuItem(value: 'files', enabled: online, child: const Text('Browse files')),
+                  if (canControl) PopupMenuItem(value: 'remote', enabled: online, child: const Text('Remote control')),
+                  PopupMenuItem(value: 'text', enabled: online, child: const Text('Send text or a link')),
+                  PopupMenuItem(value: 'ping', enabled: online, child: const Text('Ping')),
+                  const PopupMenuDivider(),
+                  const PopupMenuItem(value: 'unpair', child: Text('Unpair')),
+                ],
+              );
+              final icon = Icon(platformIcon(device.platform), color: scheme.onSurfaceVariant);
+              final info = Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      device.name,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: Theme.of(context).textTheme.titleMedium,
+                    ),
+                    const SizedBox(height: 2),
+                    StatusPill(
+                      icon: _dragging ? statusIcon : null,
+                      label: state.runsOlderApp(device) ? '$status · needs a Sidekick update' : status,
+                      color: reset ? scheme.error : (online ? Colors.green : scheme.outline),
+                    ),
+                    // The last thing the two shared (4.0: tap the card for its Chat).
+                    if (_lastShared(context) case final last?)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 4),
+                        child: Text(
+                          last,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: Theme.of(context).textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
+                        ),
+                      ),
+                  ],
+                ),
+              );
+              if (!stack) {
+                return Row(children: [icon, const SizedBox(width: 16), info, const SizedBox(width: 8), action, menu]);
+              }
+              return Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    device.name,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: Theme.of(context).textTheme.titleMedium,
-                  ),
-                  const SizedBox(height: 2),
-                  StatusPill(
-                    icon: _dragging ? statusIcon : null,
-                    label: state.runsOlderApp(device) ? '$status · needs a Sidekick update' : status,
-                    color: reset ? scheme.error : (online ? Colors.green : scheme.outline),
-                  ),
+                  Row(children: [icon, const SizedBox(width: 16), info, menu]),
+                  Padding(padding: const EdgeInsets.only(left: 40, top: 8, right: 12), child: action),
                 ],
-              ),
-            );
-            if (!stack) {
-              return Row(children: [icon, const SizedBox(width: 16), info, const SizedBox(width: 8), action, menu]);
-            }
-            return Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(children: [icon, const SizedBox(width: 16), info, menu]),
-                Padding(padding: const EdgeInsets.only(left: 40, top: 8, right: 12), child: action),
-              ],
-            );
-          },
+              );
+            },
+          ),
         ),
       ),
     );
