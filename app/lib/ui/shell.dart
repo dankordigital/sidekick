@@ -1,5 +1,7 @@
 import 'dart:async';
 
+import 'dock.dart';
+
 import 'package:material_ui/material_ui.dart';
 
 import '../app_state.dart';
@@ -252,6 +254,20 @@ class _ShellState extends State<Shell> {
             NavigationDestination(icon: Icon(d.icon), selectedIcon: Icon(d.selected), label: d.label),
         ],
       );
+      // Sidekick 4.0: the floating dock (the old looks keep their bars).
+      if (!glass) {
+        return Scaffold(
+          body: SafeArea(bottom: false, child: body),
+          bottomNavigationBar: SafeArea(
+            minimum: const EdgeInsets.fromLTRB(16, 6, 16, 12),
+            child: FloatingDock(
+              index: _index,
+              onTap: _go,
+              items: [for (final d in _destinations) DockItem(icon: d.icon, selectedIcon: d.selected, label: d.label)],
+            ),
+          ),
+        );
+      }
       return Scaffold(
         // Like the default bar, the content stops above it (16 px clear of
         // it with Liquid Glass): nothing hides behind the glass.

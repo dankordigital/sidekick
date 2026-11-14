@@ -147,7 +147,10 @@ void main() {
               '${look == 'nothing' ? 'nothing-' : ''}${w.round()}x${h.round()}-${(scale * 100).round()}-${tab.toLowerCase()}';
           where = name;
           // The Nothing side bar (computers) says "Devices", its tab bar "DEVICES".
-          final target = find.byWidgetPredicate((w) => w is Text && w.data?.toLowerCase() == tab.toLowerCase());
+          // The 4.0 dock shows only the selected tab's name: the others are
+          // found by their label, as a screen reader finds them.
+          var target = find.byWidgetPredicate((w) => w is Text && w.data?.toLowerCase() == tab.toLowerCase());
+          if (target.evaluate().isEmpty) target = find.bySemanticsLabel(tab);
           if (target.evaluate().isEmpty) {
             overflows.add('$name: no "$tab" tab to tap');
             continue;
