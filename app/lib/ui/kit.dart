@@ -241,3 +241,95 @@ class _KPillState extends State<KPill> {
     );
   }
 }
+
+/// What a hold (or right-click) shows: a title, ✕ in the corner, and one
+/// big row per action (null greys it out). A sheet on phones, flicked down
+/// or ✕ to close; a dialog on computers.
+Future<void> showActions(
+  BuildContext context, {
+  required String title,
+  required List<(String, IconData, VoidCallback?)> options,
+  String? footnote,
+}) async {
+  Widget body(BuildContext context) => SafeArea(
+    child: Padding(
+      padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  title,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w600, color: K.text),
+                ),
+              ),
+              IconButton(
+                tooltip: 'Close',
+                onPressed: () => Navigator.pop(context),
+                icon: const Icon(Icons.close_rounded, size: 20),
+                style: IconButton.styleFrom(backgroundColor: K.raised, minimumSize: const Size(44, 44)),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          for (final (label, icon, onTap) in options)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: Material(
+                color: K.raised,
+                shape: const StadiumBorder(),
+                clipBehavior: Clip.antiAlias,
+                child: InkWell(
+                  onTap: onTap == null
+                      ? null
+                      : () {
+                          Navigator.pop(context);
+                          onTap();
+                        },
+                  child: Container(
+                    height: 48,
+                    padding: const EdgeInsets.symmetric(horizontal: 18),
+                    child: Row(
+                      children: [
+                        Icon(icon, size: 20, color: onTap == null ? K.faint : K.text),
+                        const SizedBox(width: 14),
+                        Text(
+                          label,
+                          style: TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w500,
+                            color: onTap == null ? K.faint : K.text,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          if (footnote != null) Text(footnote, style: const TextStyle(fontSize: 12, color: K.faint)),
+        ],
+      ),
+    ),
+  );
+  final phone = MediaQuery.sizeOf(context).width < 700;
+  if (phone) {
+    await showModalBottomSheet<void>(context: context, showDragHandle: true, backgroundColor: K.panel, builder: body);
+  } else {
+    await showDialog<void>(
+      context: context,
+      builder: (context) => Dialog(
+        backgroundColor: K.panel,
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 420),
+          child: Padding(padding: const EdgeInsets.only(top: 16), child: body(context)),
+        ),
+      ),
+    );
+  }
+}

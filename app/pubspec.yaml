@@ -83,6 +83,17 @@ flutter:
   # the material Icons class.
   uses-material-design: true
 
+  # Sidekick 4.0's typeface (the design's Inter, Latin subset; OFL, assets/fonts/LICENSE-Inter.txt).
+  fonts:
+    - family: Inter
+      fonts:
+        - asset: assets/fonts/Inter-Regular.otf
+        - asset: assets/fonts/Inter-Medium.otf
+          weight: 500
+        - asset: assets/fonts/Inter-SemiBold.otf
+          weight: 600
+        - asset: assets/fonts/Inter-Bold.otf
+          weight: 700
   assets:
     - assets/logo/logo.png
     - assets/sounds/startup.wav

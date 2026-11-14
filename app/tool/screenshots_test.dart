@@ -44,6 +44,13 @@ Future<void> _loadFonts() async {
         ..addFont(read('Roboto-Bold.ttf')))
       .load();
   await (FontLoader('MaterialIcons')..addFont(read('MaterialIcons-Regular.otf'))).load();
+  // Sidekick 4.0's typeface, bundled with the app.
+  await (FontLoader('Inter')
+        ..addFont(Future.value(ByteData.sublistView(File('assets/fonts/Inter-Regular.otf').readAsBytesSync())))
+        ..addFont(Future.value(ByteData.sublistView(File('assets/fonts/Inter-Medium.otf').readAsBytesSync())))
+        ..addFont(Future.value(ByteData.sublistView(File('assets/fonts/Inter-SemiBold.otf').readAsBytesSync())))
+        ..addFont(Future.value(ByteData.sublistView(File('assets/fonts/Inter-Bold.otf').readAsBytesSync()))))
+      .load();
   // The Nothing look's labels use the system's monospaced font ("monospace"
   // on Linux); any mono font on this machine stands in for it.
   const mono = '/usr/share/fonts/truetype/liberation/LiberationMono-Regular.ttf';
@@ -147,6 +154,32 @@ void main() {
       ]) {
         state.history.add(item);
       }
+      // As in the design: the phone is a favourite, answers on the same
+      // Wi-Fi, and a MacBook waits for an answer ("Needs you").
+      state.setAlwaysAccept(phoneId, true);
+      state
+        ..wifiConnected = true
+        ..lan = ['192.168.1.24'];
+      await state.addByAddress('127.0.0.1:${phone.port}');
+      state.waitingOffers.add(
+        TransferOffer(
+          id: 'needs-you',
+          from: TrustedPeer(
+            id: 'mac',
+            name: 'MacBook Pro',
+            platform: DevicePlatform.macos,
+            token: 't',
+            fingerprint: 'f',
+            key: 'k',
+          ),
+          files: const [
+            OfferedFile('IMG_1842.heic', 8200000),
+            OfferedFile('IMG_1843.heic', 7800000),
+            OfferedFile('Coast walk.mov', 109600000),
+            OfferedFile('Weekend plans.pdf', 2400000),
+          ],
+        ),
+      );
     });
 
     final boundary = GlobalKey();
@@ -203,7 +236,7 @@ void main() {
     await tester.tap(find.text('Start using Sidekick'));
     expect(state.welcomed, isTrue);
     await shot('1-devices');
-    await tester.tap(find.text('Connect device'));
+    await tester.tap(find.text('+ Connect'));
     await shot('1b-devices-connect-menu');
     // QR code pairing: this device's code, then the 6-digit code with its QR
     // (an iPhone asking, so it can scan).
@@ -253,7 +286,7 @@ void main() {
     }
     await tester.tap(tab('Devices'));
     await settle();
-    await tester.tap(find.text('Connect device'));
+    await tester.tap(find.text('+ Connect'));
     await settle();
     await tester.tap(find.text('QR code'));
     await shot('phone-qr-code');

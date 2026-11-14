@@ -42,6 +42,13 @@ Future<void> _loadFonts() async {
         ..addFont(read('Roboto-Bold.ttf')))
       .load();
   await (FontLoader('MaterialIcons')..addFont(read('MaterialIcons-Regular.otf'))).load();
+  // Sidekick 4.0's typeface, bundled with the app.
+  await (FontLoader('Inter')
+        ..addFont(Future.value(ByteData.sublistView(File('assets/fonts/Inter-Regular.otf').readAsBytesSync())))
+        ..addFont(Future.value(ByteData.sublistView(File('assets/fonts/Inter-Medium.otf').readAsBytesSync())))
+        ..addFont(Future.value(ByteData.sublistView(File('assets/fonts/Inter-SemiBold.otf').readAsBytesSync())))
+        ..addFont(Future.value(ByteData.sublistView(File('assets/fonts/Inter-Bold.otf').readAsBytesSync()))))
+      .load();
   const mono = '/usr/share/fonts/truetype/liberation/LiberationMono-Regular.ttf';
   if (File(mono).existsSync()) {
     await (FontLoader('monospace')..addFont(Future.value(ByteData.sublistView(File(mono).readAsBytesSync())))).load();

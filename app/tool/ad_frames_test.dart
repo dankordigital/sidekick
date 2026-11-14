@@ -44,6 +44,13 @@ Future<void> _loadFonts() async {
   );
   Future<ByteData> read(String path) async => ByteData.sublistView(await File(path).readAsBytes());
   await (FontLoader('MaterialIcons')..addFont(read(p.join(flutterFonts, 'MaterialIcons-Regular.otf')))).load();
+  // Sidekick 4.0's typeface, bundled with the app.
+  await (FontLoader('Inter')
+        ..addFont(Future.value(ByteData.sublistView(File('assets/fonts/Inter-Regular.otf').readAsBytesSync())))
+        ..addFont(Future.value(ByteData.sublistView(File('assets/fonts/Inter-Medium.otf').readAsBytesSync())))
+        ..addFont(Future.value(ByteData.sublistView(File('assets/fonts/Inter-SemiBold.otf').readAsBytesSync())))
+        ..addFont(Future.value(ByteData.sublistView(File('assets/fonts/Inter-Bold.otf').readAsBytesSync()))))
+      .load();
   final inter = Platform.environment['SIDEKICK_FONTS'];
   for (final family in ['.AppleSystemUIFont', 'CupertinoSystemDisplay', 'CupertinoSystemText', 'Roboto']) {
     final loader = FontLoader(family);

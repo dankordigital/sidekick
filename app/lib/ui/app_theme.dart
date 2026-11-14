@@ -55,6 +55,8 @@ const sidekickOk = Color(0xFF45D07E);
 ThemeData sidekickTheme(ColorScheme scheme) {
   final base = ThemeData(
     colorScheme: scheme,
+    // The design's typeface, the same on every platform.
+    fontFamily: 'Inter',
     useMaterial3: true,
     visualDensity: VisualDensity.standard,
     // The website's preview runs in a browser on any computer: it looks

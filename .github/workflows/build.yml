@@ -31,6 +31,9 @@ env:
 jobs:
   test:
     runs-on: ubuntu-latest
+    # Writes only the hidden refs/ci/app-screens (see below).
+    permissions:
+      contents: write
     defaults:
       run:
         working-directory: app
@@ -44,6 +47,23 @@ jobs:
       - run: flutter pub get
       - run: flutter analyze
       - run: flutter test
+      # Every screen at phone, tablet and computer sizes, big text too: fails
+      # on anything that overflows.
+      - run: flutter test tool/sizes_test.dart
+      # Renders of the real screens, kept on a hidden ref so they can be put
+      # next to the design without a device: git fetch origin refs/ci/app-screens.
+      - name: Render the screens
+        run: |
+          flutter test tool/screenshots_test.dart
+          flutter test tool/transfer_shots_test.dart
+      - name: Share the screens for review
+        if: github.event_name == 'push'
+        run: |
+          cd build/screenshots
+          git init -q
+          git add -A .
+          git -c user.name=ci -c user.email=ci@localhost commit -qm "App screens for ${{ github.sha }}"
+          git push -qf "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}" HEAD:refs/ci/app-screens
 
   windows:
     runs-on: windows-latest

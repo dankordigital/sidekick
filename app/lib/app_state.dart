@@ -372,6 +372,9 @@ class AppState extends ChangeNotifier {
   /// Another device wants to send files here: ask the user.
   Stream<TransferOffer> get transferOffers => _offers.stream;
 
+  /// Requests still waiting for Accept or Decline, oldest first.
+  final List<TransferOffer> waitingOffers = [];
+
   /// A Send started here: show it full screen.
   Stream<OutgoingSend> get sends => _sends.stream;
 
@@ -1885,6 +1888,12 @@ class AppState extends ChangeNotifier {
         final joined = waitForSubnet(credentials.addresses, timeout: SidekickServer.joinByHandTime);
         _manualJoins.add(ManualJoin(credentials, joined.then<void>((_) {}, onError: (Object _) {})));
       case TransferOffered(:final offer):
+        // Waiting for an answer: Devices shows it as "Needs you" (4.0).
+        waitingOffers.add(offer);
+        notifyListeners();
+        offer.answer.whenComplete(() {
+          if (waitingOffers.remove(offer)) notifyListeners();
+        });
         _offers.add(offer);
       case Paired(:final device):
         _addPaired(device);
