@@ -512,3 +512,17 @@ void showTransferSecurity(BuildContext context, AppState state, Transfer t) {
     ),
   );
 }
+
+/// A device's files, full screen (from its hold menu: Browse files). Files
+/// is no longer a tab in 4.0.
+Future<void> showFilesOf(BuildContext context, AppState state, PairedDevice device) {
+  state.select(device.id);
+  return Navigator.of(context).push(
+    MaterialPageRoute<void>(
+      builder: (context) => Scaffold(
+        appBar: AppBar(title: Text(device.name)),
+        body: SafeArea(top: false, child: FilesPage(state: state)),
+      ),
+    ),
+  );
+}

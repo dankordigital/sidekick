@@ -822,7 +822,14 @@ Future<List<File>> pickFilesToSend(BuildContext context, {required String title}
     if (choice == null) return const [];
     type = choice;
   }
-  if (debugPickFiles case final pick?) return pick(media: type == FileType.media);
+  if (!context.mounted) return const [];
+  return pickFiles(context, title: title, media: type == FileType.media);
+}
+
+/// The system's picker: photos and videos ([media]) or any files.
+Future<List<File>> pickFiles(BuildContext context, {required String title, bool media = false}) async {
+  final type = media ? FileType.media : FileType.any;
+  if (debugPickFiles case final pick?) return pick(media: media);
   try {
     await prepareFilePicker();
     final picked = await FilePicker.pickFiles(dialogTitle: title, type: type);

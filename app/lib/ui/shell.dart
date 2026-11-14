@@ -17,10 +17,10 @@ import 'chat_page.dart';
 import 'devices_page.dart';
 import 'direct_wifi.dart';
 import 'ping.dart';
-import 'files_page.dart';
 import 'notices.dart';
 import 'qr_pairing.dart';
 import 'remote_page.dart';
+import 'send_page.dart';
 import 'settings_page.dart';
 import 'text_messages.dart';
 import 'transfer_screens.dart';
@@ -42,12 +42,12 @@ class _ShellState extends State<Shell> {
 
   AppState get state => widget.state;
 
-  /// The tray panel's Settings is tab 3.
+  /// The tray panel's Settings is tab 4.
   List<({IconData icon, IconData selected, String label})> get _destinations => [
     (icon: Icons.devices_outlined, selected: Icons.devices, label: 'Devices'),
     (icon: Icons.chat_bubble_outline_rounded, selected: Icons.chat_bubble_rounded, label: 'Chat'),
-    (icon: Icons.folder_outlined, selected: Icons.folder, label: 'Files'),
-    (icon: Icons.mouse_outlined, selected: Icons.mouse, label: 'Remote'),
+    (icon: Icons.ios_share_rounded, selected: Icons.ios_share_rounded, label: 'Send'),
+    (icon: Icons.screen_share_outlined, selected: Icons.screen_share, label: 'Remote'),
     (icon: Icons.settings_outlined, selected: Icons.settings, label: 'Settings'),
   ];
 
@@ -179,7 +179,7 @@ class _ShellState extends State<Shell> {
     final pages = [
       DevicesPage(state: state, onOpen: _go),
       ChatPage(state: state, onGoToDevices: () => _go(0)),
-      FilesPage(state: state, onGoToDevices: () => _go(0)),
+      SendPage(state: state, onGoToDevices: () => _go(0)),
       RemotePage(state: state, onGoToDevices: () => _go(0)),
       SettingsPage(state: state),
     ];

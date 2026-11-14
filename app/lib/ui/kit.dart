@@ -163,6 +163,88 @@ class KDeviceTile extends StatelessWidget {
   );
 }
 
+/// A device row as the design draws it: a 48 px tile, the name and a
+/// status line, one button on the right. The whole row is the tap target.
+class KRow extends StatefulWidget {
+  const KRow({
+    super.key,
+    required this.platform,
+    required this.color,
+    required this.name,
+    required this.status,
+    required this.statusColor,
+    required this.action,
+    this.onTap,
+    this.onHold,
+    this.tileBackground,
+    this.padding = const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+  });
+  final DevicePlatform platform;
+  final Color color;
+  final String name;
+  final String status;
+  final Color statusColor;
+  final Widget action;
+  final VoidCallback? onTap;
+  final VoidCallback? onHold;
+  final Color? tileBackground;
+  final EdgeInsetsGeometry padding;
+
+  @override
+  State<KRow> createState() => _KRowState();
+}
+
+class _KRowState extends State<KRow> {
+  bool _down = false;
+
+  @override
+  Widget build(BuildContext context) => GestureDetector(
+    behavior: HitTestBehavior.opaque,
+    onTap: widget.onTap,
+    onLongPress: widget.onHold,
+    onSecondaryTap: widget.onHold,
+    onTapDown: (_) => setState(() => _down = true),
+    onTapUp: (_) => setState(() => _down = false),
+    onTapCancel: () => setState(() => _down = false),
+    child: AnimatedScale(
+      scale: _down ? 0.98 : 1,
+      duration: Duration(milliseconds: _down ? 90 : 300),
+      curve: _down ? Curves.easeOut : const Cubic(0.34, 1.56, 0.64, 1),
+      child: Padding(
+        padding: widget.padding,
+        child: Row(
+          children: [
+            KDeviceTile(platform: widget.platform, color: widget.color, background: widget.tileBackground),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    widget.name,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500, color: K.text),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    widget.status,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w500, color: widget.statusColor),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 10),
+            widget.action,
+          ],
+        ),
+      ),
+    ),
+  );
+}
+
 enum KPillStyle { white, dark, outline, amber }
 
 /// The design's pill buttons: white (the main action), dark, outlined, amber.

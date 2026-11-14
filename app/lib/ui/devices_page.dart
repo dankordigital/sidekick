@@ -11,6 +11,7 @@ import '../core/server.dart';
 import 'bluetooth_pairing.dart';
 import 'ping.dart';
 import 'qr_pairing.dart';
+import 'files_page.dart';
 import 'kit.dart';
 import 'text_messages.dart';
 import 'transfer_screens.dart';
@@ -75,7 +76,7 @@ class DevicesPage extends StatelessWidget {
               enter(
                 KPanel(
                   dashed: true,
-                  child: _Row(
+                  child: KRow(
                     platform: d.platform,
                     color: K.deviceColor(d.id),
                     name: d.name,
@@ -153,7 +154,7 @@ class _NeedsYou extends StatelessWidget {
             style: TextStyle(color: K.amber, fontWeight: FontWeight.w600, fontSize: 14),
           ),
           const SizedBox(height: 12),
-          _Row(
+          KRow(
             platform: offer.from.platform,
             color: K.deviceColor(offer.from.id),
             tileBackground: const Color(0x33000000),
@@ -231,7 +232,7 @@ class _PairedRow extends StatelessWidget {
         : KPill('Try again', style: KPillStyle.outline, onPressed: finding ? null : () => state.findDevice(device));
     return MaybeDropTarget(
       onFiles: (files) => state.sendFiles(device, files),
-      child: _Row(
+      child: KRow(
         platform: device.platform,
         // Its own colour; grey only for a device never heard from.
         color: online || seen != null ? K.deviceColor(device.id) : K.faint,
@@ -254,7 +255,8 @@ class _PairedRow extends StatelessWidget {
     final favourite = state.alwaysAccept.contains(device.id);
     final options = <(String, IconData, VoidCallback?)>[
       ('Open chat', Icons.chat_bubble_outline_rounded, () => _open(1)),
-      if (caps?.files ?? true) ('Browse files', Icons.folder_open_rounded, online ? () => _open(2) : null),
+      if (caps?.files ?? true)
+        ('Browse files', Icons.folder_open_rounded, online ? () => showFilesOf(context, state, device) : null),
       if (canControl) ('Remote control', Icons.mouse_outlined, online ? () => _open(3) : null),
       ('Send text or a link', Icons.notes_rounded, online ? () => askAndSendText(context, state, device) : null),
       (
@@ -293,87 +295,6 @@ class _PairedRow extends StatelessWidget {
     );
     if (ok == true) await state.unpair(device.id);
   }
-}
-
-/// A device row as the design draws it: a 48 px tile, the name and a
-/// status line, one button on the right. The whole row is the tap target.
-class _Row extends StatefulWidget {
-  const _Row({
-    required this.platform,
-    required this.color,
-    required this.name,
-    required this.status,
-    required this.statusColor,
-    required this.action,
-    this.onTap,
-    this.onHold,
-    this.tileBackground,
-    this.padding = const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-  });
-  final DevicePlatform platform;
-  final Color color;
-  final String name;
-  final String status;
-  final Color statusColor;
-  final Widget action;
-  final VoidCallback? onTap;
-  final VoidCallback? onHold;
-  final Color? tileBackground;
-  final EdgeInsetsGeometry padding;
-
-  @override
-  State<_Row> createState() => _RowState();
-}
-
-class _RowState extends State<_Row> {
-  bool _down = false;
-
-  @override
-  Widget build(BuildContext context) => GestureDetector(
-    behavior: HitTestBehavior.opaque,
-    onTap: widget.onTap,
-    onLongPress: widget.onHold,
-    onSecondaryTap: widget.onHold,
-    onTapDown: (_) => setState(() => _down = true),
-    onTapUp: (_) => setState(() => _down = false),
-    onTapCancel: () => setState(() => _down = false),
-    child: AnimatedScale(
-      scale: _down ? 0.98 : 1,
-      duration: Duration(milliseconds: _down ? 90 : 300),
-      curve: _down ? Curves.easeOut : const Cubic(0.34, 1.56, 0.64, 1),
-      child: Padding(
-        padding: widget.padding,
-        child: Row(
-          children: [
-            KDeviceTile(platform: widget.platform, color: widget.color, background: widget.tileBackground),
-            const SizedBox(width: 14),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    widget.name,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500, color: K.text),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    widget.status,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w500, color: widget.statusColor),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(width: 10),
-            widget.action,
-          ],
-        ),
-      ),
-    ),
-  );
 }
 
 Future<void> pairWith(BuildContext context, AppState state, DeviceInfo device) async {

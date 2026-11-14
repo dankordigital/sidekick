@@ -26,6 +26,7 @@ import 'package:sidekick/core/models.dart';
 import 'package:sidekick/core/server.dart';
 import 'package:sidekick/core/trust.dart';
 import 'package:sidekick/main.dart';
+import 'package:sidekick/ui/dock.dart';
 import 'package:sidekick/platform/files.dart';
 import 'package:sidekick/platform/input.dart';
 import 'package:sidekick/ui/widgets.dart';
@@ -135,7 +136,7 @@ void main() {
 
     final tabs = look == 'nothing'
         ? ['DEVICES', 'SEND', 'REMOTE', 'SETTINGS']
-        : ['Devices', 'Chat', 'Files', 'Remote', 'Settings'];
+        : ['Devices', 'Chat', 'Send', 'Remote', 'Settings'];
     for (final (w, h, kind) in [
       (360.0, 740.0, 'phone'),
       (430.0, 932.0, 'phone'),
@@ -156,15 +157,21 @@ void main() {
           // The Nothing side bar (computers) says "Devices", its tab bar "DEVICES".
           // The 4.0 dock shows only the selected tab's name: the others are
           // found by their label, as a screen reader finds them.
-          var target = find.byWidgetPredicate((w) => w is Text && w.data?.toLowerCase() == tab.toLowerCase());
-          if (target.evaluate().isEmpty) target = find.bySemanticsLabel(tab);
+          // Only the tab bar's own: Send is also a button on Devices.
+          var target = find.descendant(
+            of: find.byType(NavigationRail),
+            matching: find.byWidgetPredicate((w) => w is Text && w.data?.toLowerCase() == tab.toLowerCase()),
+          );
+          if (target.evaluate().isEmpty) {
+            target = find.descendant(of: find.byType(FloatingDock), matching: find.bySemanticsLabel(tab));
+          }
           if (target.evaluate().isEmpty) {
             overflows.add('$name: no "$tab" tab to tap');
             continue;
           }
           await tester.tap(target.last, warnIfMissed: false);
           // Files and Remote load from the other device.
-          await wait(tab.toLowerCase() == 'files' || tab.toLowerCase() == 'remote' ? 600 : 150);
+          await wait(tab.toLowerCase() == 'remote' ? 600 : 150);
           await tester.runAsync(() async {
             final render = boundary.currentContext!.findRenderObject()! as RenderRepaintBoundary;
             final image = await render.toImage(pixelRatio: 0.5);

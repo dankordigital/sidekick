@@ -8,6 +8,7 @@
 
 // This is a test in all but location.
 // ignore_for_file: invalid_use_of_visible_for_testing_member
+import 'dart:async';
 import 'dart:io';
 import 'dart:ui' as ui;
 
@@ -28,6 +29,9 @@ import 'package:sidekick/main.dart';
 import 'package:sidekick/platform/files.dart';
 import 'package:sidekick/platform/desktop_window.dart';
 import 'package:sidekick/platform/input.dart';
+import 'package:sidekick/ui/dock.dart';
+import 'package:sidekick/ui/files_page.dart';
+import 'package:sidekick/ui/send_page.dart';
 import 'package:sidekick/ui/startup.dart';
 import 'package:sidekick/ui/tray_panel.dart';
 import 'package:sidekick/ui/widgets.dart';
@@ -253,36 +257,46 @@ void main() {
     await shot('1d-pin-with-qr');
     await tester.tap(find.text('Cancel'));
     await settle();
-    await tester.tap(find.text('Files').last);
-    await shot('2-files', waitForData: true);
+    // Send: two files and a link chosen.
+    final sample = Directory.systemTemp.createTempSync('sk-send');
+    final zip = File(p.join(sample.path, 'Trail photos.zip'))..writeAsBytesSync(List.filled(45300, 0));
+    final pdf = File(p.join(sample.path, 'Weekend plans.pdf'))..writeAsBytesSync(List.filled(2400, 0));
+    sendSelection.value = [Picked.file(zip), Picked.file(pdf)];
+    await tester.tap(find.descendant(of: find.byType(NavigationRail), matching: find.text('Send')));
+    await shot('2-send');
+    // Browse files is a device's own screen now (its hold menu).
+    unawaited(showFilesOf(tester.element(find.byType(NavigationRail)), state, state.paired.first));
+    await shot('2b-files', waitForData: true);
     if (find.text('Home').evaluate().isNotEmpty) {
       await tester.tap(find.text('Home'));
-      await shot('2b-files-folder', waitForData: true);
+      await shot('2c-files-folder', waitForData: true);
     }
-    await tester.tap(find.text('Remote').last);
+    await tester.pageBack();
+    await settle();
+    await tester.tap(find.descendant(of: find.byType(NavigationRail), matching: find.text('Remote')));
     await shot('3-remote', waitForData: true);
-    await tester.tap(find.text('Settings').last);
+    await tester.tap(find.descendant(of: find.byType(NavigationRail), matching: find.text('Settings')));
     await shot('5-settings');
     state.setThemeMode(ThemeMode.dark);
-    await tester.tap(find.text('Devices').last);
+    await tester.tap(find.descendant(of: find.byType(NavigationRail), matching: find.text('Devices')));
     await shot('6-devices-dark');
 
     // Phone layout. The 4.0 dock shows only the selected tab's name: the
     // others are found by their label, as a screen reader finds them.
     Finder tab(String name) =>
-        find.text(name).evaluate().isNotEmpty ? find.text(name).last : find.bySemanticsLabel(name).last;
+        find.descendant(of: find.byType(FloatingDock), matching: find.bySemanticsLabel(name)).last;
     state.setThemeMode(ThemeMode.light);
     debugForceMobile = true;
     tester.view.physicalSize = const Size(412, 915);
     for (final (tab_, name) in [
       ('Devices', 'devices'),
       ('Chat', 'chat'),
-      ('Files', 'files'),
+      ('Send', 'send'),
       ('Remote', 'remote'),
       ('Settings', 'settings'),
     ]) {
       await tester.tap(tab(tab_));
-      await shot('phone-$name', waitForData: name == 'files' || name == 'remote');
+      await shot('phone-$name', waitForData: name == 'remote');
     }
     await tester.tap(tab('Devices'));
     await settle();
