@@ -7,6 +7,12 @@ detailed developer notes; every release is in `VERSIONS.md`) and
 
 ## 14 November 2026
 
+- **Logo ideas** (`design/logo-ideas/`, the owner: "these are amazing"; none
+  picked yet): five abstract, symmetrical, round-edged marks with no letters,
+  devices or dots: Hinge, Embrace, Lock, Bloom, Pair (board:
+  `five-logos.png`). Claude's pick: Pair, as two colours with a bigger step
+  so it isn't read as a pause icon. Rejected along the way: letter marks,
+  a split circle (SumUp's), overlapping squares (copyui's), planets, blobs.
 - **Prototype: Send files becomes Send while typing**: typing in the
   message bar shrinks the white "Send files" pill into a round send button
   with an up arrow (it sends the text); sending or erasing brings "Send
