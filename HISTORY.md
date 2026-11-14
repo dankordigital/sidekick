@@ -88,6 +88,15 @@ detailed developer notes; every release is in `VERSIONS.md`) and
   the hero phone, the pairing steps, the device tiles and each card's
   picture turn slightly toward the pointer wherever it is on the page (the
   per-card hover tilt is gone; the soft light under the pointer stays).
+  Then **smooth motion everywhere** (one engine, `frame()`: every moving
+  value eases toward its target each frame): pointer-facing with inertia; a
+  soft colour glow follows the mouse; the hero rises in on load; the stack's
+  cards come in tilted back and lower, straighten as they arrive, then sink,
+  shrink and dim into the pile; buttons pull toward the pointer (magnetic),
+  get a shine on hover and a springy press; every click ripples; nav and
+  footer links underline; chips and rows lift; icons spring; questions open
+  and close smoothly; joining the wishlist bursts the app's colours.
+  Reduced motion and touch screens skip the pointer parts.
 - **Emulator: hold for actions, 6-digit codes, one notice at a time** (the
   owner): only a **6-digit code** gets the big **Copy code** button
   (`codeOf`: "482913", "482 913", "G-482913 is your Google code", "Kod BLIK
