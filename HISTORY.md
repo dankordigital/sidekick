@@ -7,11 +7,12 @@ detailed developer notes; every release is in `VERSIONS.md`) and
 
 ## 14 November 2026
 
-- **A prompt for Figma AI** (`design/figma-ai-prompt.md`): describes the
-  new look and every screen of the concept and prototype (colours, dock,
-  Chat with the dock-shaped message bar, sheets, computer window, logo), plus
-  follow-ups to make it clickable, add real states, and let it improve the
-  design on a separate page.
+- **A prompt for Figma AI** (`design/figma-ai-prompt.md`, one prompt):
+  how the new look works (colours, colour only for meaning, white pills,
+  the dock and the dock-shaped message bar, the logo), every phone and
+  computer screen and state, how to build it in Figma (pages, styles,
+  components with variants, auto layout, the clickable prototype), then
+  improve it on a separate "Improved" page.
 
 ## 13 November 2026
 
