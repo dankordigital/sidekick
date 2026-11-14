@@ -51,6 +51,7 @@ detailed developer notes; every release is in `VERSIONS.md`) and
 
 ## 14 November 2026
 
+- **4.0 course change** (the owner: "this looks nothing like the promised design"): screens were being recoloured, not rebuilt. From now on each screen is rebuilt to match its Figma picture and the emulator, checked side by side with the design before it's ticked (`design/4.0-build-plan.md`, "How each screen is built"). Devices first.
 - **4.0, step 4a:** a paired device's card shows the last thing shared and opens its Chat when tapped.
 - **4.0, step 3b: the Chat tab** (`ui/chat_page.dart`): per-device cards (files, links, notes, 6-digit codes with Copy code), hold for actions (✕ to close), the message bar whose Send files turns into Send while typing. Dock has 5 tabs (Devices · Chat · Files · Remote · Settings). Analyze clean, tests and sizes_test pass.
 - **4.0, step 3a: the Chat history** (`core/history.dart`): every file, photo, link and note sent or received is kept per device (500 each, `history.json`), with 6-digit code detection; AppState records it. 114 tests pass.
