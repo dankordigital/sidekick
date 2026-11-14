@@ -97,6 +97,12 @@ detailed developer notes; every release is in `VERSIONS.md`) and
   footer links underline; chips and rows lift; icons spring; questions open
   and close smoothly; joining the wishlist bursts the app's colours.
   Reduced motion and touch screens skip the pointer parts.
+  Then: the owner saw only the progress line move (their device asks for
+  reduced motion, which froze everything). Now reduced motion means **calm,
+  not frozen**: hovers, fades, ripples, questions and the stack piling up
+  still animate; only tilting, following the pointer, the glow and the
+  magnetic pull stop. A **Motion** switch in the top bar turns full motion
+  on or off (remembered, `sk-motion`).
 - **Emulator: hold for actions, 6-digit codes, one notice at a time** (the
   owner): only a **6-digit code** gets the big **Copy code** button
   (`codeOf`: "482913", "482 913", "G-482913 is your Google code", "Kod BLIK
