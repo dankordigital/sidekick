@@ -51,6 +51,7 @@ detailed developer notes; every release is in `VERSIONS.md`) and
 
 ## 15 November 2026
 
+- **The website moved to a private repo** (the owner: the PHP mustn't be public): `dankordigital/sidekick-site` has every page, the PHP, the demo's sources and the upload workflow; the admin panel has a new secret name there. This repo keeps only the app (and `website/` logo art for the icon tools).
 - **Website: humans only** (`gate.php`): bot-like visitors get "Just checking · I'm not a robot" (a proof-of-work puzzle in the browser, or Cloudflare Turnstile if keys are set) before the home page, /preview and /privacy; passing sets a 30-day signed cookie. Privacy policies updated; tested with curl and a real Chromium.
 - **4.0.1 polish, round 1 (the owner: "exactly like the Figma prototypes"):** the design's own icons (`ui/lucide.dart`: the emulator's Lucide SVGs drawn by a small path painter; dock, rail, device tiles, Send tiles, Chat), device colours by kind like the design (phones blue, computers green, tablets amber: `K.platformColor`), regular weight for names and status lines, medium pills, bigger section labels, more room under titles, the Chat header's round search (filters the chat) and ⋯ (Browse files, Ping, Clear this chat).
 

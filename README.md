@@ -204,16 +204,7 @@ python tool/make_icons.py                 # rebuilds all app icons from website/
 
 ## Website
 
-`index.html` (at the top of the repo) is a self-contained landing page built with Material You (Material 3). It has:
-
-- Dynamic color: every color comes from a single seed hue, so the swatches recolor the whole page.
-- Light and dark themes that follow your system setting, plus a manual toggle.
-- A working demo in the hero: the phone's media controller drives the "video" on the laptop.
-- A touchpad demo and a file-browser demo in the features section.
-
-Its icons live in `website/` and are linked as `/website/…`, so serve the repo's top folder (GitHub Pages, Netlify or Cloudflare Pages), or preview it with `python3 -m http.server` from there and open http://localhost:8000.
-
-> The waitlist form is a placeholder. Hook it up to Formspree, Buttondown, Supabase, or similar (search for `TODO` in the file).
+The website, https://getsidekick.app, lives in a separate private repository.
 
 ## Recommended stack
 

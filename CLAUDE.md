@@ -4,144 +4,13 @@ Use your phone and computer as one: send files both ways, control one device
 from another (touchpad, keyboard, shortcuts), and connect over Bluetooth
 when there's no shared Wi-Fi. Everything is encrypted.
 
-One Flutter app for **Windows, macOS, Linux, Android and iOS** (`app/`), plus a
-website (`index.html` at the top of the repo; its images live in
-`website/` and it links them as `/website/…`). It lives at
-**https://getsidekick.app**, the official domain (the owner's, hosting on
-OVHcloud; it was at sk.dankor.digital on cyber_Folks before). Use
-getsidekick.app wherever an address is shown (ads, trailers, the app).
-The owner uploads with FileZilla: `index.html`, `index.php`, `gate.php`, `wishlist.php`, `np7dpanel.php`, `privacy.html`, `preview.html`,
-`404.html`, `.htaccess`, `robots.txt` and `website/` go in the site's root
-folder (`www`). The
-pages link only with relative or `/…` paths, so nothing in them names the
-domain. **Short addresses:** pages link to `/preview` and `/privacy`
-(getsidekick.app/preview, …/privacy); `.htaccess` serves preview.html and
-privacy.html there and moves the old `.html` addresses to them (301, the
-query kept). Tested on Apache; `php -S` doesn't read `.htaccess`, so test
-them locally as /preview.html. `.github/workflows/website.yml`
-uploads exactly those over FTPS whenever they change on the branch, once
-the owner adds the secrets `FTP_SERVER`, `FTP_USERNAME`, `FTP_PASSWORD` and
-`FTP_DIR` (it skips until then). Never put the FTP login anywhere else.
-
-**Humans only** (`gate.php`, the owner's call, 15 Nov 2026): the home
-page (`human_gate` in index.php) and /preview, /privacy (`.htaccess` →
-`gate.php?page=`) first check the visitor. One that looks like a bot
-(`is_bot` User-Agent, no Accept-Language or text/html Accept, over 40
-requests a minute per hashed IP in `gate-rate.json`, or a cloud/hosting
-network already in `ip-places.json`: `is_cloud_network`, now in
-wishlist.php) gets "Just checking · I'm not a robot" (403): the tick runs
-a SHA-256 proof-of-work in the browser (`GATE_BITS` 18, at least 300 ms,
-puzzle signed and under 10 min old), or Cloudflare Turnstile when
-`wishlist-config.php` has `turnstile_site_key` and `turnstile_secret`.
-Passing sets `sk_human` (30 days, HMAC with `sidekick-wishlist/gate.key`,
-tied to the User-Agent). Counts per day in `gate.json` (shown / passed /
-failed). If the check itself breaks, people get through. Both privacy
-policies describe it. For the strongest wall in front of everything, the
-owner can also put the domain behind Cloudflare (free plan: Bot Fight
-Mode).
-
-**The site is a wishlist, not a download page** (the owner's call: Sidekick
-isn't out yet). No download buttons or links anywhere: the top bar, the hero
-and `#wishlist` (the old `#download` section) say "Join the wishlist", and
-`404.html` links there. **The wishlist is real** (`wishlist.php`, PHP only,
-no database: the owner's OVHcloud free plan): signing up puts the address
-on the list and emails "Got your email! We'll remind you when Sidekick
-comes out." (the owner's words; no confirm step) from `FROM`
-(`info@getsidekick.app`, the owner's mailbox) **over SMTP to OVHcloud's
-mail server** (`ssl0.ovh.net`: 465 SSL, then 587 STARTTLS; 993 is IMAP, it can't send; logged in as `FROM`; PHP `mail()` never
-delivered on the hosting, so it's only a fallback), the password in
-`wishlist-config.php` next to it on the hosting, **never in git**
-(`.gitignore`; template `wishlist-config.example.php`); every failure goes
-to `sidekick-wishlist/mail.log` (never the password). The email is HTML
-(`welcome_html`: the header image, a signature at the bottom (`email_footer`: the "sk" logo as `cid:logo`, Sidekick, getsidekick.app, `FROM`), `website/email-header.png` as a JPEG inside `wishlist.php` (`header_image`), attached inline as `cid:header`,
-a "Cancel my sign-up" button: the remove link) with a plain-text part, with a
-remove link. **Every email is in the 4.0 look** (`email_shell`: near-black
-page, the header (`website/email-header.png`: the Dusk "sk" and the wordmark
-on a dark glow), a #1c1c1c card, white text with one word in an app colour,
-white pill "Try the demo" (→ /preview) beside an outlined "Cancel my
-sign-up", chips, and the signature with the Dusk icon; `color-scheme: dark`);
-np7dpanel's `announce_html` uses the same frame. Also and a note to `FROM` about each sign-up (`NOTIFY_OWNER`); a
-honeypot field, a 2-second minimum, and 5 tries an hour per hashed IP.
-`wishlist-check.php` (upload once, open, delete) loads `wishlist.php`'s
-functions (`WISHLIST_LIB`) and checks the hosting: PHP, the private
-folder, openssl, the password, and a real test email to `FROM`, showing
-the log's reason if it fails. The list is `sidekick-wishlist/list.csv`,
-next to `www` (outside the web root; inside it behind a deny-all
-.htaccess only if that's not writable). On localhost (`php -S
-localhost:8000`) emails go to `sidekick-wishlist/outbox` instead. Both
-privacy policies describe exactly this; keep them true if it changes.
-**Released mode:** `.htaccess` sends `/` and `/index.html` to `index.php`,
-which counts the visit (`record_visit`) and serves index.html; when
-site.json says released it adds `class="released"` to `<html>` and
-`window.SIDEKICK_RELEASE` (`mark_released`, `release_files`: the GitHub
-release's .exe, Apple-silicon and Intel .dmg/.pkg, .apk, .ipa). **The
-version follows GitHub by itself** (site.json `auto`, the default;
-`offered_version`): the newest release (`latest_release`, cached 10 min,
-4 s timeout from the home page) once it has all seven files
-(`release_complete`), so a release still building never gives a broken
-link; otherwise, or when GitHub is out of reach, the last one offered.
-A version written in the panel is pinned (`auto` false). index.html marks the two
-looks with `only-wish` / `only-released` (Download buttons, the wishlist form,
-headings); the platform tiles in `#devices` show either way: "Coming soon",
-linking to `#wishlist`, or "Available", linking to their file. Without PHP
-it's still the wishlist. index.php needs `<html lang="en"` and `</head>`
-exactly as they are; the panel's editor skips anything with class `icon`.
-**The site's look** (4.0, 14 Nov 2026, the owner's call; prototype in
-`design/website-4.0/`, the old openbot-style page is in git history):
-`index.html` is one hand-written file (icons are the Lucide paths inline,
-`const I`), dark only (#121212 page, #1c1c1c cards, white pills, Inter +
-JetBrains Mono labels), the real wordmark up top (`website/wordmark.png`,
-white, made from `2.png`). Headings are glossy chrome (`.gl`) with one
-keyword each in an app colour (`.k`, `--c`). Sections: hero (the 4.0 chat
-running on a phone, "Try it" buttons play the MacBook: a 6-digit code with
-Copy code, hold a card for its actions, ✕ / flick down, Ping), What
-Sidekick does (a **stack of cards** that stick and pile up as you scroll,
-`#stack`), Free (the holographic FREE), Pairing (the code types itself in),
-Devices (`#devices`, tiles with `data-os`), Questions, the wishlist
-(`#wishlist`, form → `wishlist.php`, device chips), footer ("Made with ♥ in
-Poland"). **Motion everywhere, for everyone** (the owner: full motion by
-default, no switch, even with reduced motion on; `CALM=false`): one engine
-(`frame()`) eases every moving value each frame: headings, the phone, steps,
-tiles and card pictures face the pointer (`[data-face]`), a glow follows it,
-buttons are magnetic with a shine and a springy press, every click ripples,
-questions open smoothly, the wishlist bursts the app's colours. On phones
-(`max-width:600px`) the layout is its own (full-width buttons, Try it as a
-sideways row of chips, one-column stack, stacked form) and things face your
-finger while it's down, else lean as they pass the middle of the screen.
-No sounds and no light mode on this page.
-**`np7dpanel.php`** (the owner's name for it; not linked anywhere): the
-wishlist admin panel. Tabs: Overview (counts, sign-ups per day for 30 days,
-devices), Visits (home-page visits and different visitors per day, 30-day
-chart, referring sites; `sidekick-wishlist/visits.json`, visitors only as
-a day-salted hash of IP + browser, bots skipped; plus **Who visited**: every
-IP address (bots marked) for 30 days in `ips.json` (`record_ip`), with
-country, city and network from ipwho.is, looked up only from the panel
-(`ip_places`, 25 a load, `ip-places.json`), and a countries chart; visits from
-cloud / hosting / scanner networks (`is_cloud_network`: Tencent's "6 Collyer
-Quay", Alibaba, Censys…) count as bots, marked "cloud"; both
-privacy policies say so), Website (the newest GitHub release, `latest_release()`: the GitHub API,
-cached 10 minutes in `latest-release.json`, with **Release latest** and
-Check again; **Release Sidekick** with a version / **Make it a wishlist
-again**: `sidekick-wishlist/site.json`; "Release latest" follows new
-releases by itself, "Pin this version" stays on one), **Edit** (visual: the
-real home page in a frame, `?view=editor`, signed in only, `page_editable`
-wraps every text in `<span class="sk-text" data-sk=key>`; click a text and
-type, Enter keeps / Esc cancels, links and forms do nothing; Wishlist /
-Released and Computer / Phone switches; a list of changes with Undo / Put
-back the original; Save posts only the changed ones. `?tab=edit&list=1` is
-the old list of boxes, with search, the title and edits to forget. Saved to
-`sidekick-wishlist/edits.json` as {original → new} and put in by index.php
-(`apply_site_edits`), so index.html is never changed and new uploads keep
-them; an edit whose original text is gone does nothing), People (search, add, remove, send the welcome email again, send it
-to everyone who never got it, CSV export), Email everyone, Past sends
-(`sends/<id>.json`), Mail log (view, clear) and Health (PHP, openssl,
-folder, password, the mail server's ports). Its password is
-`admin_password` in `wishlist-config.php`, or the mailbox password if that
-isn't set; **never in git**. 5 wrong tries per 15 minutes per visitor,
-session cookie (Strict), CSRF token. Sends in batches of 8 from the page,
-each with the person's own remove link and `List-Unsubscribe`; who got a
-send is kept in `sidekick-wishlist/sends/<id>.txt`, so sending the same text
-again skips them. "Send a test" goes to `FROM` first.
+One Flutter app for **Windows, macOS, Linux, Android and iOS** (`app/`).
+The website (**https://getsidekick.app**, the official domain: use it
+wherever an address is shown) lives in the **private** repo
+`dankordigital/sidekick-site` since 15 Nov 2026 (the owner's call: its PHP
+and admin panel mustn't be public). Never put website PHP, the admin
+panel's name or how the site works back into this public repo. `website/`
+here only holds the logo art the icon tools use.
 
 **Every change must work on all four platforms.**
 
@@ -327,42 +196,12 @@ release. Keep this file for how things work now, not for history.
   .pkg installer's welcome page and corner icon (glass "sk", 1x and 2x).
   Macs get both: the .dmg (drag to Applications) and the .pkg (installs
   into /Applications). CI builds the .pkg with pkgbuild/productbuild.
-- Privacy policy: `privacy.html` at the top of the repo (the website) and
-  `app/packaging/privacy.txt` (the Windows installer's "Privacy policy"
-  page, installed as `Privacy.txt`, and the .pkg's second page). Keep
+- Privacy policy: `app/packaging/privacy.txt` (the Windows installer's
+  "Privacy policy" page, installed as `Privacy.txt`, and the .pkg's second
+  page) and the website's `privacy.html` (in the private site repo). Keep
   the two saying the same thing, and true: no account, no servers, no
   analytics; what's stored on the device; what's announced to nearby
   devices; every permission and why.
-- `website/hero.webp` / `hero.png` and `website/sounds/` are from the old
-  page and unused by the 4.0 one.
-- **`preview.html`** (top of the repo; "Try the demo"): a demo of **the 4.0
-  design** (the owner's call: the new look, not the current app), built by
-  `design/preview/build.py` from `design/preview/preview.src.html` plus the
-  emulator's CSS and icons (`design/emulator/`), so its cards, sheets, dock,
-  request dialog and sending ring are the 4.0 design's own. Only **file
-  sending (both ways) and Remote**. A MacBook (Apple-like: notch, macOS-style
-  wallpaper, translucent menu bar, glass Dock with Finder / Safari / Music /
-  Notes and the real Sidekick icon) whose desktop has the 4.0 Sidekick
-  window: rail, Devices with "Needs you", Chat with iPhone 16; Music, Notes
-  and a recipe beside it) and an iPhone (the 4.0 Send, Sending, Chat and
-  Remote screens with the dock), side by side; stacked on phones with the
-  computer pinned on top. Send: Photos & videos / Files on the phone → Send
-  → the Mac's amber request → Accept / Decline → progress on both; the
-  Mac's Send files sends one back → the phone's request sheet. Remote: the
-  touchpad moves the Mac's pointer, tap clicks, scroll strip, Left / Right
-  click, Keyboard types into Notes, Shortcuts (play, volume, ⌘Tab). Nothing
-  leaves the browser. `website/app/` (the old Flutter build) is unused.
-- `404.html` (top of the repo): the not-found page, for any missing
-  address, so every link in it is absolute (`/…`). `.htaccess` makes the
-  server show it for every wrong address, keeping the address and a real
-  404 status (no redirect); folder listings are off and show it too. Same look and theme
-  choice as the site, system fonts only, like `privacy.html`.
-- **The site stays out of search results** (the owner's call: not yet):
-  `noindex` in every page's `<meta name="robots">` and in the
-  `X-Robots-Tag` header `.htaccess` puts on every file; `robots.txt` lets
-  Google, Bing, DuckDuckGo, Apple and Yandex read the pages (they must, to
-  see the noindex) and keeps every other bot out. Remove all three to be
-  found.
 - Logos (`website/`): `2.png` is the wide wordmark, used **only on the
   website** (white, trimmed: `website/wordmark.png`; the "sk" in white:
   `sk-mark.png`). **The website's icon is the new "sk" Dusk**

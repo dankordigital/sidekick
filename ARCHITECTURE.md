@@ -105,20 +105,10 @@ Everything stays **on the user's own devices**. Nothing is uploaded anywhere.
 
 ### The one server-side piece: the website's wishlist
 
-- **The site:** `index.html`, `privacy.html` and the other pages are static
-  files at **getsidekick.app**, on OVHcloud web hosting. `wishlist.php` is
-  plain PHP with no database. Static files only, apart from that one script.
-- **What it stores:** the wishlist form posts to `wishlist.php`, which keeps
-  sign-ups in `sidekick-wishlist/list.csv` on the hosting. That folder sits
-  outside the public web folder, and holds the email, the devices picked and
-  the time.
-- **The emails:** it sends "Got your email!" with PHP `mail()` from
-  `info@getsidekick.app`, with a link to remove the address, and a note to
-  the owner for each sign-up.
-- **Abuse protection:** a hidden trap field, a 2-second minimum, and 5 tries
-  an hour per IP; only a salted hash of the IP is kept, for an hour.
-- This is the only personal data held off the user's devices. Both privacy
-  policies (`privacy.html`, `app/packaging/privacy.txt`) describe it.
+The website (getsidekick.app, in the private repo `dankordigital/sidekick-site`)
+keeps the wishlist's sign-ups (an email address, the devices picked, the
+time) on its hosting and emails them once. That's the only personal data
+held off people's devices; both privacy policies describe it.
 
 ## Sign-in
 
