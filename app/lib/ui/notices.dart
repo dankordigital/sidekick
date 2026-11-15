@@ -196,7 +196,7 @@ class _NoticeCardState extends State<NoticeCard> with TickerProviderStateMixin {
     _hurrying = true;
     final left = NoticeCenter.minShown - DateTime.now().difference(_shownAt);
     final ms = left.inMilliseconds.clamp(250, NoticeCenter.minShown.inMilliseconds);
-    _life.animateTo(
+    _life.animateBack(
       0,
       duration: Duration(milliseconds: ms),
       curve: Curves.linear,
