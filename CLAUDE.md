@@ -10,7 +10,7 @@ website (`index.html` at the top of the repo; its images live in
 **https://getsidekick.app**, the official domain (the owner's, hosting on
 OVHcloud; it was at sk.dankor.digital on cyber_Folks before). Use
 getsidekick.app wherever an address is shown (ads, trailers, the app).
-The owner uploads with FileZilla: `index.html`, `index.php`, `wishlist.php`, `np7dpanel.php`, `privacy.html`, `preview.html`,
+The owner uploads with FileZilla: `index.html`, `index.php`, `gate.php`, `wishlist.php`, `np7dpanel.php`, `privacy.html`, `preview.html`,
 `404.html`, `.htaccess`, `robots.txt` and `website/` go in the site's root
 folder (`www`). The
 pages link only with relative or `/…` paths, so nothing in them names the
@@ -22,6 +22,23 @@ them locally as /preview.html. `.github/workflows/website.yml`
 uploads exactly those over FTPS whenever they change on the branch, once
 the owner adds the secrets `FTP_SERVER`, `FTP_USERNAME`, `FTP_PASSWORD` and
 `FTP_DIR` (it skips until then). Never put the FTP login anywhere else.
+
+**Humans only** (`gate.php`, the owner's call, 15 Nov 2026): the home
+page (`human_gate` in index.php) and /preview, /privacy (`.htaccess` →
+`gate.php?page=`) first check the visitor. One that looks like a bot
+(`is_bot` User-Agent, no Accept-Language or text/html Accept, over 40
+requests a minute per hashed IP in `gate-rate.json`, or a cloud/hosting
+network already in `ip-places.json`: `is_cloud_network`, now in
+wishlist.php) gets "Just checking · I'm not a robot" (403): the tick runs
+a SHA-256 proof-of-work in the browser (`GATE_BITS` 18, at least 300 ms,
+puzzle signed and under 10 min old), or Cloudflare Turnstile when
+`wishlist-config.php` has `turnstile_site_key` and `turnstile_secret`.
+Passing sets `sk_human` (30 days, HMAC with `sidekick-wishlist/gate.key`,
+tied to the User-Agent). Counts per day in `gate.json` (shown / passed /
+failed). If the check itself breaks, people get through. Both privacy
+policies describe it. For the strongest wall in front of everything, the
+owner can also put the domain behind Cloudflare (free plan: Bot Fight
+Mode).
 
 **The site is a wishlist, not a download page** (the owner's call: Sidekick
 isn't out yet). No download buttons or links anywhere: the top bar, the hero

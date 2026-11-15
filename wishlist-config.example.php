@@ -5,4 +5,9 @@
 // this file: PHP runs it and prints nothing.
 return [
     'smtp_password' => '',
+    // Optional: Cloudflare Turnstile for the bot check (gate.php). Free at
+    // dash.cloudflare.com → Turnstile → Add site (getsidekick.app); paste
+    // both keys. Empty: Sidekick's own "I'm not a robot" puzzle is used.
+    'turnstile_site_key' => '',
+    'turnstile_secret' => '',
 ];

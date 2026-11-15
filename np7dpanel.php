@@ -105,17 +105,6 @@ function go(string $tab, array $query = []): void {
     exit;
 }
 
-/** A network that's a cloud provider, hosting company or scanner, not
- *  somebody's internet at home or on their phone: visits from it are bots,
- *  whatever browser they claim to be. ("6 Collyer Quay" is Tencent Cloud's
- *  address in Singapore.) */
-function is_cloud_network(string $network): bool {
-    return $network !== '' && (bool)preg_match('/alibaba|aliyun|tencent|collyer quay|amazon|aws|google cloud|google llc|microsoft|azure|'
-        . 'digitalocean|linode|akamai|ovh|hetzner|vultr|choopa|oracle|censys|shodan|leaseweb|m247|datacamp|cdn77|contabo|'
-        . 'scaleway|hostinger|ionos|cloudflare|huawei|byteplus|bytedance|zenlayer|psychz|quadranet|colocrossing|'
-        . 'hosting|datacenter|data center|server|cloud/i', $network);
-}
-
 /** "Chrome on Windows" from a browser's User-Agent, or the start of it. */
 function browser_name(string $ua): string {
     if ($ua === '') return '(none)';

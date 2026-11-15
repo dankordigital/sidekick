@@ -644,6 +644,17 @@ function save_site_edits(array $edits): bool {
     return file_put_contents(data_dir() . '/edits.json', json_encode($edits, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT), LOCK_EX) !== false;
 }
 
+/** A network that's a cloud provider, hosting company or scanner, not
+ *  somebody's internet at home or on their phone: visits from it are bots,
+ *  whatever browser they claim to be. ("6 Collyer Quay" is Tencent Cloud's
+ *  address in Singapore.) */
+function is_cloud_network(string $network): bool {
+    return $network !== '' && (bool)preg_match('/alibaba|aliyun|tencent|collyer quay|amazon|aws|google cloud|google llc|microsoft|azure|'
+        . 'digitalocean|linode|akamai|ovh|hetzner|vultr|choopa|oracle|censys|shodan|leaseweb|m247|datacamp|cdn77|contabo|'
+        . 'scaleway|hostinger|ionos|cloudflare|huawei|byteplus|bytedance|zenlayer|psychz|quadranet|colocrossing|'
+        . 'hosting|datacenter|data center|server|cloud/i', $network);
+}
+
 function is_bot(string $ua): bool {
     return $ua === '' || (bool)preg_match('/bot|crawl|spider|slurp|preview|fetch|monitor|curl|wget|python|scan|headless|lighthouse/i', $ua);
 }

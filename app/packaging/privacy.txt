@@ -171,9 +171,22 @@ website linked to it, if any. To spot abuse and see roughly where visitors
 come from, it also keeps each visitor's IP address with the times it
 visited and the browser it said it was, for 30 days. When we look at that
 list, the addresses are sent to ipwho.is to show their country, city and
-network. No cookies, nothing else, never shared.
+network. Nothing else, never shared.
 
-The website uses no cookies and no third-party analytics. It remembers your light or
+Bot check. The site is for people only. A visitor that looks like a bot (a
+bot's browser name, missing browser details, many requests a minute, or a
+hosting or scanner network) is asked to tick "I'm not a robot" first.
+Ticking it makes your browser solve a small puzzle on your own device; if
+it passes, the site sets one cookie, sk_human, which says only that this
+browser passed (signed, tied to the browser's name, for 30 days), so you
+aren't asked again. To count requests a minute, the site keeps a scrambled
+code of your IP address for one minute. If we switch on Cloudflare
+Turnstile for this check, the check page loads it from Cloudflare, which
+then sees your IP address and browser to tell people from bots (see
+Cloudflare's privacy policy).
+
+Apart from that one cookie, the website uses no cookies and no third-party
+analytics. It remembers your light or
 dark choice and color in your browser (local storage). It loads its fonts
 from Google Fonts, so your browser connects to Google's servers (see
 Google's privacy policy). If you install Sidekick through

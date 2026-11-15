@@ -238,8 +238,16 @@ try {
     that day's date, so it can't be traced back to you or matched across days), and which other website linked to it,
     if any. To spot abuse and see roughly where visitors come from, it also keeps each visitor's IP address with the
     times it visited and the browser it said it was, for 30 days. When we look at that list, the addresses are sent to
-    ipwho.is to show their country, city and network. No cookies, nothing else, never shared.</p>
-  <p>This website uses no cookies and no third-party analytics. It remembers your light or dark choice and color in your browser
+    ipwho.is to show their country, city and network. Nothing else, never shared.</p>
+  <p><strong>Bot check.</strong> The site is for people only. A visitor that looks like a bot (a bot's browser name,
+    missing browser details, many requests a minute, or a hosting or scanner network) is asked to tick “I'm not a
+    robot” first. Ticking it makes your browser solve a small puzzle on your own device; if it passes, the site sets
+    one cookie, <code>sk_human</code>, which says only that this browser passed (signed, tied to the browser's name,
+    for 30 days), so you aren't asked again. To count requests a minute, the site keeps a scrambled code of your IP
+    address for one minute. If we switch on Cloudflare Turnstile for this check, the check page loads it from
+    Cloudflare, which then sees your IP address and browser to tell people from bots (see
+    <a href="https://www.cloudflare.com/privacypolicy/">Cloudflare's privacy policy</a>).</p>
+  <p>Apart from that one cookie, this website uses no cookies and no third-party analytics. It remembers your light or dark choice and color in your browser
     (local storage). It loads its fonts from Google Fonts, so your browser connects to Google's servers (see
     <a href="https://policies.google.com/privacy">Google's privacy policy</a>); this page doesn't. If you install
     Sidekick through another service, such as AltStore, SideStore,

@@ -12,6 +12,10 @@ declare(strict_types=1);
 
 define('WISHLIST_LIB', true);
 require __DIR__ . '/wishlist.php';
+require __DIR__ . '/gate.php';
+
+// Humans only: anything that looks like a bot gets "I'm not a robot" first.
+human_gate(gate_safe_back((string)($_SERVER['REQUEST_URI'] ?? '/')));
 
 $page = (string)file_get_contents(__DIR__ . '/index.html');
 try {
