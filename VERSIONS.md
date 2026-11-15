@@ -5,10 +5,12 @@ entry here with each release (see "Releasing" in `CLAUDE.md`). The history
 starts at 1.1.3.
 
 ## 4.0.1
-- **Sidekick on Linux** (x64): a `.deb` for Debian, Ubuntu, Mint and
-  Pop!_OS, and a `.tar.gz` for the rest. Send and receive files, Chat,
-  the tray icon, notifications, sounds, Open when you log in, app icons,
-  and remote control of the Linux computer (with `xdotool`, on X11).
+- **Sidekick on Linux, on almost any distribution** (x64 and ARM64): an
+  AppImage that runs everywhere, a `.deb` (Debian, Ubuntu, Mint, Pop!_OS),
+  an `.rpm` (Fedora, openSUSE, RHEL), a `PKGBUILD` for Arch, Manjaro and
+  EndeavourOS, and a `.tar.gz`. Send and receive files, Chat, the tray
+  icon, notifications, sounds, Open when you log in, app icons, and remote
+  control of the Linux computer (`xdotool` on X11, `ydotool` on Wayland).
 - **Mac:** changing the app icon now changes Sidekick.app itself, so
   Finder and the Dock show it when Sidekick is closed too.
 - **Ink is the new default app icon** (Dusk and the others are still in

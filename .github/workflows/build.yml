@@ -559,10 +559,21 @@ jobs:
             "${auth[@]}"
           rm -f "$key"
 
-  # Linux (4.0.1): a .deb (Debian, Ubuntu, Mint, Pop!_OS…) and a .tar.gz
-  # for everything else, x64.
+  # Linux (4.0.1): packages for almost every distribution (AppImage, .deb,
+  # .rpm, .tar.gz, an Arch PKGBUILD), for x64 and ARM64. Built on Ubuntu
+  # 22.04 (glibc 2.35) so they run on older systems too. ARM64 may fail
+  # without holding up a release.
   linux:
-    runs-on: ubuntu-22.04
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: x64
+            runner: ubuntu-22.04
+          - arch: arm64
+            runner: ubuntu-22.04-arm
+    runs-on: ${{ matrix.runner }}
+    continue-on-error: ${{ matrix.arch == 'arm64' }}
     defaults:
       run:
         working-directory: app
@@ -572,11 +583,13 @@ jobs:
         with:
           channel: stable
           flutter-version: ${{ env.FLUTTER_VERSION }}
+          architecture: ${{ matrix.arch }}
           cache: true
       - name: Install the build tools
         run: |
           sudo apt-get update -q
-          sudo apt-get install -y -q clang cmake ninja-build pkg-config libgtk-3-dev libayatana-appindicator3-dev libsecret-1-dev
+          sudo apt-get install -y -q clang cmake ninja-build pkg-config libgtk-3-dev \
+            libayatana-appindicator3-dev libsecret-1-dev rpm file
 
       - name: Work out the version
         id: version
@@ -590,35 +603,16 @@ jobs:
 
       - run: flutter pub get
       - run: flutter build linux --release --build-name=${{ steps.version.outputs.version }} --build-number=${{ github.run_number }}
-
-      - name: Package the .deb and .tar.gz
-        env:
-          V: ${{ steps.version.outputs.version }}
+      - name: Package for every distribution
         run: |
-          mkdir -p build/dist
-          # .tar.gz: the app folder, with its .desktop file and icon.
-          rm -rf build/sidekick && cp -r build/linux/x64/release/bundle build/sidekick
-          cp packaging/linux/dev.sidekick.sidekick.desktop build/sidekick/
-          cp packaging/linux/dev.sidekick.sidekick.png build/sidekick/
-          tar -C build -czf "build/dist/Sidekick-$V-linux-x64.tar.gz" sidekick
-          # .deb: /opt/sidekick, a launcher and the icon.
-          root=build/deb
-          rm -rf "$root"
-          mkdir -p "$root/DEBIAN" "$root/opt" "$root/usr/bin" "$root/usr/share/applications" "$root/usr/share/icons/hicolor/512x512/apps"
-          cp -r build/linux/x64/release/bundle "$root/opt/sidekick"
-          ln -s /opt/sidekick/sidekick "$root/usr/bin/sidekick"
-          sed 's|^Exec=.*|Exec=/opt/sidekick/sidekick|' packaging/linux/dev.sidekick.sidekick.desktop > "$root/usr/share/applications/dev.sidekick.sidekick.desktop"
-          cp packaging/linux/dev.sidekick.sidekick.png "$root/usr/share/icons/hicolor/512x512/apps/"
-          sed "s/@VERSION@/$V/" packaging/linux/control > "$root/DEBIAN/control"
-          dpkg-deb --root-owner-group --build "$root" "build/dist/Sidekick-$V-linux-x64.deb"
-          ls -l build/dist
+          packaging/linux/package.sh "${{ steps.version.outputs.version }}"
+          # One PKGBUILD in the release (it covers both machines).
+          if [ "${{ matrix.arch }}" != x64 ]; then rm -f build/dist/PKGBUILD; fi
 
       - uses: actions/upload-artifact@v4
         with:
-          name: sidekick-linux
-          path: |
-            app/build/dist/*.deb
-            app/build/dist/*.tar.gz
+          name: sidekick-linux-${{ matrix.arch }}
+          path: app/build/dist/*
           if-no-files-found: error
 
   release:
@@ -651,7 +645,7 @@ jobs:
 
             **macOS 12+:** pick your Mac's kind: Apple menu → **About This Mac** says **Chip: Apple M…** → the **Apple-silicon** files; **Processor: Intel** → the **Intel** files. Open the `.dmg` and drag Sidekick into Applications, or open the `.pkg` installer and click **Continue**, then **Install**. The first time, right-click Sidekick → **Open** → **Open** (it isn't notarized yet). On macOS 15 and newer: try to open it once, then go to **System Settings → Privacy & Security** and click **Open Anyway**.
 
-            **Linux (x64):** on Debian, Ubuntu, Mint or Pop!_OS, download the `.deb` below and open it (or `sudo apt install ./Sidekick-*.deb`). Anywhere else, unpack the `.tar.gz` and run `sidekick` inside. For remote control, install `xdotool` (X11); for notifications, `libnotify-bin`.
+            **Linux (x64 and ARM64, any distribution):** the **AppImage** runs everywhere: download it, make it executable (`chmod +x Sidekick-*.AppImage`, or Properties → Allow executing) and open it. Or install a package: **Debian, Ubuntu, Mint, Pop!_OS** the `.deb` (`sudo apt install ./Sidekick-*.deb`); **Fedora, openSUSE, RHEL** the `.rpm` (`sudo dnf install ./Sidekick-*.rpm`); **Arch, Manjaro, EndeavourOS** the `PKGBUILD` (in its folder: `makepkg -si`); anything else, the `.tar.gz` (unpack, run `sidekick`). For remote control install `xdotool` (X11) or `ydotool` (Wayland); notifications use `notify-send`.
 
             **iPhone/iPad (iOS 15+):** install [AltStore](https://altstore.io) or [SideStore](https://sidestore.io) once, then add this source in it: `https://github.com/${{ github.repository }}/releases/latest/download/altstore.json` and tap **Sidekick → Install**. New versions then show up as updates. (Or install the `.ipa` below with [Sideloadly](https://sideloadly.io).)
 

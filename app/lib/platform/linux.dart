@@ -8,6 +8,11 @@ import 'input.dart';
 /// Linux (4.0.1): the desktop's own tools, so there's no native code to keep.
 abstract final class LinuxDesktop {
   static bool? _xdotool;
+  static bool? _ydotool;
+
+  /// Whether `ydotool` (remote control on Wayland, with its `ydotoold`
+  /// service running) is installed: used when there's no `xdotool`.
+  static bool get hasYdotool => _ydotool ??= _which('ydotool');
 
   /// Whether `xdotool` (remote control: pointer and keys) is installed. It
   /// works on X11 and in XWayland windows.
@@ -67,18 +72,22 @@ abstract final class LinuxDesktop {
   }
 }
 
-/// Remote control of a Linux computer through `xdotool`. Pointer moves are
-/// gathered for a frame (16 ms) so a fast swipe isn't a hundred processes.
+/// Remote control of a Linux computer: `xdotool` (X11, and X apps under
+/// Wayland) or, without it, `ydotool` (Wayland too; its `ydotoold`
+/// service must run). Pointer moves are gathered for a frame (16 ms) so a
+/// fast swipe isn't a hundred processes.
 class LinuxInputInjector implements InputInjector {
   int _dx = 0, _dy = 0;
   Timer? _flush;
 
-  @override
-  bool get supported => LinuxDesktop.hasXdotool;
+  bool get _x11 => LinuxDesktop.hasXdotool;
 
-  void _x(List<String> args) {
+  @override
+  bool get supported => LinuxDesktop.hasXdotool || LinuxDesktop.hasYdotool;
+
+  void _run(List<String> args) {
     if (!supported) return;
-    unawaited(Process.run('xdotool', args).then((_) {}, onError: (_) {}));
+    unawaited(Process.run(_x11 ? 'xdotool' : 'ydotool', args).then((_) {}, onError: (_) {}));
   }
 
   @override
@@ -89,36 +98,60 @@ class LinuxInputInjector implements InputInjector {
       _flush = null;
       final x = _dx, y = _dy;
       _dx = _dy = 0;
-      if (x != 0 || y != 0) _x(['mousemove_relative', '--', '$x', '$y']);
+      if (x == 0 && y == 0) return;
+      _run(_x11 ? ['mousemove_relative', '--', '$x', '$y'] : ['mousemove', '-x', '$x', '-y', '$y']);
     });
   }
 
-  static String _b(MouseButton b) => switch (b) {
+  static String _xButton(MouseButton b) => switch (b) {
     MouseButton.left => '1',
     MouseButton.middle => '2',
     MouseButton.right => '3',
   };
 
-  @override
-  void button(MouseButton button, {required bool down}) => _x([down ? 'mousedown' : 'mouseup', _b(button)]);
+  /// ydotool's buttons: 0 left, 1 right, 2 middle; 0x40 down, 0x80 up.
+  static int _yButton(MouseButton b) => switch (b) {
+    MouseButton.left => 0,
+    MouseButton.right => 1,
+    MouseButton.middle => 2,
+  };
+
+  static String _hex(int v) => '0x${v.toRadixString(16)}';
 
   @override
-  void click(MouseButton button, {int count = 1}) => _x(['click', '--repeat', '$count', _b(button)]);
+  void button(MouseButton button, {required bool down}) => _run(
+    _x11
+        ? [down ? 'mousedown' : 'mouseup', _xButton(button)]
+        : ['click', _hex(_yButton(button) | (down ? 0x40 : 0x80))],
+  );
+
+  @override
+  void click(MouseButton button, {int count = 1}) => _run(
+    _x11
+        ? ['click', '--repeat', '$count', _xButton(button)]
+        : ['click', '--repeat', '$count', _hex(_yButton(button) | 0xC0)],
+  );
 
   @override
   void scroll({int dx = 0, int dy = 0}) {
+    if (!_x11) {
+      // ydotool: a wheel move, in notches (positive y scrolls up).
+      final x = (dx / 120).round(), y = (dy / 120).round();
+      if (x != 0 || y != 0) _run(['mousemove', '--wheel', '-x', '$x', '-y', '$y']);
+      return;
+    }
     // 120 is one notch; X scrolls with buttons 4 (up), 5 (down), 6 (left), 7 (right).
     void notches(int amount, String plus, String minus) {
       if (amount == 0) return;
       final n = (amount.abs() / 120).ceil().clamp(1, 10);
-      _x(['click', '--repeat', '$n', amount > 0 ? plus : minus]);
+      _run(['click', '--repeat', '$n', amount > 0 ? plus : minus]);
     }
 
     notches(dy, '4', '5');
     notches(dx, '7', '6');
   }
 
-  static const _keys = {
+  static const _xKeys = {
     'enter': 'Return',
     'backspace': 'BackSpace',
     'tab': 'Tab',
@@ -144,21 +177,107 @@ class LinuxInputInjector implements InputInjector {
     'menu': 'Menu',
   };
 
-  static String _key(String k) {
-    if (_keys[k] case final s?) return s;
+  static String _xKey(String k) {
+    if (_xKeys[k] case final s?) return s;
     if (RegExp(r'^f([1-9]|1[0-2])$').hasMatch(k)) return k.toUpperCase();
     return k;
   }
 
+  /// Linux key codes (input-event-codes.h), for ydotool.
+  static const _codes = {
+    'esc': 1,
+    'backspace': 14,
+    'tab': 15,
+    'enter': 28,
+    'ctrl': 29,
+    'macctrl': 29,
+    'shift': 42,
+    'alt': 56,
+    'space': 57,
+    'home': 102,
+    'up': 103,
+    'pageup': 104,
+    'left': 105,
+    'right': 106,
+    'end': 107,
+    'down': 108,
+    'pagedown': 109,
+    'insert': 110,
+    'delete': 111,
+    'win': 125,
+    'cmd': 125,
+    'menu': 127,
+    'printscreen': 99,
+    'f1': 59,
+    'f2': 60,
+    'f3': 61,
+    'f4': 62,
+    'f5': 63,
+    'f6': 64,
+    'f7': 65,
+    'f8': 66,
+    'f9': 67,
+    'f10': 68,
+    'f11': 87,
+    'f12': 88,
+    '1': 2,
+    '2': 3,
+    '3': 4,
+    '4': 5,
+    '5': 6,
+    '6': 7,
+    '7': 8,
+    '8': 9,
+    '9': 10,
+    '0': 11,
+    'q': 16,
+    'w': 17,
+    'e': 18,
+    'r': 19,
+    't': 20,
+    'y': 21,
+    'u': 22,
+    'i': 23,
+    'o': 24,
+    'p': 25,
+    'a': 30,
+    's': 31,
+    'd': 32,
+    'f': 33,
+    'g': 34,
+    'h': 35,
+    'j': 36,
+    'k': 37,
+    'l': 38,
+    'z': 44,
+    'x': 45,
+    'c': 46,
+    'v': 47,
+    'b': 48,
+    'n': 49,
+    'm': 50,
+  };
+
   @override
-  void key(String key, {List<String> modifiers = const []}) => _x([
-    'key',
-    '--clearmodifiers',
-    [...modifiers.map(_key), _key(key)].join('+'),
-  ]);
+  void key(String key, {List<String> modifiers = const []}) {
+    if (_x11) {
+      _run([
+        'key',
+        '--clearmodifiers',
+        [...modifiers.map(_xKey), _xKey(key)].join('+'),
+      ]);
+      return;
+    }
+    final codes = [
+      for (final k in [...modifiers, key]) ?_codes[k.toLowerCase()],
+    ];
+    if (codes.length != modifiers.length + 1) return;
+    _run(['key', for (final c in codes) '$c:1', for (final c in codes.reversed) '$c:0']);
+  }
 
   @override
   void text(String text) {
-    if (text.isNotEmpty) _x(['type', '--delay', '0', '--', text]);
+    if (text.isEmpty) return;
+    _run(_x11 ? ['type', '--delay', '0', '--', text] : ['type', '--', text]);
   }
 }

@@ -390,16 +390,20 @@ release. Keep this file for how things work now, not for history.
   silently on the runner and checks every step, and uploads the pages as
   the `installer-pages` artifact. C# can't be compiled here: CI is the
   check.
-- **Linux** (4.0.1, the owner's call): `app/linux/` (Flutter's runner,
-  app id `dev.sidekick.sidekick`), glue in `platform/linux.dart`
-  (`LinuxDesktop`: `xdg-open`, `notify-send`, `paplay`/`aplay`, autostart
-  in `~/.config/autostart`; `LinuxInputInjector`: remote control through
-  `xdotool`, X11/XWayland). The tray (`tray_linux.png`, white) and window
-  icon come from `data/flutter_assets` next to the binary. CI's `linux`
-  job (ubuntu-22.04: clang, cmake, ninja, GTK 3, ayatana-appindicator,
-  libsecret) builds `Sidekick-X.Y.Z-linux-x64.deb` (`/opt/sidekick`,
-  `packaging/linux/`: .desktop, icon, control) and `.tar.gz`. Bluetooth
-  isn't offered on Linux.
+- **Linux** (4.0.1, the owner's call: "almost any device with UI, Arch,
+  Ubuntu, any"): `app/linux/` (Flutter's runner, app id
+  `dev.sidekick.sidekick`), glue in `platform/linux.dart` (`LinuxDesktop`:
+  `xdg-open`, `notify-send`, `paplay`/`aplay`, autostart in
+  `~/.config/autostart`; `LinuxInputInjector`: remote control through
+  `xdotool` (X11 / XWayland) or else `ydotool` (Wayland, with `ydotoold`)).
+  The tray (`tray_linux.png`, white) and window icon come from
+  `data/flutter_assets` next to the binary. `packaging/linux/package.sh V`
+  (after `flutter build linux`) makes `Sidekick-V-linux-x64|arm64` as an
+  AppImage (any distribution), `.deb`, `.rpm` (`sidekick.spec`), `.tar.gz`
+  and a `PKGBUILD` for Arch (installs the release's .tar.gz);
+  `SKIP_APPIMAGE=1` for a quick local check. CI's `linux` job is a matrix
+  (ubuntu-22.04 x64, ubuntu-22.04-arm arm64; arm64 may fail without
+  blocking a release). Bluetooth isn't offered on Linux.
 - `.github/workflows/build.yml`: CI and releases.
 
 ## Conventions

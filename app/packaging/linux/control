@@ -2,10 +2,10 @@ Package: sidekick
 Version: @VERSION@
 Section: net
 Priority: optional
-Architecture: amd64
+Architecture: @ARCH@
 Maintainer: Sidekick <info@getsidekick.app>
-Depends: libgtk-3-0, libayatana-appindicator3-1, libsecret-1-0
-Recommends: xdotool, libnotify-bin, pulseaudio-utils | alsa-utils
+Depends: libgtk-3-0, libsecret-1-0, libayatana-appindicator3-1 | libappindicator3-1
+Recommends: xdotool | ydotool, libnotify-bin, pulseaudio-utils | alsa-utils
 Homepage: https://getsidekick.app
 Description: Use your phone and computer as one
  Send files both ways, control one device from another, and connect

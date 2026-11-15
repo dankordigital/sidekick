@@ -1,0 +1,31 @@
+# Sidekick for Arch Linux, Manjaro, EndeavourOS…: in a folder with this
+# file, run `makepkg -si`. It installs the release's .tar.gz.
+pkgname=sidekick-bin
+pkgver=@VERSION@
+pkgrel=1
+pkgdesc="Use your phone and computer as one"
+arch=('x86_64' 'aarch64')
+url="https://getsidekick.app"
+license=('custom')
+depends=('gtk3' 'libsecret')
+optdepends=('libayatana-appindicator: tray icon'
+            'xdotool: remote control on X11'
+            'ydotool: remote control on Wayland'
+            'libnotify: notifications')
+provides=('sidekick')
+conflicts=('sidekick')
+options=('!strip')
+source_x86_64=("https://github.com/dankordigital/sidekick/releases/download/v${pkgver}/Sidekick-${pkgver}-linux-x64.tar.gz")
+source_aarch64=("https://github.com/dankordigital/sidekick/releases/download/v${pkgver}/Sidekick-${pkgver}-linux-arm64.tar.gz")
+sha256sums_x86_64=('SKIP')
+sha256sums_aarch64=('SKIP')
+
+package() {
+  install -d "$pkgdir/opt" "$pkgdir/usr/bin" "$pkgdir/usr/share/applications"
+  cp -a "$srcdir/sidekick" "$pkgdir/opt/sidekick"
+  ln -s /opt/sidekick/sidekick "$pkgdir/usr/bin/sidekick"
+  install -Dm644 "$srcdir/sidekick/dev.sidekick.sidekick.png" \
+    "$pkgdir/usr/share/icons/hicolor/512x512/apps/dev.sidekick.sidekick.png"
+  sed 's|^Exec=.*|Exec=/opt/sidekick/sidekick|' "$srcdir/sidekick/dev.sidekick.sidekick.desktop" \
+    > "$pkgdir/usr/share/applications/dev.sidekick.sidekick.desktop"
+}
