@@ -100,6 +100,9 @@ object SidekickEngine {
         android?.setMethodCallHandler { call, result ->
             try {
                 when (call.method) {
+                    // Discovery runs in this engine with or without a screen,
+                    // so Android must let multicast in either way.
+                    "acquireMulticastLock" -> Discovery.lock(app)
                     "notifyOffer" -> Notifications.offer(
                         app,
                         call.argument<String>("id") ?: "",
@@ -194,6 +197,27 @@ class BootReceiver : BroadcastReceiver() {
             context.startForegroundService(Intent(context, SidekickService::class.java))
         } catch (e: Exception) {
             // Some phones refuse; Sidekick starts the next time it's opened.
+        }
+    }
+}
+
+/**
+ * Lets Android pass multicast and broadcast (how Sidekick finds devices on
+ * Wi-Fi) to the app. Held by the app, not a screen: the engine keeps running
+ * after the screen closes, and before 4.0.2 the lock went with it (or was
+ * never taken when Sidekick started in the background), so devices stopped
+ * showing up.
+ */
+object Discovery {
+    private var multicast: android.net.wifi.WifiManager.MulticastLock? = null
+
+    @Synchronized
+    fun lock(context: Context) {
+        if (multicast?.isHeld == true) return
+        val wifi = context.applicationContext.getSystemService(Context.WIFI_SERVICE) as android.net.wifi.WifiManager
+        multicast = wifi.createMulticastLock("sidekick-discovery").apply {
+            setReferenceCounted(false)
+            acquire()
         }
     }
 }

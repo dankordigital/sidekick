@@ -369,6 +369,14 @@ release. Keep this file for how things work now, not for history.
   pairing (QR code: `_reachInviteDirect`), or with no Wi-Fi at all. The
   server never records 127.0.0.1 as a device's address (`_remoteAddress`).
   Both Info.plists list the service in `NSBonjourServices`.
+- **Finding devices on Wi-Fi** (4.0.2): UDP multicast/broadcast
+  announcements (`core/discovery.dart`) plus a sweep of every address on
+  the Wi-Fi's /24 (`AppState.scanNetwork`, real Wi-Fi/Ethernet only via
+  `lanAddresses`) 4 s after start, every 45 s while something isn't found
+  (30 s on iPhones), and on every network change: many routers drop
+  multicast. Android's multicast lock is held by the app
+  (`KeepRunning.kt` `Discovery.lock`, answered with or without a screen),
+  never released with the screen.
 - Pairing is SPAKE2 with either the 6-digit code or a QR invite's secret
   (`PairingInvite`: 5 minutes, one device, closed with the dialog). The
   scanner only talks to the address that presents the QR code's

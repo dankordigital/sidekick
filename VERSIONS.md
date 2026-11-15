@@ -4,6 +4,14 @@ Every release, newest first, with its biggest features and fixes. Add an
 entry here with each release (see "Releasing" in `CLAUDE.md`). The history
 starts at 1.1.3.
 
+## 4.0.2
+- **Devices find each other on Wi-Fi again:** Android let go of the lock
+  that lets it hear other devices as soon as you left the app (or never
+  took it when Sidekick started in the background), so phones stopped
+  seeing computers. And every device now also asks each address on the
+  Wi-Fi, which finds devices on routers and mesh systems that block the
+  usual announcements (before, only iPhones did).
+
 ## 4.0.1
 - **Sidekick on Linux, on almost any distribution** (x64 and ARM64): an
   AppImage that runs everywhere, a `.deb` (Debian, Ubuntu, Mint, Pop!_OS),

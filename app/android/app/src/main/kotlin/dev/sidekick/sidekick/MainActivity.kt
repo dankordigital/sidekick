@@ -43,7 +43,6 @@ class MainActivity : FlutterActivity() {
         var current: MainActivity? = null
     }
 
-    private var multicastLock: WifiManager.MulticastLock? = null
     private var hotspot: WifiManager.LocalOnlyHotspotReservation? = null
     /** Another device's hotspot this phone joined (see joinHotspot). */
     private var joined: ConnectivityManager.NetworkCallback? = null
@@ -252,8 +251,6 @@ class MainActivity : FlutterActivity() {
         hotspot?.close()
         hotspot = null
         leaveHotspot()
-        multicastLock?.release()
-        multicastLock = null
         if (current === this) {
             current = null
             SidekickEngine.backgroundHandlers(applicationContext)
@@ -265,14 +262,7 @@ class MainActivity : FlutterActivity() {
         startActivity(intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
     }
 
-    private fun acquireMulticastLock() {
-        if (multicastLock?.isHeld == true) return
-        val wifi = applicationContext.getSystemService(Context.WIFI_SERVICE) as WifiManager
-        multicastLock = wifi.createMulticastLock("sidekick-discovery").apply {
-            setReferenceCounted(false)
-            acquire()
-        }
-    }
+    private fun acquireMulticastLock() = Discovery.lock(this)
 
     /**
      * Opens a local-only hotspot: a private Wi-Fi network with a random name

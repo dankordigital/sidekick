@@ -752,10 +752,14 @@ class AppState extends ChangeNotifier {
         networkError ??= "Couldn't search the network. Use Connect device → Wi-Fi, QR code or IP address.";
       }
     }
-    if (Host.isIOS) {
-      unawaited(scanNetwork());
-      _scanTimer = Timer.periodic(const Duration(seconds: 30), (_) => scanNetwork());
-    }
+    // Ask every address on the Wi-Fi too (4.0.2: every platform, not just
+    // the iPhone): many routers and mesh systems drop multicast and
+    // broadcast, and then devices only find each other this way. Soon after
+    // start, then while there's something to find.
+    Timer(const Duration(seconds: 4), () => unawaited(scanNetwork()));
+    _scanTimer = Timer.periodic(Duration(seconds: Host.isIOS ? 30 : 45), (_) {
+      if (nearby.isEmpty || paired.any((d) => !isOnline(d.id))) unawaited(scanNetwork());
+    });
 
     // Off unless turned on (Settings → Bluetooth): Wi-Fi by default, and no
     // Bluetooth permission prompt at start.
@@ -915,7 +919,9 @@ class AppState extends ChangeNotifier {
     final bluetoothScan = bluetooth?.scan() ?? Future<void>.value();
     try {
       final queue = <String>[];
-      for (final address in await localAddresses()) {
+      // Real Wi-Fi / Ethernet only (not mobile data, VPNs or virtual
+      // adapters, whose ranges hold no Sidekick and take long to ask).
+      for (final address in await lanAddresses()) {
         final parts = address.split('.');
         if (parts.length != 4 || !_isPrivate(address)) continue;
         for (var i = 1; i < 255; i++) {
@@ -1510,7 +1516,10 @@ class AppState extends ChangeNotifier {
     final now = await localAddresses();
     if (now.join(',') != addresses.join(',')) {
       addresses = now;
+      if (Host.isAndroid) unawaited(AndroidBridge.acquireMulticastLock().catchError((_) {}));
       unawaited(_restartDiscovery());
+      // A new network: look for devices on it straight away.
+      unawaited(scanNetwork());
     }
     await _checkWifi();
     await Future.wait([
