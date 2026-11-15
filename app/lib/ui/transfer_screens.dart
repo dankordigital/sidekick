@@ -324,7 +324,7 @@ class _SendingScreenState extends State<SendingScreen> {
             send.names[i],
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: const TextStyle(fontSize: 15, color: K.text),
+            style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w400, color: K.text),
           ),
           const SizedBox(height: 8),
           Text(detail, style: const TextStyle(fontSize: 12.5, color: K.muted)),
@@ -558,7 +558,12 @@ class _IncomingOfferState extends State<_IncomingOffer> with SingleTickerProvide
                               key: ValueKey(_stage),
                               maxLines: 3,
                               overflow: TextOverflow.ellipsis,
-                              style: TextStyle(fontSize: 17, height: 1.3, color: titleColor),
+                              style: TextStyle(
+                                fontSize: 17,
+                                height: 1.3,
+                                fontWeight: FontWeight.w400,
+                                color: titleColor,
+                              ),
                             ),
                           ),
                           const SizedBox(height: 6),
@@ -602,10 +607,10 @@ class _IncomingOfferState extends State<_IncomingOffer> with SingleTickerProvide
             padding: const EdgeInsets.symmetric(vertical: 11),
             child: Row(
               children: [
-                Icon(
+                LucideIcon(
                   switch (historyKindOf(f.name)) {
-                    HistoryKind.photo || HistoryKind.video => Icons.image_outlined,
-                    _ => Icons.description_outlined,
+                    HistoryKind.photo || HistoryKind.video => 'photo',
+                    _ => 'file',
                   },
                   size: 22,
                   color: K.text,
@@ -616,7 +621,7 @@ class _IncomingOfferState extends State<_IncomingOffer> with SingleTickerProvide
                     f.name,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(fontSize: 15, color: K.text),
+                    style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w400, color: K.text),
                   ),
                 ),
                 const SizedBox(width: 10),
@@ -668,7 +673,7 @@ class _IncomingOfferState extends State<_IncomingOffer> with SingleTickerProvide
                             Expanded(
                               child: Text(
                                 'Always accept from $from',
-                                style: const TextStyle(fontSize: 15, color: K.text),
+                                style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w400, color: K.text),
                               ),
                             ),
                           ],

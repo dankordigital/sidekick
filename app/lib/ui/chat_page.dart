@@ -377,7 +377,7 @@ class _Chips extends StatelessWidget {
                 backgroundColor: scheme.surfaceContainerHigh,
                 labelStyle: TextStyle(
                   color: value == f ? scheme.onPrimary : scheme.onSurface,
-                  fontWeight: value == f ? FontWeight.w600 : FontWeight.w500,
+                  fontWeight: value == f ? FontWeight.w500 : FontWeight.w400,
                 ),
               ),
             ),
@@ -494,7 +494,7 @@ class _ItemCardState extends State<_ItemCard> {
         final host = link?.host.replaceFirst(RegExp(r'^www\.'), '') ?? item.text ?? '';
         final path = link == null ? '' : '${link.path}${link.hasQuery ? '?${link.query}' : ''}';
         return [
-          Text(host, style: const TextStyle(fontSize: 19, fontWeight: FontWeight.w700)),
+          Text(host, style: const TextStyle(fontSize: 19, fontWeight: FontWeight.w600)),
           if (path.length > 1) Text(path, style: small, maxLines: 2, overflow: TextOverflow.ellipsis),
           const SizedBox(height: 10),
           if (link != null)
@@ -521,7 +521,7 @@ class _ItemCardState extends State<_ItemCard> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(item.name ?? '', style: const TextStyle(fontSize: 15.5, fontWeight: FontWeight.w600)),
+                    Text(item.name ?? '', style: const TextStyle(fontSize: 15.5, fontWeight: FontWeight.w500)),
                     if (item.size != null) Text(formatBytes(item.size!), style: small),
                   ],
                 ),
@@ -682,7 +682,7 @@ class _Pill extends StatelessWidget {
               if (icon != null) ...[Icon(icon, size: 17, color: fg), const SizedBox(width: 8)],
               Text(
                 label,
-                style: TextStyle(color: fg, fontWeight: FontWeight.w600, fontSize: 14),
+                style: TextStyle(color: fg, fontWeight: FontWeight.w500, fontSize: 14),
               ),
             ],
           ),

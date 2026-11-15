@@ -209,7 +209,10 @@ class _TileState extends State<_Tile> {
             children: [
               LucideIcon(widget.icon, size: 24, color: K.text),
               const SizedBox(height: 22),
-              Text(widget.label, style: const TextStyle(fontSize: 16, color: K.text)),
+              Text(
+                widget.label,
+                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w400, color: K.text),
+              ),
             ],
           ),
         ),

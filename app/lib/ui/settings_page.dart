@@ -184,41 +184,47 @@ class _SettingsPageState extends State<SettingsPage> {
                         ],
                       ),
                     ),
-                    _label('Connections'),
-                    KPanel(
-                      padding: const EdgeInsets.symmetric(vertical: 6),
-                      child: Column(
-                        children: [
-                          if (AppState.bluetoothSupported)
-                            _Switch(
-                              'Bluetooth',
-                              state.bluetoothOn,
-                              state.setBluetooth,
-                              detail: state.bluetoothOn ? 'Used only when a device has no Wi-Fi' : null,
-                            ),
-                          if (hostIsAndroid || hostIsIOS)
-                            _Switch('Keep running in the background', state.keepRunning, state.setKeepRunning),
-                          if (hostIsAndroid && state.keepRunning) const _AndroidBatteryRow(),
-                          if (AutoLoad.supported)
-                            _Switch(
-                              'Open when you log in',
-                              state.autoLoad,
-                              state.setAutoLoad,
-                              detail: 'Straight to the ${hostIsMacOS ? 'menu bar' : 'tray'}',
-                            ),
-                          if (!hostIsComputer)
-                            _Switch('Send screenshots to computers', state.sendScreenshots, state.setSendScreenshots),
-                          if (hostIsAndroid)
-                            _Switch(
-                              'Send verification codes to computers',
-                              state.relayNotifications,
-                              state.setRelayNotifications,
-                              detail: 'Only the code, never the message',
-                            ),
-                          if (state.bluetoothOn) ?_bluetoothDetails(),
-                        ],
+                    if (AppState.bluetoothSupported ||
+                        hostIsAndroid ||
+                        hostIsIOS ||
+                        AutoLoad.supported ||
+                        !hostIsComputer) ...[
+                      _label('Connections'),
+                      KPanel(
+                        padding: const EdgeInsets.symmetric(vertical: 6),
+                        child: Column(
+                          children: [
+                            if (AppState.bluetoothSupported)
+                              _Switch(
+                                'Bluetooth',
+                                state.bluetoothOn,
+                                state.setBluetooth,
+                                detail: state.bluetoothOn ? 'Used only when a device has no Wi-Fi' : null,
+                              ),
+                            if (hostIsAndroid || hostIsIOS)
+                              _Switch('Keep running in the background', state.keepRunning, state.setKeepRunning),
+                            if (hostIsAndroid && state.keepRunning) const _AndroidBatteryRow(),
+                            if (AutoLoad.supported)
+                              _Switch(
+                                'Open when you log in',
+                                state.autoLoad,
+                                state.setAutoLoad,
+                                detail: 'Straight to the ${hostIsMacOS ? 'menu bar' : 'tray'}',
+                              ),
+                            if (!hostIsComputer)
+                              _Switch('Send screenshots to computers', state.sendScreenshots, state.setSendScreenshots),
+                            if (hostIsAndroid)
+                              _Switch(
+                                'Send verification codes to computers',
+                                state.relayNotifications,
+                                state.setRelayNotifications,
+                                detail: 'Only the code, never the message',
+                              ),
+                            if (state.bluetoothOn) ?_bluetoothDetails(),
+                          ],
+                        ),
                       ),
-                    ),
+                    ],
                     _label('App icon'),
                     KPanel(
                       padding: const EdgeInsets.all(14),
@@ -337,7 +343,10 @@ class _SettingsPageState extends State<SettingsPage> {
     return Theme(
       data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
       child: ExpansionTile(
-        title: const Text('Bluetooth details', style: TextStyle(fontSize: 15.5, color: K.text)),
+        title: const Text(
+          'Bluetooth details',
+          style: TextStyle(fontSize: 15.5, fontWeight: FontWeight.w400, color: K.text),
+        ),
         subtitle: Text(switch (bt.status) {
           _ when bt.problem != null => bt.problem!,
           BluetoothStatus.on => bt.advertising ? 'On · visible to other devices' : 'On',
@@ -496,7 +505,10 @@ class _Row extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Text(title, style: TextStyle(fontSize: 15.5, color: K.text)),
+                    Text(
+                      title,
+                      style: TextStyle(fontSize: 15.5, fontWeight: FontWeight.w400, color: K.text),
+                    ),
                     if (detail != null) ...[
                       const SizedBox(height: 2),
                       Text(detail!, style: const TextStyle(fontSize: 12.5, color: K.muted)),

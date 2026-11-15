@@ -4,6 +4,18 @@ Every release, newest first, with its biggest features and fixes. Add an
 entry here with each release (see "Releasing" in `CLAUDE.md`). The history
 starts at 1.1.3.
 
+## 4.0.1
+- **Closer to the design:** the design's own icons everywhere (dock, side
+  rail, devices, Send, Chat), devices coloured by kind (phones blue,
+  computers green, tablets amber), lighter text weights like the design,
+  more room under titles, and labels centred in their buttons.
+- **Chat:** search this chat, and ⋯ for Browse files, Ping and Clear this
+  chat; day labels (Today, Yesterday, Tuesday).
+- Text sizes stay within reason (90–130 %), so screens never get too big
+  or too small; text lines up with icons.
+- Notices one at a time really work now; Sending says "About 2 seconds
+  left", centred.
+
 ## 4.0.0
 - **A new Sidekick, built to the owner's design:** one dark look (#121212,
   white pill buttons, colour only where it means something, Inter), every
