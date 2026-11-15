@@ -688,6 +688,60 @@ class _TouchpadState extends State<_Touchpad> {
     if (dx != 0 || dy != 0) widget.onScroll(dx, -dy);
   }
 
+  // A touch's story: when it began, how far it went, how many fingers.
+  DateTime? _downAt;
+  double _travel = 0;
+  int _fingers = 0;
+  Timer? _hold;
+  bool _held = false;
+
+  void _start(ScaleStartDetails d) {
+    setState(() {
+      _active = true;
+      _dot = d.localFocalPoint;
+    });
+    _downAt = DateTime.now();
+    _travel = 0;
+    _fingers = d.pointerCount;
+    _held = false;
+    _hold?.cancel();
+    _hold = Timer(const Duration(milliseconds: 500), () {
+      if (_travel < 8 && _fingers == 1) {
+        _held = true;
+        HapticFeedback.mediumImpact();
+        widget.onRightClick();
+      }
+    });
+  }
+
+  void _update(ScaleUpdateDetails d) {
+    setState(() => _dot = d.localFocalPoint);
+    _travel += d.focalPointDelta.distance;
+    if (d.pointerCount > _fingers) _fingers = d.pointerCount;
+    if (_travel >= 8) _hold?.cancel();
+    if (d.pointerCount >= 2) {
+      _scrollBy(-d.focalPointDelta);
+    } else {
+      widget.onMove(d.focalPointDelta);
+    }
+  }
+
+  void _end(ScaleEndDetails d) {
+    _hold?.cancel();
+    setState(() => _active = false);
+    final quick = _downAt != null && DateTime.now().difference(_downAt!) < const Duration(milliseconds: 300);
+    if (!_held && quick && _travel < 8) {
+      // Two fingers tapped together: right click, like a laptop's touchpad.
+      _fingers >= 2 ? widget.onRightClick() : widget.onClick();
+    }
+  }
+
+  @override
+  void dispose() {
+    _hold?.cancel();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     final reduce = MediaQuery.disableAnimationsOf(context);
@@ -697,27 +751,26 @@ class _TouchpadState extends State<_Touchpad> {
         onPointerSignal: (e) {
           if (widget.enabled && e is PointerScrollEvent) _scrollBy(e.scrollDelta);
         },
-        child: GestureDetector(
-          onTap: widget.enabled ? widget.onClick : null,
-          onSecondaryTap: widget.enabled ? widget.onRightClick : null,
-          onLongPress: widget.enabled ? widget.onRightClick : null,
-          onScaleStart: widget.enabled
-              ? (d) => setState(() {
-                  _active = true;
-                  _dot = d.localFocalPoint;
-                })
-              : null,
-          onScaleUpdate: widget.enabled
-              ? (d) {
-                  setState(() => _dot = d.localFocalPoint);
-                  if (d.pointerCount >= 2) {
-                    _scrollBy(-d.focalPointDelta);
-                  } else {
-                    widget.onMove(d.focalPointDelta);
-                  }
-                }
-              : null,
-          onScaleEnd: widget.enabled ? (_) => setState(() => _active = false) : null,
+        // Right-click with a mouse.
+        onPointerDown: (e) {
+          if (widget.enabled && e.kind == PointerDeviceKind.mouse && e.buttons == kSecondaryMouseButton) {
+            widget.onRightClick();
+          }
+        },
+        // The pad claims every touch at once, so moving a finger up or
+        // down moves the pointer instead of scrolling the page (4.0.2).
+        // Taps and holds are worked out here: a short touch that hardly
+        // moved clicks, holding still for half a second right-clicks.
+        child: RawGestureDetector(
+          behavior: HitTestBehavior.opaque,
+          gestures: {
+            _PadRecognizer: GestureRecognizerFactoryWithHandlers<_PadRecognizer>(_PadRecognizer.new, (r) {
+              r
+                ..onStart = widget.enabled ? _start : null
+                ..onUpdate = widget.enabled ? _update : null
+                ..onEnd = widget.enabled ? _end : null;
+            }),
+          },
           child: AnimatedScale(
             scale: _active ? 0.99 : 1,
             duration: reduce ? Duration.zero : const Duration(milliseconds: 220),
@@ -793,4 +846,19 @@ class _DotGrid extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
+/// Wins every touch on the touchpad straight away, so the page around it
+/// never takes the gesture for a scroll.
+class _PadRecognizer extends ScaleGestureRecognizer {
+  // A mouse's right button is handled on its own (the Listener above).
+  @override
+  bool isPointerAllowed(PointerDownEvent event) =>
+      event.buttons != kSecondaryMouseButton && super.isPointerAllowed(event);
+
+  @override
+  void addAllowedPointer(PointerDownEvent event) {
+    super.addAllowedPointer(event);
+    resolvePointer(event.pointer, GestureDisposition.accepted);
+  }
 }

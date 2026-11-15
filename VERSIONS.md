@@ -5,6 +5,9 @@ entry here with each release (see "Releasing" in `CLAUDE.md`). The history
 starts at 1.1.3.
 
 ## 4.0.2
+- **Remote's touchpad on phones:** moving a finger up or down moves the
+  pointer instead of scrolling the page; a tap clicks, holding still for
+  half a second (or a two-finger tap) right-clicks.
 - **Devices find each other on Wi-Fi again:** Android let go of the lock
   that lets it hear other devices as soon as you left the app (or never
   took it when Sidekick started in the background), so phones stopped
