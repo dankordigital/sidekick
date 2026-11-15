@@ -4,7 +4,7 @@ Use your phone and computer as one: send files both ways, control one device
 from another (touchpad, keyboard, shortcuts), and connect over Bluetooth
 when there's no shared Wi-Fi. Everything is encrypted.
 
-One Flutter app for **Windows, macOS, Android and iOS** (`app/`), plus a
+One Flutter app for **Windows, macOS, Linux, Android and iOS** (`app/`), plus a
 website (`index.html` at the top of the repo; its images live in
 `website/` and it links them as `/website/…`). It lives at
 **https://getsidekick.app**, the official domain (the owner's, hosting on
@@ -390,6 +390,16 @@ release. Keep this file for how things work now, not for history.
   silently on the runner and checks every step, and uploads the pages as
   the `installer-pages` artifact. C# can't be compiled here: CI is the
   check.
+- **Linux** (4.0.1, the owner's call): `app/linux/` (Flutter's runner,
+  app id `dev.sidekick.sidekick`), glue in `platform/linux.dart`
+  (`LinuxDesktop`: `xdg-open`, `notify-send`, `paplay`/`aplay`, autostart
+  in `~/.config/autostart`; `LinuxInputInjector`: remote control through
+  `xdotool`, X11/XWayland). The tray (`tray_linux.png`, white) and window
+  icon come from `data/flutter_assets` next to the binary. CI's `linux`
+  job (ubuntu-22.04: clang, cmake, ninja, GTK 3, ayatana-appindicator,
+  libsecret) builds `Sidekick-X.Y.Z-linux-x64.deb` (`/opt/sidekick`,
+  `packaging/linux/`: .desktop, icon, control) and `.tar.gz`. Bluetooth
+  isn't offered on Linux.
 - `.github/workflows/build.yml`: CI and releases.
 
 ## Conventions

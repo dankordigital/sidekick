@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/foundation.dart';
@@ -7,6 +8,7 @@ import 'package:path_provider/path_provider.dart';
 
 import 'sound_platform.dart' if (dart.library.js_interop) 'sound_platform_web.dart';
 import '../core/host.dart';
+import 'linux.dart';
 
 /// Plays Sidekick's sounds on every platform, with what the system already
 /// has: no audio plugin. The sounds come from tool/sounds/ (prepared by
@@ -41,6 +43,9 @@ Future<void> startPingRingtone() async {
     final path = await _soundFile('ping');
     if (Host.isWindows) {
       windowsPlaySound(path, loop: true);
+    } else if (Host.isLinux) {
+      _linuxLoop = true;
+      unawaited(_linuxRing(path));
     } else if (_channel case final channel?) {
       await channel.invokeMethod<void>('loopSound', {'path': path});
     }
@@ -55,11 +60,27 @@ Future<void> stopPingRingtone() async {
   try {
     if (Host.isWindows) {
       windowsStopSound();
+    } else if (Host.isLinux) {
+      _linuxLoop = false;
+      _linuxRinging?.kill();
     } else if (_channel case final channel?) {
       await channel.invokeMethod<void>('stopLoop');
     }
   } catch (e) {
     debugPrint('Sidekick: stopping the ping ringtone failed: $e');
+  }
+}
+
+/// Linux: the ringtone plays again each time it ends, until Found It.
+bool _linuxLoop = false;
+Process? _linuxRinging;
+
+Future<void> _linuxRing(String path) async {
+  while (_linuxLoop) {
+    final player = await LinuxDesktop.play(path);
+    if (player == null) return;
+    _linuxRinging = player;
+    await player.exitCode;
   }
 }
 
@@ -84,6 +105,8 @@ Future<void> _play(String name) async {
       if (!played) await Process.start('/usr/bin/afplay', [path], mode: ProcessStartMode.detached);
     } else if (Host.isWindows) {
       windowsPlaySound(path);
+    } else if (Host.isLinux) {
+      await LinuxDesktop.play(path);
     } else if (Host.isIOS) {
       await const MethodChannel('sidekick/ios').invokeMethod('playSound', {'path': path});
     } else if (Host.isAndroid) {

@@ -103,6 +103,7 @@ flutter:
     - assets/sounds/ping.wav
     - assets/tray/tray.ico
     - assets/tray/tray_mac.png
+    - assets/tray/tray_linux.png
     # Settings → App icon (tool/make_icons.py): the choices, the Mac's
     # Dock and the Windows window icons.
     - assets/icons/

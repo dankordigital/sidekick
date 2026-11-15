@@ -24,7 +24,9 @@ WHAT SIDEKICK KEEPS ON YOUR DEVICE
   and the keys that let the two of you talk securely. These are kept in the
   system's protected storage: the Keychain on iPhone, storage encrypted with
   the Android Keystore on Android, Windows' built-in data protection on
-  Windows, and a file only your user account can read on the Mac.
+  Windows, a file only your user account can read on the Mac, and the
+  desktop's keyring (Secret Service) on Linux. On Linux, "Open when you
+  log in" is a small file in ~/.config/autostart.
 - Its own security identity: a certificate and private key made on the
   device when Sidekick first starts.
 - Files you receive, in the folder you choose. On iPhone and Android,

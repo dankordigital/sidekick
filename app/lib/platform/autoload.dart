@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:path/path.dart' as p;
 
 import '../core/host.dart';
+import 'linux.dart';
 
 /// Auto-load (Settings, Windows and Mac, on by default): Sidekick starts by
 /// itself when you log in, straight into the tray / menu bar.
@@ -16,7 +17,7 @@ import '../core/host.dart';
 /// Written again at every start while on, so it follows the app if it
 /// moves. Phones can't start apps at login.
 abstract final class AutoLoad {
-  static bool get supported => Host.isWindows || Host.isMacOS;
+  static bool get supported => Host.isWindows || Host.isMacOS || Host.isLinux;
 
   /// The arguments Sidekick was started with (main's).
   static List<String> args = const [];
@@ -57,6 +58,8 @@ abstract final class AutoLoad {
         }
         await file.parent.create(recursive: true);
         await file.writeAsString(_plist(Platform.resolvedExecutable));
+      } else if (Host.isLinux) {
+        await LinuxDesktop.autostart(on);
       }
     } catch (e) {
       debugPrint('Sidekick: auto-load: $e');

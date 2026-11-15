@@ -21,7 +21,7 @@ class DesktopWindow with WindowListener, TrayListener {
 
   // Not in a browser (the website's preview plays a Mac, but has no window
   // or tray to manage: window_manager would throw).
-  static bool get supported => !kIsWeb && (Host.isWindows || Host.isMacOS);
+  static bool get supported => !kIsWeb && (Host.isWindows || Host.isMacOS || Host.isLinux);
 
   /// The size of the corner window.
   static const popupSize = Size(380, 172);
@@ -51,7 +51,19 @@ class DesktopWindow with WindowListener, TrayListener {
   /// button itself and shows the pop-up without taking the focus.
   static const _mac = MethodChannel('sidekick/macos');
 
-  String get _trayIcon => Host.isWindows ? 'assets/tray/tray.ico' : 'assets/tray/tray_mac.png';
+  String get _trayIcon => Host.isWindows
+      ? 'assets/tray/tray.ico'
+      : Host.isLinux
+      ? _bundled('assets/tray/tray_linux.png')
+      : 'assets/tray/tray_mac.png';
+
+  /// An asset's file next to the app (Windows and Linux read icons from disk).
+  static String _bundled(String asset) => [
+    File(Platform.resolvedExecutable).parent.path,
+    'data',
+    'flutter_assets',
+    ...asset.split('/'),
+  ].join(Platform.pathSeparator);
 
   /// Settings → App icon: the window and taskbar (Windows), the Dock while
   /// running (Mac; null puts the app's own back). The tray stays as it is.
@@ -60,9 +72,13 @@ class DesktopWindow with WindowListener, TrayListener {
       // A full path: Windows reads the .ico from disk, and a relative one
       // was looked for in the folder Sidekick was started from, so the icon
       // never changed (4.0.0). The app's assets sit next to the .exe.
-      final exe = File(Platform.resolvedExecutable).parent.path;
-      final ico = [exe, 'data', 'flutter_assets', 'assets', 'icons', '$name.ico'].join(Platform.pathSeparator);
+      final ico = _bundled('assets/icons/$name.ico');
       if (File(ico).existsSync()) await windowManager.setIcon(ico);
+    } else if (Host.isLinux) {
+      // The window's icon (taskbar, Alt+Tab); the launcher's comes from the
+      // .desktop file.
+      final png = _bundled('assets/icons/dock-$name.png');
+      if (File(png).existsSync()) await windowManager.setIcon(png);
     } else if (Host.isMacOS) {
       final png = standard ? null : (await rootBundle.load('assets/icons/dock-$name.png')).buffer.asUint8List();
       await _mac.invokeMethod('setDockIcon', {'png': png});
@@ -131,7 +147,7 @@ class DesktopWindow with WindowListener, TrayListener {
       // No tray icon. Windows has no other way back: closing quits, as
       // before. (The Mac still has its Dock icon.)
       debugPrint('Sidekick: no tray icon: $e');
-      if (Host.isWindows) {
+      if (Host.isWindows || Host.isLinux) {
         await windowManager.setPreventClose(false);
         // No tray to come back from: never start hidden.
         if (startHidden) await windowManager.show();

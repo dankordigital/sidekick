@@ -24,7 +24,7 @@ class AppIcon {
 
   /// What was last set, so starts don't ask twice. Mac and Windows start
   /// with their own icon (Ink) every time.
-  static String? _applied = DesktopWindow.supported ? standard : null;
+  static String? _applied = DesktopWindow.supported && !Host.isLinux ? standard : null;
 
   static Future<void> apply(String name) async {
     if (Host.isWeb || _applied == name) return;

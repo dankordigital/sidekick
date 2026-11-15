@@ -210,6 +210,10 @@ def tray() -> None:
     template = Image.new("RGBA", (44, 44), (0, 0, 0, 255))  # 22 pt at 2x
     template.putalpha(_glyph_mask(44, 0.92))
     template.save(out / "tray_mac.png", optimize=True)
+    # Linux panels are dark: a white "sk" (64 px, the panel scales it).
+    white = Image.new("RGBA", (64, 64), (255, 255, 255, 255))
+    white.putalpha(_glyph_mask(64, 0.86))
+    white.save(out / "tray_linux.png", optimize=True)
     res = APP / "android/app/src/main/res"
     for density, scale in {"mdpi": 1, "hdpi": 1.5, "xhdpi": 2, "xxhdpi": 3, "xxxhdpi": 4}.items():
         s = round(24 * scale)

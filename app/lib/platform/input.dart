@@ -1,5 +1,6 @@
 import 'android.dart';
 import 'input_windows.dart' if (dart.library.js_interop) 'input_windows_web.dart';
+import 'linux.dart';
 import 'macos.dart';
 import '../core/host.dart';
 
@@ -34,6 +35,7 @@ abstract class InputInjector {
     if (Host.isWindows) return WindowsInputInjector();
     if (Host.isAndroid) return AndroidInputInjector();
     if (Host.isMacOS) return MacInputInjector();
+    if (Host.isLinux) return LinuxInputInjector();
     return UnsupportedInputInjector();
   }
 }

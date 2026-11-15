@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=Sidekick
+Comment=Use your phone and computer as one
+Exec=sidekick
+Icon=dev.sidekick.sidekick
+Terminal=false
+Categories=Network;FileTransfer;Utility;
+StartupWMClass=dev.sidekick.sidekick

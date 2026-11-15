@@ -164,11 +164,13 @@ final class SidekickNative {
     case "setDockIcon":
       // Settings → App icon: the Dock shows the chosen icon while Sidekick
       // runs; no image puts the app's own icon (Ink) back.
-      if let data = (call.arguments as? [String: Any])?["png"] as? FlutterStandardTypedData {
-        NSApp.applicationIconImage = NSImage(data: data.data)
-      } else {
-        NSApp.applicationIconImage = nil
-      }
+      // The app itself gets it too (a custom icon on Sidekick.app), so
+      // Finder, Launchpad and the Dock show it when Sidekick isn't running;
+      // nil takes it off. Fails quietly where the app's folder isn't
+      // writable (then only the running Dock icon changes).
+      let image = ((call.arguments as? [String: Any])?["png"] as? FlutterStandardTypedData).flatMap { NSImage(data: $0.data) }
+      NSApp.applicationIconImage = image
+      NSWorkspace.shared.setIcon(image, forFile: Bundle.main.bundlePath, options: [])
       result(nil)
     case "showPopup":
       // In front of everything, without activating Sidekick: it fades in,
