@@ -198,7 +198,10 @@ release. Keep this file for how things work now, not for history.
     layout, like the shell. Rows that put a button beside text stack it
     underneath when big text leaves no room (device cards, Quick save).
     Tap areas on phones are at least 48 points. Text is at least 4.5:1 in
-    the theme (`test/contrast_test.dart`). main.dart rebuilds the app only when
+    the theme (`test/contrast_test.dart`). Text scaling is kept within
+    90–130 % and text sits in the middle of its line (4.0.1, the owner:
+    elements never too big or small, centred with their text; headings like
+    "Needs you" stay on the left). main.dart rebuilds the app only when
     its look changes (`_RebuildOn`), not on every state change (ten a
     second during a transfer): screens listen to the state themselves, so
     a new screen must too (`ListenableBuilder`).

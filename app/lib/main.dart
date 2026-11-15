@@ -175,6 +175,18 @@ class SidekickApp extends StatelessWidget {
           builder: (context, child) {
             // Short notices ("Sent …", "Paired with …") over every screen.
             child = NoticeArea(child: child ?? const SizedBox());
+            // Text sits in the middle of its line (Inter rides high), so labels
+            // line up with the icons and pills around them; and system text
+            // sizes stay within reason, never too big or too small for the
+            // design (the owner's call, 4.0.1).
+            child = MediaQuery.withClampedTextScaling(
+              minScaleFactor: 0.9,
+              maxScaleFactor: 1.3,
+              child: DefaultTextHeightBehavior(
+                textHeightBehavior: const TextHeightBehavior(leadingDistribution: TextLeadingDistribution.even),
+                child: child,
+              ),
+            );
             return DesktopWindow.supported ? _withCornerPopup(context, child) : child;
           },
           home: _maybeSplash(
