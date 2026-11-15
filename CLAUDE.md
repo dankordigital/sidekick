@@ -353,12 +353,12 @@ release. Keep this file for how things work now, not for history.
   `icon-192.png`, `icon-512.png`, `icon-apple.png` full-bleed home-screen
   icon), next to the wordmark and in the demo's Dock and window; the old
   glass `favicon.png` / `apple-touch-icon.png` stay for the welcome email.
-  **The app's icons are the "sk" icons in `design/logo-sk/`** (Dusk the
+  **The app's icons are the "sk" icons in `design/logo-sk/`** (Ink the
   app's own; see App icon below); `3.png` is still the "sk" monogram for
   the logo inside the app (`app/assets/logo/logo.png`) and the tray icons.
   `app/tool/make_icons.py` regenerates all of them (run it from the repo
   root after changing either). Mac and iPhone also get `Runner/AppIcon.icon`
-  (Icon Composer, what macOS/iOS 26+ show): the Dusk art as one plain
+  (Icon Composer, what macOS/iOS 26+ show): the Ink art as one plain
   layer, the system rounds it.
 - Mac: the file picker (`file_picker`) needs the
   `files.user-selected.read-write` entitlement and `prepareFilePicker()`
@@ -686,14 +686,16 @@ release. Keep this file for how things work now, not for history.
     four shortcuts + More). Settings (whole-row switches, green).
 - **App icon, in Settings only** (4.0, the owner's call: never in the
   first-time setup): the eight "sk" icons from `design/logo-sk/` (Ink,
-  Paper, Sky, Amber, Mint, Signal, Chrome, Dusk). **Dusk is the default
-  and the app's own icon** everywhere. `tool/make_icons.py` `sk_icons()`
-  makes them all: iPhone alternate icons (`AppIcon-Ink`… in
+  Paper, Sky, Amber, Mint, Signal, Chrome, Dusk). **Ink is the default
+  and the app's own icon** everywhere (4.0.1, the owner's call; Dusk was
+  4.0.0's). `tool/make_icons.py` `sk_icons()`
+  makes them all: iPhone alternate icons (`AppIcon-Dusk`… in
   `ASSETCATALOG_COMPILER_ALTERNATE_APPICON_NAMES`), Android launcher
-  `activity-alias`es (`.LauncherDefault` = Dusk, `.LauncherInk`…,
+  `activity-alias`es (`.LauncherDefault` = Ink, `.LauncherDusk`…,
   MainActivity `setAppIcon`), the Mac Dock while running (`setDockIcon`,
   `assets/icons/dock-*.png`) and the Windows window/taskbar
-  (`assets/icons/*.ico`; the .exe's own can't change). Tray and menu-bar
+  (`assets/icons/*.ico`, by its full path next to the .exe: a relative
+  path never loaded, 4.0.0; the .exe's own can't change). Tray and menu-bar
   icons stay as they are. `AppState.appIcon` (pref `appIcon`),
   `platform/app_icon.dart` `AppIcon.apply`.
 - **Home-screen widgets** (4.0, iPhone and Android): small "Last file"

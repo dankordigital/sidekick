@@ -81,7 +81,7 @@
         </activity>
 
         <!-- The launcher icon: one entry per app icon (Settings → App icon),
-             one turned on. LauncherDefault is Dusk (MainActivity.setAppIcon
+             one turned on. LauncherDefault is Ink (MainActivity.setAppIcon
              switches them; icons from tool/make_icons.py). -->
         <activity-alias
             android:name=".LauncherDefault"
@@ -95,9 +95,9 @@
             </intent-filter>
         </activity-alias>
         <activity-alias
-            android:name=".LauncherInk"
+            android:name=".LauncherDusk"
             android:targetActivity=".MainActivity"
-            android:icon="@mipmap/ic_launcher_ink"
+            android:icon="@mipmap/ic_launcher_dusk"
             android:enabled="false"
             android:exported="true">
             <intent-filter>

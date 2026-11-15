@@ -57,7 +57,12 @@ class DesktopWindow with WindowListener, TrayListener {
   /// running (Mac; null puts the app's own back). The tray stays as it is.
   Future<void> setAppIcon(String name, {required bool standard}) async {
     if (Host.isWindows) {
-      await windowManager.setIcon('assets/icons/$name.ico');
+      // A full path: Windows reads the .ico from disk, and a relative one
+      // was looked for in the folder Sidekick was started from, so the icon
+      // never changed (4.0.0). The app's assets sit next to the .exe.
+      final exe = File(Platform.resolvedExecutable).parent.path;
+      final ico = [exe, 'data', 'flutter_assets', 'assets', 'icons', '$name.ico'].join(Platform.pathSeparator);
+      if (File(ico).existsSync()) await windowManager.setIcon(ico);
     } else if (Host.isMacOS) {
       final png = standard ? null : (await rootBundle.load('assets/icons/dock-$name.png')).buffer.asUint8List();
       await _mac.invokeMethod('setDockIcon', {'png': png});

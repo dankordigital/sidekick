@@ -145,7 +145,7 @@ import WidgetKit
           result(widgetLinks.take())
         case "setAppIcon":
           // Settings → App icon: an alternate icon (AppIcon-Ink, …); nil is
-          // the usual one (Dusk). iOS says it changed; only
+          // the usual one (Ink). iOS says it changed; only
           // ask when it really changes, so that note never shows at start.
           let name = (call.arguments as? [String: Any])?["name"] as? String
           let app = UIApplication.shared

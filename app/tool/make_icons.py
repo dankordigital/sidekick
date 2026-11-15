@@ -12,7 +12,7 @@ Source:
 Writes the tray icons, the in-app logo and the website's old glass icons from
 3.png, and every app icon (Windows .ico, Android launcher icons, macOS and
 iOS icon sets and the Settings → App icon choices) from the eight "sk" icons
-in design/logo-sk/ (sk_icons: Dusk is the default). Re-run it whenever the
+in design/logo-sk/ (sk_icons: Ink is the default). Re-run it whenever the
 artwork changes.
 
 Mac and iPhone get the Liquid Glass look:
@@ -223,10 +223,10 @@ def tray() -> None:
 # ------------------------------------------------------- 4.0: the "sk" icons
 
 # The eight icons people choose from (Settings → App icon), from the owner's
-# design/logo-sk/: the same letters on new backgrounds. Dusk is the default
+# design/logo-sk/: the same letters on new backgrounds. Ink is the default
 # (the app's own icon everywhere); the others are alternates.
 SK_ICONS = ["ink", "paper", "sky", "amber", "mint", "signal", "chrome", "dusk"]
-SK_DEFAULT = "dusk"
+SK_DEFAULT = "ink"
 
 
 def sk_full_bleed(name: str) -> np.ndarray:

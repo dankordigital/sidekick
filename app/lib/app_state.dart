@@ -263,7 +263,7 @@ class AppState extends ChangeNotifier {
   /// Made themes are gone with 4.0 (kept false for the code that still asks).
   bool customLook = false;
 
-  /// Settings → App icon: one of [AppIcon.choices] (pref `appIcon`; Dusk,
+  /// Settings → App icon: one of [AppIcon.choices] (pref `appIcon`; Ink,
   /// the app's own icon, by default).
   String appIcon = AppIcon.standard;
 

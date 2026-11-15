@@ -163,7 +163,7 @@ final class SidekickNative {
       result(nil)
     case "setDockIcon":
       // Settings → App icon: the Dock shows the chosen icon while Sidekick
-      // runs; no image puts the app's own icon (Dusk) back.
+      // runs; no image puts the app's own icon (Ink) back.
       if let data = (call.arguments as? [String: Any])?["png"] as? FlutterStandardTypedData {
         NSApp.applicationIconImage = NSImage(data: data.data)
       } else {

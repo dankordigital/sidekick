@@ -5,6 +5,10 @@ entry here with each release (see "Releasing" in `CLAUDE.md`). The history
 starts at 1.1.3.
 
 ## 4.0.1
+- **Ink is the new default app icon** (Dusk and the others are still in
+  Settings → App icon).
+- **Changing the app icon works on Windows** (the window and taskbar
+  icon); in 4.0.0 the icon file was never found, so nothing changed.
 - **Closer to the design:** the design's own icons everywhere (dock, side
   rail, devices, Send, Chat), devices coloured by kind (phones blue,
   computers green, tablets amber), lighter text weights like the design,

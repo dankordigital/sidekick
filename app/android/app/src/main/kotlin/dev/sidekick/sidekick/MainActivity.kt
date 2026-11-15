@@ -180,7 +180,7 @@ class MainActivity : FlutterActivity() {
                             result.success(null)
                         }
                         "setAppIcon" -> {
-                            setAppIcon(call.argument<String>("name") ?: "dusk")
+                            setAppIcon(call.argument<String>("name") ?: "ink")
                             result.success(null)
                         }
                         "input" -> {
@@ -199,17 +199,17 @@ class MainActivity : FlutterActivity() {
 
     /** Settings → App icon: one launcher entry per icon points at this
      *  activity (AndroidManifest.xml); the chosen one is turned on before the
-     *  others are off, so there's always one. "dusk" is LauncherDefault. */
+     *  others are off, so there's always one. "ink" is LauncherDefault. */
     private fun setAppIcon(name: String) {
         val prefix = MainActivity::class.java.name.substringBeforeLast('.')
         val icons = listOf("ink", "paper", "sky", "amber", "mint", "signal", "chrome", "dusk")
-        val chosen = if (name in icons) name else "dusk"
-        fun alias(icon: String) = if (icon == "dusk") "LauncherDefault" else "Launcher" + icon.replaceFirstChar { it.uppercase() }
+        val chosen = if (name in icons) name else "ink"
+        fun alias(icon: String) = if (icon == "ink") "LauncherDefault" else "Launcher" + icon.replaceFirstChar { it.uppercase() }
         fun set(icon: String, on: Boolean) {
             val component = ComponentName(this, "$prefix.${alias(icon)}")
             val now = packageManager.getComponentEnabledSetting(component)
             val isOn = now == PackageManager.COMPONENT_ENABLED_STATE_ENABLED ||
-                (now == PackageManager.COMPONENT_ENABLED_STATE_DEFAULT && icon == "dusk")
+                (now == PackageManager.COMPONENT_ENABLED_STATE_DEFAULT && icon == "ink")
             if (isOn == on) return
             packageManager.setComponentEnabledSetting(
                 component,
