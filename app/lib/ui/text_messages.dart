@@ -8,27 +8,27 @@ import '../app_state.dart';
 import '../core/host.dart';
 import '../core/models.dart';
 import '../core/text_message.dart';
+import '../platform/desktop_notify.dart';
 import '../platform/desktop_window.dart';
 import '../platform/notifications.dart';
 import '../platform/sound.dart';
 import 'widgets.dart';
 
-/// Text or a link arrived: always ask, Copy or (for a link) Open, even from
-/// a device whose files are accepted without asking (the owner's call:
-/// text is never saved as a file). In the tray the window opens for it; a
-/// phone in the background gets a notification and the card waits in the app.
+/// Text or a link arrived (4.0.2, the owner's call): no pop-up. It's in
+/// that device's Chat (Copy / Open link there); here it only makes a sound,
+/// and when Sidekick isn't in front (a phone in the background, a computer
+/// in the tray) a notification says who sent it and what.
 Future<void> showReceivedText(BuildContext context, AppState state, ReceivedText message) async {
   if (state.sound) unawaited(playRequestSound());
   OfferNotifications.showText(message.from.name, message.text, link: message.link != null);
-  if (DesktopWindow.supported) await DesktopWindow.instance.open();
-  if (!context.mounted) return;
-  final link = message.link;
-  // Copy happens inside the card (it says "Copied" where you're looking).
-  final open = await showDialog<bool>(
-    context: context,
-    builder: (context) => ReceivedTextDialog(message: message),
-  );
-  if (open != true || link == null) return;
+  if (DesktopNotify.supported && DesktopWindow.supported && DesktopWindow.instance.hidden.value) {
+    final text = message.text.length > 200 ? '${message.text.substring(0, 200)}…' : message.text;
+    await DesktopNotify.show(title: message.from.name, body: text);
+  }
+}
+
+/// Opens [link] in the browser, or says why it couldn't.
+Future<void> openReceivedLink(BuildContext context, Uri link) async {
   var opened = false;
   try {
     opened = await launchUrl(link, mode: LaunchMode.externalApplication);

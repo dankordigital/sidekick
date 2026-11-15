@@ -5,6 +5,7 @@ entry here with each release (see "Releasing" in `CLAUDE.md`). The history
 starts at 1.1.3.
 
 ## 4.0.2
+- Messages and files arrive quietly: a sound, no big pop-up; phones show a notification titled with the sender ("MacBook Pro") and what they sent. The sender gets no "Sent" notice; the Chat shows ✓✓ once it's delivered.
 - **Remote's touchpad on phones:** moving a finger up or down moves the
   pointer instead of scrolling the page; a tap clicks, holding still for
   half a second (or a two-finger tap) right-clicks.

@@ -436,7 +436,6 @@ class DemoAppState extends AppState {
   @override
   Future<void> sendText(PairedDevice d, String text) async {
     link.send({'t': 'text', 'text': text});
-    _notices.add(Notice('Sent the ${isOnlyLink(text) ? 'link' : 'text'} to ${d.name}'));
   }
 
   // ---------------------------------------------------------------- sending
@@ -526,7 +525,6 @@ class DemoAppState extends AppState {
     }
     debugPrint('Sidekick preview: sent $what in ${DateTime.now().difference(start).inMilliseconds} ms');
     send._set(SendPhase.done);
-    _notices.add(Notice('Sent $what to ${d.name}'));
   }
 
   // ---------------------------------------------------------------- downloading

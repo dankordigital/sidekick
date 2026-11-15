@@ -484,7 +484,7 @@ class AppState extends ChangeNotifier {
       if (text.length > maxTextMessage) return await _sendTextAsFile(d, text);
       await (await _clientForTransfer(d, text.length)).sendText(text);
       _record(HistoryItem.text(device: d.id, fromMe: true, text: text));
-      _notices.add(Notice('Sent the $what to ${d.name}'));
+      // No notice: the Chat shows it with a double tick (delivered).
     } on SidekickException catch (e) {
       if (e.status == 404) return _sendTextAsFile(d, text);
       _noteFailure(d, e);
@@ -2192,7 +2192,7 @@ class AppState extends ChangeNotifier {
     }
     // Say how it went where the user is, not only in the Files tab.
     if (failure == null) {
-      _notices.add(Notice('Sent $what to ${d.name}'));
+      // No notice: the Chat shows it with a double tick (delivered).
     } else if (send.watchers == 0) {
       _notices.add(
         _failed(

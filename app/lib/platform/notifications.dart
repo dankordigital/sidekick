@@ -99,7 +99,8 @@ abstract final class OfferNotifications {
   static void showText(String from, String text, {required bool link}) {
     if (!supported || WidgetsBinding.instance.lifecycleState == AppLifecycleState.resumed) return;
     final body = text.length > 200 ? '${text.substring(0, 200)}…' : text;
-    _call('offerDone', {'id': 'text', 'title': '${link ? 'Link' : 'Text'} from $from', 'body': body});
+    // Like a chat app: the sender as the title, what they sent below.
+    _call('offerDone', {'id': 'text', 'title': from, 'body': body});
   }
 
   static void _call(String method, Map<String, Object?> args) =>

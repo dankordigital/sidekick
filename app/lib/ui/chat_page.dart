@@ -448,9 +448,23 @@ class _ItemCardState extends State<_ItemCard> {
       children: [
         Semantics(hint: 'Hold for more actions', child: card),
         const SizedBox(height: 6),
-        Text(
-          '${me ? 'You sent' : 'From ${widget.device.name}'} · $when',
-          style: TextStyle(fontSize: 12, color: scheme.onSurfaceVariant),
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              me ? when : 'From ${widget.device.name} · $when',
+              style: TextStyle(fontSize: 12, color: scheme.onSurfaceVariant),
+            ),
+            // Sent and delivered (only delivered things are listed): two
+            // ticks, the sender's only sign it got there (4.0.2).
+            if (me) ...[
+              const SizedBox(width: 5),
+              Semantics(
+                label: 'Delivered',
+                child: const Icon(Icons.done_all_rounded, size: 16, color: K.ok),
+              ),
+            ],
+          ],
         ),
       ],
     );
@@ -529,7 +543,7 @@ class _ItemCardState extends State<_ItemCard> {
             ],
           ),
           const SizedBox(height: 10),
-          Text(item.fromMe ? 'Delivered ✓' : 'Received', style: small?.copyWith(fontSize: 13)),
+          Text(item.fromMe ? 'Sent' : 'Received', style: small?.copyWith(fontSize: 13)),
           if (path != null) ...[
             const SizedBox(height: 10),
             Wrap(
