@@ -9,6 +9,7 @@ import '../app_state.dart';
 import '../core/models.dart';
 import '../core/text_message.dart';
 import 'kit.dart';
+import 'lucide.dart';
 import 'notices.dart';
 import 'text_messages.dart';
 import 'widgets.dart';
@@ -29,11 +30,12 @@ class Picked {
     return t.length > 40 ? '${t.substring(0, 40)}…' : t;
   }
 
-  IconData get icon {
-    if (text case final t?) return isOnlyLink(t) ? Icons.link_rounded : Icons.notes_rounded;
+  /// Its design icon (lucide.dart).
+  String get icon {
+    if (text case final t?) return isOnlyLink(t) ? 'link' : 'paste';
     final ext = p.extension(file!.path).toLowerCase();
     const photos = {'.jpg', '.jpeg', '.png', '.heic', '.gif', '.webp', '.mov', '.mp4', '.m4v'};
-    return photos.contains(ext) ? Icons.image_outlined : Icons.description_outlined;
+    return photos.contains(ext) ? 'photo' : 'file';
   }
 
   static int _lengthOf(File f) {
@@ -99,10 +101,10 @@ class SendPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final phone = Platform.isIOS || Platform.isAndroid;
     final tiles = [
-      _Tile('Files', Icons.description_outlined, () => _files(context)),
-      _Tile('Photos & videos', Icons.image_outlined, () => _files(context, media: true)),
-      _Tile('Text or link', Icons.link_rounded, () => _text(context)),
-      _Tile('Paste', Icons.content_paste_rounded, () => _paste(context)),
+      _Tile('Files', 'file', () => _files(context)),
+      _Tile('Photos & videos', 'photo', () => _files(context, media: true)),
+      _Tile('Text or link', 'link', () => _text(context)),
+      _Tile('Paste', 'paste', () => _paste(context)),
     ];
     return ListenableBuilder(
       listenable: Listenable.merge([state, sendSelection]),
@@ -113,7 +115,7 @@ class SendPage extends StatelessWidget {
           padding: const EdgeInsets.fromLTRB(20, 18, 20, 24),
           children: [
             const KTitle('Send'),
-            const SizedBox(height: 10),
+            const SizedBox(height: 16),
             const KSub('What would you like to send?'),
             const SizedBox(height: 22),
             LayoutBuilder(
@@ -172,7 +174,7 @@ class SendPage extends StatelessWidget {
 class _Tile extends StatefulWidget {
   const _Tile(this.label, this.icon, this.onTap);
   final String label;
-  final IconData icon;
+  final String icon;
   final VoidCallback onTap;
 
   @override
@@ -205,7 +207,7 @@ class _TileState extends State<_Tile> {
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Icon(widget.icon, size: 24, color: K.text),
+              LucideIcon(widget.icon, size: 24, color: K.text),
               const SizedBox(height: 22),
               Text(widget.label, style: const TextStyle(fontSize: 16, color: K.text)),
             ],
@@ -280,7 +282,7 @@ class _PickedRow extends StatelessWidget {
     decoration: BoxDecoration(color: K.raised, borderRadius: BorderRadius.circular(18)),
     child: Row(
       children: [
-        Icon(item.icon, size: 22, color: K.text),
+        LucideIcon(item.icon, size: 22, color: K.text),
         const SizedBox(width: 12),
         Expanded(
           child: Column(
@@ -331,7 +333,7 @@ class _Target extends StatelessWidget {
     final ready = online && enabled;
     return KRow(
       platform: device.platform,
-      color: online || seen != null ? K.deviceColor(device.id) : K.faint,
+      color: online || seen != null ? K.platformColor(device.platform) : K.faint,
       name: device.name,
       status: online
           ? '${how ?? 'Connected'} · ready'

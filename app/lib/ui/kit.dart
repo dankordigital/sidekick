@@ -8,6 +8,7 @@ import 'package:material_ui/material_ui.dart';
 
 import '../app_state.dart';
 import '../core/models.dart';
+import 'lucide.dart';
 
 /// The design's colours.
 abstract final class K {
@@ -32,18 +33,24 @@ abstract final class K {
   static const line = Color(0x26FFFFFF);
   static const hair = Color(0x14FFFFFF);
 
-  /// Each device gets its own colour for its icon (stable by its id).
-  static Color deviceColor(String id) {
-    const colors = [blue, green, orange, Color(0xFFD6ADF2), Color(0xFF74B9FF), Color(0xFFEE9A7D)];
-    var h = 0;
-    for (final c in id.codeUnits) {
-      h = (h * 31 + c) & 0x7fffffff;
-    }
-    return colors[h % colors.length];
-  }
+  /// A device's colour in the design: phones blue, tablets amber,
+  /// computers green (grey is for one never heard from, chosen by callers).
+  static Color platformColor(DevicePlatform p) => switch (p) {
+    DevicePlatform.ios || DevicePlatform.android => blue,
+    DevicePlatform.macos || DevicePlatform.windows || DevicePlatform.linux => green,
+    _ => orange,
+  };
 }
 
 /// The design's device icons (line icons, like its Lucide set).
+/// The design's device icon (Lucide), by name.
+String deviceIconName(DevicePlatform p) => switch (p) {
+  DevicePlatform.ios || DevicePlatform.android => 'phone',
+  DevicePlatform.macos => 'laptop',
+  DevicePlatform.windows || DevicePlatform.linux => 'monitor',
+  _ => 'tablet',
+};
+
 IconData deviceIcon(DevicePlatform p) => switch (p) {
   DevicePlatform.ios || DevicePlatform.android => Icons.smartphone_outlined,
   DevicePlatform.macos => Icons.laptop_outlined,
@@ -95,10 +102,15 @@ class KLabel extends StatelessWidget {
     padding: const EdgeInsets.fromLTRB(2, 6, 2, 0),
     child: Row(
       children: [
-        if (icon != null) ...[Icon(icon, size: 20, color: K.text), const SizedBox(width: 8)],
+        if (icon != null) ...[
+          icon == Icons.star_border_rounded || icon == Icons.star_rounded
+              ? const LucideIcon('star', size: 22, color: K.text)
+              : Icon(icon, size: 20, color: K.text),
+          const SizedBox(width: 10),
+        ],
         Text(
           text,
-          style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600, color: K.muted),
+          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: K.muted),
         ),
       ],
     ),
@@ -160,7 +172,9 @@ class KDeviceTile extends StatelessWidget {
     width: size,
     height: size,
     decoration: BoxDecoration(color: background ?? K.raised, borderRadius: BorderRadius.circular(size * 0.3)),
-    child: Icon(deviceIcon(platform), size: size * 0.46, color: color),
+    child: Center(
+      child: LucideIcon(deviceIconName(platform), size: size * 0.46, color: color),
+    ),
   );
 }
 
@@ -225,14 +239,14 @@ class _KRowState extends State<KRow> {
                     widget.name,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500, color: K.text),
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w400, color: K.text),
                   ),
                   const SizedBox(height: 2),
                   Text(
                     widget.status,
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
-                    style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w500, color: widget.statusColor),
+                    style: TextStyle(fontSize: 13, fontWeight: FontWeight.w400, color: widget.statusColor),
                   ),
                 ],
               ),
@@ -316,7 +330,7 @@ class _KPillState extends State<KPill> {
                   if (widget.icon != null) ...[Icon(widget.icon, size: 18, color: fg), const SizedBox(width: 8)],
                   Text(
                     widget.label,
-                    style: TextStyle(color: fg, fontWeight: FontWeight.w600, fontSize: widget.small ? 13.5 : 15),
+                    style: TextStyle(color: fg, fontWeight: FontWeight.w500, fontSize: widget.small ? 13.5 : 15),
                   ),
                 ],
               ),
@@ -455,7 +469,7 @@ class KDevicePicker extends StatelessWidget {
             padding: const EdgeInsets.fromLTRB(14, 12, 18, 12),
             child: Row(
               children: [
-                KDeviceTile(platform: device.platform, color: K.deviceColor(device.id)),
+                KDeviceTile(platform: device.platform, color: K.platformColor(device.platform)),
                 const SizedBox(width: 14),
                 Expanded(
                   child: Column(

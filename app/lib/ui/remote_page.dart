@@ -91,7 +91,7 @@ class _IphoneCantBeControlledState extends State<_IphoneCantBeControlled> {
     padding: const EdgeInsets.fromLTRB(20, 18, 20, 24),
     children: [
       const KTitle('Remote'),
-      const SizedBox(height: 10),
+      const SizedBox(height: 16),
       const KSub('A little more room to move.'),
       const SizedBox(height: 22),
       KDevicePicker(state: widget.state, device: widget.device, onPick: (d) => widget.state.select(d.id)),
@@ -364,7 +364,7 @@ class _RemoteState extends State<_Remote> {
       padding: const EdgeInsets.fromLTRB(20, 18, 20, 24),
       children: [
         const KTitle('Remote'),
-        const SizedBox(height: 10),
+        const SizedBox(height: 16),
         const KSub('A little more room to move.'),
         const SizedBox(height: 22),
         KDevicePicker(

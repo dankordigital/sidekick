@@ -10,6 +10,10 @@ import '../core/host.dart';
 import '../core/models.dart';
 import '../core/text_message.dart';
 import 'app_theme.dart';
+import 'files_page.dart';
+import 'kit.dart';
+import 'lucide.dart';
+import 'ping.dart';
 import 'widgets.dart';
 
 /// Sidekick 4.0's Chat tab: one place per paired device for everything the
@@ -33,8 +37,14 @@ class _ChatPageState extends State<ChatPage> {
   final _text = TextEditingController();
   final _focus = FocusNode();
 
+  /// The design's search (the round button by the title): filters this
+  /// device's chat by name or text.
+  bool _searching = false;
+  final _query = TextEditingController();
+
   @override
   void dispose() {
+    _query.dispose();
     _text.dispose();
     _focus.dispose();
     super.dispose();
@@ -56,7 +66,15 @@ class _ChatPageState extends State<ChatPage> {
             .first;
   }
 
-  bool _keep(HistoryItem i) => switch (_filter) {
+  bool _keep(HistoryItem i) => _matches(i) && _kind(i);
+
+  bool _matches(HistoryItem i) {
+    final q = _query.text.trim().toLowerCase();
+    if (!_searching || q.isEmpty) return true;
+    return (i.name ?? '').toLowerCase().contains(q) || (i.text ?? '').toLowerCase().contains(q);
+  }
+
+  bool _kind(HistoryItem i) => switch (_filter) {
     _Filter.all => true,
     _Filter.files => i.kind == HistoryKind.file,
     _Filter.photos => i.kind == HistoryKind.photo || i.kind == HistoryKind.video,
@@ -69,14 +87,50 @@ class _ChatPageState extends State<ChatPage> {
     listenable: state,
     builder: (context, _) {
       final d = _device;
-      final text = Theme.of(context).textTheme;
       return Padding(
         padding: const EdgeInsets.fromLTRB(20, 16, 20, 12),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text('Chat', style: text.headlineLarge),
-            const SizedBox(height: 12),
+            KTitle(
+              'Chat',
+              action: d == null
+                  ? null
+                  : Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        _RoundButton(
+                          icon: _searching ? 'close' : 'search',
+                          label: _searching ? 'Close search' : 'Search',
+                          onTap: () => setState(() {
+                            _searching = !_searching;
+                            if (!_searching) _query.clear();
+                          }),
+                        ),
+                        const SizedBox(width: 10),
+                        _RoundButton(icon: 'more', label: 'More', onTap: () => _more(context, d)),
+                      ],
+                    ),
+            ),
+            AnimatedSize(
+              duration: const Duration(milliseconds: 260),
+              curve: const Cubic(0.22, 1, 0.36, 1),
+              child: _searching
+                  ? Padding(
+                      padding: const EdgeInsets.only(top: 12),
+                      child: TextField(
+                        controller: _query,
+                        autofocus: true,
+                        onChanged: (_) => setState(() {}),
+                        decoration: const InputDecoration(
+                          hintText: 'Search this chat',
+                          prefixIcon: Padding(padding: EdgeInsets.all(14), child: LucideIcon('search', size: 18)),
+                        ),
+                      ),
+                    )
+                  : const SizedBox(width: double.infinity),
+            ),
+            const SizedBox(height: 14),
             if (d == null)
               Expanded(child: _NoDevices(onGoToDevices: widget.onGoToDevices))
             else ...[
@@ -163,6 +217,30 @@ class _ChatPageState extends State<ChatPage> {
     return '${t.day} ${months[t.month - 1]}${t.year == now.year ? '' : ' ${t.year}'}';
   }
 
+  /// ⋯: what else there is to do with this device.
+  Future<void> _more(BuildContext context, PairedDevice d) {
+    final online = state.isOnline(d.id);
+    return showActions(
+      context,
+      title: d.name,
+      options: [
+        ('Browse files', Icons.folder_open_rounded, online ? () => showFilesOf(context, state, d) : null),
+        (
+          'Ping',
+          Icons.notifications_active_outlined,
+          online
+              ? () async {
+                  final rang = await state.ping(d);
+                  if (!rang && context.mounted) await showAlreadyPinged(context, d.name);
+                }
+              : null,
+        ),
+        ('Clear this chat', Icons.delete_outline_rounded, () => setState(() => state.history.forget(d.id))),
+      ],
+      footnote: 'Clearing only removes the list here. Files you got stay where they are.',
+    );
+  }
+
   Future<void> _sendText(PairedDevice d) async {
     final t = _text.text.trim();
     if (t.isEmpty) return;
@@ -206,18 +284,18 @@ class _DevicePicker extends StatelessWidget {
                   children: [
                     Text(
                       device.name,
-                      style: Theme.of(context).textTheme.titleLarge,
+                      style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w400, color: K.text),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
                     Text(
                       how == null ? 'Not reachable' : '$how · encrypted',
-                      style: TextStyle(fontSize: 12.5, color: how == null ? scheme.onSurfaceVariant : sidekickOk),
+                      style: TextStyle(fontSize: 13, color: how == null ? scheme.onSurfaceVariant : sidekickOk),
                     ),
                   ],
                 ),
               ),
-              if (state.paired.length > 1) Icon(Icons.expand_more_rounded, color: scheme.onSurfaceVariant),
+              if (state.paired.length > 1) const LucideIcon('down', size: 24, color: K.text),
             ],
           ),
         ),
@@ -263,7 +341,9 @@ class _DeviceBadge extends StatelessWidget {
       color: Theme.of(context).colorScheme.surfaceContainerHigh,
       borderRadius: BorderRadius.circular(size * 0.3),
     ),
-    child: Icon(platformIcon(platform), size: size * 0.46),
+    child: Center(
+      child: LucideIcon(deviceIconName(platform), size: size * 0.46, color: K.platformColor(platform)),
+    ),
   );
 }
 
@@ -762,6 +842,33 @@ class _NoDevices extends StatelessWidget {
           FilledButton(onPressed: onGoToDevices, child: const Text('Connect a device')),
         ],
       ],
+    ),
+  );
+}
+
+/// The design's round #262626 button beside a title (search, ⋯).
+class _RoundButton extends StatelessWidget {
+  const _RoundButton({required this.icon, required this.label, required this.onTap});
+  final String icon;
+  final String label;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) => Semantics(
+    button: true,
+    label: label,
+    excludeSemantics: true,
+    child: Material(
+      color: K.raised,
+      shape: const CircleBorder(),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: onTap,
+        child: SizedBox.square(
+          dimension: 48,
+          child: Center(child: LucideIcon(icon, size: 22, color: K.text)),
+        ),
+      ),
     ),
   );
 }

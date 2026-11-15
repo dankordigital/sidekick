@@ -49,6 +49,10 @@ detailed developer notes; every release is in `VERSIONS.md`) and
    and both privacy policies.
 4. Release as usual once CI is green.
 
+## 15 November 2026
+
+- **4.0.1 polish, round 1 (the owner: "exactly like the Figma prototypes"):** the design's own icons (`ui/lucide.dart`: the emulator's Lucide SVGs drawn by a small path painter; dock, rail, device tiles, Send tiles, Chat), device colours by kind like the design (phones blue, computers green, tablets amber: `K.platformColor`), regular weight for names and status lines, medium pills, bigger section labels, more room under titles, the Chat header's round search (filters the chat) and ⋯ (Browse files, Ping, Clear this chat).
+
 ## 14 November 2026
 
 - **4.0, step 7: notices one at a time**; CLAUDE.md rewritten for 4.0 (one look, kit, dock and rail, app icons, widgets, codes only, CI renders on `refs/ci/app-screens`); version 4.0.0 and its VERSIONS.md entry.

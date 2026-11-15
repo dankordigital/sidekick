@@ -9,6 +9,7 @@ import '../core/history.dart';
 import '../core/server.dart';
 import '../platform/sound.dart';
 import 'kit.dart';
+import 'lucide.dart';
 import 'widgets.dart';
 
 // ------------------------------------------------------------------ sender
@@ -132,7 +133,7 @@ class _SendingScreenState extends State<SendingScreen> {
                 const SizedBox(height: 18),
                 Row(
                   children: [
-                    KDeviceTile(platform: d.platform, color: K.deviceColor(d.id)),
+                    KDeviceTile(platform: d.platform, color: K.platformColor(d.platform)),
                     const SizedBox(width: 14),
                     Expanded(
                       child: Column(
@@ -531,14 +532,16 @@ class _IncomingOfferState extends State<_IncomingOffer> with SingleTickerProvide
                       width: 48,
                       height: 48,
                       decoration: BoxDecoration(color: K.panel, borderRadius: BorderRadius.circular(14)),
-                      child: Icon(
-                        switch (_stage) {
-                          _Stage.done => Icons.check_rounded,
-                          _Stage.gone => Icons.close_rounded,
-                          _ => deviceIcon(offer.from.platform),
-                        },
-                        size: 22,
-                        color: _stage == _Stage.done ? K.ok : K.deviceColor(offer.from.id),
+                      child: Center(
+                        child: LucideIcon(
+                          switch (_stage) {
+                            _Stage.done => 'check',
+                            _Stage.gone => 'close',
+                            _ => deviceIconName(offer.from.platform),
+                          },
+                          size: 22,
+                          color: _stage == _Stage.done ? K.ok : K.platformColor(offer.from.platform),
+                        ),
                       ),
                     ),
                     const SizedBox(width: 16),

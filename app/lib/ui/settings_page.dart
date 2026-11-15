@@ -113,7 +113,7 @@ class _SettingsPageState extends State<SettingsPage> {
                         children: [
                           Row(
                             children: [
-                              KDeviceTile(platform: state.me.platform, color: K.deviceColor(state.id)),
+                              KDeviceTile(platform: state.me.platform, color: K.platformColor(state.me.platform)),
                               const SizedBox(width: 14),
                               Expanded(
                                 child: Column(

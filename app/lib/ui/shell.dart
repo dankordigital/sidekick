@@ -45,12 +45,12 @@ class _ShellState extends State<Shell> {
   AppState get state => widget.state;
 
   /// The tray panel's Settings is tab 4.
-  List<({IconData icon, IconData selected, String label})> get _destinations => [
-    (icon: Icons.devices_outlined, selected: Icons.devices, label: 'Devices'),
-    (icon: Icons.chat_bubble_outline_rounded, selected: Icons.chat_bubble_rounded, label: 'Chat'),
-    (icon: Icons.ios_share_rounded, selected: Icons.ios_share_rounded, label: 'Send'),
-    (icon: Icons.screen_share_outlined, selected: Icons.screen_share, label: 'Remote'),
-    (icon: Icons.settings_outlined, selected: Icons.settings, label: 'Settings'),
+  List<({IconData icon, IconData selected, String label, String lucide})> get _destinations => [
+    (icon: Icons.devices_outlined, selected: Icons.devices, label: 'Devices', lucide: 'devices'),
+    (icon: Icons.chat_bubble_outline_rounded, selected: Icons.chat_bubble_rounded, label: 'Chat', lucide: 'chat'),
+    (icon: Icons.ios_share_rounded, selected: Icons.ios_share_rounded, label: 'Send', lucide: 'send'),
+    (icon: Icons.screen_share_outlined, selected: Icons.screen_share, label: 'Remote', lucide: 'remote'),
+    (icon: Icons.settings_outlined, selected: Icons.settings, label: 'Settings', lucide: 'settings'),
   ];
 
   @override
@@ -290,7 +290,10 @@ class _ShellState extends State<Shell> {
           child: FloatingDock(
             index: _index,
             onTap: _go,
-            items: [for (final d in _destinations) DockItem(icon: d.icon, selectedIcon: d.selected, label: d.label)],
+            items: [
+              for (final d in _destinations)
+                DockItem(icon: d.icon, selectedIcon: d.selected, label: d.label, lucide: d.lucide),
+            ],
           ),
         ),
       );
@@ -308,7 +311,8 @@ class _ShellState extends State<Shell> {
               onTap: _go,
               items: [
                 for (final (i, d) in _destinations.indexed)
-                  if (!(split && i == 1)) (i, DockItem(icon: d.icon, selectedIcon: d.selected, label: d.label)),
+                  if (!(split && i == 1))
+                    (i, DockItem(icon: d.icon, selectedIcon: d.selected, label: d.label, lucide: d.lucide)),
               ],
             ),
             const SizedBox(width: 10),

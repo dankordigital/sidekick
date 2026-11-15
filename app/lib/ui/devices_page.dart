@@ -49,7 +49,7 @@ class DevicesPage extends StatelessWidget {
               action: KPill('+ Connect', style: KPillStyle.dark, onPressed: () => showConnectOptions(context, state)),
             ),
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: 16),
           enter(const KSub('Your devices, a little closer.')),
           if (paired.isEmpty) ...[
             const SizedBox(height: 16),
@@ -78,7 +78,7 @@ class DevicesPage extends StatelessWidget {
                   dashed: true,
                   child: KRow(
                     platform: d.platform,
-                    color: K.deviceColor(d.id),
+                    color: K.platformColor(d.platform),
                     name: d.name,
                     status: d.address == null ? 'Nearby over Bluetooth' : 'Same Wi-Fi',
                     statusColor: K.faint,
@@ -151,12 +151,12 @@ class _NeedsYou extends StatelessWidget {
         children: [
           const Text(
             'Needs you',
-            style: TextStyle(color: K.amber, fontWeight: FontWeight.w600, fontSize: 14),
+            style: TextStyle(color: K.amber, fontWeight: FontWeight.w500, fontSize: 14),
           ),
           const SizedBox(height: 12),
           KRow(
             platform: offer.from.platform,
-            color: K.deviceColor(offer.from.id),
+            color: K.platformColor(offer.from.platform),
             tileBackground: const Color(0x33000000),
             name: offer.from.name,
             status: n == 1 ? 'Wants to send you ${offer.files.first.name}' : 'Wants to send you $n files',
@@ -235,7 +235,7 @@ class _PairedRow extends StatelessWidget {
       child: KRow(
         platform: device.platform,
         // Its own colour; grey only for a device never heard from.
-        color: online || seen != null ? K.deviceColor(device.id) : K.faint,
+        color: online || seen != null ? K.platformColor(device.platform) : K.faint,
         name: device.name,
         status: status,
         statusColor: reset ? K.red : (online ? K.ok : K.faint),

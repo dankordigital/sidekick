@@ -1,12 +1,17 @@
 import 'package:flutter/services.dart';
 import 'package:material_ui/material_ui.dart';
 
+import 'lucide.dart';
+
 /// One tab in the [FloatingDock].
 class DockItem {
-  const DockItem({required this.icon, required this.selectedIcon, required this.label});
+  const DockItem({required this.icon, required this.selectedIcon, required this.label, this.lucide});
   final IconData icon;
   final IconData selectedIcon;
   final String label;
+
+  /// The design's own icon (lucide.dart), used instead of [icon] when set.
+  final String? lucide;
 }
 
 /// Sidekick 4.0's phone tab bar (design/emulator `.dock`): a rounded bar
@@ -145,7 +150,10 @@ class _DockButtonState extends State<_DockButton> {
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(widget.selected ? widget.item.selectedIcon : widget.item.icon, size: 22, color: fg),
+                if (widget.item.lucide case final name?)
+                  LucideIcon(name, size: 22, color: fg)
+                else
+                  Icon(widget.selected ? widget.item.selectedIcon : widget.item.icon, size: 22, color: fg),
                 AnimatedSize(
                   duration: open,
                   curve: spring,
@@ -213,10 +221,18 @@ class SideRail extends StatelessWidget {
                             color: i == index ? const Color(0xFFF0F0F0) : Colors.transparent,
                             shape: BoxShape.circle,
                           ),
-                          child: Icon(
-                            i == index ? item.selectedIcon : item.icon,
-                            size: 24,
-                            color: i == index ? const Color(0xFF141414) : const Color(0xFFF2F2F2),
+                          child: Center(
+                            child: item.lucide != null
+                                ? LucideIcon(
+                                    item.lucide!,
+                                    size: 24,
+                                    color: i == index ? const Color(0xFF141414) : const Color(0xFFF2F2F2),
+                                  )
+                                : Icon(
+                                    i == index ? item.selectedIcon : item.icon,
+                                    size: 24,
+                                    color: i == index ? const Color(0xFF141414) : const Color(0xFFF2F2F2),
+                                  ),
                           ),
                         ),
                         const SizedBox(height: 6),
